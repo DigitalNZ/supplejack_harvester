@@ -1,0 +1,5 @@
+.jump-to {
+  @include element('body') {
+    min-width: 21rem;
+  }
+}

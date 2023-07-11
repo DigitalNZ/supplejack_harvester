@@ -48,6 +48,10 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :transformation_definitions, only: [] do
+    resources :raw_records, only: %i[index]
+  end
+
   get :jobs, to: 'extraction_jobs#index', as: :extraction_jobs
 
   resources :destinations do

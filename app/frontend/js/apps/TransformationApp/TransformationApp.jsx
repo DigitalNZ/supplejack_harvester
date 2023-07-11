@@ -18,6 +18,7 @@ import Field from "~/js/apps/TransformationApp/components/Field";
 import FieldNavigationPanel from "./components/FieldNavigationPanel";
 import ExpandCollapseIcon from "./components/ExpandCollapseIcon";
 import HeaderActions from "./components/HeaderActions";
+import RawDataBody from "./RawDataBody";
 
 const TransformationApp = ({}) => {
   const dispatch = useDispatch();
@@ -61,20 +62,7 @@ const TransformationApp = ({}) => {
           <div className={rawRecordClasses}>
             <div className="card">
               <div className="card-body">
-                <div className="d-flex flex-row flex-nowrap justify-content-between mb-4">
-                  <h5 className="text-truncate">Raw data</h5>
-                  <button
-                    onClick={() => clickToggleSection("rawRecordExpanded")}
-                    type="button"
-                    className="btn btn-primary"
-                  >
-                    <ExpandCollapseIcon
-                      expanded={uiAppDetails["rawRecordExpanded"]}
-                    />
-                  </button>
-                </div>
-
-                <RecordViewer record={appDetails.rawRecord} format={appDetails.format} />
+                <RawDataBody clickToggleSection={clickToggleSection} />
               </div>
             </div>
           </div>
@@ -90,7 +78,7 @@ const TransformationApp = ({}) => {
                       clickToggleSection("transformedRecordExpanded")
                     }
                     type="button"
-                    className="btn btn-primary"
+                    className="btn btn-outline-primary"
                   >
                     <ExpandCollapseIcon
                       expanded={uiAppDetails["transformedRecordExpanded"]}
@@ -98,7 +86,10 @@ const TransformationApp = ({}) => {
                   </button>
                 </div>
 
-                <RecordViewer record={appDetails.transformedRecord} format="JSON" />
+                <RecordViewer
+                  record={appDetails.transformedRecord}
+                  format="JSON"
+                />
               </div>
             </div>
           </div>

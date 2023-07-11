@@ -33,6 +33,7 @@ module Harvester
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
     config.eager_load_paths << Rails.root.join('supplejack')
+    config.eager_load_paths << Rails.root.join('slices')
 
     config.time_zone = ENV.fetch('TIME_ZONE', 'Auckland')
 

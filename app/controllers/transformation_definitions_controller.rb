@@ -12,47 +12,7 @@ class TransformationDefinitionsController < ApplicationController
       HarvestDefinition.find_by(transformation_definition_id: copy.id)
     end.compact
 
-    @props = {
-      entities: {
-        fields: {
-          ids: @transformation_definition.fields.map(&:id),
-          entities: @fields.index_by { |field| field[:id] }
-        },
-        appDetails: {
-          format: @transformation_definition.extraction_job.format,
-          rawRecord: @transformation_definition.records.first,
-          transformedRecord: {},
-          contentSource: @content_source,
-          transformationDefinition: @transformation_definition
-        }
-      },
-      ui: {
-        fields: {
-          ids: @transformation_definition.fields.map(&:id),
-          entities: @fields.map.with_index do |field, index|
-            {
-              id: field[:id],
-              saved: true,
-              deleting: false,
-              saving: false,
-              running: false,
-              hasRun: false,
-              expanded: true,
-              displayed: false
-            }
-          end.index_by { |field| field[:id] }
-        },
-        appDetails: {
-          fieldNavExpanded: true,
-          rawRecordExpanded: true,
-          transformedRecordExpanded: true,
-          readOnly: @transformation_definition.copy?
-        }
-      },
-      config: {
-        environment: Rails.env
-      }
-    }.to_json
+    @props = transformation_app_state
   end
 
   def new
