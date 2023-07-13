@@ -3,6 +3,7 @@
 class ApplicationController < ActionController::Base
   include UserAuthorization
   include DeviseOverrides
+  include ReduxState
 
   def paginate_and_filter_jobs(jobs)
     @status = params[:status]

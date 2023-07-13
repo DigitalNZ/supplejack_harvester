@@ -1,5 +1,5 @@
-<%= vertical_form_with model: [@content_source, @harvest_definition], id: 'js-harvest-definition-form' do |form| %>
-  <%= form.hidden_field :content_source_id, value: @content_source.id %>
+<%= vertical_form_with model: [@pipeline, @harvest_definition], id: 'js-harvest-definition-form' do |form| %>
+  <%= form.hidden_field :content_source_id, value: @pipeline.id %>
   <%= form.hidden_field :kind,               value: @harvest_definition.kind %>
 
   <div class='card'>
@@ -17,9 +17,9 @@
         <% end %>
 
         <% if @harvest_definition.enrichment? %>
-          <% extraction_definitions = @content_source.extraction_definitions.enrichment.originals %>
+          <% extraction_definitions = ExtractionDefinition.all.enrichment %>
         <% else %>
-          <% extraction_definitions = @content_source.extraction_definitions.harvest.originals %>
+          <% extraction_definitions = ExtractionDefinition.all.harvest  %>
         <% end %>
 
         <div class="col-3">
@@ -31,9 +31,9 @@
         </div>
 
         <% if @harvest_definition.enrichment? %>
-          <% transformation_definitions = @content_source.transformation_definitions.enrichment.originals %>
+          <% transformation_definitions = TransformationDefinition.all.enrichment %>
         <% else %>
-          <% transformation_definitions = @content_source.transformation_definitions.harvest.originals %>
+          <% transformation_definitions = TransformationDefinition.all.harvest %>
         <% end %>
 
         <div class="col-3">
@@ -42,14 +42,6 @@
 
         <div class='col-9'>
           <%= form.select :transformation_definition_id, options_from_collection_for_select(transformation_definitions, 'id', 'name'), {},  class: "form-select" %>
-        </div>
-
-        <div class="col-3">
-          <%= form.label :destination_id, 'Destination', class: "form-label" %>
-        </div>
-
-        <div class='col-9'>
-          <%= form.select :destination_id, options_from_collection_for_select(@destinations, 'id', 'name'), {},  class: "form-select" %>
         </div>
 
         <div class="col-3">

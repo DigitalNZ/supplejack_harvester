@@ -1,3 +1,4 @@
+<% pipeline_id = @pipeline&.id %>
 <% source_id = @content_source&.id %>
 <% extraction_id = @extraction_definition&.id %>
 <% transformation_id = @transformation_definition&.id %>
@@ -19,6 +20,24 @@
       path: (content_source_path(source_id) rescue nil),
       active: (current_page?(content_source_path(source_id)) rescue false),
       display: request.path.match?(/^\/content_sources\/\d+/)) %>
+      
+    <%= breadcrumb_item(
+      text: 'Pipelines',
+      path: pipelines_path,
+      active: current_page?(pipelines_path),
+      display: request.path.include?(pipelines_path)) %>
+      
+    <%= breadcrumb_item(
+      text: @pipeline&.name_in_database,
+      path: (pipeline_path(pipeline_id) rescue nil),
+      active: (current_page?(pipeline_path(pipeline_id)) rescue false),
+      display: request.path.match?(/^\/pipelines\/\d+/)) %>
+      
+    <%= breadcrumb_item(
+      text: 'Jobs',
+      path: (pipeline_jobs_path(pipeline_id) rescue nil),
+      active: (current_page?(pipeline_jobs_path(pipeline_id)) rescue false),
+      display: request.path.match?(/^\/pipelines\/\d+\/jobs/)) %>
 
     <%= breadcrumb_item(
       text: 'Destinations',
@@ -33,12 +52,6 @@
       display: request.path.match?(/^\/destinations\/\d+/)) %>
 
     <%= breadcrumb_item(
-      text: 'Extraction Jobs',
-      path: extraction_jobs_path,
-      active: current_page?(extraction_jobs_path),
-      display: request.path.include?(extraction_jobs_path)) %>
-
-    <%= breadcrumb_item(
       text: @extraction_definition&.name_in_database,
       path: (content_source_extraction_definition_path(source_id, extraction_id) rescue nil),
       active: current_page(:extraction_definitions, %w[show]),
@@ -47,14 +60,8 @@
     <%= breadcrumb_item(
       text: @transformation_definition&.name_in_database,
       path: (content_source_transformation_definition_path(source_id, transformation_id) rescue nil),
-      active: current_page(:transformation_definition, %w[show]),
+      active: current_page(:transformation_definitions, %w[show]),
       display: request.path.match?(/\/transformation_definitions\/\d+/)) %>
-
-    <%= breadcrumb_item(
-      text: @harvest_definition&.name_in_database,
-      path: (content_source_harvest_definition_path(source_id, harvest_definition_id) rescue nil),
-      active: current_page(:harvest_definitions, %w[show]),
-      display: request.path.match?(/\/harvest_definitions\/\d+/)) %>
       
     <%= breadcrumb_item(
       text: @harvest_job&.name_in_database,

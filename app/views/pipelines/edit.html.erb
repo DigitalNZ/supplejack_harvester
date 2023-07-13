@@ -1,0 +1,45 @@
+<%= content_for(:title) { "Editing #{@pipeline.name_in_database}" } %>
+
+<%= content_for(:header) do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <h1 class='float-start'><%= @pipeline.name_in_database %></h1>
+
+  <div class="float-end">
+    <button type="submit" class="btn btn-primary" data-form="js-pipeline-form">
+      Update
+    </button>
+
+    <%= link_to 'Cancel', pipeline_path(@pipeline), class: 'btn btn-outline-danger' %>
+  </div>
+
+  <div class='clearfix'></div>
+
+<% end %>
+
+<%= vertical_form_with model: @pipeline, id: 'js-pipeline-form' do |form| %>
+
+  <div class="card">
+    <div class="card-body">
+      <div class='row gy-3 align-items-center'>
+        <div class="col-3">
+          <%= form.label :name, 'Name', class: "form-label" %>
+        </div>
+        <div class='col-9'>
+          <%= form.text_field :name, class: {"form-control": true, "is-invalid": @pipeline.errors[:name].any? } %>
+        </div>
+        
+        <div class="col-3">
+          <%= form.label :description, 'Description', class: "form-label" %>
+        </div>
+        <div class='col-9'>
+          <%= form.text_field :description, class: {"form-control": true, "is-invalid": @pipeline.errors[:description].any? } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<% end %>
+
+
+

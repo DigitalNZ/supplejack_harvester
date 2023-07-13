@@ -1,5 +1,6 @@
-<%= vertical_form_with model: [@content_source, @transformation_definition], id: 'js-transformation-definition-form' do |form| %>
-  <%= form.hidden_field :content_source_id, value: @content_source.id %>
+<%= vertical_form_with model: [@pipeline, @harvest_definition, @transformation_definition], id: 'js-transformation-definition-form' do |form| %>
+  <%= form.hidden_field :pipeline_id,        value: @pipeline.id %>
+  <%= hidden_field :harvest_definition_id,   value: @harvest_definition.id %>
   <%= form.hidden_field :kind,               value: @transformation_definition.kind %>
 
   <div class='card'>

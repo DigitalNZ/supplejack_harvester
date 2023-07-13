@@ -10,15 +10,16 @@ import { request } from "~/js/utils/request";
 export const addField = createAsyncThunk(
   "fields/addFieldStatus",
   async (payload) => {
-    const { name, block, contentSourceId, transformationDefinitionId } =
+    const { name, block, pipelineId, harvestDefinitionId, transformationDefinitionId } =
       payload;
 
     const response = request
       .post(
-        `/content_sources/${contentSourceId}/transformation_definitions/${transformationDefinitionId}/fields`,
+        `/pipelines/${pipelineId}/harvest_definitions/${harvestDefinitionId}/transformation_definitions/${transformationDefinitionId}/fields`,
         {
           field: {
-            content_source_id: contentSourceId,
+            harvestDefinitionId: harvestDefinitionId,
+            piplineId: pipelineId,
             transformation_definition_id: transformationDefinitionId,
             name: name,
             block: block,
@@ -36,11 +37,11 @@ export const addField = createAsyncThunk(
 export const deleteField = createAsyncThunk(
   "fields/deleteFieldStatus",
   async (payload) => {
-    const { id, contentSourceId, transformationDefinitionId } = payload;
+    const { id, pipelineId, harvestDefinitionId, transformationDefinitionId } = payload;
 
     const response = request
       .delete(
-        `/content_sources/${contentSourceId}/transformation_definitions/${transformationDefinitionId}/fields/${id}`
+        `/pipelines/${pipelineId}/harvest_definitions/${harvestDefinitionId}/transformation_definitions/${transformationDefinitionId}/fields/${id}`
       )
       .then((response) => {
         return id;
@@ -53,12 +54,12 @@ export const deleteField = createAsyncThunk(
 export const updateField = createAsyncThunk(
   "fields/updateFieldStatus",
   async (payload) => {
-    const { id, contentSourceId, transformationDefinitionId, name, block } =
+    const { id, pipelineId, harvestDefinitionId, transformationDefinitionId, name, block } =
       payload;
 
     const response = request
       .patch(
-        `/content_sources/${contentSourceId}/transformation_definitions/${transformationDefinitionId}/fields/${id}`,
+        `/pipelines/${pipelineId}/harvest_definitions/${harvestDefinitionId}/transformation_definitions/${transformationDefinitionId}/fields/${id}`,
         {
           field: {
             name: name,

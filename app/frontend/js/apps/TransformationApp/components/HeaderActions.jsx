@@ -8,20 +8,23 @@ import {
 import { selectFieldIds } from "/js/features/FieldsSlice";
 import AddField from "~/js/apps/TransformationApp/components/AddField";
 import { selectUiAppDetails } from "~/js/features/UiAppDetailsSlice";
+import { selectRawRecord } from "/js/features/RawRecordSlice";
 
 const HeaderActions = () => {
   const dispatch = useDispatch();
   const fieldIds = useSelector(selectFieldIds);
   const appDetails = useSelector(selectAppDetails);
+  const rawRecord = useSelector(selectRawRecord);
   const { readOnly } = useSelector(selectUiAppDetails);
 
   const runAllFields = () => {
     dispatch(
       clickedOnRunFields({
-        contentSourceId: appDetails.contentSource.id,
-        format: appDetails.format,
+        harvestDefinitionId: appDetails.harvestDefinition.id,
+        pipelineId: appDetails.pipeline.id,
+        format: rawRecord.format,
         transformationDefinitionId: appDetails.transformationDefinition.id,
-        record: appDetails.rawRecord,
+        record: rawRecord.body,
         fields: fieldIds,
       })
     );

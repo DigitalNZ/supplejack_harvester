@@ -17,7 +17,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <% content_sources_classes = class_names('nav-link', active: request.path.include?('content_sources')) %>
+    <% pipelines_classes = class_names('nav-link', active: request.path.include?('pipelines')) %>
     <% destinations_classes = class_names('nav-link', active: request.path.include?('destinations')) %>
     <% extraction_jobs_classes = class_names('nav-link', active: current_page?(extraction_jobs_path)) %>
 
@@ -25,7 +25,7 @@
       <ul class="navbar-nav">
         <% if user_signed_in? %>
           <li class="nav-item">
-            <%= link_to 'Content sources', content_sources_path, class: content_sources_classes %>
+            <%= link_to 'Pipelines', pipelines_path, class: pipelines_classes %>
           </li>
           <li class="nav-item">
             <%= link_to 'Destinations', destinations_path, class: destinations_classes %>

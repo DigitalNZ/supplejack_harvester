@@ -11,7 +11,7 @@
 
   <% if @harvest_job&.extraction_job&.queued? || @harvest_job&.extraction_job&.running? %>
     <div class="float-end">
-      <% cancel_path = cancel_content_source_harvest_definition_harvest_job_path(@content_source, @harvest_definition, @harvest_job) %>
+      <% cancel_path = cancel_pipeline_harvest_definition_harvest_job_path(@pipeline, @harvest_definition, @harvest_job) %>
       <%= button_to "Cancel job", cancel_path, class: "btn btn-outline-danger me-1", form_class: 'd-inline me-1' %>
     </div>
   <% end %>
@@ -57,7 +57,7 @@
         <tr>
           <th scope="row"></th>
           <td>
-            <% path = content_source_extraction_definition_extraction_job_path(@content_source, @harvest_job.extraction_definition, @harvest_job.extraction_job) %>
+            <% path = pipeline_harvest_definition_extraction_definition_extraction_job_path(@pipeline, @harvest_definition, @harvest_job.extraction_definition, @harvest_job.extraction_job) %>
             <%= link_to "View Extraction Results", path, class: "btn btn-outline-primary" %>
           </td>
         </tr>
@@ -66,7 +66,7 @@
 
       <tr>
         <th scope="row">Load Destination</th>
-        <td><%= @harvest_job.harvest_definition.destination.url %></td>
+        <td><%= @harvest_job.destination.url %></td>
       </tr>
 
       <tr>

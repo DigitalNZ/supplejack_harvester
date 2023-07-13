@@ -4,7 +4,12 @@
       <div class='col-3'>
         <% definition = job.send("#{type}_definition") %>
         <% next if definition.nil? %>
-        <% path = send("content_source_#{type}_definition_#{type}_job_path", definition.content_source, definition, job) %>
+
+        <% if type == 'harvest' %>
+          <% path = send("pipeline_harvest_definition_#{type}_job_path", pipeline, pipeline.harvest, job) %>
+        <% else %>
+          <% path = send("pipeline_harvest_definition_#{type}_definition_#{type}_job_path", pipeline, pipeline.harvest, pipeline.harvest.extraction_definition, job) %>
+        <% end %>
 
         <%= link_to path, class: 'card mb-3' do %>      
           <div class='card-body'>

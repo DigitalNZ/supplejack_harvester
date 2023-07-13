@@ -1,0 +1,24 @@
+.definition-group {
+  border: 1px dashed $pompeii-ash;
+  border-radius: 5px;
+  padding: 12px 16px 12px 16px;
+  position: relative;
+  margin-left: 0;
+  margin-right: 0;
+
+  @include modifier('spacer') {
+    margin-top: 7rem;
+  }
+
+  @include element('bridge') {
+    position: absolute;
+    width: 0px;
+    height: 112px;
+    top: -112px;
+    border-left: 1px dashed $pompeii-ash;
+    left: 0;
+    right: 0;
+    margin: auto;
+    padding: 0;
+  }
+}

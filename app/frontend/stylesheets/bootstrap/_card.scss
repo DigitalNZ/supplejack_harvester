@@ -1,0 +1,74 @@
+.card {
+  text-decoration: none;
+  color: $antarctic-deep;
+  width: 100%;
+  position: relative;
+
+  @include modifier('create-cta') {
+    background-color: transparent;
+    border: 1px solid $primary;
+    color: $primary;
+
+    .card-body {
+      width: 100%;
+    }
+  }
+
+  @include element('control') {
+    position: absolute;
+    right: .5rem;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    height: 1rem;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    ul {
+      padding: 0;
+    }
+
+    li a {
+      padding: 10px 16px 9px 16px;
+    }
+
+    .dropdown-item:hover, .dropdown-item:focus {
+      color: $white;
+      background-color: $primary;
+    }
+
+    .dropdown-divider {
+      margin: 0;
+    }
+  }
+  
+  @include modifier('right-arrow') {
+    position: relative;
+    &:after {
+      position: absolute;
+      content: '\F138';
+      right: -1.5rem;
+      top: 0;
+      bottom: 0;
+      width: 1.25rem;
+      height: 1.25rem;
+      margin: auto;
+      font-family: "bootstrap-icons";
+      color: $primary;
+    }
+  }
+}
+
+a.card {
+  &:hover {
+    border-color: $primary;
+  }
+}
+
+form {
+  .card {
+    background: $doctor;
+  }
+}

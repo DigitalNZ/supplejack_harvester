@@ -6,6 +6,7 @@ import {
 
 // entities
 import fields from "/js/features/FieldsSlice";
+import rawRecord from "/js/features/RawRecordSlice";
 import appDetails from "/js/features/AppDetailsSlice";
 
 // ui
@@ -22,6 +23,7 @@ export default function configureAppStore(preloadedState) {
     reducer: combineReducers({
       entities: combineReducers({
         fields,
+        rawRecord,
         appDetails,
       }),
       ui: combineReducers({

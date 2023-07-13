@@ -5,14 +5,14 @@ class HarvestJob < ApplicationRecord
   include Job
 
   belongs_to :harvest_definition
+  belongs_to :destination
   belongs_to :extraction_job, optional: true
   has_many   :transformation_jobs
   has_many   :load_jobs
 
-  delegate :content_source, to: :harvest_definition
+  delegate :pipeline, to: :harvest_definition
   delegate :extraction_definition, to: :harvest_definition
   delegate :transformation_definition, to: :harvest_definition
-  delegate :destination, to: :harvest_definition
 
   after_create do
     self.name = "#{harvest_definition.name}__job-#{id}"

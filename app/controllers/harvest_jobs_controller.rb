@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class HarvestJobsController < ApplicationController
-  before_action :find_content_source
+  before_action :find_pipeline
   before_action :find_harvest_definition
   before_action :find_harvest_job, only: %i[show cancel]
 
@@ -15,10 +15,10 @@ class HarvestJobsController < ApplicationController
       flash.notice = 'Harvest job queued successfuly'
     else
       flash.alert = 'There was an issue launching the harvest job'
-      return redirect_to content_source_harvest_definition_path(@content_source, @harvest_definition)
+      return redirect_to pipeline_jobs_path(@pipeline)
     end
 
-    redirect_to content_source_harvest_definition_harvest_job_path(@content_source, @harvest_definition, @harvest_job)
+    redirect_to pipeline_jobs_path(@pipeline)
   end
 
   def cancel
@@ -29,13 +29,13 @@ class HarvestJobsController < ApplicationController
       flash.alert = 'There was an issue cancelling the harvest job'
     end
 
-    redirect_to content_source_harvest_definition_path(@content_source, @harvest_definition)
+    redirect_to pipeline_jobs_path(@pipeline)
   end
 
   private
 
-  def find_content_source
-    @content_source = ContentSource.find(params[:content_source_id])
+  def find_pipeline
+    @pipeline = Pipeline.find(params[:pipeline_id])
   end
 
   def find_harvest_definition
@@ -47,6 +47,6 @@ class HarvestJobsController < ApplicationController
   end
 
   def harvest_job_params
-    params.require(:harvest_job).permit(:extraction_job_id, :harvest_definition_id)
+    params.require(:harvest_job).permit(:extraction_job_id, :harvest_definition_id, :destination_id)
   end
 end

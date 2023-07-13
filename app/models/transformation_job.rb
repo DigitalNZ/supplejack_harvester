@@ -19,19 +19,19 @@ class TransformationJob < ApplicationRecord
   def records(page = 1)
     return [] if transformation_definition.record_selector.blank? || extraction_job.documents[page].nil?
 
-    if transformation_definition.extraction_job.format == 'HTML'
+    case transformation_definition.extraction_job.format
+    when 'HTML'
       Nokogiri::HTML(extraction_job.documents[page].body)
-        .xpath(transformation_definition.record_selector)
-        .map(&:to_xml)
-    elsif transformation_definition.extraction_job.format == 'XML'
+              .xpath(transformation_definition.record_selector)
+              .map(&:to_xml)
+    when 'XML'
       Nokogiri::XML(extraction_job.documents[page].body)
-        .xpath(transformation_definition.record_selector)
-        .map(&:to_xml)
-    elsif transformation_definition.extraction_job.format == 'JSON'
+              .xpath(transformation_definition.record_selector)
+              .map(&:to_xml)
+    when 'JSON'
       JsonPath.new(transformation_definition.record_selector)
               .on(extraction_job.documents[page].body)
               .flatten
     end
-
   end
 end

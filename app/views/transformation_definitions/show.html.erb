@@ -14,7 +14,7 @@
           <i class="bi bi-rocket" aria-hidden="true"></i> Deploy
         </button>
       <% end %>
-      <%= link_to edit_content_source_transformation_definition_path(@content_source, @transformation_definition), class: 'btn btn-outline-primary' do %>
+      <%= link_to edit_pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition, @transformation_definition), class: 'btn btn-outline-primary' do %>
         <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
       <% end %>
       <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
@@ -27,25 +27,9 @@
   <div class="clearfix"></div>
 <% end %>
 
-<% if @transformation_definition.copy? %>
-  <div class="alert alert-warning" role="alert">
-    This transformation is a safe copy of <%= link_to @transformation_definition.original_transformation_definition.name, content_source_transformation_definition_path(@content_source, @transformation_definition.original_transformation_definition) %> and cannot be edited. If you want to change it, please make your changes to the original.
-  </div>
-<% end %>
-
 <div id="js-transformation-app" data-props="<%= @props %>"></div>
 
 <%# Modals %>
-<%= render layout: 'shared/delete-modal', locals: { path: content_source_transformation_definition_path(@content_source, @transformation_definition) } do %>
+<%= render layout: 'shared/delete-modal', locals: { path: pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition, @transformation_definition) } do %>
   Are you sure you want to delete "<%= @transformation_definition.name %>"?
-<% end %>
-
-<% path = update_harvest_definitions_content_source_transformation_definition_path(@content_source, @transformation_definition) %>
-<%= render layout: 'shared/update-harvest-definition-modal', locals: { path: path } do %>
-  This transformation is used by these <%= @transformation_definition.kind %>s:
-  <ul>
-    <% @related_harvest_definitions.each do |harvest_definition| %>
-      <li><%= harvest_definition.name %></li>
-    <% end %>
-  </ul>
 <% end %>

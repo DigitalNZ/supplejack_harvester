@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class TransformationDefinition < ApplicationRecord
-  belongs_to :content_source
   belongs_to :extraction_job # used for previewing, needs to be refactored
+  belongs_to :pipeline
+
   has_many :fields
 
   scope :originals, -> { where(original_transformation_definition: nil) }
@@ -13,7 +14,7 @@ class TransformationDefinition < ApplicationRecord
   validate :cannot_be_a_copy_of_self
 
   after_create do
-    self.name = "#{content_source.name.parameterize}__#{kind}-transformation-#{id}"
+    self.name = "#{pipeline.name.parameterize}__#{kind}-transformation-#{id}"
     save!
   end
 
@@ -61,5 +62,12 @@ class TransformationDefinition < ApplicationRecord
     if original_transformation_definition == self
       errors.add(:copy, 'Transformation Definition cannot be a copy of itself')
     end
+  end
+
+  def to_h
+    {
+      id: id,
+      name: name
+    }
   end
 end

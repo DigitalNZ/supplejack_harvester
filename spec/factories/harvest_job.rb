@@ -9,7 +9,7 @@ FactoryBot.define do
       status { 'completed' }
 
       after(:create) do |harvest_job|
-        transformation_definition = create(:transformation_definition, content_source: harvest_job.content_source)
+        transformation_definition = create(:transformation_definition, pipeline: harvest_job.pipeline)
 
         harvest_job.extraction_job = create(:extraction_job, status: 'completed', start_time: 2.hours.ago,
                                                              end_time: 1.hour.ago)

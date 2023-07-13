@@ -1,0 +1,30 @@
+<div class="<%= class_names('card', 'card--right-arrow': position == 'first') %>">
+  <div class='card-body'>
+    <h5 class="card-title"><%= definition.name %></h5>
+
+    <% if reference?(pipeline, definition) %>
+      <span class="badge text-bg-light">Reference</span>
+    <% end %>
+
+    <div class="btn-group card__control">
+        <i class="bi bi-three-dots-vertical" data-bs-toggle='dropdown'></i>
+        <ul class="dropdown-menu dropdown-menu-end">
+        <% if reference?(pipeline, definition) %>
+          <li>
+            <%= link_to edit_path, class: 'dropdown-item' do %>
+              <i class="bi bi-link-45deg me-2"></i>Go to reference source
+            <% end %>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+        <% else %>
+          <li>
+            <%= link_to edit_path, class: 'dropdown-item' do %>
+              <i class="bi bi-link-45deg me-2"></i><%= edit_text %>
+            <% end %>  
+          </li>
+        <% end %>
+        <li><a class="dropdown-item" href="#"><i class="bi bi-trash me-2"></i>Remove definition</a></li>
+        </ul>
+    </div>
+  </div>
+</div>

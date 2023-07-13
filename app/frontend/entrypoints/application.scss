@@ -8,25 +8,32 @@
 @import "~bootstrap/scss/bootstrap";
 @import "~bootstrap-icons/font/bootstrap-icons.min";
 
+// Mixins
+
+@import "../stylesheets/mixins/bem";
+
 // Bootstrap overrides
 @import "../stylesheets/bootstrap/breadcrumb";
 @import "../stylesheets/bootstrap/form";
 @import "../stylesheets/bootstrap/navbar";
 @import "../stylesheets/bootstrap/root";
 @import "../stylesheets/bootstrap/typography";
+@import "../stylesheets/bootstrap/card";
 
-// Mixins
+// Library overrides
 
-@import "../stylesheets/mixins/bem";
+@import "../stylesheets/autocomplete/autocomplete";
+
 
 // Blocks
 
-@import "../stylesheets/blocks/card";
 @import "../stylesheets/blocks/field-nav";
 @import "../stylesheets/blocks/field-nav-panel";
 @import "../stylesheets/blocks/form-in-dropdown";
 @import "../stylesheets/blocks/header";
+@import "../stylesheets/blocks/jump-to";
 @import "../stylesheets/blocks/record-view";
+@import "../stylesheets/blocks/definition-group";
 
 
 @import "../stylesheets/base";

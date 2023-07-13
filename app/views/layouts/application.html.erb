@@ -3,13 +3,15 @@
   <head>
     <title><%= content_for?(:title) ? "#{yield(:title)} | " : '' %>Harvester</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.min.css">
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= vite_client_tag %>
+
     <%= vite_javascript_tag 'application' %>
     <%= vite_stylesheet_tag 'application.scss' %>
-
   </head>
 
   <body>

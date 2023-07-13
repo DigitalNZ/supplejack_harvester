@@ -36,6 +36,8 @@ module Extraction
     end
 
     def headers
+      return super if @extraction_definition.headers.blank?
+
       super
         .merge(
           @extraction_definition.headers.map(&:to_h).reduce(&:merge)

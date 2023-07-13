@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ExtractionDefinitionsController < ApplicationController
-  before_action :find_content_source
+  before_action :find_pipeline
+  before_action :find_harvest_definition
   before_action :find_extraction_definition, only: %i[show edit update destroy update_harvest_definitions]
   before_action :find_destinations, only: %i[new create edit update]
 
@@ -23,7 +24,13 @@ class ExtractionDefinitionsController < ApplicationController
     @extraction_definition = ExtractionDefinition.new(extraction_definition_params)
 
     if @extraction_definition.save
-      redirect_to content_source_path(@content_source), notice: 'Extraction Definition created successfully'
+      if params[:harvest_definition_id].present?
+        HarvestDefinition.find(params[:harvest_definition_id]).update(
+          extraction_definition_id: @extraction_definition.id
+        )
+      end
+
+      redirect_to pipeline_path(@pipeline), notice: 'Extraction Definition created successfully'
     else
       flash.alert = 'There was an issue creating your Extraction Definition'
       render :new
@@ -33,7 +40,7 @@ class ExtractionDefinitionsController < ApplicationController
   def update
     if @extraction_definition.update(extraction_definition_params)
       flash.notice = 'Extraction Definition updated successfully'
-      redirect_to content_source_extraction_definition_path(@content_source, @extraction_definition)
+      redirect_to pipeline_path(@pipeline)
     else
       flash.alert = 'There was an issue updating your Extraction Definition'
       render 'edit'
@@ -47,14 +54,16 @@ class ExtractionDefinitionsController < ApplicationController
     end
 
     flash.notice = 'Harvest definitions updated.'
-    redirect_to content_source_extraction_definition_path(@content_source, @extraction_definition)
+    redirect_to pipeline_extraction_definition_path(@pipeline, @extraction_definition)
   end
 
   def test
     @extraction_definition = ExtractionDefinition.new(extraction_definition_params.except('headers_attributes'))
 
-    extraction_definition_params['headers_attributes'].each do |key, header_attributes|
-      @extraction_definition.headers << Header.new(header_attributes)
+    unless extraction_definition_params['headers_attributes'].nil?
+      extraction_definition_params['headers_attributes'].each do |key, header_attributes|
+        @extraction_definition.headers << Header.new(header_attributes)
+      end
     end
 
     render json: Extraction::DocumentExtraction.new(@extraction_definition).extract
@@ -77,17 +86,21 @@ class ExtractionDefinitionsController < ApplicationController
 
   def destroy
     if @extraction_definition.destroy
-      redirect_to content_source_path(@content_source), notice: 'Extraction Definition deleted successfully'
+      redirect_to pipeline_path(@pipeline), notice: 'Extraction Definition deleted successfully'
     else
       flash.alert = 'There was an issue deleting your Extraction Definition'
-      redirect_to content_source_extraction_definition_path(@content_source, @extraction_definition)
+      redirect_to pipeline_extraction_definition_path(@pipeline, @extraction_definition)
     end
   end
 
   private
 
-  def find_content_source
-    @content_source = ContentSource.find(params[:content_source_id])
+  def find_pipeline
+    @pipeline = Pipeline.find(params[:pipeline_id])
+  end
+
+  def find_harvest_definition
+    @harvest_definition = HarvestDefinition.find(params[:harvest_definition_id])
   end
 
   def find_extraction_definition
@@ -100,7 +113,7 @@ class ExtractionDefinitionsController < ApplicationController
 
   def extraction_definition_params
     params.require(:extraction_definition).permit(
-      :content_source_id,
+      :pipeline_id,
       :name, :format, :base_url, :throttle, :pagination_type,
       :page_parameter, :per_page_parameter, :page, :per_page,
       :total_selector,

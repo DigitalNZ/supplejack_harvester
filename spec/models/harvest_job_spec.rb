@@ -3,9 +3,9 @@
 require 'rails_helper'
 
 RSpec.describe HarvestJob, type: :model do
-  let(:content_source)    { create(:content_source, name: 'National Library of New Zealand') }
-  let(:harvest_definition) { create(:harvest_definition, content_source:) }
-  let(:harvest_job) { create(:harvest_job, :completed, harvest_definition:) }
+  let(:pipeline)           { create(:pipeline, name: 'NLNZCat') }
+  let(:harvest_definition) { create(:harvest_definition, pipeline:) }
+  let(:harvest_job)        { create(:harvest_job, :completed, harvest_definition:) }
 
   describe '#duration_seconds' do
     it 'returns nil if extraction_job is nil' do
@@ -64,5 +64,9 @@ RSpec.describe HarvestJob, type: :model do
     it 'automatically generates a sensible name' do
       expect(harvest_job.name).to eq "#{harvest_job.harvest_definition.name}__job-#{harvest_job.id}"
     end
+  end
+
+  describe 'associations' do
+    it { is_expected.to belong_to(:destination) }
   end
 end

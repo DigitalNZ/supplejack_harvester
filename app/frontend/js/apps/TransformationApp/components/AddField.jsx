@@ -13,7 +13,8 @@ const AddField = () => {
       addField({
         name: "",
         block: "",
-        contentSourceId: appDetails.contentSource.id,
+        harvestDefinitionId: appDetails.harvestDefinition.id,
+        pipelineId: appDetails.pipeline.id,
         transformationDefinitionId: appDetails.transformationDefinition.id,
       })
     );

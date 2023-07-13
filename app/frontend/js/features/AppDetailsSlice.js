@@ -4,12 +4,12 @@ import { request } from "~/js/utils/request";
 export const clickedOnRunFields = createAsyncThunk(
   "appDetails/clickedOnRunFieldsStatus",
   async (payload) => {
-    const { contentSourceId, transformationDefinitionId, fields, record, format } =
+    const { pipelineId, harvestDefinitionId, transformationDefinitionId, fields, record, format } =
       payload;
 
     const response = request
       .post(
-        `/content_sources/${contentSourceId}/transformation_definitions/${transformationDefinitionId}/fields/run`,
+        `/pipelines/${pipelineId}/harvest_definitions/${harvestDefinitionId}/transformation_definitions/${transformationDefinitionId}/fields/run`,
         {  
           format: format,
           record: record,
