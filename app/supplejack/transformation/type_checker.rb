@@ -13,6 +13,8 @@ module Transformation
       return true if @value.empty?
 
       @value.none? do |key, value|
+        return true unless valid_hash_value?(key, value)
+
         !allowed_raw_type?(key) || !allowed_raw_type?(value)
       end
     end
@@ -21,6 +23,14 @@ module Transformation
       return nil if @faulty_variable.nil?
 
       "Field contains a wrong type: #{@faulty_variable.class}. The field returned: #{@value.inspect}"
+    end
+
+    def valid_hash_value?(key, value)
+      return true if !key.instance_of?(Hash) || !value.nil?
+
+      key.none? do |k, v|
+        !allowed_raw_type?(k) || allowed_raw_type?(v)
+      end
     end
 
     def allowed_raw_type?(value)
