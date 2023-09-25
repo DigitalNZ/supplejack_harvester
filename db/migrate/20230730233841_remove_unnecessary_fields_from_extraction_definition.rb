@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RemoveUnnecessaryFieldsFromExtractionDefinition < ActiveRecord::Migration[7.0]
   def change
     remove_column :extraction_definitions, :page_parameter

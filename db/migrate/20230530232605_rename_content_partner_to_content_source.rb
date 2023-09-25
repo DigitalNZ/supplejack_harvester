@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RenameContentPartnerToContentSource < ActiveRecord::Migration[7.0]
   def change
     rename_table :content_partners, :content_sources
