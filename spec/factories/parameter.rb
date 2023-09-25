@@ -5,6 +5,6 @@ FactoryBot.define do
     name  { 'key' }
     content { 'ab.cd.ef.gh' }
 
-    association :request
+    request
   end
 end

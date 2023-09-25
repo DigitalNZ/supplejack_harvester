@@ -26,7 +26,7 @@ RSpec.describe Extraction::Documents do
     end
 
     it 'sets the limit_value to nil' do
-      expect(subject.limit_value).to eq nil
+      expect(subject.limit_value).to be_nil
     end
   end
 
@@ -42,9 +42,9 @@ RSpec.describe Extraction::Documents do
     end
 
     it 'returns nil when index is out of bounds' do
-      expect(subject[10]).to eq nil
-      expect(subject[0]).to eq nil
-      expect(subject[-1]).to eq nil
+      expect(subject[10]).to be_nil
+      expect(subject[0]).to be_nil
+      expect(subject[-1]).to be_nil
     end
   end
 

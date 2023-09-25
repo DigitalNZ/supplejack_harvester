@@ -83,7 +83,8 @@ RSpec.describe Extraction::DocumentExtraction do
       it 'evaluates provided ruby code as parameters based on a response' do
         previous_extraction = subject.extract
 
-        create(:parameter, kind: 'query', name: 'page', content: 'JSON.parse(response)[\'page_nr\'] + 1', request:, content_type: 1)
+        create(:parameter, kind: 'query', name: 'page', content: 'JSON.parse(response)[\'page_nr\'] + 1', request:,
+                           content_type: 1)
 
         expect(Extraction::Request).to receive(:new).with(
           url: request.url,
@@ -109,7 +110,7 @@ RSpec.describe Extraction::DocumentExtraction do
         subject.extract
         subject.save
 
-        expect(File.exist?(subject.send(:file_path))).to eq true
+        expect(File.exist?(subject.send(:file_path))).to be true
       end
     end
 

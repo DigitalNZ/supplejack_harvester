@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Field, type: :model do
+RSpec.describe Field do
   let(:pipeline) { create(:pipeline, :figshare) }
   let(:extraction_definition) { pipeline.harvest.extraction_definition }
   let(:extraction_job) { create(:extraction_job, extraction_definition:) }
@@ -29,15 +29,15 @@ RSpec.describe Field, type: :model do
     let(:delete_field) { create(:field, kind: 2, transformation_definition:) }
 
     it 'can be a field' do
-      expect(field.field?).to eq true
+      expect(field.field?).to be true
     end
 
     it 'can be a reject_if field' do
-      expect(reject_field.reject_if?).to eq true
+      expect(reject_field.reject_if?).to be true
     end
 
     it 'can be a delete_if field' do
-      expect(delete_field.delete_if?).to eq true
+      expect(delete_field.delete_if?).to be true
     end
   end
 end

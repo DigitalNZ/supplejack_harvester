@@ -3,7 +3,7 @@
 FactoryBot.define do
   factory :pipeline_job do
     key { SecureRandom.hex }
-    harvest_definitions_to_run { }
+    harvest_definitions_to_run { [] }
 
     pipeline
     destination

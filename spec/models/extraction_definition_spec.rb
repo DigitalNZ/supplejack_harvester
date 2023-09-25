@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe ExtractionDefinition, type: :model do
+RSpec.describe ExtractionDefinition do
   subject! { create(:extraction_definition, pipeline: pipeline1) }
 
   let!(:pipeline1) { create(:pipeline, name: 'National Library of New Zealand') }
@@ -106,7 +106,7 @@ RSpec.describe ExtractionDefinition, type: :model do
 
     kinds.each do |key, value|
       it "can be #{key}" do
-        expect(ExtractionDefinition.new(kind: value).kind).to eq(key.to_s)
+        expect(described_class.new(kind: value).kind).to eq(key.to_s)
       end
     end
   end
@@ -121,11 +121,11 @@ RSpec.describe ExtractionDefinition, type: :model do
     let(:standalone)                { create(:extraction_definition, pipeline:) }
 
     it 'returns true if the extraction definition is used in more than one harvest definition' do
-      expect(shared.shared?).to eq true
+      expect(shared.shared?).to be true
     end
 
     it 'returns false if the extraction definition is only used in one harvest definition' do
-      expect(standalone.shared?).to eq false
+      expect(standalone.shared?).to be false
     end
   end
 end

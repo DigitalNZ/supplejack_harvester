@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'HarvestDefinitions', type: :request do
+RSpec.describe 'HarvestDefinitions' do
   let(:user)                      { create(:user) }
   let!(:pipeline)                 { create(:pipeline, :figshare) }
   let(:extraction_definition)     { pipeline.harvest.extraction_definition }
@@ -126,7 +126,7 @@ RSpec.describe 'HarvestDefinitions', type: :request do
 
         harvest_definition.reload
 
-        expect(harvest_definition.source_id).not_to eq nil
+        expect(harvest_definition.source_id).not_to be_nil
       end
     end
   end

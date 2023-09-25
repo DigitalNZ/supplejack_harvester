@@ -3,15 +3,16 @@
 require 'rails_helper'
 
 RSpec.describe Extraction::EnrichmentExtraction do
+  subject { described_class.new(ed, records.first, 1, extraction_job.extraction_folder) }
+
   let(:extraction_job) { create(:extraction_job) }
   let(:destination) { create(:destination) }
   let(:ed) { create(:extraction_definition, :enrichment, destination:, extraction_jobs: [extraction_job]) }
   let(:re) { Extraction::RecordExtraction.new(ed, 1).extract }
-  let(:records) { records = JSON.parse(re.body)['records'] }
-  let(:subject) { described_class.new(ed, records.first, 1, extraction_job.extraction_folder) }
+  let(:records) { JSON.parse(re.body)['records'] }
 
   before do
-    stub_figshare_enrichment_page_1(destination)
+    stub_figshare_enrichment_page1(destination)
   end
 
   describe '#extract' do
@@ -26,7 +27,7 @@ RSpec.describe Extraction::EnrichmentExtraction do
         subject.extract
         subject.save
 
-        expect(File.exist?(subject.send(:file_path))).to eq true
+        expect(File.exist?(subject.send(:file_path))).to be true
       end
     end
 
@@ -55,12 +56,17 @@ RSpec.describe Extraction::EnrichmentExtraction do
 
   describe '#valid?' do
     it 'returns true if the provided enrichment url returns something from the record' do
-      expect(subject.valid?).to eq true
+      expect(subject.valid?).to be true
     end
 
     it 'returns false if the provided enrichment url returns nothing from the record' do
-      ed = create(:extraction_definition, :enrichment, destination:, extraction_jobs: [extraction_job], enrichment_url: 'http://www.google.co.nz/#{record[\'bla\']}')
-      expect(described_class.new(ed, records.first, 1, extraction_job.extraction_folder).valid?).to eq false
+      ed = create(
+        :extraction_definition, :enrichment,
+        destination:,
+        extraction_jobs: [extraction_job],
+        enrichment_url: '"http://www.google.co.nz/#{record["bla"]}"'
+      )
+      expect(described_class.new(ed, records.first, 1, extraction_job.extraction_folder).valid?).to be false
     end
   end
 end

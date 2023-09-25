@@ -21,7 +21,7 @@ RSpec.describe Extraction::Execution do
       it 'saves the full response from the content source to the filesystem' do
         subject.call
 
-        expect(File.exist?(full_job.extraction_folder)).to eq true
+        expect(File.exist?(full_job.extraction_folder)).to be true
         extracted_files = Dir.glob("#{full_job.extraction_folder}/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 5
@@ -34,7 +34,7 @@ RSpec.describe Extraction::Execution do
       it 'saves the first page from the content source to the filesystem' do
         subject.call
 
-        expect(File.exist?(sample_job.extraction_folder)).to eq true
+        expect(File.exist?(sample_job.extraction_folder)).to be true
         extracted_files = Dir.glob("#{sample_job.extraction_folder}/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 1
@@ -68,7 +68,7 @@ RSpec.describe Extraction::Execution do
       it 'does not extract further pages' do
         subject.call
 
-        expect(File.exist?(extraction_job.extraction_folder)).to eq true
+        expect(File.exist?(extraction_job.extraction_folder)).to be true
         extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 2
@@ -83,9 +83,13 @@ RSpec.describe Extraction::Execution do
       let(:pipeline_job)                    { create(:pipeline_job, pipeline:, destination:) }
       let(:harvest_definition)              { create(:harvest_definition, pipeline:) }
       let(:destination)                     { create(:destination) }
-      let!(:harvest_job)                    { create(:harvest_job, extraction_job:, harvest_definition:, pipeline_job:) }
+      let!(:harvest_job)                    do
+        create(:harvest_job, extraction_job:, harvest_definition:, pipeline_job:)
+      end
       let!(:harvest_report)                 { create(:harvest_report, pipeline_job:, harvest_job:) }
-      let!(:sample_harvest_job)             { create(:harvest_job, extraction_job: sample_extraction_job, harvest_definition:, pipeline_job:) }
+      let!(:sample_harvest_job)             do
+        create(:harvest_job, extraction_job: sample_extraction_job, harvest_definition:, pipeline_job:)
+      end
       let!(:sample_harvest_report)          { create(:harvest_report, pipeline_job:, harvest_job: sample_harvest_job) }
       let(:request_one)                     { create(:request, :figshare_initial_request, extraction_definition:) }
       let(:request_two)                     { create(:request, :figshare_main_request, extraction_definition:) }
@@ -116,8 +120,12 @@ RSpec.describe Extraction::Execution do
       end
 
       context 'when it is a harvest for a specific number of pages' do
-        let(:pipeline_job)                    { create(:pipeline_job, page_type: 'set_number', pages: 3, destination:, pipeline:) }
-        let!(:harvest_job)                    { create(:harvest_job, extraction_job:, harvest_definition:, pipeline_job:) }
+        let(:pipeline_job) do
+          create(:pipeline_job, page_type: 'set_number', pages: 3, destination:, pipeline:)
+        end
+        let!(:harvest_job) do
+          create(:harvest_job, extraction_job:, harvest_definition:, pipeline_job:)
+        end
         let(:subject) { described_class.new(extraction_job, extraction_definition) }
 
         it 'enqueues 3 Transformation Workers in Sidekiq' do

@@ -3,7 +3,7 @@
 FactoryBot.define do
   factory :extraction_definition do
     format { 'JSON' }
-    base_url { "#{Faker::Internet.url}" }
+    base_url { Faker::Internet.url.to_s }
     throttle { 0 }
     kind { 0 }
     per_page { 50 }
@@ -29,10 +29,12 @@ FactoryBot.define do
     trait :enrichment do
       kind { 1 }
       source_id { 'test' }
-      enrichment_url { '"https://api.figshare.com/v1/articles/#{record[\'dc_identifier\'].first}"' }
+      # rubocop:disable Lint/InterpolationCheck
+      enrichment_url { '"https://api.figshare.com/v1/articles/#{record["dc_identifier"].first}"' }
+      # rubocop:enable Lint/InterpolationCheck
       throttle { 1000 }
     end
 
-    association :pipeline
+    pipeline
   end
 end

@@ -4,7 +4,7 @@ FactoryBot.define do
   factory :request do
     http_method { 'GET' }
 
-    association :extraction_definition
+    extraction_definition
 
     trait :figshare_initial_request do
       after(:create) do |request|
@@ -56,8 +56,14 @@ FactoryBot.define do
 
   trait :freesound_main_request do
     after(:create) do |request|
-      create(:parameter, name: 'page',
-                         content: 'Nokogiri::HTML.parse(response).at_xpath(\'./html/body/root/next\').content.match(/.+page=(?<page>.+?)&/)[:page]', request:, content_type: 1)
+      create(
+        :parameter,
+        name: 'page',
+        content: 'Nokogiri::HTML.parse(response).at_xpath(\'./html/body/root/next\')' \
+                 '.content.match(/.+page=(?<page>.+?)&/)[:page]',
+        request:,
+        content_type: 1
+      )
       create(:parameter, name: 'page_size', content: '50', request:)
     end
   end

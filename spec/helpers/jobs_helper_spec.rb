@@ -4,38 +4,33 @@ require 'rails_helper'
 
 RSpec.describe JobsHelper do
   describe '#job_status_text' do
-    let(:queued_job)         { create(:extraction_job) }
-    let(:full_running_job)   { create(:extraction_job, status: 'running') }
-    let(:sample_running_job) { create(:extraction_job, kind: 'sample', status: 'running') }
-    let(:errored_job)        { create(:extraction_job, status: 'errored') }
-    let(:cancelled_job)      { create(:extraction_job, status: 'cancelled') }
-    let(:completed_job)      { create(:extraction_job, status: 'completed') }
-
-    let(:destination)        { create(:destination) }
-    let(:pipeline)           { create(:pipeline, name: 'NLNZCat') }
-    let(:harvest_definition) { create(:harvest_definition, pipeline:) }
-
     it 'returns Waiting in queue... for queued jobs' do
+      queued_job = create(:extraction_job)
       expect(job_status_text(queued_job)).to eq 'Waiting in queue...'
     end
 
     it 'returns Running full job... when running a full job if ExtractionJob' do
+      full_running_job = create(:extraction_job, status: 'running')
       expect(job_status_text(full_running_job)).to eq 'Running full job...'
     end
 
     it 'returns Running sample job... when running a sample job' do
+      sample_running_job = create(:extraction_job, kind: 'sample', status: 'running')
       expect(job_status_text(sample_running_job)).to eq 'Running sample job...'
     end
 
     it 'returns An error occured when an error occured' do
+      errored_job = create(:extraction_job, status: 'errored')
       expect(job_status_text(errored_job)).to eq 'An error occured'
     end
 
     it 'returns Cancelled when a job is cancelled' do
+      cancelled_job = create(:extraction_job, status: 'cancelled')
       expect(job_status_text(cancelled_job)).to eq 'Cancelled'
     end
 
     it 'returns Completed when a job is completed' do
+      completed_job = create(:extraction_job, status: 'completed')
       expect(job_status_text(completed_job)).to eq 'Completed'
     end
   end

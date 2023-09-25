@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
-RSpec.describe 'Parameters', type: :request do
+RSpec.describe 'Parameters' do
   let(:user)                       { create(:user) }
   let(:pipeline)                   { create(:pipeline) }
   let(:harvest_definition)         { create(:harvest_definition, extraction_definition:, pipeline:) }
@@ -36,7 +38,7 @@ RSpec.describe 'Parameters', type: :request do
           parameter: parameter.attributes
         }
 
-        parameter = JSON.parse(response.body)
+        parameter = response.parsed_body
 
         expect(parameter['name']).to eq 'key'
         expect(parameter['content']).to eq 'value'
@@ -70,8 +72,8 @@ RSpec.describe 'Parameters', type: :request do
           parameter: { name: 'X-Forwarded-For', content: 'ab.cd.ef.gh' }
         }
 
-        expect(JSON.parse(response.body)['name']).to eq 'X-Forwarded-For'
-        expect(JSON.parse(response.body)['content']).to eq 'ab.cd.ef.gh'
+        expect(response.parsed_body['name']).to eq 'X-Forwarded-For'
+        expect(response.parsed_body['content']).to eq 'ab.cd.ef.gh'
       end
     end
   end
@@ -98,7 +100,7 @@ RSpec.describe 'Parameters', type: :request do
       delete pipeline_harvest_definition_extraction_definition_request_parameter_path(pipeline, harvest_definition,
                                                                                       extraction_definition, request, parameter)
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 end

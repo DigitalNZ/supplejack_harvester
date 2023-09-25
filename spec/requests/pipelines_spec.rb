@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
-RSpec.describe 'Pipelines', type: :request do
+RSpec.describe 'Pipelines' do
   let(:user) { create(:user) }
   let!(:pipeline) { create(:pipeline, name: 'DigitalNZ Production') }
 
@@ -12,7 +14,7 @@ RSpec.describe 'Pipelines', type: :request do
     it 'displays a list of pipelines' do
       get pipelines_path
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
       expect(response.body).to include CGI.escapeHTML(pipeline.name)
     end
   end
@@ -74,7 +76,7 @@ RSpec.describe 'Pipelines', type: :request do
     it 'renders a specific pipeline' do
       get pipeline_path(pipeline)
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
       expect(response.body).to include pipeline.name
     end
   end
@@ -83,7 +85,7 @@ RSpec.describe 'Pipelines', type: :request do
     it 'renders the edit page successfully' do
       get edit_pipeline_path(pipeline)
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
       expect(response.body).to include pipeline.name
     end
   end
@@ -128,7 +130,7 @@ RSpec.describe 'Pipelines', type: :request do
 
         pipeline.reload
 
-        expect(pipeline.name).not_to eq nil
+        expect(pipeline.name).not_to be_nil
       end
 
       it 're renders the form' do

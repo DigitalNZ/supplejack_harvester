@@ -62,11 +62,11 @@ RSpec.describe Transformation::TypeChecker do
       end
 
       it 'array of Hash with symbol => Integer' do
-        expect(described_class.new([{a: 1}]).valid?).to be true
+        expect(described_class.new([{ a: 1 }]).valid?).to be true
       end
 
       it 'array of Hash with String => Integer' do
-        expect(described_class.new([{'a' => 1}]).valid?).to be true
+        expect(described_class.new([{ 'a' => 1 }]).valid?).to be true
       end
 
       it 'Hash of String => TrueClass' do
@@ -104,7 +104,7 @@ RSpec.describe Transformation::TypeChecker do
       end
 
       it 'Array of Hash with String => Array' do
-        expect(described_class.new([{'a' => []}]).valid?).to be false
+        expect(described_class.new([{ 'a' => [] }]).valid?).to be false
       end
 
       it 'Object in Hash key' do

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'ExtractionJobs', type: :request do
+RSpec.describe 'ExtractionJobs' do
   subject!                    { create(:extraction_job, extraction_definition:) }
 
   let(:user)                  { create(:user) }

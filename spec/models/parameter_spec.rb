@@ -2,11 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Parameter, type: :model do
-  describe 'validations' do
-    subject { build(:parameter) }
-  end
-
+RSpec.describe Parameter do
   describe 'associations' do
     it { is_expected.to belong_to(:request) }
   end
@@ -17,33 +13,33 @@ RSpec.describe Parameter, type: :model do
     let(:slug)   { create(:parameter, kind: 2) }
 
     it 'can be a query parameter' do
-      expect(query.query?).to eq true
+      expect(query.query?).to be true
     end
 
     it 'can be a header parameter' do
-      expect(header.header?).to eq true
+      expect(header.header?).to be true
     end
 
     it 'can be a slug parameter' do
-      expect(slug.slug?).to eq true
+      expect(slug.slug?).to be true
     end
   end
 
-  describe "#content_type" do
+  describe '#content_type' do
     let(:static)       { create(:parameter, content_type: 0) }
     let(:dynamic)      { create(:parameter, content_type: 1) }
     let(:incremental)  { create(:parameter, content_type: 2) }
 
     it 'can be static' do
-      expect(static.static?).to eq true
+      expect(static.static?).to be true
     end
 
     it 'can be dynamic' do
-      expect(dynamic.dynamic?).to eq true
+      expect(dynamic.dynamic?).to be true
     end
 
     it 'can be incremental' do
-      expect(incremental.incremental?).to eq true
+      expect(incremental.incremental?).to be true
     end
   end
 
@@ -60,7 +56,7 @@ RSpec.describe Parameter, type: :model do
     end
 
     it 'returns nothing for a slug parameter' do
-      expect(slug.to_h).to eq nil
+      expect(slug.to_h).to be_nil
     end
   end
 
@@ -69,12 +65,13 @@ RSpec.describe Parameter, type: :model do
     let(:dynamic)     { create(:parameter, kind: 'query', name: 'itemsPerPage', content: '1 + 1', content_type: 1) }
     let(:incremental) { create(:parameter, kind: 'query', name: 'itemsPerPage', content: '12', content_type: 2) }
     let(:dynamic_response) do
-      create(:parameter, kind: 'query', name: 'itemsPerPage', content: 'JSON.parse(response)["items_found"] + 10', content_type: 1)
+      create(:parameter, kind: 'query', name: 'itemsPerPage', content: 'JSON.parse(response)["items_found"] + 10',
+                         content_type: 1)
     end
     let(:extraction_definition)         { create(:extraction_definition, :figshare) }
     let(:request)                       { create(:request, :figshare_initial_request, extraction_definition:) }
     let(:response)                      { Extraction::DocumentExtraction.new(request).extract }
-    
+
     before do
       stub_figshare_harvest_requests(request)
     end
@@ -92,7 +89,7 @@ RSpec.describe Parameter, type: :model do
     end
 
     it 'returns the incremented parameter if it is incremental' do
-      expect(incremental.evaluate(response).content).to eq "22"
+      expect(incremental.evaluate(response).content).to eq '22'
     end
   end
 end

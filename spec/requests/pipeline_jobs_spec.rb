@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
-RSpec.describe 'PipelineJobs', type: :request do
+RSpec.describe 'PipelineJobs' do
   let(:user)         { create(:user) }
   let(:pipeline)     { create(:pipeline) }
   let(:destination)  { create(:destination) }
@@ -14,7 +16,7 @@ RSpec.describe 'PipelineJobs', type: :request do
     it 'displays a list of pipeline jobs' do
       get pipeline_pipeline_jobs_path(pipeline)
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 
@@ -30,10 +32,10 @@ RSpec.describe 'PipelineJobs', type: :request do
           }
         end.to change(PipelineJob, :count).by(1)
       end
-  
+
       it 'queues a PipelineWorker' do
         expect(PipelineWorker).to receive(:perform_async)
-  
+
         post pipeline_pipeline_jobs_path(pipeline), params: {
           pipeline_job: {
             destination_id: destination.id,
@@ -41,7 +43,7 @@ RSpec.describe 'PipelineJobs', type: :request do
           }
         }
       end
-  
+
       it 'redirects to the Pipeline Jobs table' do
         post pipeline_pipeline_jobs_path(pipeline), params: {
           pipeline_job: {
@@ -49,7 +51,7 @@ RSpec.describe 'PipelineJobs', type: :request do
             pipeline_id: pipeline.id
           }
         }
-  
+
         expect(response).to redirect_to(pipeline_pipeline_jobs_path(pipeline))
       end
 
@@ -74,26 +76,26 @@ RSpec.describe 'PipelineJobs', type: :request do
               destination_id: nil
             }
           }
-        end.to change(PipelineJob, :count).by(0)
+        end.not_to change(PipelineJob, :count)
       end
-      
+
       it 'does not queue a PipelineWorker' do
         expect(PipelineWorker).not_to receive(:perform_async)
-  
+
         post pipeline_pipeline_jobs_path(pipeline), params: {
           pipeline_job: {
             destination_id: nil
           }
         }
       end
-  
+
       it 'redirects to the Pipeline Jobs table' do
         post pipeline_pipeline_jobs_path(pipeline), params: {
           pipeline_job: {
             destination_id: nil
           }
         }
-  
+
         expect(response).to redirect_to(pipeline_pipeline_jobs_path(pipeline))
       end
 
@@ -117,17 +119,17 @@ RSpec.describe 'PipelineJobs', type: :request do
 
     context 'when the cancellation is successful' do
       it 'cancels the pipeline and harvest extraction_jobs' do
-        expect(pipeline_job.cancelled?).to eq false
-        expect(harvest_job.cancelled?).to eq false
+        expect(pipeline_job.cancelled?).to be false
+        expect(harvest_job.cancelled?).to be false
 
         post cancel_pipeline_pipeline_job_path(pipeline, pipeline_job)
 
         pipeline_job.reload
         harvest_job.reload
 
-        expect(pipeline_job.cancelled?).to eq true
-        expect(harvest_job.cancelled?).to eq true
-        expect(harvest_job.extraction_job.cancelled?).to eq true
+        expect(pipeline_job.cancelled?).to be true
+        expect(harvest_job.cancelled?).to be true
+        expect(harvest_job.extraction_job.cancelled?).to be true
       end
 
       it 'displays an appropriate message' do
@@ -139,7 +141,7 @@ RSpec.describe 'PipelineJobs', type: :request do
 
       it 'redirects to the pipeline jobs table' do
         post cancel_pipeline_pipeline_job_path(pipeline, pipeline_job)
-        
+
         expect(response).to redirect_to pipeline_pipeline_jobs_path(pipeline)
       end
     end
@@ -150,17 +152,17 @@ RSpec.describe 'PipelineJobs', type: :request do
       end
 
       it 'does not cancel the harvest extraction jobs' do
-        expect(pipeline_job.cancelled?).to eq false
-        expect(harvest_job.cancelled?).to eq false
+        expect(pipeline_job.cancelled?).to be false
+        expect(harvest_job.cancelled?).to be false
 
         post cancel_pipeline_pipeline_job_path(pipeline, pipeline_job)
 
         pipeline_job.reload
         harvest_job.reload
 
-        expect(pipeline_job.cancelled?).to eq false
-        expect(harvest_job.cancelled?).to eq false
-        expect(harvest_job.extraction_job.cancelled?).to eq false
+        expect(pipeline_job.cancelled?).to be false
+        expect(harvest_job.cancelled?).to be false
+        expect(harvest_job.extraction_job.cancelled?).to be false
       end
 
       it 'displays an appropriate message' do
@@ -172,7 +174,7 @@ RSpec.describe 'PipelineJobs', type: :request do
 
       it 'redirects to the pipeline jobs table' do
         post cancel_pipeline_pipeline_job_path(pipeline, pipeline_job)
-        
+
         expect(response).to redirect_to pipeline_pipeline_jobs_path(pipeline)
       end
     end

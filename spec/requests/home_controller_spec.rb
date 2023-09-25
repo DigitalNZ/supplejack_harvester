@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Home', type: :request do
+RSpec.describe 'Home' do
   let(:user) { create(:user) }
 
   before do

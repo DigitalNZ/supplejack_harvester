@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe PipelinesHelper, type: :helper do
+RSpec.describe PipelinesHelper do
   let(:pipeline) { create(:pipeline) }
 
   describe '#definition_help_text' do
@@ -16,58 +16,60 @@ RSpec.describe PipelinesHelper, type: :helper do
       end
     end
 
-    context 'when the harvest_definition has no transformation_definition' do
-      context 'when the harvest_definition has a completed extraction job' do
-        let(:harvest_definition) { create(:harvest_definition, pipeline:, transformation_definition: nil) }
-        let!(:extraction_job) do
-          create(:extraction_job, extraction_definition: harvest_definition.extraction_definition, status: 'completed')
-        end
+    context 'when the harvest_definition has no transformation_definition and a completed extraction job' do
+      let(:harvest_definition) { create(:harvest_definition, pipeline:, transformation_definition: nil) }
 
-        it 'returns a helpful message' do
-          expect(definition_help_text(harvest_definition,
-                                      'harvest')).to eq 'Extraction sample is complete, please add your harvest transformation'
-        end
+      before do
+        create(:extraction_job, extraction_definition: harvest_definition.extraction_definition, status: 'completed')
       end
 
-      context 'when the harvest_definition does not have a completed extraction job' do
-        let(:harvest_definition) { create(:harvest_definition, pipeline:, transformation_definition: nil) }
-        let!(:extraction_job) do
-          create(:extraction_job, extraction_definition: harvest_definition.extraction_definition, status: 'running')
-        end
-
-        it 'returns a helpful message' do
-          expect(definition_help_text(harvest_definition,
-                                      'harvest')).to eq 'Extraction sample is not ready, please refresh the page to see when it is completed'
-        end
+      it 'returns a helpful message' do
+        help_text = definition_help_text(harvest_definition, 'harvest')
+        expect(help_text).to eq 'Extraction sample is complete, please add your harvest transformation'
       end
     end
 
-    context 'when the harvest_definition has a transformation definition' do
-      context 'when the transformation definition doesnt have any fields' do
-        let(:harvest_definition) { create(:harvest_definition, pipeline:) }
-        let!(:extraction_job) do
-          create(:extraction_job, extraction_definition: harvest_definition.extraction_definition, status: 'completed')
-        end
+    context 'when the harvest_definition does not have a transformation job an incompleted extraction job' do
+      let(:harvest_definition) { create(:harvest_definition, pipeline:, transformation_definition: nil) }
 
-        it 'returns a helpful message' do
-          expect(definition_help_text(harvest_definition,
-                                      'harvest')).to eq 'Please add fields to your transformation definition'
-        end
+      before do
+        create(:extraction_job, extraction_definition: harvest_definition.extraction_definition, status: 'running')
       end
 
-      context 'when the transformation definition has fields' do
-        let(:harvest_definition) { create(:harvest_definition, pipeline:) }
-        let!(:extraction_job) do
-          create(:extraction_job, extraction_definition: harvest_definition.extraction_definition, status: 'completed')
-        end
-        let!(:field) do
-          create(:field, name: 'title', block: "JsonPath.new('title').on(record).first",
-                         transformation_definition: harvest_definition.transformation_definition)
-        end
+      it 'returns a helpful message' do
+        help_text = definition_help_text(harvest_definition, 'harvest')
+        expect(help_text).to eq 'Extraction sample is not ready, please refresh the page to see when it is completed'
+      end
+    end
 
-        it 'returns a helpful message' do
-          expect(definition_help_text(harvest_definition, 'harvest')).to eq 'Your harvest is ready to run'
-        end
+    context 'when the harvest_definition has a transformation definition with no fields in it' do
+      let(:harvest_definition) { create(:harvest_definition, pipeline:) }
+
+      before do
+        create(:extraction_job, extraction_definition: harvest_definition.extraction_definition, status: 'completed')
+      end
+
+      it 'returns a helpful message' do
+        expect(definition_help_text(harvest_definition,
+                                    'harvest')).to eq 'Please add fields to your transformation definition'
+      end
+    end
+
+    context 'when the harvest_definition has a transformation definition with fields in it' do
+      let(:harvest_definition) { create(:harvest_definition, pipeline:) }
+
+      before do
+        create(:extraction_job, extraction_definition: harvest_definition.extraction_definition, status: 'completed')
+        create(
+          :field,
+          name: 'title',
+          block: "JsonPath.new('title').on(record).first",
+          transformation_definition: harvest_definition.transformation_definition
+        )
+      end
+
+      it 'returns a helpful message' do
+        expect(definition_help_text(harvest_definition, 'harvest')).to eq 'Your harvest is ready to run'
       end
     end
   end

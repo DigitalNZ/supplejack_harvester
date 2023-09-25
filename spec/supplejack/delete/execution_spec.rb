@@ -13,7 +13,7 @@ RSpec.describe Delete::Execution do
 
   let(:pipeline)           { create(:pipeline, name: 'test') }
   let(:destination)        { create(:destination) }
-  let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:)}
+  let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
   let(:harvest_definition) { create(:harvest_definition, pipeline:, kind: 'harvest') }
   let(:harvest_job)        { create(:harvest_job, harvest_definition:, pipeline_job:) }
 
@@ -34,7 +34,7 @@ RSpec.describe Delete::Execution do
 
   describe '#call' do
     it 'sends the internal identifier to the API to be deleted' do
-      expect(Delete::Execution.new(record, destination).call.status).to eq 200
+      expect(described_class.new(record, destination).call.status).to eq 200
     end
   end
 end

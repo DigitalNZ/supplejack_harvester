@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Destination, type: :model do
+RSpec.describe Destination do
   describe 'validations' do
     subject { build(:destination) }
 

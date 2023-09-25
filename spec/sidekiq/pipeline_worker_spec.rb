@@ -7,8 +7,13 @@ RSpec.describe PipelineWorker, type: :job do
   let(:pipeline)               { create(:pipeline, :figshare) }
   let(:harvest_definition)     { pipeline.harvest }
   let(:enrichment_definitions) { create_list(:harvest_definition, 2, kind: 'enrichment', pipeline:) }
-  let(:harvest_and_enrichment_pipeline_job)   { create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id, enrichment_definitions.map(&:id)].flatten) }
-  let(:enrichment_only_pipeline_job)          { create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: enrichment_definitions.map(&:id)) }
+  let(:harvest_and_enrichment_pipeline_job) do
+    create(:pipeline_job, pipeline:, destination:,
+                          harvest_definitions_to_run: [harvest_definition.id, enrichment_definitions.map(&:id)].flatten)
+  end
+  let(:enrichment_only_pipeline_job) do
+    create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: enrichment_definitions.map(&:id))
+  end
 
   describe '#perform' do
     context 'when the harvest definitions to run includes a harvest' do

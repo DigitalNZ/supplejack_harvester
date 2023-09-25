@@ -10,15 +10,15 @@ RSpec.describe Extraction::EnrichmentExecution do
 
   describe '#call' do
     before do
-      stub_figshare_enrichment_page_1(destination)
-      stub_figshare_enrichment_page_2(destination)
+      stub_figshare_enrichment_page1(destination)
+      stub_figshare_enrichment_page2(destination)
     end
 
     context 'when the job is sample' do
       it 'saves the enrichment for the first 20 records to the filesystem' do
         described_class.new(sample_job).call
 
-        expect(File.exist?(sample_job.extraction_folder)).to eq true
+        expect(File.exist?(sample_job.extraction_folder)).to be true
         extracted_files = Dir.glob("#{sample_job.extraction_folder}/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 20
@@ -33,7 +33,7 @@ RSpec.describe Extraction::EnrichmentExecution do
       it 'saves the enrichment for all the pages to the filesystem' do
         described_class.new(full_job).call
 
-        expect(File.exist?(full_job.extraction_folder)).to eq true
+        expect(File.exist?(full_job.extraction_folder)).to be true
         extracted_files = Dir.glob("#{full_job.extraction_folder}/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 40
@@ -65,7 +65,7 @@ RSpec.describe Extraction::EnrichmentExecution do
       it 'does not extract further pages' do
         described_class.new(job).call
 
-        expect(File.exist?(job.extraction_folder)).to eq true
+        expect(File.exist?(job.extraction_folder)).to be true
         extracted_files = Dir.glob("#{job.extraction_folder}/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 1
@@ -74,7 +74,7 @@ RSpec.describe Extraction::EnrichmentExecution do
 
     context 'when the document has failed to be extracted' do
       before do
-        stub_failed_figshare_enrichment_page_1(destination)
+        stub_failed_figshare_enrichment_page1(destination)
       end
 
       let(:subject) { described_class.new(sample_job) }

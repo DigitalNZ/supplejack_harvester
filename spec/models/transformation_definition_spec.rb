@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe TransformationDefinition, type: :model do
+RSpec.describe TransformationDefinition do
   let(:pipeline)              { create(:pipeline, :figshare, name: 'National Library of New Zealand') }
   let(:extraction_definition) { pipeline.harvest.extraction_definition }
   let(:extraction_job)        { create(:extraction_job, extraction_definition:) }
@@ -72,11 +72,11 @@ RSpec.describe TransformationDefinition, type: :model do
     let(:standalone) { create(:transformation_definition, pipeline:) }
 
     it 'returns true if the transformation definition is used in more than one harvest definition' do
-      expect(shared.shared?).to eq true
+      expect(shared.shared?).to be true
     end
 
     it 'returns false if the transformation definition is used in only one harvest definition' do
-      expect(standalone.shared?).to eq false
+      expect(standalone.shared?).to be false
     end
   end
 end

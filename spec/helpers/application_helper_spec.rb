@@ -5,11 +5,11 @@ require 'rails_helper'
 RSpec.describe ApplicationHelper do
   describe '#last_edited_by' do
     it 'returns nil if resource is nil' do
-      expect(last_edited_by(nil)).to eq nil
+      expect(last_edited_by(nil)).to be_nil
     end
 
     it 'returns nil if last_edited_by is nil' do
-      expect(last_edited_by(Pipeline.new)).to eq nil
+      expect(last_edited_by(Pipeline.new)).to be_nil
     end
 
     it 'returns a formatted string if last_edited_by has a user' do

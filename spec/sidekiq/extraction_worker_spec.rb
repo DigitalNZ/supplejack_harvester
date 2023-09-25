@@ -7,7 +7,7 @@ RSpec.describe ExtractionWorker, type: :job do
   let(:destination)           { create(:destination) }
   let(:extraction_definition) { pipeline.harvest.extraction_definition }
   let(:extraction_job)        { create(:extraction_job, extraction_definition:, status: 'queued') }
-  let(:subject)               { ExtractionWorker.new }
+  let(:subject)               { described_class.new }
   let(:request)               { create(:request, :figshare_initial_request, extraction_definition:) }
 
   describe 'options' do
@@ -26,10 +26,13 @@ RSpec.describe ExtractionWorker, type: :job do
 
   describe '#perform' do
     before { stub_figshare_harvest_requests(request) }
-    
+
     context 'when the extraction is for an enrichment' do
       let(:destination) { create(:destination) }
-      let(:extraction_definition) { create(:extraction_definition, kind: 'enrichment', destination:, source_id: 'test', enrichment_url: 'http://www.google.co.nz') }
+      let(:extraction_definition) do
+        create(:extraction_definition, kind: 'enrichment', destination:, source_id: 'test',
+                                       enrichment_url: 'http://www.google.co.nz')
+      end
       let(:enrichment_extraction_job) { create(:extraction_job, extraction_definition:, status: 'queued') }
 
       it 'triggers the Enrichment Extraction process' do
@@ -64,31 +67,31 @@ RSpec.describe ExtractionWorker, type: :job do
 
       context 'when the extraction is completed' do
         it 'updates the harvest report that the extraction is completed' do
-          expect(harvest_report.extraction_completed?).to eq false
+          expect(harvest_report.extraction_completed?).to be false
           subject.perform(extraction_job.id, harvest_report.id)
           harvest_report.reload
-          expect(harvest_report.extraction_completed?).to eq true
+          expect(harvest_report.extraction_completed?).to be true
         end
 
         it 'updates the harvest report that the transformation is completed if the transformation workers are completed' do
-          expect(harvest_report.transformation_completed?).to eq false
+          expect(harvest_report.transformation_completed?).to be false
           subject.perform(extraction_job.id, harvest_report.id)
           harvest_report.reload
-          expect(harvest_report.transformation_completed?).to eq true
+          expect(harvest_report.transformation_completed?).to be true
         end
 
         it 'updates the harvest report that the load is completed if the load workers are completed' do
-          expect(harvest_report.load_completed?).to eq false
+          expect(harvest_report.load_completed?).to be false
           subject.perform(extraction_job.id, harvest_report.id)
           harvest_report.reload
-          expect(harvest_report.load_completed?).to eq true
+          expect(harvest_report.load_completed?).to be true
         end
 
         it 'updates the harvest report that the delete is completed if the delete workers are completed' do
-          expect(harvest_report.delete_completed?).to eq false
+          expect(harvest_report.delete_completed?).to be false
           subject.perform(extraction_job.id, harvest_report.id)
           harvest_report.reload
-          expect(harvest_report.delete_completed?).to eq true
+          expect(harvest_report.delete_completed?).to be true
         end
       end
     end

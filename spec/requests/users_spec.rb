@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
-RSpec.describe 'Users', type: :request do
+RSpec.describe 'Users' do
   let(:admin) { create(:user, role: :admin) }
   let(:user) { create(:user) }
 

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Fields', type: :request do
+RSpec.describe 'Fields' do
   let(:user)                       { create(:user) }
   let(:pipeline)                   { create(:pipeline, :figshare) }
   let(:extraction_definition)      { pipeline.harvest.extraction_definition }
@@ -41,7 +41,7 @@ RSpec.describe 'Fields', type: :request do
           field: field.attributes
         }
 
-        field = JSON.parse(response.body)
+        field = response.parsed_body
 
         expect(field['name']).to eq 'title'
         expect(field['block']).to eq "JsonPath.new('title').on(record).first"
@@ -74,7 +74,7 @@ RSpec.describe 'Fields', type: :request do
           field: { name: 'Description' }
         }
 
-        expect(JSON.parse(response.body)['name']).to eq 'Description'
+        expect(response.parsed_body['name']).to eq 'Description'
       end
     end
   end
@@ -101,7 +101,7 @@ RSpec.describe 'Fields', type: :request do
       delete pipeline_harvest_definition_transformation_definition_field_path(pipeline, harvest_definition,
                                                                               transformation_definition, field)
 
-      expect(response.status).to eq(200)
+      expect(response).to have_http_status(:ok)
     end
   end
 
@@ -128,7 +128,7 @@ RSpec.describe 'Fields', type: :request do
           record: 1
         }
 
-        transformed_record = JSON.parse(response.body)['transformation']['transformed_record']
+        transformed_record = response.parsed_body['transformation']['transformed_record']
 
         expect(transformed_record['title']).to eq 'Visual outcomes with femtosecond laser-assisted cataract surgery versus conventional cataract surgery in toric IOL insertion'
         expect(transformed_record['dc_identifier']).to eq 22_947_914
@@ -144,7 +144,7 @@ RSpec.describe 'Fields', type: :request do
           record: 1
         }
 
-        body = JSON.parse(response.body)['transformation']
+        body = response.parsed_body['transformation']
 
         expect(body['rejection_reasons']).to include 'reject_block'
       end
@@ -159,7 +159,7 @@ RSpec.describe 'Fields', type: :request do
           record: 1
         }
 
-        body = JSON.parse(response.body)['transformation']
+        body = response.parsed_body['transformation']
 
         expect(body['deletion_reasons']).to include 'delete_block'
       end

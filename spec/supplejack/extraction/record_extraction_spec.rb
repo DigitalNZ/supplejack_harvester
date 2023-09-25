@@ -22,7 +22,7 @@ RSpec.describe Extraction::RecordExtraction do
               }
             },
             headers: fake_json_headers
-          ).to_return(fake_response('test_api_records'))
+          ).to_return(fake_response('test_api_records_1'))
       end
 
       let(:subject) { described_class.new(extraction_definition, 1) }
@@ -55,7 +55,7 @@ RSpec.describe Extraction::RecordExtraction do
               }
             },
             headers: fake_json_headers
-          ).to_return(fake_response('test_api_records'))
+          ).to_return(fake_response('test_api_records_1'))
       end
 
       it 'returns an extraction document from a particular job from a Supplejack API' do

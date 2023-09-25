@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe ExtractionJob, type: :model do
+RSpec.describe ExtractionJob do
   subject { create(:extraction_job, extraction_definition:) }
 
   let(:pipeline) { create(:pipeline, name: 'National Library of New Zealand') }
@@ -67,25 +67,25 @@ RSpec.describe ExtractionJob, type: :model do
 
   describe '#create_folder' do
     it 'creates a folder at the Extractions Path' do
-      expect(File.exist?(subject.extraction_folder)).to eq true
+      expect(File.exist?(subject.extraction_folder)).to be true
     end
   end
 
   describe '#delete_folder' do
     it 'deletes a folder at the extractions path' do
-      expect(File.exist?(subject.extraction_folder)).to eq true
+      expect(File.exist?(subject.extraction_folder)).to be true
 
       subject.delete_folder
 
-      expect(File.exist?(subject.extraction_folder)).to eq false
+      expect(File.exist?(subject.extraction_folder)).to be false
     end
 
     it 'does nothing if the folder does not exist' do
-      expect(File.exist?(subject.extraction_folder)).to eq true
+      expect(File.exist?(subject.extraction_folder)).to be true
 
       subject.delete_folder
 
-      expect(File.exist?(subject.extraction_folder)).to eq false
+      expect(File.exist?(subject.extraction_folder)).to be false
 
       expect { subject.delete_folder }.not_to raise_error
     end
@@ -146,11 +146,11 @@ RSpec.describe ExtractionJob, type: :model do
     let(:unfinished_ej) { create(:extraction_job, status: 'running') }
 
     it 'returns true if the job has finished' do
-      expect(finished_ej.finished?).to eq true
+      expect(finished_ej.finished?).to be true
     end
 
     it 'returns false if the job has not finished' do
-      expect(unfinished_ej.finished?).to eq false
+      expect(unfinished_ej.finished?).to be false
     end
   end
 
@@ -177,11 +177,11 @@ RSpec.describe ExtractionJob, type: :model do
     let(:unfinished_ej) { create(:extraction_job, status: 'running') }
 
     it 'returns true if the job has finished' do
-      expect(finished_ej.finished?).to eq true
+      expect(finished_ej.finished?).to be true
     end
 
     it 'returns false if the job has not finished' do
-      expect(unfinished_ej.finished?).to eq false
+      expect(unfinished_ej.finished?).to be false
     end
   end
 end

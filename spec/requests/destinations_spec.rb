@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Destinations', type: :request do
+RSpec.describe 'Destinations' do
   let(:user)        { create(:user) }
   let(:destination) { create(:destination) }
 
@@ -14,7 +14,7 @@ RSpec.describe 'Destinations', type: :request do
     it 'displays a list of destinations' do
       get destinations_path
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 
@@ -22,7 +22,7 @@ RSpec.describe 'Destinations', type: :request do
     it 'displays a particular destination' do
       get destination_path(destination)
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 
@@ -30,7 +30,7 @@ RSpec.describe 'Destinations', type: :request do
     it 'displays the new destination form' do
       get new_destination_path
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 
@@ -117,7 +117,7 @@ RSpec.describe 'Destinations', type: :request do
 
         destination.reload
 
-        expect(destination.name).not_to eq nil
+        expect(destination.name).not_to be_nil
       end
     end
   end
@@ -142,7 +142,7 @@ RSpec.describe 'Destinations', type: :request do
         }
       }
 
-      expect(JSON.parse(response.body)['status']).to eq 200
+      expect(response.parsed_body['status']).to eq 200
     end
 
     it 'returns error if the details provided are invalid' do
@@ -164,7 +164,7 @@ RSpec.describe 'Destinations', type: :request do
         }
       }
 
-      expect(JSON.parse(response.body)['status']).to eq 403
+      expect(response.parsed_body['status']).to eq 403
     end
   end
 end

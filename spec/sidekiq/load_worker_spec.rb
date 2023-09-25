@@ -7,11 +7,16 @@ RSpec.describe LoadWorker, type: :job do
   let!(:harvest_definition)    { pipeline.harvest }
   let!(:enrichment_definition) { create(:harvest_definition, kind: 'enrichment', pipeline:) }
   let(:destination)            { create(:destination) }
-  let(:pipeline_job)           { create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [enrichment_definition.id], key: 'test') }
+  let(:pipeline_job)           do
+    create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [enrichment_definition.id], key: 'test')
+  end
 
   describe '#perform' do
     let(:harvest_job) { create(:harvest_job, :completed, harvest_definition:, pipeline_job:) }
-    let!(:harvest_report) { create(:harvest_report, harvest_job:, pipeline_job:, extraction_status: 'completed', transformation_status: 'completed', delete_status: 'completed', load_workers_queued: 1) }
+    let!(:harvest_report) do
+      create(:harvest_report, harvest_job:, pipeline_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', delete_status: 'completed', load_workers_queued: 1)
+    end
 
     let!(:field) do
       create(:field, name: 'title', block: "JsonPath.new('title').on(record).first",
@@ -30,7 +35,7 @@ RSpec.describe LoadWorker, type: :job do
       end
 
       it 'does not queue enrichments if there is already an existing enrichment with the same key' do
-        enrichment_job = create(
+        create(
           :harvest_job,
           :completed,
           harvest_definition: enrichment_definition,
@@ -46,7 +51,10 @@ RSpec.describe LoadWorker, type: :job do
 
     context 'when the harvest is not completed' do
       let(:harvest_job) { create(:harvest_job, harvest_definition:, pipeline_job:, key: 'test') }
-      let!(:harvest_report) { create(:harvest_report, harvest_job:, pipeline_job:, extraction_status: 'running', transformation_status: 'running', delete_status: 'running', load_workers_queued: 1) }
+      let!(:harvest_report) do
+        create(:harvest_report, harvest_job:, pipeline_job:, extraction_status: 'running', transformation_status: 'running',
+                                delete_status: 'running', load_workers_queued: 1)
+      end
 
       it 'does not queue enrichments' do
         expect(HarvestWorker).not_to receive(:perform_async)

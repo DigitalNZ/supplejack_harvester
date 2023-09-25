@@ -14,7 +14,11 @@ AllCops:
     - "db/schema.rb"
     - "Rakefile"
     - "config.ru"
-    - "spec/**/*"
+    - "spec/models/**/*"
+    - "spec/requests/**/*"
+    - "spec/sidekiq/**/*"
+    - "spec/supplejack/**/*"
+    - "spec/system/**/*"
     # we might need to review all those migrations and create a new one
     # for referential integrity and follow the best practices from rubocop-rails:
     # - https://guides.rubyonrails.org/active_record_migrations.html#active-record-and-referential-integrity

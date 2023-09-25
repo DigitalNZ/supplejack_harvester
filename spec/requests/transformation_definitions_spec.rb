@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Transformation Definitions', type: :request do
+RSpec.describe 'Transformation Definitions' do
   let!(:user) { create(:user) }
   let!(:pipeline) { create(:pipeline) }
   let!(:harvest_definition) { create(:harvest_definition, pipeline:) }
@@ -17,7 +17,7 @@ RSpec.describe 'Transformation Definitions', type: :request do
     it 'renders the new form' do
       get new_pipeline_harvest_definition_transformation_definition_path(pipeline, harvest_definition, kind: 'harvest')
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 
@@ -26,7 +26,7 @@ RSpec.describe 'Transformation Definitions', type: :request do
       get edit_pipeline_harvest_definition_transformation_definition_path(pipeline, harvest_definition,
                                                                           transformation_definition)
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 
@@ -76,7 +76,7 @@ RSpec.describe 'Transformation Definitions', type: :request do
           transformation_definition: transformation_definition.attributes
         }
 
-        expect(response.status).to eq 200
+        expect(response).to have_http_status :ok
         expect(response.body).to include 'There was an issue creating your Transformation Definition'
       end
     end
@@ -89,7 +89,7 @@ RSpec.describe 'Transformation Definitions', type: :request do
       get pipeline_harvest_definition_transformation_definition_path(pipeline, harvest_definition,
                                                                      transformation_definition)
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 
@@ -134,7 +134,7 @@ RSpec.describe 'Transformation Definitions', type: :request do
 
         transformation_definition.reload
 
-        expect(transformation_definition.record_selector).not_to eq nil
+        expect(transformation_definition.record_selector).not_to be_nil
       end
 
       it 're renders the form' do
@@ -187,9 +187,9 @@ RSpec.describe 'Transformation Definitions', type: :request do
         transformation_definition: subject.attributes
       }
 
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
 
-      json_data = JSON.parse(response.body)['result']
+      json_data = response.parsed_body['result']
       expected_keys = %w[article_id title DOI description type url published_date authors links defined_type
                          modified_date]
 

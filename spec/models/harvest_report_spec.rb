@@ -2,20 +2,21 @@
 
 require 'rails_helper'
 
-RSpec.describe HarvestReport, type: :model do
+RSpec.describe HarvestReport do
+  subject                  { create(:harvest_report, pipeline_job:, harvest_job:) }
+
   let(:pipeline)           { create(:pipeline) }
   let(:destination)        { create(:destination) }
   let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
   let(:harvest_definition) { create(:harvest_definition, pipeline:) }
   let(:harvest_job)        { create(:harvest_job, harvest_definition:, pipeline_job:) }
-  subject                  { create(:harvest_report, pipeline_job:, harvest_job:) }
 
   describe 'associations' do
     it { is_expected.to belong_to(:pipeline_job) }
   end
 
   describe 'status checks' do
-    ['extraction', 'transformation', 'load'].each do |type|
+    %w[extraction transformation load].each do |type|
       described_class::STATUSES.each do |status|
         it "defines the check #{type}_#{status}?" do
           subject.send("#{type}_status=", status)
@@ -33,7 +34,7 @@ RSpec.describe HarvestReport, type: :model do
       end
     end
   end
-  
+
   describe '#increment_pages_extracted!' do
     it 'increments the pages extracted count' do
       expect(subject.pages_extracted).to eq 0
@@ -69,7 +70,7 @@ RSpec.describe HarvestReport, type: :model do
       expect(subject.records_rejected).to eq 5
     end
   end
-  
+
   describe '#increment_records_deleted!' do
     it 'increments the records deleted count' do
       expect(subject.records_deleted).to eq 0
@@ -78,7 +79,7 @@ RSpec.describe HarvestReport, type: :model do
       expect(subject.records_deleted).to eq 1
     end
   end
-  
+
   describe '#increment_transformation_workers_queued!' do
     it 'increments the transformation workers queued count count' do
       expect(subject.transformation_workers_queued).to eq 0
@@ -87,7 +88,7 @@ RSpec.describe HarvestReport, type: :model do
       expect(subject.transformation_workers_queued).to eq 1
     end
   end
-  
+
   describe '#increment_transformation_workers_completed!' do
     it 'increments the transformation workers completed count count' do
       expect(subject.transformation_workers_completed).to eq 0
@@ -96,7 +97,7 @@ RSpec.describe HarvestReport, type: :model do
       expect(subject.transformation_workers_completed).to eq 1
     end
   end
-  
+
   describe '#increment_load_workers_queued!' do
     it 'increments the load workers queued count count' do
       expect(subject.load_workers_queued).to eq 0
@@ -105,7 +106,7 @@ RSpec.describe HarvestReport, type: :model do
       expect(subject.load_workers_queued).to eq 1
     end
   end
-  
+
   describe '#increment_load_workers_completed!' do
     it 'increments the load workers completed count count' do
       expect(subject.load_workers_completed).to eq 0
@@ -123,7 +124,7 @@ RSpec.describe HarvestReport, type: :model do
       expect(subject.delete_workers_queued).to eq 1
     end
   end
-  
+
   describe '#increment_delete_workers_completed!' do
     it 'increments the delete workers completed count count' do
       expect(subject.delete_workers_completed).to eq 0
@@ -136,17 +137,16 @@ RSpec.describe HarvestReport, type: :model do
   describe '#duration_seconds' do
     let(:nil_report) { create(:harvest_report, pipeline_job:, harvest_job:) }
     let(:in_progress_report) do
-      create(:harvest_report, pipeline_job:, harvest_job:, 
+      create(:harvest_report, pipeline_job:, harvest_job:,
                               extraction_start_time: 20.minutes.ago,
                               extraction_updated_time: 15.minutes.ago,
                               transformation_start_time: 18.minutes.ago,
                               transformation_updated_time: 16.minutes.ago,
                               load_start_time: 14.minutes.ago,
-                              load_updated_time: 12.minutes.ago
-      )
+                              load_updated_time: 12.minutes.ago)
     end
     let(:idle_offset) do
-      create(:harvest_report, pipeline_job:, harvest_job:, 
+      create(:harvest_report, pipeline_job:, harvest_job:,
                               extraction_start_time: 20.minutes.ago,
                               extraction_end_time: 15.minutes.ago,
                               transformation_start_time: 10.minutes.ago,
@@ -154,7 +154,7 @@ RSpec.describe HarvestReport, type: :model do
     end
 
     it 'returns nil if there are no times' do
-      expect(nil_report.duration_seconds).to eq nil
+      expect(nil_report.duration_seconds).to be_nil
     end
 
     it 'returns the time between the extraction start and the latest updated time between the extraction, transformation, and load' do
@@ -167,11 +167,26 @@ RSpec.describe HarvestReport, type: :model do
   end
 
   describe '#status' do
-    let(:queued)      { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'queued', transformation_status: 'queued', load_status: 'queued', delete_status: 'queued') }
-    let(:running_one) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running', transformation_status: 'queued', load_status: 'queued', delete_status: 'queued') }
-    let(:running_two) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'queued', load_status: 'queued', delete_status: 'queued') }
-    let(:completed) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'completed', load_status: 'completed', delete_status: 'completed') }
-    let(:cancelled) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'cancelled', transformation_status: 'completed', load_status: 'completed', delete_status: 'completed') }
+    let(:queued) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'queued', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let(:running_one) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let(:running_two) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let(:completed) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+    end
+    let(:cancelled) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'cancelled',
+                              transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+    end
 
     it 'returns queued if all processes are queued' do
       expect(queued.status).to eq 'queued'
@@ -195,69 +210,102 @@ RSpec.describe HarvestReport, type: :model do
   end
 
   describe '#transformation_workers_completed?' do
-    let(:completed)             { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_workers_queued: 1, transformation_workers_completed: 1) }
-    let(:incomplete_extraction) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running', transformation_workers_queued: 1, transformation_workers_completed: 1) }
-    let(:incomplete_transformation) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_workers_queued: 2, transformation_workers_completed: 1) }
+    let(:completed) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_workers_queued: 1,
+                              transformation_workers_completed: 1)
+    end
+    let(:incomplete_extraction) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running', transformation_workers_queued: 1,
+                              transformation_workers_completed: 1)
+    end
+    let(:incomplete_transformation) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_workers_queued: 2,
+                              transformation_workers_completed: 1)
+    end
 
     it 'returns true if the extraction is completed and the number of transformation workers queued matches the number of transformation workers completed' do
-      expect(completed.transformation_workers_completed?).to eq true
+      expect(completed.transformation_workers_completed?).to be true
     end
 
     it 'returns false if the extraction is not completed even if the number of transformation workers queued matches the number of transformation workers completed' do
-      expect(incomplete_extraction.transformation_workers_completed?).to eq false
+      expect(incomplete_extraction.transformation_workers_completed?).to be false
     end
 
     it 'returns false if the extraction is completed but the number of transformation workers queued does not match the number of transformation workers completed' do
-      expect(incomplete_transformation.transformation_workers_completed?).to eq false
+      expect(incomplete_transformation.transformation_workers_completed?).to be false
     end
   end
 
   describe '#load_workers_completed?' do
-    let(:completed)             { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'completed', transformation_workers_queued: 1, transformation_workers_completed: 1, load_workers_queued: 1, load_workers_completed: 1) }
-    let(:incomplete_transformation) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'running', transformation_workers_queued: 1, transformation_workers_completed: 1, load_workers_queued: 1, load_workers_completed: 1) }
-    let(:incomplete_load) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'completed', transformation_workers_queued: 2, transformation_workers_completed: 1, load_workers_queued: 2, load_workers_completed: 1) }
+    let(:completed) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', transformation_workers_queued: 1, transformation_workers_completed: 1, load_workers_queued: 1, load_workers_completed: 1)
+    end
+    let(:incomplete_transformation) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'running',
+                              transformation_workers_queued: 1, transformation_workers_completed: 1, load_workers_queued: 1, load_workers_completed: 1)
+    end
+    let(:incomplete_load) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', transformation_workers_queued: 2, transformation_workers_completed: 1, load_workers_queued: 2, load_workers_completed: 1)
+    end
 
     it 'returns true if the transformation is completed and the number of load workers queued matches the number of load workers completed' do
-      expect(completed.load_workers_completed?).to eq true
+      expect(completed.load_workers_completed?).to be true
     end
 
     it 'returns false if the extraction is not completed even if the number of load workers queued matches the number of load workers completed' do
-      expect(incomplete_transformation.load_workers_completed?).to eq false
+      expect(incomplete_transformation.load_workers_completed?).to be false
     end
 
     it 'returns false if the transformation is completed but the number of load workers queued does not match the number of load workers completed' do
-      expect(incomplete_load.load_workers_completed?).to eq false
+      expect(incomplete_load.load_workers_completed?).to be false
     end
   end
 
   describe '#delete_workers_completed?' do
-    let(:completed)             { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'completed', transformation_workers_queued: 1, transformation_workers_completed: 1, delete_workers_queued: 1, delete_workers_completed: 1) }
-    let(:incomplete_transformation) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'running', transformation_workers_queued: 1, transformation_workers_completed: 1, delete_workers_queued: 1, delete_workers_completed: 1) }
-    let(:incomplete_delete) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'completed', transformation_workers_queued: 2, transformation_workers_completed: 1, delete_workers_queued: 2, load_workers_completed: 1) }
+    let(:completed) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', transformation_workers_queued: 1, transformation_workers_completed: 1, delete_workers_queued: 1, delete_workers_completed: 1)
+    end
+    let(:incomplete_transformation) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'running',
+                              transformation_workers_queued: 1, transformation_workers_completed: 1, delete_workers_queued: 1, delete_workers_completed: 1)
+    end
+    let(:incomplete_delete) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', transformation_workers_queued: 2, transformation_workers_completed: 1, delete_workers_queued: 2, load_workers_completed: 1)
+    end
 
     it 'returns true if the transformation is completed and the number of load workers queued matches the number of load workers completed' do
-      expect(completed.load_workers_completed?).to eq true
+      expect(completed.load_workers_completed?).to be true
     end
 
     it 'returns false if the extraction is not completed even if the number of load workers queued matches the number of load workers completed' do
-      expect(incomplete_transformation.delete_workers_completed?).to eq false
+      expect(incomplete_transformation.delete_workers_completed?).to be false
     end
 
     it 'returns false if the transformation is completed but the number of load workers queued does not match the number of load workers completed' do
-      expect(incomplete_delete.delete_workers_completed?).to eq false
+      expect(incomplete_delete.delete_workers_completed?).to be false
     end
   end
 
   describe '#completed?' do
-    let(:complete)   { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'completed', load_status: 'completed', delete_status: 'completed') }
-    let(:incomplete) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'running', load_status: 'running', delete_status: 'running') }
+    let(:complete)   do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+    end
+    let(:incomplete) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'running',
+                              load_status: 'running', delete_status: 'running')
+    end
 
     it 'returns true if the extraction, transformation, load, and delete are completed' do
-      expect(complete.completed?).to eq true
+      expect(complete.completed?).to be true
     end
 
     it 'returns false if any of the extraction, transformation, load, or delete are not completed' do
-      expect(incomplete.completed?).to eq false
+      expect(incomplete.completed?).to be false
     end
   end
 end

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe HarvestDefinition, type: :model do
+RSpec.describe HarvestDefinition do
   subject do
     create(
       :harvest_definition,
@@ -60,30 +60,30 @@ RSpec.describe HarvestDefinition, type: :model do
       pipeline = create(:pipeline)
       harvest_definition = create(:harvest_definition, pipeline:, extraction_definition: nil)
 
-      expect(harvest_definition.ready_to_run?).to eq false
+      expect(harvest_definition.ready_to_run?).to be false
     end
 
     it 'returns false if it has an extraction_definition but no transformation definition' do
       pipeline = create(:pipeline)
       harvest_definition = create(:harvest_definition, pipeline:, transformation_definition: nil)
 
-      expect(harvest_definition.ready_to_run?).to eq false
+      expect(harvest_definition.ready_to_run?).to be false
     end
 
     it 'returns false if it has an extraction definition, transformation definition but no fields' do
       pipeline = create(:pipeline)
       harvest_definition = create(:harvest_definition, pipeline:)
 
-      expect(harvest_definition.ready_to_run?).to eq false
+      expect(harvest_definition.ready_to_run?).to be false
     end
 
     it 'returns true if it has an extraction_definition and a transformation_definition with fields' do
       pipeline = create(:pipeline)
       harvest_definition = create(:harvest_definition, pipeline:)
-      field = create(:field, name: 'title', block: "JsonPath.new('title').on(record).first",
-                             transformation_definition: pipeline.harvest.transformation_definition)
+      create(:field, name: 'title', block: "JsonPath.new('title').on(record).first",
+                     transformation_definition: pipeline.harvest.transformation_definition)
 
-      expect(harvest_definition.ready_to_run?).to eq true
+      expect(harvest_definition.ready_to_run?).to be true
     end
   end
 end

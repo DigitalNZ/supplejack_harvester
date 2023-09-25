@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe HarvestJob, type: :model do
+RSpec.describe HarvestJob do
   let(:destination)        { create(:destination) }
   let(:pipeline)           { create(:pipeline, name: 'NLNZCat') }
   let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
