@@ -6,7 +6,8 @@ WebMock.disable_net_connect!(
   allow: [
     'https://chromedriver.storage.googleapis.com',
     'https://googlechromelabs.github.io',
-    'https://edgedl.me.gvt1.com'
+    'https://edgedl.me.gvt1.com',
+    'https://storage.googleapis.com'
   ],
   allow_localhost: true
 )

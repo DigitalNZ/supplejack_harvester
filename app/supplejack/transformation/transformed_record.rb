@@ -23,14 +23,8 @@ module Transformation
       end
     end
 
-    def rejection_reasons
-      @reject_fields.each_with_object([]) do |field, reasons|
-        reasons.push(field.name) if field.value == true
-      end
-    end
-
-    def deletion_reasons
-      @delete_fields.each_with_object([]) do |field, reasons|
+    def reasons(fields)
+      fields.each_with_object([]) do |field, reasons|
         reasons.push(field.name) if field.value == true
       end
     end
@@ -39,8 +33,8 @@ module Transformation
       {
         'transformed_record' => transformed_record,
         'errors' => errors,
-        'rejection_reasons' => rejection_reasons,
-        'deletion_reasons' => deletion_reasons
+        'rejection_reasons' => reasons(@reject_fields),
+        'deletion_reasons' => reasons(@delete_fields)
       }
     end
   end

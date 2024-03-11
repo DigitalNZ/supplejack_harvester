@@ -58,6 +58,8 @@
     <p>The job hasn't started yet so there is no results available.</p>
   <% elsif @extraction_job.running? %>
     <p>The job is currently running. This page might not be fetched yet.</p>
+  <% elsif @extraction_definition.extract_text_from_file %>
+    <p>The text has not yet been extracted from the file.</p>
   <% else %>
     <p>The extracted page could not be found.</p>
   <% end %>

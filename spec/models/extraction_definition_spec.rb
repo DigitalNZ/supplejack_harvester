@@ -58,7 +58,7 @@ RSpec.describe ExtractionDefinition do
   describe '#validation' do
     it {
       expect(subject).to validate_inclusion_of(:format).in_array(%w[JSON
-                                                                    XML]).with_message('is not included in the list')
+                                                                    XML HTML]).with_message('is not included in the list')
     }
 
     it 'requires a pipeline' do

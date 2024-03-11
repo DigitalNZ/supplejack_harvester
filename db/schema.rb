@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_01_17_001915) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_05_235829) do
   create_table "destinations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "url", null: false
@@ -39,6 +39,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_01_17_001915) do
     t.string "total_selector"
     t.boolean "split", default: false, null: false
     t.string "split_selector"
+    t.boolean "extract_text_from_file", default: false, null: false
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_extraction_definitions_on_name", unique: true

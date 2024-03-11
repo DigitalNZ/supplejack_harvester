@@ -42,6 +42,7 @@ gem 'faraday-follow_redirects'
 gem 'jsonpath'
 gem 'nokogiri'
 gem 'sidekiq'
+gem 'yomu'
 
 # transformation related
 gem 'webmock'

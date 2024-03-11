@@ -84,8 +84,28 @@
             </div>
 
             <div class='col-8'>
-              <%= form.select :destination_id, options_from_collection_for_select(@destinations, 'id', 'name'), {},
-                              class: 'form-select' %>
+              <%= form.select(:destination_id,
+                              options_from_collection_for_select(
+                                @destinations, 'id', 'name', @extraction_definition&.destination&.id
+                              ),
+                              {}, class: 'form-select') %>
+            </div>
+
+                        <div class="col-4">
+              <%= form.label :extract_text_from_file, class: 'form-label' do %>
+                Extract text from file
+
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="If the source document is a file (PDF, Word doc) you can extract the text and convert it into a JSON format that can be used in a Transformation."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="col-8">
+              <%= form.select :extract_text_from_file, options_for_select(
+                    [%w[No false], %w[Yes true]], model.extract_text_from_file
+                  ), {}, class: 'form-select' %>
             </div>
           </div>
 

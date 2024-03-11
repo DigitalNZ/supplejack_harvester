@@ -3,6 +3,10 @@ default: &default
   SJ_USER_AGENT: Supplejack Harvester v2.0
   FIXTURES_PATH: spec/fixtures
   OTP_ENCRYPTION_KEY: AGoodEncryptionKey
+  SECRET_KEY_BASE: anawesomelysecretsecretkeybase
+  ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: encryptionprimarykey
+  ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: encryptiondeterministickey
+  ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: encryptionderivationsalt
 
 development:
   <<: *default

@@ -3,7 +3,7 @@ FROM ruby:3.2.2-alpine3.18
 WORKDIR /app
 
 ARG BUILD_PACKAGES="build-base curl-dev git"
-ARG DEV_PACKAGES="bash mysql-client mariadb-dev yaml-dev zlib-dev nodejs yarn libxml2 libxml2-dev libxslt libxslt-dev gmp-dev"
+ARG DEV_PACKAGES="bash mysql-client mariadb-dev yaml-dev zlib-dev nodejs yarn libxml2 libxml2-dev libxslt libxslt-dev gmp-dev openjdk8-jre"
 ARG RUBY_PACKAGES="tzdata"
 
 WORKDIR /app
@@ -34,6 +34,8 @@ ARG RAILS_ENV="production"
 ENV RAILS_ENV=$RAILS_ENV
 ARG RAILS_MASTER_KEY
 ENV RAILS_MASTER_KEY=$RAILS_MASTER_KEY
+ARG RAILS_SECRET_KEY_BASE
+ENV SECRET_KEY_BASE=$RAILS_SECRET_KEY_BASE
 
 RUN bundle exec rails assets:precompile
 

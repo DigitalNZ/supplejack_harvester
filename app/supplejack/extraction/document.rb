@@ -23,6 +23,11 @@ module Extraction
 
     def save(file_path)
       File.write(file_path, to_json)
+      # If the file fails to be converted to a JSON document
+      # write the original file to the filepath as a binary
+      # It is probably a PDF or Word Doc
+    rescue JSON::GeneratorError
+      File.write(file_path, @body, mode: 'wb')
     end
 
     def size_in_bytes
@@ -35,6 +40,8 @@ module Extraction
       Rails.logger.debug { "Loading document #{file_path}" }
       json = JSON.parse(File.read(file_path)).symbolize_keys
       Document.new(file_path, **json)
+    rescue JSON::ParserError
+      {}
     end
 
     def to_hash

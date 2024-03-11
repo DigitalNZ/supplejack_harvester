@@ -58,6 +58,7 @@ module Extraction
 
     def enqueue_record_transformation(api_record, document, page)
       return unless @harvest_job.present? && document.successful?
+      return if @extraction_definition.extract_text_from_file?
 
       TransformationWorker.perform_async(@harvest_job.id, page, api_record['id'])
       @harvest_report.increment_transformation_workers_queued! if @harvest_report.present?

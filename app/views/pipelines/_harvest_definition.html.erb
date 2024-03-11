@@ -137,7 +137,9 @@
 
       <% else %>
 
-        <% disabled = !@harvest_definition&.extraction_definition&.extraction_jobs&.any?(&:completed?) %>
+        <% disabled =
+             @harvest_definition.extraction_definition.blank? ||
+             @harvest_definition.extraction_definition.extraction_jobs&.none?(&:completed?) %>
 
         <button
           type="button"

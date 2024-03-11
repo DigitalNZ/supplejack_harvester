@@ -16,7 +16,7 @@
           <% end %>
         </h2>
         <h3 class="card-subtitle">
-          <%= send("#{type}_card_subtitle", definition) %>
+          <%= send(:"#{type}_card_subtitle", definition) %>
         </h3>
 
         <% if type == 'extraction' %>
@@ -173,7 +173,7 @@
       <div class="modal-body">
         <p>Please name the new definition which you are cloning</p>
 
-        <% clone_url = send("clone_pipeline_harvest_definition_#{type}_definition_path", @pipeline, block_definition,
+        <% clone_url = send(:"clone_pipeline_harvest_definition_#{type}_definition_path", @pipeline, block_definition,
                             definition) %>
 
         <%= vertical_form_with(model: definition,

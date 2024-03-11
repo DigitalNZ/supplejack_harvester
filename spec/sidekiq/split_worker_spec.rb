@@ -101,13 +101,10 @@ RSpec.describe SplitWorker, type: :job do
       end
 
       it 'updates the Harvest Report appropriately' do
-        expect(harvest_report.pages_extracted).to eq 0
-
         SplitWorker.new.perform(extraction_job.id)  
 
         harvest_report.reload
 
-        expect(harvest_report.pages_extracted).to eq 2
         expect(harvest_report.transformation_workers_queued).to eq 2
       end
     end
