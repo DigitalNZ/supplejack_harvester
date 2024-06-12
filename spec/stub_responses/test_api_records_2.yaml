@@ -207,7 +207,7 @@ body: |-
         
         ],
         "source_website_name": null,
-        "source_url": "/records/83499/source",
+        "source_url": "['https://api.figshare.com/v1/articles/23029880']",
         "job_id": null,
         "available_thumbnail": false,
         "available_large_thumbnail": false,
@@ -387,6 +387,7 @@ body: |-
               23071181
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.676Z",
             "created_at": "2023-05-22T23:52:34.766Z",
             "description": "<p>Social Research Methods, fourth edition, is an introductory text for undergraduate social research students. This new edition aims to inspire and continue students’ engagement with social research by presenting the requisite introductory skills within a framework of exciting, up-to-date, relevant Australian and New Zealand research.</p>    <p>This textbook includes new chapters and expands on difficult areas to encourage students to develop a set of practical research skills in line with contemporary Australian and New Zealand social research. It is vital for beginner social scientists to have a broad and comparative understanding of the major contemporary social research methods and this text aims to provide this requisite.</p>",
@@ -787,6 +788,7 @@ body: |-
               23071178
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.692Z",
             "created_at": "2023-05-22T23:52:34.795Z",
             "description": "This chapter explores cosmopolitanism across three thematic areas: immigration; indigeneity; and identity. It argues that thematic areas encompass issues in which cosmopolitan tendencies are at work in Australia and New Zealand, while they also serve to illustrate some of the contemporary challenges, social divisions, and points of conflict that confront both nations. The chapter considers the extent to which cosmopolitanism has the potential to address these challenges and tensions, and explores what the example of Australia and New Zealand can tell about the politics of postcolonial societies in the contemporary world. In both Australia and New Zealand the fact that both governments remain wedded to a neo-liberal political agenda makes the task of establishing a more cosmopolitan political compact. The conservative mindset of Australia and New Zealand's political elites to issues relating to ethnicity reflect those of an earlier generation of politicians, and their initial resistance to multiculturalism in the early 1970s.",
@@ -1187,6 +1189,7 @@ body: |-
               23071055
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.708Z",
             "created_at": "2023-05-22T23:52:34.816Z",
             "description": "Written by authoritative author Gino Dal Pont, <i>Law of Charity</i>, 2nd edition, is a high level text focusing on the law which governs and regulates the application of money for charitable purposes. Providing coverage of both Australian and international law, this text is an exposition of the law pertaining to charitable objects and includes discussion on the history of charity law, privileges of charity under general law and statute, the jurisdiction of the court in relation to the charitable sector, and reform of charity law.",
@@ -1587,6 +1590,7 @@ body: |-
               23070764
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.289Z",
             "created_at": "2023-05-22T23:52:34.838Z",
             "description": "No description available",
@@ -1987,6 +1991,7 @@ body: |-
               23070638
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.311Z",
             "created_at": "2023-05-22T23:52:34.858Z",
             "description": "No description available",
@@ -2387,6 +2392,7 @@ body: |-
               23070551
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.331Z",
             "created_at": "2023-05-22T23:52:34.877Z",
             "description": "No description available",
@@ -2787,6 +2793,7 @@ body: |-
               23070341
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.348Z",
             "created_at": "2023-05-22T23:52:34.896Z",
             "description": "No description available",
@@ -3187,6 +3194,7 @@ body: |-
               23070317
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.366Z",
             "created_at": "2023-05-22T23:52:34.914Z",
             "description": "This chapter assesses extremes and abrupt or irreversible changes in the ocean and cryosphere in a changing climate, to identify regional hot spots, cascading effects, their impacts on human and natural systems, and sustainable and resilient risk management strategies. It is not comprehensive in terms of the systems assessed and some information on extremes, abrupt and irreversible changes, in particular for the cryosphere, may be found in other chapters.",
@@ -3587,6 +3595,7 @@ body: |-
               23070134
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.381Z",
             "created_at": "2023-05-22T23:52:34.932Z",
             "description": "<p>Tasmania is an island located 42 degrees south of the equator and 240 kilometres south of the Australian mainland. With over 50 % of its land protected as state forest, national parks, or reserves with World Heritage status, and no land for around 10,000 kilometres to its west and (with the exception of New Zealand) 12,000 kilometres to its east, it could be said that Tasmania is one of the last remaining islands where wilderness sits at its core.</p>    <p>In the past 20 years, we have witnessed significant growth in tourism in Tasmania. In 2008, approximately 897,000 visitors came to Tasmania; in 2018 numbers had grown to 1.3 million. But relatively, this growth cannot be compared to destinations like Bali which, in the same time period, experienced growth from 2.5  million to 8.7  million visitors. However, for Tasmanians – ranging from the indigenous Tasmanians through to those who now call it home – the change is noticeable. Just this afternoon, we were discussing the Tasmanian notion of the ‘secret spot’. Many Tasmanians will have grown up with a beach, a forest, a campsite or a place to visit that was their secret. To many of us, this spot was called ‘Spot X’ – a secluded campsite that we could return to on any day of the year, and we could be sure to find it empty. It felt like ours. And for many years, it was only ours. But in the early 2000s, Tasmania was discovered by what we call mainlanders. Our ‘Spot Xs’ were found and many of us will recall arriving at our favourite site, only to discover it was being used. Oh, the horror! This story is similar to many others that Tasmanians will tell about how their favourite quiet places have changed as tourists have discovered them. The island of Tasmania has experienced changes and with these come resistance, acceptance, profit and loss. So what makes Tasmania special? And why has this growth occurred? And why have we as Tasmanians reacted as we have, as tourist numbers have risen?</p>",
@@ -3987,6 +3996,7 @@ body: |-
               23069885
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.397Z",
             "created_at": "2023-05-22T23:52:34.952Z",
             "description": "No description available",
@@ -4387,6 +4397,7 @@ body: |-
               23069813
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.413Z",
             "created_at": "2023-05-22T23:52:46.499Z",
             "description": "Tasmania has long been a gateway to the tempestuous Southern Ocean and the frozen continent of Antarctica beyond, with human endeavours intermingling basic exploration and resource exploitation. While the pointy ends of islands and continents in the Southern Hemisphere – Tasmania, New Zealand, South America, South Africa – are aimed at Antarctica, the coastline of southern Australia as a whole cradles the Southern Ocean, and matches the coastline of East Antarctica in shape. This is no accident; until approximately 100 million years ago, Antarctica and Australia were joined, part of the supercontinent of Gondwana. Thus the 42% of icy Antarctica claimed by Australia, lying due south of our sunburnt land, has a long geological history of connection and continuity.",
@@ -4787,6 +4798,7 @@ body: |-
               23069708
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.428Z",
             "created_at": "2023-05-22T23:52:46.534Z",
             "description": "I was once told by a patronising Englishman that the trouble with Australia was  that too much geography and not enough history. I have often thought about those comments and retrospectively rehearsed what I might have said in response.  But clearly the observation is not really relevant to Tasmania. Although a small  Island with only a modest population it has a remarkably rich tradition of historical  literature. Every generation since the 1830s has produced books of merit many of  which can still be read with interest today. John West's history written in 1852 was  without question the best historical work produced anywhere in Colonial Australia.  It was a celebration of the success of colonisation but it also included. a long elegiac  section on the fate of the Aborigines. And many other 19th century writers, men Iike  Calder, Bonwick and Melville, took up the subject of the Black War and its aftermath  and are essential reading still. They all expressed sympathy for the. dispossessed  indigenous tribes and what is more they showed respect and even admiration for the  vigour and courage of the resistance. They regarded them as patriots and martyrs. It  was a view that was distinctly Tasmanian with no close parallel anywhere else in the  Colonies. It comes closer to the historical traditions of New Zealand",
@@ -5187,6 +5199,7 @@ body: |-
               23069609
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:28.447Z",
             "created_at": "2023-05-22T23:52:46.559Z",
             "description": "No description available",
@@ -5587,6 +5600,7 @@ body: |-
               23069582
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:30.870Z",
             "created_at": "2023-05-22T23:52:46.581Z",
             "description": "Twelve states (Argentina, Australia, Belgium, Chile, France, Japan, New Zealand, Norway, Union of Soviet Socialist Republics – USSR (now Russia), South Africa, the United Kingdom (UK) and the United States of America (USA)) signed the Antarctic Treaty at the conclusion of the Antarctic Conference in Washington in December 1959. The original signatories have remained influential actors in the system, and proudly promote this status. These states became Antarctic Treaty Consultative Parties (ATCPs) by virtue of their status as original signatories under Article IX. The other Consultative Parties – now numbering seventeen – have to accede to the treaty and then gain consultative party status by ‘conducting substantial research activity there, such as the establishment of a scientific station or the despatch of a scientific expedition’. This leaves questions moot over the meaning of ‘during such times’ and ‘substantial research activity’ in Article IX (2) and how acceding states assess the level of scientific work required of the original signatories.<p> </p> The original signatories have helped shape the development of what has become known as the Antarctic Treaty System (ATS). The majority of the original signatories have undertaken much of the ‘heavy lifting’ within the ATS, for example, the development of arrangements to address the protection of flora and fauna, the regulation of marine and mineral resources, environmental protection and the regulation of tourism. As a result the original signatory states have been active in developing administrative arrangements within the Antarctic Treaty Consultative Meetings (ATCMs) and have had key roles in its Working Groups. Most significantly ‘the originals’ conduct a major proportion of the scientific effort and logistics on the continent.",
@@ -5987,6 +6001,7 @@ body: |-
               23069567
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:30.892Z",
             "created_at": "2023-05-22T23:52:46.604Z",
             "description": "The Pacific Ocean is the Earth’s largest ocean, covering one-third of the world’s surface. This huge expanse of ocean supports the most extensive and diverse coral reefs in the world (Burke et al., 2011), the largest commercial fishery (FAO, 2014), the most and deepest oceanic trenches (General Bathymetric Chart of the Oceans, available at www.gebco.net), the largest upwelling system (Spalding et al., 2012), the healthiest and, in some cases, largest remaining populations of many globally rare and threatened species, including marine mammals, seabirds and marine reptiles (Tittensor et al., 2010).<p> </p>  The South Pacific Ocean surrounds and is bordered by 23 countries and territories (for the purpose of this chapter, countries west of Papua New Guinea are not considered to be part of the South Pacific), which range in size from small atolls (e.g., Nauru) to continents (South America, Australia). Associated populations of each of the countries and territories range from less than 10,000 (Tokelau, Nauru, Tuvalu) to nearly 30.5 million (Peru; Population Estimates and Projections, World Bank Group, accessed at http://data.worldbank.org/data-catalog/population-projection-tables, August 2014). Most of the tropical and sub-tropical western and central South Pacific Ocean is contained within exclusive economic zones (EEZs), whereas vast expanses of temperate waters are associated with high seas areas (Figure 1). The eastern and western extremes of the ocean basin contain two major boundary currents: the poleward-flowing East Australian Current (EAC), which runs along Australia’s North-West shelf in the west (Ridgway and Dunn, 2003) and the northward-flowing Humboldt Current, which runs along South America’s continental shelf in the east (Montecino and Lange, 2009). The dominant shallow water ecosystems of the region are tropical coral reef and lagoon systems and mangrove communities in the sub-tropics and tropics and temperate rocky reefs and kelp beds in temperate zones. Other marine communities across tropical, sub-tropical and temperate zones include rocky intertidals, mudflats, seagrass beds, estuaries and salt marshes in inshore areas and seamount, hydrothermal vents and trenches in offshore zones. Five Large Marine Ecosystems (www.lme.edc.uri.edu) have been defined across the South Pacific Ocean, including the Humboldt Current, the northeast Australian shelf, east-central Australian shelf, southeast Australian shelf and New Zealand shelf.",
@@ -6387,6 +6402,7 @@ body: |-
               23069555
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:30.910Z",
             "created_at": "2023-05-22T23:52:46.625Z",
             "description": "No description available",
@@ -6787,6 +6803,7 @@ body: |-
               23069426
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:30.926Z",
             "created_at": "2023-05-22T23:52:46.645Z",
             "description": "<p>Today, scholars from diverse disciplinary backgrounds are employing  an array of methodological and theoretical approaches to understand  and explain the experiences of individuals and groups within action  sports cultures in local, national, global and virtual contexts in both  historical and contemporary conditions. However, it is important to  keep in mind that this work builds upon a strong academic foundation  established by scholars who forged new ground in the mid and  late 1990s when they argued for, and clearly illustrated, the need to  understand and explain new trends in sporting participation and consumption.  Among their number were (in alphabetical order) Becky  Beal (skateboarding), Douglas Booth (surfing), Jason Laurendeau (sky  diving), Catherine Palmer (the commodification of risk and extreme  sports), Robert Rinehart (alternative sport media and events) and  Belinda Wheaton (windsurfing). These scholars were scattered across  the disciplines (i.e. sociology, cultural studies, history, anthropology)  and indeed the world (i.e. Australia, England, Canada, New Zealand,  the USA) . They were working mostly independently with very little, if  any, other research in action sports to draw upon to inform their analyses  and interpretations.</p>    <p>In chis chapter, we present the responses from the aforementioned  scholars to a series of questions (again in alphabetical order) focused less  on che key findings from their research and more on their personal journeys  into and through researching action spore cultures. In particular, it  has been their attention to women's and gender issues that have been of  significance to our own work. We have been fortunate to have many of  these scholars as formal or informal mentors and/or academic friends,  and thus are very grateful for their willingness to share their experiences  and sage advice with us. Of course, this is far from an exhaustive list.  Various others have made valuable contributions over the years, and their  work is drawn upon extensively in the chapters in this book. However, in  the reflections of the scholars in this chapter, we hope that other researchers  will find the following insights from these academic pioneers helpful  (perhaps even inspirational) as they embark on their own journeys in  action sport and/or gender studies.</p>",
@@ -7187,6 +7204,7 @@ body: |-
               23069324
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:30.942Z",
             "created_at": "2023-05-22T23:52:46.668Z",
             "description": "Diodontids are spiny, globular, demersal inhabitants of relatively shallow, warm and temperate coastal  waters, although 1 species (not found in New Zealand) is entirely pelagic, and most species have an extended,  pelagic early life history phase. Like the related tetraodontids, diodontids are capable of inflating their  body by swallowing water. This behaviour presents potential predators with an unpalatable, spiny ball,  discouraging predation. Their food includes benthic invertebrates, especially crustaceans, echinoderms,  and gastropods. There is no commercial catch. Globally, there are 7 recognised genera and 18 valid species.  Only a single diodontid species is widespread in New Zealand waters, but 2 occur rarely around the north  of the mainland. The common name ‘porcupinefishes’ is in widespread use in New Zealand, however see  comment under <i>Allomycterus pilatus</i>. Previous taxonomic revisions were by Leis (1978, 2001, 2006).",
@@ -7587,6 +7605,7 @@ body: |-
               23069303
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:30.957Z",
             "created_at": "2023-05-22T23:52:46.688Z",
             "description": "No description available",
@@ -7987,6 +8006,7 @@ body: |-
               23068361
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:30.973Z",
             "created_at": "2023-05-22T23:52:46.707Z",
             "description": "No description available",

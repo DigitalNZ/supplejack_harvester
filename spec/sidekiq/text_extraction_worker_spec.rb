@@ -10,7 +10,7 @@ RSpec.describe TextExtractionWorker, type: :job do
   describe "#perform" do
     context 'when the PDF extraction is not part of a harvest' do
       before do
-        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example.json")
+        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example__1234__01.json")
       end
 
       it 'converts a PDF into raw text' do
@@ -36,7 +36,7 @@ RSpec.describe TextExtractionWorker, type: :job do
       it 'names the new files following as it was originally' do
         TextExtractionWorker.new.perform(extraction_job.id)
       
-        expect(File.exist?("#{extraction_job.extraction_folder}/example.json")).to eq(true)
+        expect(File.exist?("#{extraction_job.extraction_folder}/example__1234__01.json")).to eq(true)
       end
 
       it 'does not enqueue Transformation Workers' do
@@ -48,7 +48,7 @@ RSpec.describe TextExtractionWorker, type: :job do
 
     context 'when the PDF extraction is part of a harvest' do
       before do
-        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example.json")
+        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example__1234__01.json")
       end
 
       let!(:harvest_report)    { create(:harvest_report, pipeline_job:, harvest_job:) }
@@ -77,7 +77,7 @@ RSpec.describe TextExtractionWorker, type: :job do
 
     context 'when the PDF extraction is part of an enrichment' do
       before do
-        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example__1234__.json")
+        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example__1234__01.json")
       end
 
       let(:destination) { create(:destination) }

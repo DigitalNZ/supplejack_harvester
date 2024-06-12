@@ -3,7 +3,7 @@
 class PipelineJob < ApplicationRecord
   include Job
 
-  serialize :harvest_definitions_to_run, Array
+  serialize :harvest_definitions_to_run, type: Array
 
   belongs_to :pipeline
   belongs_to :extraction_job, optional: true

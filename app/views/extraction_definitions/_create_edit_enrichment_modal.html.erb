@@ -74,6 +74,32 @@
             </div>
 
             <div class="col-4">
+              <%= form.label :format, class: 'form-label' do %>
+                Fragment Source ID
+                <span
+                  data-bs-toggle="tooltip"
+                  data-bs-title="The Source ID of the fragment that contains the complete URL to use for the enrichment. Note that if you put a value in this field query and slug of the request will be ignored."></i>
+                </span>
+              <% end %>
+            </div>
+            <div class="col-8">
+              <%= form.text_field :fragment_source_id, class: 'form-control' %>
+            </div>
+
+            <div class="col-4">
+              <%= form.label :format, class: 'form-label' do %>
+                Fragment Key
+                <span
+                  data-bs-toggle="tooltip"
+                  data-bs-title="The key of the fragment that contains the complete URL to use for the enrichment."></i>
+                </span>
+              <% end %>
+            </div>
+            <div class="col-8">
+              <%= form.text_field :fragment_key, class: 'form-control' %>
+            </div>
+
+            <div class="col-4">
               <%= form.label :destination_id, class: 'form-label' do %>
               Preview harvested records from
               <span

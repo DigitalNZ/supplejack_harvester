@@ -99,7 +99,7 @@ class ExtractionDefinitionsController < ApplicationController
     safe_params = params.require(:extraction_definition).permit(
       :pipeline_id, :name, :format, :base_url, :throttle, :page, :per_page,
       :total_selector, :kind, :destination_id, :source_id, :enrichment_url, :paginated, :split, :split_selector,
-      :extract_text_from_file
+      :extract_text_from_file, :fragment_source_id, :fragment_key
     )
     merge_last_edited_by(safe_params)
   end

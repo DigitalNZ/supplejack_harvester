@@ -32,8 +32,13 @@ module Extraction
       current_page.in?(1..documents_filepath.length)
     end
 
+    # The enrichments rely on the files being ordered by page number
+    # so that the index [2005] gives back page 2005 etc.
+    # If the pages and indexes do not match up, records will be enriched with data that is not meant for them
     def documents_filepath
-      @documents_filepath ||= Dir.glob("#{@folder}/*.json")
+      @documents_filepath ||= Dir.glob("#{@folder}/*.json").sort_by do |page|
+        page.match(/__(?<record_id>.+)__(?<page>.+).json/)[:page].to_i
+      end
     end
   end
 end

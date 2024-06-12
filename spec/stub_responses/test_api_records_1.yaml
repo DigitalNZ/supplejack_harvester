@@ -384,6 +384,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "Self-enucleation of one eye",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.610Z",
             "created_at": "2023-05-22T02:13:21.118Z",
             "dc_identifier": [
@@ -783,6 +784,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "Review of H. Barr and A. M. Hutchison, eds., Text and Controversy from Wyclif to Bale: Essays in Honour of Anne Hudson (Turnhout: Brepols, 2005)",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.625Z",
             "created_at": "2023-05-22T02:13:21.142Z",
             "dc_identifier": [
@@ -1182,6 +1184,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "Review of Anneke B. Mulder-Bakker (ed.) and Margot H. King and Hugh Feiss (trans.), Mary of Oignies: Mother of Salvation (Turnhout: Brepols, 2007)",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.641Z",
             "created_at": "2023-05-22T02:13:21.162Z",
             "dc_identifier": [
@@ -1581,6 +1584,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "Review of Liz Herbert McAvoy (ed.), Rhetoric of the Anchorhold: Space, Place and Body within the Discourses of Enclosure (Cardiff: University of Wales Press, 2008)",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.660Z",
             "created_at": "2023-05-22T02:13:21.182Z",
             "dc_identifier": [
@@ -1980,6 +1984,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "Review of Emilia Jamroziak and Janet Burton (Eds), Religious and Laity in Western Europe 1000-1400: Interactions, Negotiation, and Power (Turnhout: Brepols, 2006)",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.675Z",
             "created_at": "2023-05-22T02:13:21.201Z",
             "dc_identifier": [
@@ -2379,6 +2384,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "Reciprocal smiling in negative schizophrenia",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.690Z",
             "created_at": "2023-05-22T02:13:21.220Z",
             "dc_identifier": [
@@ -2778,6 +2784,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "R.S. Hill, The Iron Hand in the Velvet Glove: Modernisation of Policing in NZ 1886-1917",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.704Z",
             "created_at": "2023-05-22T02:13:21.240Z",
             "dc_identifier": [
@@ -3177,6 +3184,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "W. Coster, Baptism and Spiritual Kinship in Early Modern England",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.719Z",
             "created_at": "2023-05-22T02:13:21.263Z",
             "dc_identifier": [
@@ -3576,6 +3584,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "Women and Urban Life in Eighteenth-Century England: 'On the Town' (review)",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.733Z",
             "created_at": "2023-05-22T02:13:21.283Z",
             "dc_identifier": [
@@ -3975,6 +3984,7 @@ body: |-
             "_type": "SupplejackApi::ApiRecord::RecordFragment",
             "title": "Review of Peter Coss and Maurice Keen, eds. Heraldry, Pageantry and Social Display in Medieval England (2002)",
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-22T21:56:48.749Z",
             "created_at": "2023-05-22T02:13:21.305Z",
             "dc_identifier": [
@@ -4377,6 +4387,7 @@ body: |-
               23072123
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:23.251Z",
             "created_at": "2023-05-22T23:52:32.910Z",
             "description": "This report provides an overview of an international benchmarking project and the resulting outcomes involving ten universities from New Zealand, Australia, Canada and the United Kingdom.",
@@ -4777,6 +4788,7 @@ body: |-
               23072120
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:23.267Z",
             "created_at": "2023-05-22T23:52:32.935Z",
             "description": "No abstract available.",
@@ -5177,6 +5189,7 @@ body: |-
               23072033
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:23.283Z",
             "created_at": "2023-05-22T23:52:32.956Z",
             "description": "New Zealand has a rich and diverse macroalgal flora  that has been studied since James Cook’s first voyage  to New Zealand in 1769. The New Zealand region  ranges from cool temperate seas at southerly latitudes  to subtropical waters in the north. Here we review the  history of phycological research in New Zealand since  1900, and the current status of research in taxonomy,  ecology, physiology and seaweed uses including aquaculture  and seaweed extracts. Some 770 species of  seaweed are known to New Zealand, of which 22 are  alien. Few taxa have received monographic treatment  and many remain to be described. Polysaccharides  have been identified from over 80 New Zealand seaweeds  and many of these compounds have commercial  potential. In addition to urgent taxonomic work, future  research should include a national program of longterm  (> 5 years) monitoring of macroalgal communities,  rates of growth and primary production, and the  contribution of seaweed-based production to coastal  food webs.",
@@ -5577,6 +5590,7 @@ body: |-
               23071937
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.556Z",
             "created_at": "2023-05-22T23:52:32.977Z",
             "description": "Biphasic insulin aspart 30 (BIAsp 30) includes 30% soluble rapid-acting insulin aspart (IAsp) along with an intermediate-acting 70% protaminated IAsp that provides coverage of prandial and basal insulin in a single injection. As BIAsp 30 has been available internationally for 10 years, this review provides a comprehensive overview of the discovery of BIAsp 30, its pharmacokinetic and pharmacodynamic profile, safety and efficacy outcomes from the clinical trial programme, 'real-life' clinical insights provided by observational study data, and cost effectiveness and quality-of-life information. These studies have demonstrated that BIAsp 30 once or twice daily is an appropriate option for insulin initiation. BIAsp 30 also provides a switch option in patients on biphasic human insulin (BHI). Switching from BHI to BIAsp 30 is associated with improved postprandial glucose (PPG) and reduced nocturnal and major hypoglycaemia, although daytime hypoglycaemia is higher with BIAsp 30. Intensification of BIAsp 30 can be achieved by increasing the number of daily doses up to three times daily with meals. Therefore, BIAsp 30 provides an intensification option for individuals who are not achieving control with basal insulin and would prefer the simplicity of a single biphasic insulin instead of progressing to a basal-bolus approach. BIAsp 30 has a simple dose-titration algorithm, which enables patients to effectively self-titrate their insulin dose. Cost-effectiveness analyses have demonstrated that BIAsp 30 is cost effective or dominant compared with BHI 30 or insulin glargine in a number of healthcare settings. In conclusion, BIAsp 30 offers a simple and flexible option for insulin initiation and intensification that provides coverage of both fasting and prandial glucose.",
@@ -5977,6 +5991,7 @@ body: |-
               23071886
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.578Z",
             "created_at": "2023-05-22T23:52:32.999Z",
             "description": "No description available",
@@ -6377,6 +6392,7 @@ body: |-
               23071577
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.595Z",
             "created_at": "2023-05-22T23:52:33.018Z",
             "description": "No description available",
@@ -6777,6 +6793,7 @@ body: |-
               23071553
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.613Z",
             "created_at": "2023-05-22T23:52:33.040Z",
             "description": "No description available",
@@ -7177,6 +7194,7 @@ body: |-
               23071328
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.628Z",
             "created_at": "2023-05-22T23:52:33.061Z",
             "description": "No description available",
@@ -7577,6 +7595,7 @@ body: |-
               23071295
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.644Z",
             "created_at": "2023-05-22T23:52:33.080Z",
             "description": "No abstract available.",
@@ -7977,6 +7996,7 @@ body: |-
               23071220
             ],
             "source_id": "test",
+            "source_url": "https://api.figshare.com/v1/articles/23029880",
             "updated_at": "2023-05-24T03:16:25.660Z",
             "created_at": "2023-05-22T23:52:33.100Z",
             "description": "No description available",

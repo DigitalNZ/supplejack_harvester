@@ -46,6 +46,16 @@ RSpec.describe Extraction::Documents do
       expect(subject[0]).to be_nil
       expect(subject[-1]).to be_nil
     end
+
+    it 'returns pages based on their page number, rather than their order in the file system' do
+      documents = Extraction::Documents.new(Rails.root.join("spec/support/enrichment_documents"))
+
+      expect(documents[1].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111115__000000001.json')
+      expect(documents[2].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111113__000000002.json') 
+      expect(documents[3].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111114__000000003.json')
+      expect(documents[4].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111112__000000004.json')
+      expect(documents[5].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111111__000000005.json')
+    end
   end
 
   describe '#total_pages' do

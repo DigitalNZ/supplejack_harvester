@@ -18,10 +18,14 @@ module Extraction
     private
 
     def url
+      return fragment_url if @extraction_definition.fragment_source_id.present?
+
       @request.url(@record)
     end
 
     def params
+      return {} if @extraction_definition.fragment_source_id.present?
+
       @request.query_parameters(@record)
     end
 
@@ -35,6 +39,14 @@ module Extraction
       name_str = @extraction_definition.name.parameterize(separator: '_')
       page_str = format('%09d', @page)[-9..]
       "#{@extraction_folder}/#{name_str}__#{@record['id']}__#{page_str}.json"
+    end
+
+    def fragment_url
+      url = @record['fragments'].find do |fragment|
+              fragment['source_id'] == @extraction_definition.fragment_source_id
+            end[@extraction_definition.fragment_key]
+
+      [*url].first
     end
   end
 end

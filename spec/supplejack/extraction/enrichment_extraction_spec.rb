@@ -26,6 +26,14 @@ RSpec.describe Extraction::EnrichmentExtraction do
     it 'fetches additional metadata based on the provided record' do
       expect(subject.extract).to be_a(Extraction::Document)
     end
+
+    context 'when the complete URL is in a fragment' do
+      let(:ed) { create(:extraction_definition, :enrichment, destination:, extraction_jobs: [extraction_job], fragment_source_id: 'test', fragment_key: 'source_url') }
+
+      it 'fetches the additional metadata by using the complete URL' do
+        expect(subject.extract).to be_a(Extraction::Document)
+      end
+    end
   end
 
   describe '#save' do
