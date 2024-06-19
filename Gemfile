@@ -42,9 +42,11 @@ gem 'rqrcode'
 gem 'faraday', '~> 2.9'
 gem 'faraday-follow_redirects'
 gem 'jsonpath'
+gem 'minitar'
 gem 'nokogiri'
 gem 'sidekiq'
 gem 'yomu'
+gem 'zlib'
 
 # transformation related
 gem 'webmock'

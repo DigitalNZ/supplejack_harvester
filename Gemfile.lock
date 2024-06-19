@@ -243,7 +243,8 @@ GEM
       mime-types-data (~> 3.2015)
     mime-types-data (3.2024.0507)
     mini_mime (1.1.5)
-    minitest (5.22.3)
+    minitar (0.9)
+    minitest (5.19.0)
     multi_json (1.15.0)
     mutex_m (0.2.0)
     mysql2 (0.5.6)
@@ -465,7 +466,8 @@ GEM
       nokogiri (~> 1.8)
     yard (0.9.36)
     yomu (0.1.5)
-    zeitwerk (2.6.13)
+    zeitwerk (2.6.16)
+    zlib (3.1.1)
 
 PLATFORMS
   aarch64-linux-musl
@@ -493,6 +495,7 @@ DEPENDENCIES
   jsonpath
   kaminari
   letter_opener
+  minitar
   mysql2 (~> 0.5)
   nokogiri
   pry-byebug
@@ -517,6 +520,7 @@ DEPENDENCIES
   webmock
   yard
   yomu
+  zlib
 
 RUBY VERSION
    ruby 3.2.2p53
