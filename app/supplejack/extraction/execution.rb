@@ -70,9 +70,10 @@ module Extraction
     end
 
     def custom_stop_conditions_met?
-      return false if @extraction_definition.stop_conditions.empty?
+      stop_conditions = @extraction_definition.stop_conditions
+      return false if stop_conditions.empty?
 
-      @extraction_definition.stop_conditions.map { |condition| condition.evaluate(@de.document.body) }.any?(true)
+      stop_conditions.map { |condition| condition.evaluate(@de.document.body) }.any?(true)
     end
 
     def throttle
@@ -80,9 +81,10 @@ module Extraction
     end
 
     def extract_archive_and_save(request)
-      @de = ArchiveExtraction.new(request, @extraction_job.extraction_folder, @previous_request)
-      @de.extract
-      @de.save_entries(@extraction_job.extraction_folder)
+      extraction_folder = @extraction_job.extraction_folder
+      @de = ArchiveExtraction.new(request, extraction_folder, @previous_request)
+      @de.download_archive
+      @de.save_entries(extraction_folder)
     end
 
     def extract_and_save_document(request)
