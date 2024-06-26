@@ -4,7 +4,8 @@ module Extraction
   # Manages the filesystem part of the request object
   # Saves it to filesystem and loads it in memory
   class Document
-    attr_reader :status, :request_headers, :response_headers, :body, :url, :method, :params, :file_path
+    attr_reader :status, :request_headers, :response_headers, :url, :method, :params, :file_path
+    attr_accessor :body
 
     def initialize(file_path = nil, **kwargs)
       @file_path = file_path
