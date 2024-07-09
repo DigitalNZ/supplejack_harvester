@@ -59,6 +59,10 @@ class ExtractionDefinition < ApplicationRecord
     }
   end
 
+  def json?
+    format.in? %w[JSON ARCHIVE_JSON]
+  end
+
   def shared?
     @shared = harvest_definitions.count > 1 if @shared.nil?
     @shared

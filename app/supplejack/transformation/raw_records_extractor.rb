@@ -39,12 +39,14 @@ module Transformation
     end
 
     def format
+      return 'JSON' if @extraction_job.extraction_definition.format == 'ARCHIVE_JSON'
+
       @extraction_job.extraction_definition.format
     end
 
     def record_selector
       return @transformation_definition.record_selector if @transformation_definition.record_selector.present?
-      return '*' if format == 'JSON'
+      return '*' if format.in?(%w[JSON ARCHIVE_JSON])
 
       '/'
     end
