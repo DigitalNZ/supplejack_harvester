@@ -52,9 +52,20 @@ class LoadWorker
     @harvest_report.increment_load_workers_completed!
     @harvest_report.reload
 
-    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
+    if @harvest_report.load_workers_completed?
+      @harvest_report.load_completed!
+      Api::Utils::NoticeHarvestingToApi.new(destination, source_id, false).call
+    end
 
     @harvest_job.pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
     @harvest_job.execute_delete_previous_records
+  end
+
+  def source_id
+    @harvest_job.pipeline_job.pipeline.harvest.source_id
+  end
+
+  def destination
+    @harvest_job.pipeline_job.destination
   end
 end
