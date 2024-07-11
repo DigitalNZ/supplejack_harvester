@@ -10,14 +10,7 @@ module Delete
     end
 
     def call
-      connection(@destination.url, {}, { 'Authentication-Token' => @destination.api_key })
-        .put(
-          '/harvester/records/delete',
-          {
-            id: @record['transformed_record']['internal_identifier']
-          }.to_json,
-          'Content-Type' => 'application/json'
-        )
+      Api::Harvester::Record.new(@destination).delete(@record['transformed_record']['internal_identifier'])
     end
   end
 end
