@@ -18,10 +18,10 @@ Rails.application.routes.draw do
       resource :two_factor_setups, only: %i[show create destroy]
     end
   end
-  
+
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
-    
+
     resources :pipeline_jobs, only: %i[create show index] do
       post :cancel, on: :member
     end
