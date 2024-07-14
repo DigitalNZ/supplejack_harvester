@@ -3,6 +3,7 @@
 class PipelineJobsController < ApplicationController
   before_action :find_pipeline
   before_action :find_pipeline_job, only: %i[show cancel]
+  before_action :complete_finished_jobs
 
   def index
     @pipeline_jobs = paginate_and_filter_jobs(@pipeline.pipeline_jobs)
@@ -36,6 +37,19 @@ class PipelineJobsController < ApplicationController
   end
 
   private
+  
+  # we have noticed an issue where jobs are not being appropriately marked as completed during the worker lifecycle
+  # this is being caused by latency between the concurrent sidekiq process and the database
+  # future plan is to introduce a watching process as part of the harvest and move logic about completions and scheduling enrichments there
+  def complete_finished_jobs
+    running_reports = @pipeline.pipeline_jobs.flat_map(&:harvest_reports).select { |report| report.status == 'running'  }
+
+    running_reports.each do |report|
+      report.update(transformation_status: 'completed') if report.transformation_workers_completed?
+      report.update(load_status: 'completed') if report.load_workers_completed?
+      report.update(delete_status: 'completed') if report.delete_workers_completed?
+    end
+  end
 
   def find_pipeline
     @pipeline = Pipeline.find(params[:pipeline_id])
