@@ -7,6 +7,10 @@ RSpec.describe 'PipelineJobs' do
   let(:pipeline)     { create(:pipeline) }
   let(:destination)  { create(:destination) }
   let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }
+  let(:harvest_definition) { create(:harvest_definition, pipeline:) }
+  let(:harvest_job) { create(:harvest_job, harvest_definition:, pipeline_job:) }
+
+  let!(:harvest_report) { create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'running', transformation_workers_queued: 1, transformation_workers_completed: 1, load_status: 'running', load_workers_queued: 1, load_workers_completed: 1, delete_status: 'running', delete_workers_queued: 0, delete_workers_completed: 0) }
 
   before do
     sign_in(user)
@@ -17,6 +21,15 @@ RSpec.describe 'PipelineJobs' do
       get pipeline_pipeline_jobs_path(pipeline)
 
       expect(response).to have_http_status :ok
+    end
+
+    it 'completes running jobs that have finished' do
+      expect(harvest_report.status).to eq 'running'
+      get pipeline_pipeline_jobs_path(pipeline)
+
+      harvest_report.reload
+
+      expect(harvest_report.status).to eq 'completed'
     end
   end
 
