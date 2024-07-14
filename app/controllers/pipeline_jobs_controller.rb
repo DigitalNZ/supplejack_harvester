@@ -37,12 +37,15 @@ class PipelineJobsController < ApplicationController
   end
 
   private
-  
+
   # we have noticed an issue where jobs are not being appropriately marked as completed during the worker lifecycle
   # this is being caused by latency between the concurrent sidekiq process and the database
-  # future plan is to introduce a watching process as part of the harvest and move logic about completions and scheduling enrichments there
+  # future plan is to introduce a watching process as part of the harvest and move logic
+  # about completions and scheduling enrichments there
   def complete_finished_jobs
-    running_reports = @pipeline.pipeline_jobs.flat_map(&:harvest_reports).select { |report| report.status == 'running'  }
+    running_reports = @pipeline.pipeline_jobs.flat_map(&:harvest_reports).select do |report|
+      report.status == 'running'
+    end
 
     running_reports.each do |report|
       report.update(transformation_status: 'completed') if report.transformation_workers_completed?
