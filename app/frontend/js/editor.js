@@ -8,7 +8,7 @@ import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { xml } from "@codemirror/legacy-modes/mode/xml";
 
 export function editorExtensions(format, readOnly, formField) {
-  if (format == "JSON") {
+  if (format == "JSON" || format == "ARCHIVE_JSON") {
     return [basicSetup, json(), EditorState.readOnly.of(readOnly)];
   } else if (format == "XML" || format == "HTML") {
     return [
@@ -52,7 +52,7 @@ if (extractionResultViewer) {
   const format = extractionResultViewer.dataset.format;
   let results = extractionResultViewer.dataset.results;
 
-  if (format == "JSON") {
+  if (format == "JSON" || format == "ARCHIVE_JSON") {
     results = JSON.stringify(JSON.parse(results), null, 2);
   } else if (format == "XML") {
     results = xmlFormat(results, { indentation: "  ", lineSeparator: "\n" });

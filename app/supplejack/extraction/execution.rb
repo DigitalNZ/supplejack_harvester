@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'zlib'
+require 'archive/tar/minitar'
+
 module Extraction
   # Performs the work as defined in the document extraction
   class Execution
@@ -11,23 +14,37 @@ module Extraction
     end
 
     def call
-      extract_and_save_document(@extraction_definition.requests.first)
+      extract(@extraction_definition.requests.first)
       return if @extraction_job.is_sample? || set_number_reached?
       return unless @extraction_definition.paginated?
 
       loop do
-        @extraction_definition.page += 1
-
-        extract_and_save_document(@extraction_definition.requests.last)
-
+        next_page
+        extract(@extraction_definition.requests.last)
         throttle
 
-        break if @extraction_job.reload.cancelled?
+        break if execution_cancelled?
         break if stop_condition_met?
       end
     end
 
     private
+
+    def extract(request)
+      if @extraction_definition.format == 'ARCHIVE_JSON'
+        extract_archive_and_save(request)
+      else
+        extract_and_save_document(request)
+      end
+    end
+
+    def next_page
+      @extraction_definition.page += 1
+    end
+
+    def execution_cancelled?
+      @extraction_job.reload.cancelled?
+    end
 
     def stop_condition_met?
       [set_number_reached?, extraction_failed?, duplicate_document_extracted?, custom_stop_conditions_met?].any?(true)
@@ -53,13 +70,21 @@ module Extraction
     end
 
     def custom_stop_conditions_met?
-      return false if @extraction_definition.stop_conditions.empty?
+      stop_conditions = @extraction_definition.stop_conditions
+      return false if stop_conditions.empty?
 
-      @extraction_definition.stop_conditions.map { |condition| condition.evaluate(@de.document.body) }.any?(true)
+      stop_conditions.map { |condition| condition.evaluate(@de.document.body) }.any?(true)
     end
 
     def throttle
       sleep @extraction_definition.throttle / 1000.0
+    end
+
+    def extract_archive_and_save(request)
+      extraction_folder = @extraction_job.extraction_folder
+      @de = ArchiveExtraction.new(request, extraction_folder, @previous_request)
+      @de.download_archive
+      @de.save_entries(extraction_folder)
     end
 
     def extract_and_save_document(request)

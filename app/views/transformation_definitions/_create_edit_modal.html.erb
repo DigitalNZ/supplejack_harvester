@@ -116,7 +116,7 @@
   <span
     id='js-transformation-definition-preview-data-<%= harvest_definition.id %>'
     data-format="<%= model.extraction_job.format %>"
-    <% if model.extraction_job.format == 'JSON' %>
+    <% if model.extraction_job.json? %>
       data-result="<%= model.records.first.to_json %>"
     <% else %>
       data-result="<%= model.records.first %>"
@@ -129,7 +129,7 @@
     <span
       id='js-transformation-definition-preview-data-<%= harvest_definition.id %>'
       data-format="<%= extraction_job.format %>"
-      <% if extraction_job.format == 'JSON' %>
+      <% if extraction_job.json? %>
         <%# TODO: load this with Ajax? %>
         data-result="<%= TransformationDefinition.new(extraction_job:).records.first.to_json %>"
       <% else %>

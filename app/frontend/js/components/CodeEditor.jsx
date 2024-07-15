@@ -11,7 +11,7 @@ const CodeEditor = ({ initContent, onChange, format = "ruby", ...props }) => {
   const editorRef = useRef();
 
   const editorExtensions = () => {
-    if (format == "JSON") {
+    if (format == "JSON" || format == "ARCHIVE_JSON") {
       return [basicSetup, json(), EditorState.readOnly.of(true)];
     } else if (format == "XML" || format == "HTML") {
       return [
@@ -39,7 +39,7 @@ const CodeEditor = ({ initContent, onChange, format = "ruby", ...props }) => {
 
   const doc = () => {
     let content;
-    if (format == "JSON") {
+    if (format == "JSON" || format == "ARCHIVE_JSON") {
       try {
         content = JSON.stringify(JSON.parse(initContent), null, 2);
       } catch (err) {
