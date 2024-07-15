@@ -13,6 +13,10 @@ module Api
       @connection.get(path, params)
     end
 
+    def post(path, params)
+      @connection.post(path, params)
+    end
+
     def put(path, params)
       @connection.put(path, params)
     end
