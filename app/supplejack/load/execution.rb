@@ -2,8 +2,6 @@
 
 module Load
   class Execution
-    include HttpClient
-
     def initialize(records, harvest_job, api_record_id = nil)
       @records            = records
       @harvest_job        = harvest_job
@@ -27,25 +25,18 @@ module Load
     private
 
     def harvest_request
-      connection(@destination.url, {}, { 'Authentication-Token' => @destination.api_key })
-        .post(
-          '/harvester/records/create_batch',
-          {
-            records: build_records
-          }.to_json,
-          headers
-        )
+      Api::Harvester::Record.new(@destination).create_batch(
+        records: build_records
+      )
     end
 
     def enrichment_request
       required_fragments = [@harvest_definition.source_id] if @harvest_definition.required_for_active_record?
 
-      connection(@destination.url, {}, { 'Authentication-Token' => @destination.api_key })
-        .post(
-          "/harvester/records/#{@api_record_id}/fragments.json",
-          { fragment: build_record(@records.first), required_fragments: }.to_json,
-          headers
-        )
+      Api::Harvester::Fragment.new(@destination).post(
+        @api_record_id,
+        { fragment: build_record(@records.first), required_fragments: }
+      )
     end
 
     def build_records
