@@ -54,7 +54,7 @@ class LoadWorker
 
     if @harvest_report.load_workers_completed?
       @harvest_report.load_completed!
-      Api::Utils::NoticeHarvestingToApi.new(destination, source_id, false).call
+      Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
     end
 
     @harvest_job.pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)

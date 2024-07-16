@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Api::Utils::NoticeHarvestingToApi do
+RSpec.describe Api::Utils::NotifyHarvesting do
   let(:destination) { create(:destination) }
 
   def stub_index_request
