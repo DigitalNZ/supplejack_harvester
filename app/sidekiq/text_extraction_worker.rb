@@ -6,8 +6,16 @@ class TextExtractionWorker < FileExtractionWorker
       saved_file = File.read("#{@tmp_directory}/#{file}")
 
       saved_response = { 'method' => 'GET', 'status' => 200, 'response_headers' => [], 'request_headers' => [] }
+      text = Yomu.read(:text, saved_file)
 
-      create_document(Yomu.read(:text, saved_file), saved_response, file)
+      if text.squish.empty?
+        # ocr the file
+        base_file_name = File.basename(file, File.extname(file))
+        `ocrmypdf "#{@tmp_directory}/#{file}" --sidecar "#{@tmp_directory}/#{base_file_name}.txt" - --output-type=none -q`
+        text = File.read("#{@tmp_directory}/#{base_file_name}.txt")
+      end
+
+      create_document(text, saved_response, file)
       @page += 1
     end
 
