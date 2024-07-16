@@ -26,6 +26,19 @@ RSpec.describe TextExtractionWorker, type: :job do
     
           expect(extracted_files.count).to eq 1
         end
+
+        it 'signifies if content has been extracted from a PDF' do
+          TextExtractionWorker.new.perform(extraction_job.id)
+
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
+
+          document = JSON.parse(File.read(extracted_files.first))
+          process = JSON.parse(document['body'])['process'] 
+
+          expect(process).to eq 'Extracted from application/pdf using Yomu'
+        end
   
         it 'cleans up the tmp folder it creates' do
           expect(Dir.exist?("#{extraction_job.extraction_folder}/tmp")).to eq false
@@ -68,6 +81,19 @@ RSpec.describe TextExtractionWorker, type: :job do
           text = JSON.parse(document['body'])['text'] 
 
           expect(text).to include("AUCKLAND OFFICE")
+        end
+
+        it 'signifies if content has been extracted using OCR' do
+          TextExtractionWorker.new.perform(extraction_job.id)
+
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
+
+          document = JSON.parse(File.read(extracted_files.first))
+          process = JSON.parse(document['body'])['process'] 
+
+          expect(process).to eq 'Extracted from PDF using OCRmyPDF'
         end
       end
     end

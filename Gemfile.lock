@@ -493,6 +493,7 @@ DEPENDENCIES
   jsonpath
   kaminari
   letter_opener
+  marcel
   mysql2 (~> 0.5)
   nokogiri
   pry-byebug
