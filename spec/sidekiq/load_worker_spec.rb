@@ -12,9 +12,9 @@ RSpec.describe LoadWorker, type: :job do
   end
 
   def stub_notice_to_api
-    notifier = instance_double('Api::Utils::NoticeHarvestingToApi')
+    notifier = instance_double('Api::Utils::NotifyHarvesting')
     expect(notifier).to receive(:call)
-    expect(Api::Utils::NoticeHarvestingToApi).to receive(:new) { notifier }
+    expect(Api::Utils::NotifyHarvesting).to receive(:new) { notifier }
   end
 
   describe '#perform' do

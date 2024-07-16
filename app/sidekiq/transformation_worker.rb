@@ -65,9 +65,7 @@ class TransformationWorker
     return if records.empty?
 
     LoadWorker.perform_async(@harvest_job.id, records.to_json, @api_record_id)
-    if @harvest_report.load_workers_queued.zero?
-      Api::Utils::NoticeHarvestingToApi.new(destination, source_id, true).call
-    end
+    Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
     @harvest_report.increment_load_workers_queued!
   end
 

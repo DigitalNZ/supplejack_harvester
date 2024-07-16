@@ -2,7 +2,7 @@
 
 module Api
   module Utils
-    class NoticeHarvestingToApi
+    class NotifyHarvesting
       def initialize(destination, source_id, harvesting)
         @api_source = Harvester::Source.new(destination)
         @source_id = source_id
