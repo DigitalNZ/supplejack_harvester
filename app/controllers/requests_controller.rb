@@ -36,9 +36,11 @@ class RequestsController < ApplicationController
 
       @previous_response = Extraction::DocumentExtraction.new(@previous_request).extract
     end
+    document = Extraction::DocumentExtraction.new(@request, nil, @previous_response).extract
+    document.body = "Tar files can't be displayed" if @extraction_definition.format == 'ARCHIVE_JSON'
 
     render json: @request.to_h.merge(
-      preview: Extraction::DocumentExtraction.new(@request, nil, @previous_response).extract
+      preview: document
     )
   end
 

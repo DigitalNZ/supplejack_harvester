@@ -23,6 +23,7 @@ class ExtractionJob < ApplicationRecord
   end
 
   delegate :format, to: :extraction_definition
+  delegate :json?, to: :extraction_definition
 
   # Returns the fullpath to the extraction folder for this job
   #

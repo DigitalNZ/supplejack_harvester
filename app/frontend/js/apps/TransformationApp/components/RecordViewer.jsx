@@ -9,7 +9,7 @@ const RecordViewer = ({ record, format }) => {
   const editor = useRef();
 
   function doc() {
-    if (format == "JSON") {
+    if (format == "JSON" || format == "ARCHIVE_JSON") {
       return JSON.stringify(record, null, 2);
     } else if (format == "XML") {
       return xmlFormat(record, { indentation: "  ", lineSeparator: "\n" });

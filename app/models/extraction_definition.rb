@@ -3,7 +3,7 @@
 # Used to store the information for running an extraction
 #
 class ExtractionDefinition < ApplicationRecord
-  FORMATS = %w[JSON XML HTML].freeze
+  FORMATS = %w[JSON XML HTML ARCHIVE_JSON].freeze
 
   # The destination is used for Enrichment Extractions
   # To know where to pull the records that are to be enriched from
@@ -57,6 +57,10 @@ class ExtractionDefinition < ApplicationRecord
       id:,
       name:
     }
+  end
+
+  def json?
+    format.in? %w[JSON ARCHIVE_JSON]
   end
 
   def shared?

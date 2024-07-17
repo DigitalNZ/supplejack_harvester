@@ -75,7 +75,7 @@ function displayPreview(data) {
   } = data;
 
   try {
-    if (format == "JSON") {
+    if (format == "JSON" || format == "ARCHIVE_JSON") {
       result = JSON.stringify(JSON.parse(result), null, 2);
     } else if (format == "XML") {
       result = xmlFormat(result, {
@@ -145,7 +145,10 @@ function bindRecordSelectorTestEventListeners(id) {
     (response, _alertClass) => {
       let results = response.data.result;
 
-      if (response.data.format == "JSON") {
+      if (
+        response.data.format == "JSON" ||
+        response.data.format == "ARCHIVE_JSON"
+      ) {
         results = JSON.stringify(response.data.result, null, 2);
       } else if (response.data.format == "XML") {
         results = xmlFormat(response.data.result, {
