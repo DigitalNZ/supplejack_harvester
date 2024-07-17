@@ -3,6 +3,9 @@
 class TextExtractionWorker < FileExtractionWorker
   def process_extracted_documents
     Dir.children(@tmp_directory).each do |file|
+
+      harvest_report.update(extraction_updated_time: Time.zone.now)
+
       saved_file = File.read("#{@tmp_directory}/#{file}")
       mimetype = Marcel::MimeType.for(saved_file)
 

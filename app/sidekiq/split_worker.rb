@@ -3,6 +3,8 @@
 class SplitWorker < FileExtractionWorker
   def process_extracted_documents
     Dir.children(@tmp_directory).each do |file|
+      harvest_report.update(extraction_updated_time: Time.zone.now)
+
       saved_response = JSON.parse(File.read("#{@tmp_directory}/#{file}"))
 
       Nokogiri::XML(saved_response['body']).xpath(@extraction_definition.split_selector).each_slice(100) do |records|
