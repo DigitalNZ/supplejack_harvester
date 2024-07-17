@@ -15,6 +15,7 @@ class FileExtractionWorker
     process_extracted_documents
 
     FileUtils.remove_dir(@tmp_directory)
+    harvest_report.extraction_completed!
 
     create_transformation_jobs if @extraction_job.harvest_job.present?
   end
