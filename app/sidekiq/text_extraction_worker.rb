@@ -34,7 +34,7 @@ class TextExtractionWorker < FileExtractionWorker
 
   def ocr_pdf(file)
     base_file_name = File.basename(file, File.extname(file))
-    `ocrmypdf "#{@tmp_directory}/#{file}" --sidecar "#{@tmp_directory}/#{base_file_name}.txt" - --output-type=none -q`
+    `ocrmypdf "#{@tmp_directory.shellescape}/#{file.shellescape}" --sidecar "#{@tmp_directory.shellescape}/#{base_file_name.shellescape}.txt" - --output-type=none -q`
     File.read("#{@tmp_directory}/#{base_file_name}.txt")
   end
 

@@ -135,4 +135,5 @@ jobs:
           MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: |
+          sudo apt-get install -y ocrmypdf tesseract-ocr
           bundle exec rspec spec --fail-fast --format=progress
