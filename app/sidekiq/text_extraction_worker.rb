@@ -3,36 +3,42 @@
 class TextExtractionWorker < FileExtractionWorker
   def process_extracted_documents
     Dir.children(@tmp_directory).each do |file|
-
-      harvest_report.update(extraction_updated_time: Time.zone.now)
-
       saved_file = File.read("#{@tmp_directory}/#{file}")
       mimetype = Marcel::MimeType.for(saved_file)
 
-      saved_response = { 'method' => 'GET', 'status' => 200, 'response_headers' => [], 'request_headers' => [] }
       text = Yomu.read(:text, saved_file)
       process = "Extracted from #{mimetype} using Yomu"
 
-      if text.squish.empty?
-        base_file_name = File.basename(file, File.extname(file))
-        `ocrmypdf "#{@tmp_directory}/#{file}" --sidecar "#{@tmp_directory}/#{base_file_name}.txt" - --output-type=none -q`
-        text = File.read("#{@tmp_directory}/#{base_file_name}.txt")
+      if text.squish.empty? && mimetype == 'application/pdf'
+        text = ocr_pdf(file)
         process = 'Extracted from PDF using OCRmyPDF'
       end
 
-      create_document(text, saved_response, file, process)
+      create_document(text, file, process)
       @page += 1
     end
 
     @extraction_definition.update(format: 'JSON')
   end
 
-  def create_document(extracted_text, saved_response, filename, process)
+  def create_document(extracted_text, filename, process)
     Extraction::Document.new(
       url: saved_response['url'], method: saved_response['method'],
       params: saved_response['params'], request_headers: saved_response['request_headers'],
       status: saved_response['status'], response_headers: saved_response['response_headers'],
-      body: { text: extracted_text, process: process }.to_json
+      body: { text: extracted_text, process: }.to_json
     ).save("#{@extraction_folder}/#{filename}")
+  end
+
+  private
+
+  def ocr_pdf(file)
+    base_file_name = File.basename(file, File.extname(file))
+    `ocrmypdf "#{@tmp_directory}/#{file}" --sidecar "#{@tmp_directory}/#{base_file_name}.txt" - --output-type=none -q`
+    File.read("#{@tmp_directory}/#{base_file_name}.txt")
+  end
+
+  def saved_response
+    { 'method' => 'GET', 'status' => 200, 'response_headers' => [], 'request_headers' => [] }
   end
 end

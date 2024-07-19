@@ -40,16 +40,22 @@ class ExtractionWorker < ApplicationWorker
     return if @harvest_report.blank?
 
     @harvest_report.reload
-    @harvest_report.extraction_cancelled! if @job.cancelled?
 
-    return if @job.cancelled?
+    if @job.cancelled?
+      @harvest_report.extraction_cancelled!
+      return
+    end
 
+    update_harvest_report!
+
+    trigger_following_processes
+  end
+
+  def update_harvest_report!
     @harvest_report.extraction_completed! unless @job.extraction_definition.extract_text_from_file?
     @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
     @harvest_report.load_completed! if @harvest_report.load_workers_completed?
     @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
-
-    trigger_following_processes
   end
 
   def trigger_following_processes
