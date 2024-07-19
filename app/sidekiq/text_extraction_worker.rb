@@ -3,18 +3,10 @@
 class TextExtractionWorker < FileExtractionWorker
   def process_extracted_documents
     Dir.children(@tmp_directory).each do |file|
-      saved_file = File.read("#{@tmp_directory}/#{file}")
-      mimetype = Marcel::MimeType.for(saved_file)
+      loaded_file = File.read("#{@tmp_directory}/#{file}")
 
-      text = Yomu.read(:text, saved_file)
-      process = "Extracted from #{mimetype} using Yomu"
-
-      if text.squish.empty? && mimetype == 'application/pdf'
-        text = ocr_pdf(file)
-        process = 'Extracted from PDF using OCRmyPDF'
-      end
-
-      create_document(text, file, process)
+      extracted_text = extract_text(loaded_file, file)
+      create_document(extracted_text[:text], file, extracted_text[:process])
       @page += 1
     end
 
@@ -32,9 +24,26 @@ class TextExtractionWorker < FileExtractionWorker
 
   private
 
+  def extract_text(loaded_file, file)
+    mimetype = Marcel::MimeType.for(loaded_file)
+
+    text = Yomu.read(:text, loaded_file)
+    process = "Extracted from #{mimetype} using Yomu"
+
+    if text.squish.empty? && mimetype == 'application/pdf'
+      text = ocr_pdf(file)
+      process = 'Extracted from PDF using OCRmyPDF'
+    end
+
+    { text:, process: }
+  end
+
   def ocr_pdf(file)
     base_file_name = File.basename(file, File.extname(file))
-    `ocrmypdf "#{@tmp_directory.shellescape}/#{file.shellescape}" --sidecar "#{@tmp_directory.shellescape}/#{base_file_name.shellescape}.txt" - --output-type=none -q`
+    `ocrmypdf \
+      "#{@tmp_directory.shellescape}/#{file.shellescape}" \
+      --sidecar "#{@tmp_directory.shellescape}/#{base_file_name.shellescape}.txt" - \
+      --output-type=none -q`
     File.read("#{@tmp_directory}/#{base_file_name}.txt")
   end
 
