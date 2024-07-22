@@ -4,7 +4,7 @@ WORKDIR /app
 
 ARG BUILD_PACKAGES="build-base curl-dev git"
 # AWS CLI is used to run the S3 extraction
-ARG DEV_PACKAGES="bash mysql-client mariadb-dev yaml-dev zlib-dev nodejs yarn libxml2 libxml2-dev libxslt libxslt-dev gmp-dev openjdk8-jre python3 py3-pip aws-cli tesseract-ocr ocrmypdf"
+ARG DEV_PACKAGES="bash mysql-client mariadb-dev yaml-dev zlib-dev nodejs yarn libxml2 libxml2-dev libxslt libxslt-dev gmp-dev openjdk8-jre python3 py3-pip aws-cli tesseract-ocr tesseract-ocr-data-eng ocrmypdf"
 ARG RUBY_PACKAGES="tzdata"
 
 WORKDIR /app
