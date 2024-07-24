@@ -80,4 +80,19 @@ class ExtractionDefinition < ApplicationRecord
 
     cloned_extraction_definition
   end
+
+  def destroy
+    # Remove all associated harvest reports
+    extraction_jobs.each do |extraction_job|
+      next if extraction_job.harvest_job.blank?
+
+      extraction_job.harvest_job.harvest_report.destroy!
+      extraction_job.reload
+      extraction_job.harvest_job.destroy!
+    end
+
+    reload
+
+    super
+  end
 end
