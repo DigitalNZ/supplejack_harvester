@@ -34,6 +34,19 @@ RSpec.describe Extraction::EnrichmentExtraction do
         expect(subject.extract).to be_a(Extraction::Document)
       end
     end
+
+    context 'when record extraction fails' do
+      before do
+        subject
+
+        allow(Extraction::Request).to receive(:new).and_raise(StandardError)
+      end
+
+      it 'retries the extraction' do
+        expect(Extraction::Request).to receive(:new).at_least(2)
+        subject.extract
+      end
+    end
   end
 
   describe '#save' do
