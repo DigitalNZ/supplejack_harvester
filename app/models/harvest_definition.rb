@@ -27,16 +27,6 @@ class HarvestDefinition < ApplicationRecord
     definition.destroy unless definition.nil? || definition.shared?
   end
 
-  def destroy_harvest_reports
-    harvest_jobs.each do |harvest_job|
-      next if harvest_job.blank? || harvest_job.harvest_report.blank?
-
-      harvest_job.harvest_report.destroy!
-    end
-
-    reload
-  end
-
   def destroy_associated_definitions
     destroy_definition(extraction_definition)
     destroy_definition(transformation_definition)
