@@ -11,6 +11,9 @@ class ExtractionDefinition < ApplicationRecord
   belongs_to :pipeline
   belongs_to :last_edited_by, class_name: 'User', optional: true
 
+  # the before_destroy needs to be here (before any other dependent: :destroy statements)
+  before_destroy :remove_dependent_objects, prepend: true
+
   has_many :harvest_definitions, dependent: :nullify
   has_many :extraction_jobs, dependent: :destroy
   has_many :requests, dependent: :destroy
@@ -81,7 +84,7 @@ class ExtractionDefinition < ApplicationRecord
     cloned_extraction_definition
   end
 
-  def destroy
+  def remove_dependent_objects
     # Remove all associated harvest reports
     extraction_jobs.each do |extraction_job|
       next if extraction_job.harvest_job.blank?
@@ -92,7 +95,5 @@ class ExtractionDefinition < ApplicationRecord
     end
 
     reload
-
-    super
   end
 end
