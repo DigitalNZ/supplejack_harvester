@@ -28,7 +28,7 @@ class HarvestDefinition < ApplicationRecord
   end
 
   def destroy_harvest_reports
-    harvest_jobs.each do | harvest_job |
+    harvest_jobs.each do |harvest_job|
       next if harvest_job.blank? || harvest_job.harvest_report.blank?
 
       harvest_job.harvest_report.destroy!
