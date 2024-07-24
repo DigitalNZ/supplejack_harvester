@@ -244,7 +244,7 @@ GEM
     mime-types-data (3.2024.0507)
     mini_mime (1.1.5)
     minitar (0.9)
-    minitest (5.19.0)
+    minitest (5.22.3)
     multi_json (1.15.0)
     mutex_m (0.2.0)
     mysql2 (0.5.6)
@@ -347,8 +347,8 @@ GEM
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
     retriable (3.1.2)
-    rexml (3.2.8)
-      strscan (>= 3.0.9)
+    rexml (3.3.2)
+      strscan
     rotp (6.3.0)
     rqrcode (2.2.0)
       chunky_png (~> 1.0)
@@ -466,7 +466,7 @@ GEM
       nokogiri (~> 1.8)
     yard (0.9.36)
     yomu (0.1.5)
-    zeitwerk (2.6.16)
+    zeitwerk (2.6.13)
     zlib (3.1.1)
 
 PLATFORMS
@@ -495,6 +495,7 @@ DEPENDENCIES
   jsonpath
   kaminari
   letter_opener
+  marcel
   minitar
   mysql2 (~> 0.5)
   nokogiri

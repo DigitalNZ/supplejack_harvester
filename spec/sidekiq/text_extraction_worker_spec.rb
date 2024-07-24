@@ -9,40 +9,92 @@ RSpec.describe TextExtractionWorker, type: :job do
  
   describe "#perform" do
     context 'when the PDF extraction is not part of a harvest' do
-      before do
-        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example__1234__01.json")
-      end
 
-      it 'converts a PDF into raw text' do
-        extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+      context 'when the PDF has a text layer' do
+        before do
+          FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example__1234__01.json")
+        end
   
-        expect(extracted_files.count).to eq 1
-
-        TextExtractionWorker.new.perform(extraction_job.id)
-
-        extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+        it 'converts a PDF into raw text' do
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
   
-        expect(extracted_files.count).to eq 1
+          TextExtractionWorker.new.perform(extraction_job.id)
+  
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
+        end
+
+        it 'signifies if content has been extracted from a PDF' do
+          TextExtractionWorker.new.perform(extraction_job.id)
+
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
+
+          document = JSON.parse(File.read(extracted_files.first))
+          process = JSON.parse(document['body'])['process'] 
+
+          expect(process).to eq 'Extracted from application/pdf using Yomu'
+        end
+  
+        it 'cleans up the tmp folder it creates' do
+          expect(Dir.exist?("#{extraction_job.extraction_folder}/tmp")).to eq false
+  
+          TextExtractionWorker.new.perform(extraction_job.id)
+  
+          expect(Dir.exist?("#{extraction_job.extraction_folder}/tmp")).to eq false 
+        end
+  
+        it 'names the new files following as it was originally' do
+          TextExtractionWorker.new.perform(extraction_job.id)
+        
+          expect(File.exist?("#{extraction_job.extraction_folder}/example__1234__01.json")).to eq(true)
+        end
+  
+        it 'does not enqueue Transformation Workers' do
+          expect(TransformationWorker).not_to receive(:perform_async)
+  
+          TextExtractionWorker.new.perform(extraction_job.id) 
+        end
       end
 
-      it 'cleans up the tmp folder it creates' do
-        expect(Dir.exist?("#{extraction_job.extraction_folder}/tmp")).to eq false
+      context 'when the PDF does not have a text layer' do
+        before do
+          FileUtils.cp("#{Rails.root}/spec/support/example_needing_ocr.pdf", "#{extraction_job.extraction_folder}/example__1234__01.json")
+        end
 
-        TextExtractionWorker.new.perform(extraction_job.id)
+        it 'OCRs the PDF to add a text layer' do
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
 
-        expect(Dir.exist?("#{extraction_job.extraction_folder}/tmp")).to eq false 
-      end
+          TextExtractionWorker.new.perform(extraction_job.id)
 
-      it 'names the new files following as it was originally' do
-        TextExtractionWorker.new.perform(extraction_job.id)
-      
-        expect(File.exist?("#{extraction_job.extraction_folder}/example__1234__01.json")).to eq(true)
-      end
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
 
-      it 'does not enqueue Transformation Workers' do
-        expect(TransformationWorker).not_to receive(:perform_async)
+          document = JSON.parse(File.read(extracted_files.first))
+          text = JSON.parse(document['body'])['text'] 
 
-        TextExtractionWorker.new.perform(extraction_job.id) 
+          expect(text).to include("AUCKLAND OFFICE")
+        end
+
+        it 'signifies if content has been extracted using OCR' do
+          TextExtractionWorker.new.perform(extraction_job.id)
+
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
+
+          document = JSON.parse(File.read(extracted_files.first))
+          process = JSON.parse(document['body'])['process'] 
+
+          expect(process).to eq 'Extracted from PDF using OCRmyPDF'
+        end
       end
     end
 
