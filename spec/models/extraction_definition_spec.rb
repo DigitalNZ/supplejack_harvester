@@ -197,21 +197,15 @@ RSpec.describe ExtractionDefinition do
       let!(:harvest_report)     { create(:harvest_report, pipeline_job:, harvest_job:) }
 
       it "destroys the extraction definition" do
-        expect {
-          subject.destroy
-        }.to change { ExtractionDefinition.count }.by(-1)
+        expect { subject.destroy }.to change(ExtractionDefinition, :count).by(-1)
       end
 
       it "destroys the harvest job" do
-        expect {
-          subject.destroy
-        }.to change { HarvestJob.count }.by(-1)
+        expect { subject.destroy }.to change(HarvestJob, :count).by(-1)
       end
 
       it "destroys the harvest reports" do
-        expect {
-          subject.destroy
-        }.to change { HarvestReport.count }.by(-1)
+        expect { subject.destroy }.to change(HarvestReport, :count).by(-1)
       end
     end
 
@@ -219,9 +213,7 @@ RSpec.describe ExtractionDefinition do
       let!(:extraction_job)     { create(:extraction_job, extraction_definition: subject)}
 
       it "destroys the extraction definition" do
-        expect {
-          subject.destroy
-        }.to change { ExtractionDefinition.count }.by(-1)
+        expect { subject.destroy }.to change(ExtractionDefinition, :count).by(-1)
       end
     end
   end
