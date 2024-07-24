@@ -185,4 +185,44 @@ RSpec.describe ExtractionDefinition do
       expect(cloned_extraction_definition.name).to eq 'clone'
     end
   end
+
+  describe "#destroy" do
+    let!(:pipeline_job)       { create(:pipeline_job, pipeline: pipeline1, destination:) }
+    let!(:harvest_definition) { create(:harvest_definition, pipeline: pipeline1, extraction_definition: subject) }
+    let!(:destination)        { create(:destination) }
+
+    context "when an extraction definition is run as part of a harvest" do
+      let!(:extraction_job)     { create(:extraction_job, extraction_definition: subject, harvest_job:)}
+      let!(:harvest_job)        { create(:harvest_job, :completed, harvest_definition:, pipeline_job:) }
+      let!(:harvest_report)     { create(:harvest_report, pipeline_job:, harvest_job:) }
+
+      it "destroys the extraction definition" do
+        expect {
+          subject.destroy
+        }.to change { ExtractionDefinition.count }.by(-1)
+      end
+
+      it "destroys the harvest job" do
+        expect {
+          subject.destroy
+        }.to change { HarvestJob.count }.by(-1)
+      end
+
+      it "destroys the harvest reports" do
+        expect {
+          subject.destroy
+        }.to change { HarvestReport.count }.by(-1)
+      end
+    end
+
+    context "when an extraction definition doesn't run as part of a harvest" do
+      let!(:extraction_job)     { create(:extraction_job, extraction_definition: subject)}
+
+      it "destroys the extraction definition" do
+        expect {
+          subject.destroy
+        }.to change { ExtractionDefinition.count }.by(-1)
+      end
+    end
+  end
 end
