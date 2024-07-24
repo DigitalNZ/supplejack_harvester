@@ -152,5 +152,24 @@ RSpec.describe HarvestDefinition do
         expect { harvest_definition.destroy }.to change(TransformationDefinition, :count).by(0)
       end
     end
+
+    context "when a harvest definition has previously been run" do
+      let!(:destination)        { create(:destination) }
+      let!(:pipeline_job)       { create(:pipeline_job, pipeline: pipeline, destination:) }
+      let!(:harvest_job)        { create(:harvest_job, :completed, harvest_definition:, pipeline_job:) }
+      let!(:harvest_report)     { create(:harvest_report, pipeline_job:, harvest_job:) }
+
+      it "destroys the harvest definition" do
+        expect { harvest_definition.destroy }.to change(HarvestDefinition, :count).by(-1)
+      end
+
+      it "destroys the harvest job" do
+        expect { harvest_definition.destroy }.to change(HarvestJob, :count).by(-1)
+      end
+
+      it "destroys the harvest reports" do
+        expect { harvest_definition.destroy }.to change(HarvestReport, :count).by(-1)
+      end
+    end 
   end
 end

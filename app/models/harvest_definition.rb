@@ -59,4 +59,16 @@ class HarvestDefinition < ApplicationRecord
   def clone(pipeline)
     HarvestDefinition.new(dup.attributes.merge(pipeline:))
   end
+
+  def destroy
+    harvest_jobs.each do | harvest_job |
+      next if harvest_job.blank? || harvest_job.harvest_report.blank?
+
+      harvest_job.harvest_report.destroy!
+    end
+
+    reload
+
+    super
+  end
 end
