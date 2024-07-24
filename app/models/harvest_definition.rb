@@ -40,7 +40,6 @@ class HarvestDefinition < ApplicationRecord
   def destroy_associated_definitions
     destroy_definition(extraction_definition)
     destroy_definition(transformation_definition)
-    destroy_harvest_reports
   end
 
   def completed_harvest_jobs?
