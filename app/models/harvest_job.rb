@@ -7,7 +7,7 @@ class HarvestJob < ApplicationRecord
   belongs_to :pipeline_job
   belongs_to :harvest_definition
   belongs_to :extraction_job, optional: true
-  has_one    :harvest_report, dependent: :destroy
+  has_one    :harvest_report
 
   delegate :extraction_definition, to: :harvest_definition
   delegate :transformation_definition, to: :harvest_definition
