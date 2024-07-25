@@ -10,7 +10,7 @@ class ExtractionJob < ApplicationRecord
   enum :kind, { full: 0, sample: 1 }, prefix: :is
 
   belongs_to :extraction_definition
-  has_one :harvest_job, dependent: :restrict_with_exception
+  has_one :harvest_job, dependent: :destroy
 
   after_create :create_folder
   after_destroy :delete_folder
