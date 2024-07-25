@@ -36,11 +36,11 @@ class SchemasController < ApplicationController
     if @schema.update(schema_params)
       flash.notice = t('.success')
 
-      redirect_to schemas_path
+      redirect_to schema_path(@schema)
     else
       flash.alert = t('.failure')
 
-      render 'edit'
+      render 'show'
     end
   end
 

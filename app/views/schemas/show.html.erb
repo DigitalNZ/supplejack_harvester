@@ -1,0 +1,59 @@
+<%= content_for(:title) { @schema.name_in_database } %>
+
+<%= content_for(:header) do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <h1 class='header__title'><%= @schema.name %></h1>
+
+  <div class="header__actions">
+    <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#create-modal">
+      Edit Schema
+    </button>
+
+    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
+      <i class="bi bi-trash" aria-hidden="true"></i> Delete
+    </button>
+  </div>
+
+  <div class="clearfix"></div>
+
+  <p><%= @schema.description %></p>
+<% end %>
+
+<%= render layout: 'shared/delete_modal',
+           locals: { path: schema_path(@schema) } do %>
+  <p>
+    Are you sure you want to delete "<%= @schema.name %>"?
+  </p>
+
+  <p>
+    This will also delete the fields associated with it.
+  </p>
+<% end %>
+
+<%= render layout: 'shared/create_modal',
+           locals: { modal_heading: 'Update new schema', button_text: 'Update schema' } do %>
+  <%= vertical_form_with model: @schema do |form| %>
+
+    <div class='row gy-3 align-items-center'>
+      <div class="col-4">
+        <%= form.label :name, 'Schema Name', class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.text_field :name, class: { 'form-control': true, 'is-invalid': @schema.errors[:name].any? } %>
+      </div>
+
+      <div class="col-4">
+        <%= form.label :description, 'Schema Description', class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.text_area :description,
+                           class: { 'form-control': true, 'is-invalid': @schema.errors[:description].any? } %>
+      </div>
+    </div>
+
+    <div class='d-grid mt-4'>
+      <button type="submit" class="btn btn-primary">Update schema</button>
+    </div>
+  <% end %>
+<% end %>
