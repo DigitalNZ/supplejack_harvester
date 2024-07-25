@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_05_06_215031) do
+ActiveRecord::Schema[7.1].define(version: 2024_07_25_030305) do
   create_table "destinations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "url", null: false
@@ -143,6 +143,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_06_215031) do
     t.timestamp "transformation_updated_time"
     t.timestamp "load_updated_time"
     t.timestamp "delete_updated_time"
+    t.string "definition_name"
     t.index ["harvest_job_id"], name: "index_harvest_reports_on_harvest_job_id"
     t.index ["pipeline_job_id"], name: "index_harvest_reports_on_pipeline_job_id"
   end

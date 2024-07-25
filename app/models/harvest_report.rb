@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class HarvestReport < ApplicationRecord
-  belongs_to :pipeline_job
-  belongs_to :harvest_job
+  belongs_to :pipeline_job, optional: true
+  belongs_to :harvest_job, optional: true
 
   STATUSES = %w[queued cancelled running completed errored].freeze
 
@@ -11,9 +11,9 @@ class HarvestReport < ApplicationRecord
   enum :load_status,           STATUSES, prefix: :load
   enum :delete_status,         STATUSES, prefix: :delete
 
-  delegate :harvest_definition, to: :harvest_job
-  delegate :extraction_definition, to: :harvest_job
-  delegate :transformation_definition, to: :harvest_job
+  delegate :harvest_definition, to: :harvest_job, allow_nil: true
+  delegate :extraction_definition, to: :harvest_job, allow_nil: true
+  delegate :transformation_definition, to: :harvest_job, allow_nil: true
 
   enum :kind, { harvest: 0, enrichment: 1 }
 
@@ -97,7 +97,7 @@ class HarvestReport < ApplicationRecord
   private
 
   def considered_cancelled?
-    statuses.any?('cancelled') || harvest_job.cancelled? || pipeline_job.cancelled?
+    statuses.any?('cancelled') || harvest_job&.cancelled? || pipeline_job.cancelled?
   end
 
   def considered_running?

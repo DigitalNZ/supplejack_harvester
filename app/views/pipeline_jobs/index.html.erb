@@ -67,7 +67,7 @@
                ) %>
 
               <tr>
-                <td><%= report.harvest_job.name %></td>
+                <td><%= report.definition_name || report.harvest_job.name %></td>
                 <td>
                   <% if pipeline_job.schedule.present? %>
                     Schedule
@@ -88,30 +88,32 @@
                 <td><%= report.records_rejected %></td>
                 <td><%= report.records_deleted %></td>
                 <td>
-                  <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <% if report.harvest_job.extraction_job_id.present? %>
-                      <li>
-                        <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
-                              @pipeline.id,
-                              report.harvest_definition.id,
-                              report.extraction_definition.id,
-                              report.harvest_job.extraction_job_id
-                            ), class: 'dropdown-item' do %>
-                          <i class="bi bi-link-45deg me-2"></i> View Extracted Data
-                        <% end %>
-                      </li>
-                    <% end %>
+                  <% if report.harvest_definition %>
+                    <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <% if report.harvest_job && report.harvest_job.extraction_job_id.present? %>
+                        <li>
+                          <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                                @pipeline.id,
+                                report.harvest_definition.id,
+                                report.extraction_definition.id,
+                                report.harvest_job.extraction_job_id
+                              ), class: 'dropdown-item' do %>
+                            <i class="bi bi-link-45deg me-2"></i> View Extracted Data
+                          <% end %>
+                        </li>
+                      <% end %>
 
-                    <% if report.status == 'running' || report.status == 'queued' %>
-                      <li>
-                        <%= button_to cancel_pipeline_pipeline_job_path(@pipeline.id, report.pipeline_job_id),
-                                      class: 'dropdown-item' do %>
-                          <i class="bi bi-x-circle me-2"></i> Cancel job
-                        <% end %>
-                      </li>
-                    <% end %>
-                  </ul>
+                      <% if report.status == 'running' || report.status == 'queued' %>
+                        <li>
+                          <%= button_to cancel_pipeline_pipeline_job_path(@pipeline.id, report.pipeline_job_id),
+                                        class: 'dropdown-item' do %>
+                            <i class="bi bi-x-circle me-2"></i> Cancel job
+                          <% end %>
+                        </li>
+                      <% end %>
+                    </ul>
+                  <% end %>
                 </td>
               </tr>
           <% else %>

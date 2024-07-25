@@ -204,8 +204,8 @@ RSpec.describe ExtractionDefinition do
         expect { subject.destroy }.to change(HarvestJob, :count).by(-1)
       end
 
-      it "destroys the harvest reports" do
-        expect { subject.destroy }.to change(HarvestReport, :count).by(-1)
+      it "does not destroy the harvest reports" do
+        expect { subject.destroy }.to change(HarvestReport, :count).by(0)
       end
     end
 
