@@ -8,7 +8,9 @@ class SchemasController < ApplicationController
     @schema = Schema.new
   end
 
-  def show; end
+  def show
+    @props = schema_redux_state
+  end
 
   def create
     @schema = Schema.new(schema_params)

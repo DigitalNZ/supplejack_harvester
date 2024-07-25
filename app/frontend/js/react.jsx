@@ -61,3 +61,26 @@ if (extractionAppHTMLElement !== null) {
     </React.StrictMode>
   );
 }
+
+// Schema App
+
+import SchemaApp from "/js/apps/SchemaApp/SchemaApp";
+import configureSchemaAppStore from "/js/apps/SchemaApp/store";
+
+const schemaAppHTMLElement = document.querySelector("#js-schema-app");
+
+if (schemaAppHTMLElement !== null) {
+  const root = ReactDOM.createRoot(schemaAppHTMLElement);
+  const props = JSON.parse(schemaAppHTMLElement.dataset.props);
+
+  root.render(
+    <React.StrictMode>
+      <ErrorBoundary environment={props.config.environment}>
+        <Provider store={configureSchemaAppStore(props)}>
+          <SchemaApp />
+        </Provider>
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
+}
+

@@ -6,6 +6,7 @@ class ApplicationController < ActionController::Base
   include DeviseOverrides
   include TransformationReduxState
   include ExtractionReduxState
+  include SchemaReduxState
 
   def paginate_and_filter_jobs(jobs)
     @status = params[:status]

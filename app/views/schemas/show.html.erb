@@ -20,6 +20,8 @@
   <p><%= @schema.description %></p>
 <% end %>
 
+<div id="js-schema-app" data-props="<%= @props %>"></div>
+
 <%= render layout: 'shared/delete_modal',
            locals: { path: schema_path(@schema) } do %>
   <p>

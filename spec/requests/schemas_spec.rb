@@ -24,6 +24,24 @@ RSpec.describe 'Schemas' do
 
       expect(response).to have_http_status :ok
     end
+
+    it 'assigns the schema redux state' do
+      get schema_path(schema)
+
+      expected_state = {
+        entities: {
+          fields: {}
+        },
+        ui: {
+          fields: {}
+        },
+        config: {
+          environment: Rails.env
+        }
+      }.to_json
+
+      expect(assigns(:props)).to eq(expected_state)
+    end
   end
 
   describe 'POST /create' do
@@ -92,12 +110,12 @@ RSpec.describe 'Schemas' do
         expect(schema.name).to eq 'Updated schema'
       end
 
-      it 'redirects to the schemas page' do
+      it 'redirects to the schema page' do
         patch schema_path(schema), params: {
           schema: { name: 'Updated schema' }
         }
 
-        expect(response).to redirect_to schemas_path
+        expect(response).to redirect_to schema_path(schema)
       end
     end
 
