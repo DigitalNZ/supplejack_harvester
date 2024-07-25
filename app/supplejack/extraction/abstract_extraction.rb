@@ -5,7 +5,11 @@ module Extraction
     attr_accessor :document
 
     def extract
-      @document = Extraction::Request.new(url:, params:, headers:).send(http_method)
+      ::Retriable.retriable do
+        @document = Extraction::Request.new(url:, params:, headers:).send(http_method)
+      end
+    rescue StandardError => e
+      ::Sidekiq.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
     end
 
     def save
