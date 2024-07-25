@@ -67,7 +67,7 @@
                ) %>
 
               <tr>
-                <td><%= report.harvest_job.name %></td>
+                <td><%= report.definition_name || report.harvest_job.name %></td>
                 <td>
                   <% if pipeline_job.schedule.present? %>
                     Schedule
@@ -90,7 +90,7 @@
                 <td>
                   <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
                   <ul class="dropdown-menu dropdown-menu-end">
-                    <% if report.harvest_job.extraction_job_id.present? %>
+                    <% if report.harvest_job && report.harvest_job.extraction_job_id.present? %>
                       <li>
                         <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
                               @pipeline.id,
