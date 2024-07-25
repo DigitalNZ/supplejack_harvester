@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe HarvestReport do
-  subject                  { create(:harvest_report, pipeline_job:, harvest_job:) }
+  subject                  { create(:harvest_report, pipeline_job:, harvest_job:, definition_name: harvest_job.harvest_definition.name) }
 
   let(:pipeline)           { create(:pipeline) }
   let(:destination)        { create(:destination) }
@@ -12,7 +12,13 @@ RSpec.describe HarvestReport do
   let(:harvest_job)        { create(:harvest_job, harvest_definition:, pipeline_job:) }
 
   describe 'associations' do
-    it { is_expected.to belong_to(:pipeline_job) }
+    it { is_expected.to belong_to(:pipeline_job).optional }
+  end
+
+  describe '#initialize' do
+    it 'has the same name as its harvest definition' do
+      expect(subject.definition_name).to eq harvest_definition.name
+    end
   end
 
   describe 'status checks' do
