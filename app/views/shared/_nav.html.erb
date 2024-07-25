@@ -20,6 +20,7 @@
 
     <% pipelines_classes = class_names('nav-link', active: request.path.include?('pipelines')) %>
     <% destinations_classes = class_names('nav-link', active: request.path.include?('destinations')) %>
+    <% schemas_classes = class_names('nav-link', active: request.path.include?('schemas')) %>
 
     <div class="collapse navbar-collapse justify-content-between" id="navbar-nav">
       <ul class="navbar-nav">
@@ -29,6 +30,9 @@
           </li>
           <li class="nav-item">
             <%= link_to 'Destinations', destinations_path, class: destinations_classes %>
+          </li>
+          <li class="nav-item">
+            <%= link_to 'Schemas', schemas_path, class: schemas_classes %>
           </li>
         <% end %>
       </ul>

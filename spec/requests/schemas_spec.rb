@@ -26,14 +26,6 @@ RSpec.describe 'Schemas' do
     end
   end
 
-  describe 'GET /new' do
-    it 'displays the new schema form' do
-      get new_schema_path
-
-      expect(response).to have_http_status :ok
-    end
-  end
-
   describe 'POST /create' do
     context 'with valid attributes' do
       it 'creates a new schema' do

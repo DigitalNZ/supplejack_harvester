@@ -5,13 +5,10 @@ class SchemasController < ApplicationController
 
   def index
     @schemas = Schema.order(:name).page(params[:page])
+    @schema = Schema.new
   end
 
   def show; end
-
-  def new
-    @schema = Schema.new
-  end
 
   def create
     @schema = Schema.new(schema_params)
@@ -20,7 +17,8 @@ class SchemasController < ApplicationController
       redirect_to schemas_path, notice: t('.success')
     else
       flash.alert = t('.failure')
-      render :new
+      @schemas = Schema.order(:name).page(params[:page])
+      render :index
     end
   end
 
