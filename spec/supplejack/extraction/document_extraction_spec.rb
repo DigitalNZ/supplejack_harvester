@@ -44,6 +44,19 @@ RSpec.describe Extraction::DocumentExtraction do
       end
     end
 
+    context 'when record extraction fails' do
+      before do
+        subject
+
+        allow(Extraction::Request).to receive(:new).and_raise(StandardError)
+      end
+
+      it 'retries the extraction' do
+        expect(Extraction::Request).to receive(:new).at_least(2)
+        subject.extract
+      end
+    end
+
     context 'when using Dynamic parameters' do
       it 'evaluates provided ruby code as parameters' do
         create(:parameter, kind: 'query', name: 'date', content: 'Date.today', request:, content_type: 1)
