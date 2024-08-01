@@ -49,7 +49,7 @@ def stub_figshare_requests(destination, page, ids, fake_response_name)
       query: {
         'api_key' => 'testkey',
         'search' => { 'status' => 'active', 'fragments.source_id' => 'test' },
-        'search_options' => { 'page' => page }
+        'search_options' => { 'page' => page, 'per_page' => 100 }
       },
       headers: fake_json_headers
     ).to_return(fake_response("test_api_records_#{page}"))
