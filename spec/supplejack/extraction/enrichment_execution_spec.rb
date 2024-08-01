@@ -43,6 +43,12 @@ RSpec.describe Extraction::EnrichmentExecution do
 
         expect(extracted_files.count).to eq 40
       end
+
+      it 'schedules 40 enrichment extraction jobs' do
+        expect(EnrichmentExtractionWorker).to receive(:perform_async).exactly(40).times.and_call_original
+
+        described_class.new(full_job).call
+      end
     end
 
     context 'when the enrichment extraction definition has a throttle' do
