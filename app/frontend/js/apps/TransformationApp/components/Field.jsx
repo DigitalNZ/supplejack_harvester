@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import classNames from "classnames";
 import { isEmpty } from "lodash";
@@ -43,6 +43,8 @@ const Field = ({ id }) => {
   const [kindValue, setKindValue] = useState(kind);
   const [blockValue, setBlockValue] = useState(block);
   const [showModal, setShowModal] = useState(false);
+
+  const nameInputRef = useRef(null);
 
   const handleSaveClick = () => {
     dispatch(
@@ -125,6 +127,10 @@ const Field = ({ id }) => {
     if (isEmpty(nameValue)) {
       const element = document.getElementById(`field-${id}`);
       element.scrollIntoView({ behaviour: "smooth" });
+    }
+
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
     }
   }, []);
 
@@ -216,6 +222,7 @@ const Field = ({ id }) => {
                         required="required"
                         defaultValue={name}
                         onChange={(e) => setNameValue(e.target.value)}
+                        ref={nameInputRef}
                       />
                     </div>
                   </div>
