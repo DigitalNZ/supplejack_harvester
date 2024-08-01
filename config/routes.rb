@@ -60,7 +60,9 @@ Rails.application.routes.draw do
     post :test, on: :collection
   end
 
-  resources :schemas
+  resources :schemas do
+    resources :schema_fields, only: %i[create update destroy]
+  end
 
   mount Sidekiq::Web => '/sidekiq'
 

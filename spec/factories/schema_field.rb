@@ -2,6 +2,6 @@
 
 FactoryBot.define do
   factory :schema_field do
-    name        { Faker::Name.unique.name }
+    name        { 'title' }
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_22_022636) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_01_210820) do
   create_table "destinations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "url", null: false
@@ -233,6 +233,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_22_022636) do
     t.text "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "last_edited_by_id"
+    t.index ["last_edited_by_id"], name: "index_schemas_on_last_edited_by_id"
   end
 
   create_table "stop_conditions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -295,5 +297,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_22_022636) do
 
   add_foreign_key "extraction_definitions", "users", column: "last_edited_by_id"
   add_foreign_key "pipelines", "users", column: "last_edited_by_id"
+  add_foreign_key "schemas", "users", column: "last_edited_by_id"
   add_foreign_key "transformation_definitions", "users", column: "last_edited_by_id"
 end
