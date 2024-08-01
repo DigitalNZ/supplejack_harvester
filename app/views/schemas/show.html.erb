@@ -3,7 +3,7 @@
 <%= content_for(:header) do %>
   <%= render 'shared/breadcrumb_nav' %>
 
-  <h1 class='header__title'><%= @schema.name %></h1>
+  <h1 class='header__title'><%= @schema.name_in_database %></h1>
 
   <div class="header__actions">
     <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#create-modal">

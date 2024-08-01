@@ -15,7 +15,15 @@ module SchemaReduxState
 
   def schema_entities_slices
     {
-      fields: {}
+      fields: entity_slice(@schema.schema_fields),
+      appDetails: schema_app_details_slice
+    }
+  end
+
+  def entity_slice(entities)
+    {
+      ids: entities.pluck(:id),
+      entities: entities.map(&:to_h).index_by { |entity| entity[:id] }
     }
   end
 
@@ -28,6 +36,12 @@ module SchemaReduxState
   def schema_config_slice
     {
       environment: Rails.env
+    }
+  end
+
+  def schema_app_details_slice
+    {
+      schema: @schema
     }
   end
 end

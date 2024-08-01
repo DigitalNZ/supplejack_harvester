@@ -1,8 +1,40 @@
+import { some } from "lodash";
 
 import {
+  createAsyncThunk,
   createSlice,
   createEntityAdapter,
 } from "@reduxjs/toolkit";
+
+export const addField = createAsyncThunk(
+  "fields/addFieldStatus",
+  async (payload) => {
+    console.log(payload);
+    const {
+      name,
+      schemaId,
+    } = payload;
+
+    const response = request
+      .post(
+        `/schemas/${schemaId}/fields`,
+        {
+          field: {
+            name: name,
+          },
+        }
+      )
+      .then(function (response) {
+        return response.data;
+      });
+
+    return response;
+  }
+);
+
+export const hasEmptyFields = (state) => {
+  return some(selectAllFields(state), { name: "" });
+};
 
 const fieldsAdapter = createEntityAdapter({
   sortComparer: (fieldOne, fieldTwo) =>
