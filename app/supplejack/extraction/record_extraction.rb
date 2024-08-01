@@ -19,7 +19,7 @@ module Extraction
     def params
       {
         search: active_filter.merge(fragment_filter),
-        search_options: { page: @page },
+        search_options: { page: @page, per_page: 100 },
         api_key: api_source.api_key
       }
     end
