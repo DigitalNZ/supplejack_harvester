@@ -11,4 +11,14 @@ RSpec.describe SchemaField, type: :model do
 
     it { is_expected.to belong_to(:schema) }
   end
+
+  describe '#kinds' do
+    kinds = { dynamic: 0, fixed: 1 }
+
+    kinds.each do |key, value|
+      it "can be #{key}" do
+        expect(described_class.new(kind: value).kind).to eq(key.to_s)
+      end
+    end
+  end
 end
