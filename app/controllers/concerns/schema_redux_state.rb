@@ -29,7 +29,24 @@ module SchemaReduxState
 
   def schema_ui_slices
     {
-      fields: {}
+      fields: ui_schema_fields_slice
+    }
+  end
+
+  def ui_schema_fields_slice
+    schema_field_entities = @schema.schema_fields.map { |schema_field| ui_schema_field_entity(schema_field) }
+
+    {
+      ids: @schema.schema_fields.pluck(:id),
+      entities: schema_field_entities.index_by { |schema_field| schema_field[:id] }
+    }
+  end
+
+  def ui_schema_field_entity(schema_field)
+    {
+      id: schema_field[:id], saved: true,
+      saving: false, deleting: false,
+      active: false, displayed: true
     }
   end
 

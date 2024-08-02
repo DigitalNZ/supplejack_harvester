@@ -5,11 +5,11 @@ import {
   createSlice,
   createEntityAdapter,
 } from "@reduxjs/toolkit";
+import { request } from "~/js/utils/request";
 
 export const addField = createAsyncThunk(
   "fields/addFieldStatus",
   async (payload) => {
-    console.log(payload);
     const {
       name,
       schemaId,
@@ -17,14 +17,61 @@ export const addField = createAsyncThunk(
 
     const response = request
       .post(
-        `/schemas/${schemaId}/fields`,
+        `/schemas/${schemaId}/schema_fields`,
         {
-          field: {
+          schema_field: {
             name: name,
+            schema_id: schemaId
           },
         }
       )
       .then(function (response) {
+        return response.data;
+      });
+
+    return response;
+  }
+);
+
+export const deleteField = createAsyncThunk(
+  "fields/deleteFieldStatus",
+  async (payload) => {
+    const { id, schemaId } =
+      payload;
+
+    const response = request
+      .delete(
+        `/schemas/${schemaId}/schema_fields/${id}`
+      )
+      .then((response) => {
+        return id;
+      });
+
+    return response;
+  }
+);
+
+export const updateField = createAsyncThunk(
+  "fields/updateFieldStatus",
+  async (payload) => {
+    const {
+      id,
+      schemaId,
+      name,
+      kind,
+    } = payload;
+
+    const response = request
+      .patch(
+        `/schemas/${schemaId}/schema_fields/${id}`,
+        {
+          schema_field: {
+            name: name,
+            kind: kind,
+          },
+        }
+      )
+      .then((response) => {
         return response.data;
       });
 
@@ -47,6 +94,15 @@ const fieldsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(addField.fulfilled, (state, action) => {
+        fieldsAdapter.upsertOne(state, action.payload);
+      })
+      .addCase(deleteField.fulfilled, (state, action) => {
+        fieldsAdapter.removeOne(state, action.payload);
+      })
+      .addCase(updateField.fulfilled, (state, action) => {
+        fieldsAdapter.setOne(state, action.payload);
+      });
   },
 });
 

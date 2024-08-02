@@ -36,7 +36,7 @@ class SchemaFieldsController < ApplicationController
   private
 
   def schema_field_params
-    params.require(:schema_field).permit(:name, :schema_id)
+    params.require(:schema_field).permit(:name, :schema_id, :kind)
   end
 
   def find_schema_field

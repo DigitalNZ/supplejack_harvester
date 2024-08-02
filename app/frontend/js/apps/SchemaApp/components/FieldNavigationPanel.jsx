@@ -1,27 +1,21 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-// import { selectAllFields } from "~/js/features/TransformationApp/FieldsSlice";
-// import { filter } from "lodash";
-// import FieldNavigationListItem from "./FieldNavigationListItem";
+import { selectAllFields } from "~/js/features/TransformationApp/FieldsSlice";
+import FieldNavigationListItem from "./FieldNavigationListItem";
 import AddField from "~/js/apps/SchemaApp/components/AddField";
 // import { toggleDisplayFields } from "~/js/features/TransformationApp/UiFieldsSlice";
 import Tooltip from "~/js/components/Tooltip";
 
 const FieldNavigationPanel = () => {
-  // const dispatch = useDispatch();
-  // const allFields = useSelector(selectAllFields);
-
-  // const fields = filter(allFields, ["kind", "field"]);
-  // const conditions = filter(allFields, ["kind", "reject_if"]).concat(
-  //   filter(allFields, ["kind", "delete_if"])
-  // );
+  const dispatch = useDispatch();
+  const fields = useSelector(selectAllFields);
 
   return (
     <div className="card field-nav-panel">
       <div className="d-flex flex-column overflow-auto">
         <div className="field-nav-panel__header field-nav-panel__header--fields">
           <Tooltip data-bs-title="PLACEHOLDER">
-            <h5>Fields</h5>
+            <h5>Schema fields</h5>
           </Tooltip>
 
           <div className="btn-group card__control">
@@ -59,7 +53,9 @@ const FieldNavigationPanel = () => {
           <AddField />
 
           <ul className="field-nav nav nav-pills flex-column overflow-auto flex-nowrap">
-
+            {fields.map((field) => {
+              return <FieldNavigationListItem id={field.id} key={field.id} />;
+            })}
           </ul>
         </div>
       </div>
