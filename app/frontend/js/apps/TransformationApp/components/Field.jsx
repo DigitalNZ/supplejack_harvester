@@ -129,6 +129,7 @@ const Field = ({ id }) => {
       element.scrollIntoView({ behaviour: "smooth" });
     }
 
+    // Focus on the name input field
     if (nameInputRef.current) {
       nameInputRef.current.focus();
     }
