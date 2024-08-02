@@ -60,9 +60,9 @@ const Parameter = ({ id }) => {
 
   useEffect(() => {
     if (kind === "slug") {
-      contentInputRef.current.focus();
+      contentInputRef.current?.focus();
     } else {
-      nameInputRef.current.focus();
+      nameInputRef.current?.focus();
     }
   }, [kind]);
 
