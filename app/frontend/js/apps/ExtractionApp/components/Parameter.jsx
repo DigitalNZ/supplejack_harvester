@@ -284,7 +284,10 @@ const Parameter = ({ id }) => {
                             </option>
                             {map(initialRequestQueryParameters, (parameter) => {
                               return (
-                                <option value={parameter.name} ref={valueInputRef}>
+                                <option
+                                  value={parameter.name}
+                                  ref={valueInputRef}
+                                >
                                   {parameter.name}
                                 </option>
                               );
