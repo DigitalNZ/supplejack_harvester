@@ -25,6 +25,7 @@ const Field = ({ id }) => {
 
   const [nameValue, setNameValue] = useState(name);
   const [kindValue, setKindValue] = useState(kind);
+  const [fieldValue, setFieldValue] = useState('')
   const [showModal, setShowModal] = useState(false);
 
   const handleClose = () => setShowModal(false);
@@ -143,7 +144,7 @@ const Field = ({ id }) => {
                       <strong>Field name </strong>
                     </label>
 
-                    <div className="col-sm-10">
+                    <div className="col-sm-8">
                       <input
                         id="name"
                         type="text"
@@ -175,6 +176,27 @@ const Field = ({ id }) => {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className='row'>
+                <div className='col-10'>
+                  <div className="row">
+                    <label className="col-form-label col-sm-2" htmlFor="add-value">
+                      <strong>Add value </strong>
+                    </label>
+
+                    <div className="col-sm-10">
+                      <input
+                        id="add-value"
+                        type="text"
+                        className="form-control"
+                        required="required"
+                        onChange={(e) => setFieldValue(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
             </div>

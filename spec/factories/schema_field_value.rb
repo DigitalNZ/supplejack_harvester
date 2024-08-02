@@ -2,6 +2,6 @@
 
 FactoryBot.define do
   factory :schema_field_value do
-    name        { 'title' }
+    value        { 'National Library of New Zealand' }
   end
 end

@@ -1,6 +1,6 @@
 class SchemaFieldValue < ApplicationRecord
 
-  validates :name, presence: true
+  validates :value, presence: true
 
   belongs_to :schema_field
 end
