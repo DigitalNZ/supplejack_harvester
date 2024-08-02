@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+
+import { map } from 'lodash';
 
 import { useSelector, useDispatch } from 'react-redux';
 import classNames from "classnames";
@@ -6,18 +8,24 @@ import classNames from "classnames";
 import { selectAppDetails } from '~/js/features/SchemaApp/AppDetailsSlice';
 
 import { selectFieldById, updateField, deleteField } from "~/js/features/SchemaApp/FieldsSlice";
+
 import {
   selectUiFieldById, toggleDisplayField,
   setActiveField,
 } from "~/js/features/SchemaApp/UiFieldsSlice";
 
+
+import { addFieldValue } from '~/js/features/SchemaApp/FieldValuesSlice';
+
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
+
+import FieldValue from "~/js/apps/SchemaApp/components/FieldValue";
 
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
 
-  const { name, kind } = useSelector((state) =>
+  const { name, kind, schemaFieldValueIds } = useSelector((state) =>
     selectFieldById(state, id)
   );
 
@@ -95,6 +103,16 @@ const Field = ({ id }) => {
     }
   };
 
+  const handleAddFieldValueClick = () => {
+    dispatch(
+      addFieldValue({
+        value: fieldValue,
+        schemaFieldId: id,
+        schemaId: appDetails.schema.id
+      })
+    );
+  };
+
   return (
     <>
       <div
@@ -140,11 +158,11 @@ const Field = ({ id }) => {
 
                 <div className='col-8'>
                   <div className="row">
-                    <label className="col-form-label col-sm-2" htmlFor="name">
+                    <label className="col-form-label col-sm-3" htmlFor="name">
                       <strong>Field name </strong>
                     </label>
 
-                    <div className="col-sm-8">
+                    <div className="col-sm-9">
                       <input
                         id="name"
                         type="text"
@@ -178,14 +196,14 @@ const Field = ({ id }) => {
                 </div>
               </div>
 
-              <div className='row'>
-                <div className='col-10'>
+              <div className='row my-4 justify-content-between'>
+                <div className='col-8'>
                   <div className="row">
-                    <label className="col-form-label col-sm-2" htmlFor="add-value">
+                    <label className="col-form-label col-sm-3" htmlFor="add-value">
                       <strong>Add value </strong>
                     </label>
 
-                    <div className="col-sm-10">
+                    <div className="col-sm-9">
                       <input
                         id="add-value"
                         type="text"
@@ -197,7 +215,20 @@ const Field = ({ id }) => {
                   </div>
                 </div>
 
+                <div className='col-1'>
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={() => handleAddFieldValueClick()}
+                  >
+                    Add
+                  </button>
+                </div>
+
               </div>
+
+              {map(schemaFieldValueIds, (fieldValueId) => (
+                <FieldValue id={fieldValueId} key={fieldValueId} />
+              ))}
 
             </div>
           </div>

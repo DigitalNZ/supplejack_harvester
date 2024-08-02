@@ -7,6 +7,8 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
+import { addFieldValue } from '~/js/features/SchemaApp/FieldValuesSlice';
+
 export const addField = createAsyncThunk(
   "fields/addFieldStatus",
   async (payload) => {
@@ -102,7 +104,18 @@ const fieldsSlice = createSlice({
       })
       .addCase(updateField.fulfilled, (state, action) => {
         fieldsAdapter.setOne(state, action.payload);
-      });
+      })
+      .addCase(addFieldValue.fulfilled, (state, action) => {
+
+        console.log(state.entities.fields);
+
+        fieldsAdapter.updateOne(state, {
+          id: action.payload.schema_field_id,
+          changes: {
+            schemaFieldValueIds: [action.payload.id]
+          }
+        })
+      })
   },
 });
 

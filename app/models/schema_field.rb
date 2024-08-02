@@ -9,7 +9,7 @@ class SchemaField < ApplicationRecord
       id:,
       name:,
       kind:,
-      schema_field_values: schema_field_values.map(&:to_h),
+      schemaFieldValueIds: schema_field_values.map(&:id),
       created_at:,
       updated_at:
     }
