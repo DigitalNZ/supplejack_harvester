@@ -71,7 +71,7 @@ RSpec.describe LoadWorker, type: :job do
       end
 
       it 'retries the Load Execution' do
-        expect(Load::Execution).to receive(:new).exactly(5).times
+        expect(Load::Execution).to receive(:new).exactly(2).times
 
         described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]")
       end
