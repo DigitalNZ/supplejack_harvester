@@ -1,5 +1,6 @@
 class SchemaField < ApplicationRecord
   belongs_to :schema
+  has_many :schema_field_values, dependent: :destroy
 
   enum :kind, { dynamic: 0, fixed: 1 }
 

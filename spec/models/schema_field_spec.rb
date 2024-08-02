@@ -10,6 +10,7 @@ RSpec.describe SchemaField, type: :model do
     end
 
     it { is_expected.to belong_to(:schema) }
+    it { is_expected.to have_many(:schema_field_values) }
   end
 
   describe '#kinds' do

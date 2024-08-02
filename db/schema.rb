@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_08_01_215908) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_02_005507) do
   create_table "destinations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "url", null: false
@@ -218,6 +218,14 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_01_215908) do
     t.index ["destination_id"], name: "index_schedules_on_destination_id"
     t.index ["name"], name: "index_schedules_on_name", unique: true
     t.index ["pipeline_id"], name: "index_schedules_on_pipeline_id"
+  end
+
+  create_table "schema_field_values", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.text "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "schema_field_id", null: false
+    t.index ["schema_field_id"], name: "index_schema_field_values_on_schema_field_id"
   end
 
   create_table "schema_fields", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
