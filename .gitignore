@@ -20,6 +20,9 @@
 !/tmp/pids/
 !/tmp/pids/.keep
 
+# Docker bind mount
+/dev_data
+
 # Ignore extraction files, but keep the directory
 /extractions/test/*
 /extractions/development/*
