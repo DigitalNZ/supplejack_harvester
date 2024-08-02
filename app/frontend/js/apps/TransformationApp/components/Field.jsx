@@ -131,7 +131,7 @@ const Field = ({ id }) => {
 
     // Focus on the name input field
     if (nameInputRef.current) {
-      nameInputRef.current?.focus();
+      nameInputRef.current.focus();
     }
   }, []);
 
