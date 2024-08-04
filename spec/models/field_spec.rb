@@ -40,4 +40,49 @@ RSpec.describe Field do
       expect(delete_field.delete_if?).to be true
     end
   end
+
+  context 'when associated with a schema field' do
+    let(:schema)             { create(:schema) }
+    let(:schema_field)       { create(:schema_field, schema:, name: 'document_source', kind: 'fixed') }
+    let(:schema_field_value) { create(:schema_field_value, value: 'external', schema_field:) }
+
+    let(:dynamic_schema_field) { create(:schema_field, schema:, name: 'internal_identifier', kind: 'dynamic') }
+
+    let(:fixed_schema_field) { create(:schema_field, schema:, name: 'test', kind: 'fixed') }
+
+    let(:field)              { create(:field, transformation_definition:, schema_field:, schema_field_value:, name: 'test field') }
+    let(:custom_field)       { create(:field, transformation_definition:, name: 'hello') }
+    let(:dynamic_field)      { create(:field, transformation_definition:, schema_field: dynamic_schema_field, block: 'Dynamic Block') }
+    let(:fixed_field)        { create(:field, transformation_definition:, schema_field: fixed_schema_field) }
+
+    describe 'name' do
+      it 'gets its name from a schema field' do
+        expect(field.name).to eq 'document_source'
+      end
+    end
+
+    describe 'block' do
+      it 'gets its block from a schema field value when the schema field is kind fixed' do
+        expect(field.block).to eq 'external'
+      end
+
+      it 'uses its own block when the schema field is type kind dynamic' do
+        expect(dynamic_field.block).to eq 'Dynamic Block'
+      end
+
+      it 'returns nil if the schema field is type fixed but it has no values' do
+        expect(fixed_field.block).to eq nil
+      end
+    end
+
+    describe '#schema?' do
+      it 'returns true when it is associated with a schema field' do
+        expect(field.schema?).to eq true
+      end
+
+      it 'returns false when it is not associated with a schema field' do
+        expect(custom_field.schema?).to eq false
+      end
+    end
+  end
 end
