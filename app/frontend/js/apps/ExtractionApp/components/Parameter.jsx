@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import classNames from "classnames";
 import { capitalize, filter, map } from "lodash";
@@ -54,6 +54,17 @@ const Parameter = ({ id }) => {
   const [contentValue, setContentValue] = useState(content);
   const [kindValue] = useState(kind);
   const [showModal, setShowModal] = useState(false);
+
+  const nameInputRef = useRef(null);
+  const contentInputRef = useRef(null);
+
+  useEffect(() => {
+    if (kind === "slug") {
+      contentInputRef.current?.focus();
+    } else {
+      nameInputRef.current?.focus();
+    }
+  }, [kind]);
 
   const handleSaveClick = () => {
     dispatch(
@@ -257,6 +268,7 @@ const Parameter = ({ id }) => {
                             className="form-control"
                             defaultValue={name}
                             onChange={(e) => setNameValue(e.target.value)}
+                            ref={nameInputRef}
                           />
                         )}
 
@@ -265,13 +277,17 @@ const Parameter = ({ id }) => {
                             className="form-select"
                             defaultValue={name}
                             onChange={(e) => setNameValue(e.target.value)}
+                            ref={nameInputRef}
                           >
                             <option value="">
                               Please select a parameter to be incremented...
                             </option>
                             {map(initialRequestQueryParameters, (parameter) => {
                               return (
-                                <option value={parameter.name}>
+                                <option
+                                  value={parameter.name}
+                                  ref={valueInputRef}
+                                >
                                   {parameter.name}
                                 </option>
                               );
@@ -306,6 +322,7 @@ const Parameter = ({ id }) => {
                         required="required"
                         defaultValue={contentValue}
                         onChange={(e) => setContentValue(e.target.value)}
+                        ref={contentInputRef}
                       />
                     )}
 
