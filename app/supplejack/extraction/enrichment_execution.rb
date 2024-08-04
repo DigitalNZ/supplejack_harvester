@@ -21,9 +21,12 @@ module Extraction
 
     def extract_and_save_enrichment_documents(api_records)
       api_records.each_with_index do |api_record, index|
-        EnrichmentExtractionWorker.perform_async
-
         page = page_from_index(index)
+
+        EnrichmentExtractionWorker.perform_async(@extraction_definition,
+                                                 @extraction_job,
+                                                 ApiRecord.new(api_record), 
+                                                 page)
 
         ee = new_enrichment_extraction(api_record, page)
         next unless ee.valid?
