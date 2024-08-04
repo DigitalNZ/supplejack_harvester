@@ -9,7 +9,7 @@ class SchemaFieldsController < ApplicationController
 
     if @schema_field.save
       update_last_edited_by([@schema_field.schema])
-      render json: @schema_field
+      render json: @schema_field.to_h
     else
       render500
     end
@@ -18,7 +18,7 @@ class SchemaFieldsController < ApplicationController
   def update
     if @schema_field.update(schema_field_params)
       update_last_edited_by([@schema_field.schema])
-      render json: @schema_field
+      render json: @schema_field.to_h
     else
       render500
     end

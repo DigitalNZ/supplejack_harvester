@@ -25,7 +25,7 @@ import FieldValue from "~/js/apps/SchemaApp/components/FieldValue";
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
 
-  const { name, kind, schemaFieldValueIds } = useSelector((state) =>
+  const { name, kind, schema_field_value_ids } = useSelector((state) =>
     selectFieldById(state, id)
   );
 
@@ -111,6 +111,8 @@ const Field = ({ id }) => {
         schemaId: appDetails.schema.id
       })
     );
+
+    setFieldValue('');
   };
 
   return (
@@ -196,39 +198,46 @@ const Field = ({ id }) => {
                 </div>
               </div>
 
-              <div className='row my-4 justify-content-between'>
-                <div className='col-8'>
-                  <div className="row">
-                    <label className="col-form-label col-sm-3" htmlFor="add-value">
-                      <strong>Add value </strong>
-                    </label>
+              {kind == 'fixed' && (
+                <div className='row my-4 justify-content-between'>
+                  <div className='col-8'>
+                    <div className="row">
+                      <label className="col-form-label col-sm-3" htmlFor="add-value">
+                        <strong>Add value </strong>
+                      </label>
 
-                    <div className="col-sm-9">
-                      <input
-                        id="add-value"
-                        type="text"
-                        className="form-control"
-                        required="required"
-                        onChange={(e) => setFieldValue(e.target.value)}
-                      />
+                      <div className="col-sm-9">
+                        <input
+                          id="add-value"
+                          type="text"
+                          className="form-control"
+                          required="required"
+                          value={fieldValue}
+                          onChange={(e) => setFieldValue(e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
+
+                  <div className='col-1'>
+                    <button
+                      className="btn btn-outline-primary"
+                      onClick={() => handleAddFieldValueClick()}
+                    >
+                      Add
+                    </button>
+                  </div>
+
                 </div>
+              )}
 
-                <div className='col-1'>
-                  <button
-                    className="btn btn-outline-primary"
-                    onClick={() => handleAddFieldValueClick()}
-                  >
-                    Add
-                  </button>
+              {schema_field_value_ids.length > 0 && (
+                <div className='border-top'>
+                  {map(schema_field_value_ids, (fieldValueId) => (
+                    <FieldValue id={fieldValueId} key={fieldValueId} fieldId={id} />
+                  ))}
                 </div>
-
-              </div>
-
-              {map(schemaFieldValueIds, (fieldValueId) => (
-                <FieldValue id={fieldValueId} key={fieldValueId} />
-              ))}
+              )}
 
             </div>
           </div>

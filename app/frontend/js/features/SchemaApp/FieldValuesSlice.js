@@ -33,23 +33,27 @@ export const addFieldValue = createAsyncThunk(
   }
 );
 
-// export const deleteField = createAsyncThunk(
-//   "fields/deleteFieldStatus",
-//   async (payload) => {
-//     const { id, schemaId } =
-//       payload;
+export const deleteFieldValue = createAsyncThunk(
+  "fields/deleteFieldValueStatus",
+  async (payload) => {
 
-//     const response = request
-//       .delete(
-//         `/schemas/${schemaId}/schema_fields/${id}`
-//       )
-//       .then((response) => {
-//         return id;
-//       });
+    const {
+      id,
+      schemaId,
+      schemaFieldId
+    } = payload;
 
-//     return response;
-//   }
-// );
+    const response = request
+      .delete(
+        `/schemas/${schemaId}/schema_fields/${schemaFieldId}/schema_field_values/${id}`
+      )
+      .then((response) => {
+        return id;
+      });
+
+    return response;
+  }
+);
 
 // export const updateField = createAsyncThunk(
 //   "fields/updateFieldStatus",

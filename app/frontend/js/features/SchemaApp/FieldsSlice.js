@@ -1,4 +1,4 @@
-import { some } from "lodash";
+import { some, filter } from "lodash";
 
 import {
   createAsyncThunk,
@@ -7,7 +7,7 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
-import { addFieldValue } from '~/js/features/SchemaApp/FieldValuesSlice';
+import { addFieldValue, deleteFieldValue } from '~/js/features/SchemaApp/FieldValuesSlice';
 
 export const addField = createAsyncThunk(
   "fields/addFieldStatus",
@@ -85,10 +85,7 @@ export const hasEmptyFields = (state) => {
   return some(selectAllFields(state), { name: "" });
 };
 
-const fieldsAdapter = createEntityAdapter({
-  sortComparer: (fieldOne, fieldTwo) =>
-    fieldTwo.created_at.localeCompare(fieldOne.created_at),
-});
+const fieldsAdapter = createEntityAdapter();
 
 const fieldsSlice = createSlice({
   name: "fieldsSlice",
@@ -106,15 +103,14 @@ const fieldsSlice = createSlice({
         fieldsAdapter.setOne(state, action.payload);
       })
       .addCase(addFieldValue.fulfilled, (state, action) => {
+        state.entities[action.payload.schema_field_id].schema_field_value_ids.push(action.payload.id)
+      })
+      .addCase(deleteFieldValue.fulfilled, (state, action) => {
+        const ids = filter(state.entities[action.meta.arg.schemaFieldId].schema_field_value_ids, (fieldId) => {
+          return fieldId != action.payload;
+        });
 
-        console.log(state.entities.fields);
-
-        fieldsAdapter.updateOne(state, {
-          id: action.payload.schema_field_id,
-          changes: {
-            schemaFieldValueIds: [action.payload.id]
-          }
-        })
+        state.entities[action.meta.arg.schemaFieldId].schema_field_value_ids = ids;
       })
   },
 });

@@ -36,6 +36,7 @@ RSpec.describe "SchemaFields", type: :request do
         schema_field = response.parsed_body
 
         expect(schema_field['name']).to eq 'title'
+        expect(schema_field['schema_field_value_ids']).to eq []
       end
     end
   end
@@ -60,6 +61,7 @@ RSpec.describe "SchemaFields", type: :request do
         patch schema_schema_field_path(schema, schema_field), params: { schema_field: { name: 'internal_identifier' } }
 
         expect(response.parsed_body['name']).to eq 'internal_identifier'
+        expect(response.parsed_body['schema_field_value_ids']).to eq []
       end
     end
   end
