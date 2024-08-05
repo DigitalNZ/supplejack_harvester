@@ -8,10 +8,10 @@ import Field from './components/Field';
 
 // actions from state
 
-import { selectFieldIds } from '~/js/features/SchemaApp/FieldsSlice';
+import { selectSchemaFieldIds } from '~/js/features/SchemaApp/SchemaFieldsSlice';
 
 const SchemaApp = () => {
-  const fieldIds = useSelector(selectFieldIds);
+  const fieldIds = useSelector(selectSchemaFieldIds);
 
   return (
     <>

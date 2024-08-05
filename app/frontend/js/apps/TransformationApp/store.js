@@ -10,6 +10,10 @@ import rawRecord from "/js/features/TransformationApp/RawRecordSlice";
 import appDetails from "/js/features/TransformationApp/AppDetailsSlice";
 import schemas from "/js/features/TransformationApp/SchemasSlice";
 
+// shared slice?
+
+// import schemaFields from '/js/features/SchemaApp/FieldsSlice';
+
 // ui
 import uiFields from "/js/features/TransformationApp/UiFieldsSlice";
 import uiAppDetails from "/js/features/TransformationApp/UiAppDetailsSlice";

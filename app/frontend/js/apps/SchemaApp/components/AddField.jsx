@@ -1,19 +1,19 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  addField,
-  hasEmptyFields,
-} from "~/js/features/SchemaApp/FieldsSlice";
+  addSchemaField,
+  hasEmptySchemaFields,
+} from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import { selectAppDetails } from "~/js/features/SchemaApp/AppDetailsSlice";
 
 const AddField = () => {
   const dispatch = useDispatch();
   const appDetails = useSelector(selectAppDetails);
-  const emptyFields = useSelector(hasEmptyFields);
+  const emptyFields = useSelector(hasEmptySchemaFields);
 
   const addNewField = () => {
     dispatch(
-      addField({
+      addSchemaField({
         name: "",
         schemaId: appDetails.schema.id
       })

@@ -15,7 +15,7 @@ module SchemaReduxState
 
   def schema_entities_slices
     {
-      fields: entity_slice(@schema.schema_fields),
+      schemaFields: entity_slice(@schema.schema_fields),
       fieldValues: entity_slice(@schema.schema_fields.flat_map(&:schema_field_values)),
       appDetails: schema_app_details_slice
     }
@@ -30,7 +30,7 @@ module SchemaReduxState
 
   def schema_ui_slices
     {
-      fields: ui_schema_fields_slice
+      schemaFields: ui_schema_fields_slice
     }
   end
 

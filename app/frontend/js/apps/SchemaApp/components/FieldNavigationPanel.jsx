@@ -1,14 +1,12 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectAllFields } from "~/js/features/TransformationApp/FieldsSlice";
+import { selectAllSchemaFields } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import FieldNavigationListItem from "./FieldNavigationListItem";
 import AddField from "~/js/apps/SchemaApp/components/AddField";
-// import { toggleDisplayFields } from "~/js/features/TransformationApp/UiFieldsSlice";
 import Tooltip from "~/js/components/Tooltip";
 
 const FieldNavigationPanel = () => {
-  const dispatch = useDispatch();
-  const fields = useSelector(selectAllFields);
+  const fields = useSelector(selectAllSchemaFields);
 
   return (
     <div className="card field-nav-panel">
@@ -26,22 +24,12 @@ const FieldNavigationPanel = () => {
             <ul className="dropdown-menu dropdown-menu-end">
               <li
                 className="dropdown-item card__control-acton"
-                onClick={() => {
-                  // dispatch(
-                  //   toggleDisplayFields({ fields: fields, displayed: false })
-                  // );
-                }}
               >
                 <i className="bi bi-eye-slash me-2"></i> Hide all fields
               </li>
 
               <li
                 className="dropdown-item card__control-acton"
-                onClick={() => {
-                  // dispatch(
-                  //   toggleDisplayFields({ fields: fields, displayed: true })
-                  // );
-                }}
               >
                 <i className="bi bi-eye me-2"></i> Show all fields
               </li>

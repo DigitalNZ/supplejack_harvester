@@ -7,12 +7,12 @@ import classNames from "classnames";
 
 import { selectAppDetails } from '~/js/features/SchemaApp/AppDetailsSlice';
 
-import { selectFieldById, updateField, deleteField } from "~/js/features/SchemaApp/FieldsSlice";
+import { selectSchemaFieldById, updateSchemaField, deleteSchemaField } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 
 import {
-  selectUiFieldById, toggleDisplayField,
-  setActiveField,
-} from "~/js/features/SchemaApp/UiFieldsSlice";
+  selectUiSchemaFieldById, toggleDisplaySchemaField,
+  setActiveSchemaField,
+} from "~/js/features/SchemaApp/UiSchemaFieldsSlice";
 
 
 import { addFieldValue } from '~/js/features/SchemaApp/FieldValuesSlice';
@@ -26,7 +26,7 @@ const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
 
   const { name, kind, schema_field_value_ids } = useSelector((state) =>
-    selectFieldById(state, id)
+    selectSchemaFieldById(state, id)
   );
 
   const dispatch = useDispatch();
@@ -65,7 +65,7 @@ const Field = ({ id }) => {
   };
 
   const { saved, deleting, saving, displayed, active } =
-    useSelector((state) => selectUiFieldById(state, id));
+    useSelector((state) => selectUiSchemaFieldById(state, id));
 
   const fieldClasses = classNames("col-12", "collapse", {
     show: displayed,

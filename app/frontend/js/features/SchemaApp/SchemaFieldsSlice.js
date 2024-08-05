@@ -9,8 +9,8 @@ import { request } from "~/js/utils/request";
 
 import { addFieldValue, deleteFieldValue } from '~/js/features/SchemaApp/FieldValuesSlice';
 
-export const addField = createAsyncThunk(
-  "fields/addFieldStatus",
+export const addSchemaField = createAsyncThunk(
+  "fields/addSchemaFieldStatus",
   async (payload) => {
     const {
       name,
@@ -35,8 +35,8 @@ export const addField = createAsyncThunk(
   }
 );
 
-export const deleteField = createAsyncThunk(
-  "fields/deleteFieldStatus",
+export const deleteSchemaField = createAsyncThunk(
+  "fields/deleteSchemaFieldStatus",
   async (payload) => {
     const { id, schemaId } =
       payload;
@@ -53,8 +53,8 @@ export const deleteField = createAsyncThunk(
   }
 );
 
-export const updateField = createAsyncThunk(
-  "fields/updateFieldStatus",
+export const updateSchemaField = createAsyncThunk(
+  "fields/updateSchemaFieldStatus",
   async (payload) => {
     const {
       id,
@@ -81,25 +81,25 @@ export const updateField = createAsyncThunk(
   }
 );
 
-export const hasEmptyFields = (state) => {
-  return some(selectAllFields(state), { name: "" });
+export const hasEmptySchemaFields = (state) => {
+  return some(selectAllSchemaFields(state), { name: "" });
 };
 
-const fieldsAdapter = createEntityAdapter();
+const schemaFieldsAdapter = createEntityAdapter();
 
-const fieldsSlice = createSlice({
-  name: "fieldsSlice",
+const schemaFieldsSlice = createSlice({
+  name: "schemaFieldsSlice",
   initialState: {},
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(addField.fulfilled, (state, action) => {
+      .addCase(addSchemaField.fulfilled, (state, action) => {
         fieldsAdapter.upsertOne(state, action.payload);
       })
-      .addCase(deleteField.fulfilled, (state, action) => {
+      .addCase(deleteSchemaField.fulfilled, (state, action) => {
         fieldsAdapter.removeOne(state, action.payload);
       })
-      .addCase(updateField.fulfilled, (state, action) => {
+      .addCase(updateSchemaField.fulfilled, (state, action) => {
         fieldsAdapter.setOne(state, action.payload);
       })
       .addCase(addFieldValue.fulfilled, (state, action) => {
@@ -115,13 +115,13 @@ const fieldsSlice = createSlice({
   },
 });
 
-const { actions, reducer } = fieldsSlice;
+const { actions, reducer } = schemaFieldsSlice;
 
 export const {
-  selectById: selectFieldById,
-  selectIds: selectFieldIds,
-  selectAll: selectAllFields,
-} = fieldsAdapter.getSelectors((state) => state.entities.fields);
+  selectById: selectSchemaFieldById,
+  selectIds: selectSchemaFieldIds,
+  selectAll: selectAllSchemaFields,
+} = schemaFieldsAdapter.getSelectors((state) => state.entities.schemaFields);
 
 export const { } = actions;
 

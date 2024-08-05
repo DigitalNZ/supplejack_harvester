@@ -1,18 +1,18 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { selectFieldById } from "~/js/features/SchemaApp/FieldsSlice";
+import { selectSchemaFieldById } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import {
-  selectUiFieldById,
-  toggleDisplayField,
-  setActiveField,
-} from "~/js/features/TransformationApp/UiFieldsSlice";
+  selectUiSchemaFieldById,
+  toggleDisplaySchemaField,
+  setActiveSchemaField,
+} from "~/js/features/SchemaApp/UiSchemaFieldsSlice";
 import classNames from "classnames";
 
 const FieldNavigationListItem = ({ id }) => {
   const dispatch = useDispatch();
-  const { name } = useSelector((state) => selectFieldById(state, id));
+  const { name } = useSelector((state) => selectSchemaFieldById(state, id));
   const { displayed } = useSelector((state) =>
-    selectUiFieldById(state, id)
+    selectUiSchemaFieldById(state, id)
   );
 
   const linkClasses = classNames("nav-link", "text-truncate");
@@ -20,10 +20,10 @@ const FieldNavigationListItem = ({ id }) => {
   const handleListItemClick = () => {
     const desiredDisplaySetting = !displayed;
 
-    dispatch(toggleDisplayField({ id: id, displayed: desiredDisplaySetting }));
+    dispatch(toggleDisplaySchemaField({ id: id, displayed: desiredDisplaySetting }));
 
     if (desiredDisplaySetting == true) {
-      dispatch(setActiveField(id));
+      dispatch(setActiveSchemaField(id));
     }
   };
 
