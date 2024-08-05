@@ -7,7 +7,8 @@ module TransformationReduxState
     {
       entities: {
         fields: fields_slice, rawRecord: raw_record_slice,
-        appDetails: app_details_slice, sharedDefinitions: shared_definitions_slice
+        appDetails: app_details_slice, sharedDefinitions: shared_definitions_slice, 
+        schemas: schema_slice
       },
       ui: {
         fields: ui_fields_slice, appDetails: ui_app_details_slice
@@ -17,6 +18,13 @@ module TransformationReduxState
   end
 
   private
+
+  def schema_slice
+    {
+      ids: @schemas.pluck(:id),
+      entities: @schemas.index_by { |schema| schema[:id] }
+    }
+  end
 
   def fields_slice
     {

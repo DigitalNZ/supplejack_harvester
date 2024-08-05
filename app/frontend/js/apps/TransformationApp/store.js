@@ -8,6 +8,7 @@ import {
 import fields from "/js/features/TransformationApp/FieldsSlice";
 import rawRecord from "/js/features/TransformationApp/RawRecordSlice";
 import appDetails from "/js/features/TransformationApp/AppDetailsSlice";
+import schemas from "/js/features/TransformationApp/SchemasSlice";
 
 // ui
 import uiFields from "/js/features/TransformationApp/UiFieldsSlice";
@@ -27,6 +28,7 @@ export default function configureAppStore(preloadedState) {
         rawRecord,
         appDetails,
         sharedDefinitions,
+        schemas,
       }),
       ui: combineReducers({
         fields: uiFields,

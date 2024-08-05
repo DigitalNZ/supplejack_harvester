@@ -76,6 +76,7 @@ class TransformationDefinitionsController < ApplicationController
 
   def assign_show_variables
     @fields = @transformation_definition.fields.order(created_at: :desc).map(&:to_h)
+    @schemas = Schema.all.order(created_at: :desc).map(&:to_h)
     @props = transformation_app_state
 
     @extraction_jobs = if @harvest_definition.extraction_definition.present?
