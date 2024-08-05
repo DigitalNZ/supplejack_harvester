@@ -33,10 +33,11 @@ module Extraction
     def extraction_cancelled?
       @extraction_job.reload.cancelled?
     end
-    
+
     def process_enrichment(api_record, page)
       if @harvest_job.pipeline_job.run_enrichment_concurrently?
-        EnrichmentExtractionWorker.perform_async(@extraction_definition.id, @extraction_job.id, @harvest_job.id, api_record, page)
+        EnrichmentExtractionWorker.perform_async(@extraction_definition.id, @extraction_job.id, @harvest_job.id,
+                                                 api_record, page)
       else
         process_enrichment_extraction(@extraction_definition.id, @extraction_job.id, @harvest_job.id, api_record, page)
       end
