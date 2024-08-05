@@ -27,7 +27,7 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
 
       expect(Extraction::EnrichmentExtraction).to receive(:new).with(request, api_record, page, extraction_job.extraction_folder).and_call_original
 
-      subject.perform(extraction_definition, extraction_job, harvest_job, api_record, page)
+      subject.perform(extraction_definition.id, extraction_job.id, harvest_job.id, api_record.body, page)
     end
 
     context 'when the enrichment extraction is valid' do
@@ -38,19 +38,19 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
       it 'calls extract and save' do
         expect_any_instance_of(Extraction::EnrichmentExtraction).to receive(:extract_and_save).and_call_original
 
-        subject.perform(extraction_definition, extraction_job, harvest_job, api_record, 1)
+        subject.perform(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1)
       end
 
       it 'enqueues a record transformation' do
         expect(TransformationWorker).to receive(:perform_async)
 
-        subject.perform(extraction_definition, extraction_job, harvest_job, api_record, 1)
+        subject.perform(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1)
       end
 
       it 'updates the harvest report' do
         expect_any_instance_of(HarvestReport).to receive(:increment_pages_extracted!).and_call_original
 
-        subject.perform(extraction_definition, extraction_job, harvest_job, api_record, 1)
+        subject.perform(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1)
       end
     end
 
@@ -62,13 +62,13 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
       it 'does not call extract and save' do
         expect_any_instance_of(Extraction::EnrichmentExtraction).not_to receive(:extract_and_save).and_call_original
 
-        subject.perform(extraction_definition, extraction_job, harvest_job, api_record, 1)
+        subject.perform(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1)
       end
 
       it 'does not enqueue a record transformation' do
         expect(TransformationWorker).not_to receive(:perform_async)
 
-        subject.perform(extraction_definition, extraction_job, harvest_job, api_record, 1)
+        subject.perform(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1)
       end
     end
   end

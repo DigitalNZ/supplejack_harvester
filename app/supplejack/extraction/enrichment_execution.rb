@@ -24,13 +24,12 @@ module Extraction
         page = page_from_index(index)
         
         # TODO: This should only perform async if the user has selected this option
-        EnrichmentExtractionWorker.perform_async(@extraction_definition,
-                                                 @extraction_job,
-                                                 @harvest_job,
-                                                 ApiRecord.new(api_record), 
+        EnrichmentExtractionWorker.perform_async(@extraction_definition.id,
+                                                 @extraction_job.id,
+                                                 @harvest_job.id,
+                                                 api_record,
                                                  page)
 
-        throttle
         break if @extraction_job.reload.cancelled?
       end
     end
