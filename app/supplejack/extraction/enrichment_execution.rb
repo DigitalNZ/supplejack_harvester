@@ -2,6 +2,8 @@
 
 module Extraction
   class EnrichmentExecution
+    include Extraction::Concerns::EnrichmentExtractionProcess
+
     def initialize(extraction_job)
       @extraction_job = extraction_job
       @extraction_definition = extraction_job.extraction_definition
@@ -22,13 +24,16 @@ module Extraction
     def extract_and_save_enrichment_documents(api_records)
       api_records.each_with_index do |api_record, index|
         page = page_from_index(index)
-        
-        # TODO: This should only perform async if the user has selected this option
-        EnrichmentExtractionWorker.perform_async(@extraction_definition.id,
-                                                 @extraction_job.id,
-                                                 @harvest_job.id,
-                                                 api_record,
-                                                 page)
+
+        if @harvest_job.pipeline_job.run_enrichment_concurrently?
+          EnrichmentExtractionWorker.perform_async(@extraction_definition.id,
+                                                   @extraction_job.id,
+                                                   @harvest_job.id,
+                                                   api_record,
+                                                   page)
+        else
+          process_enrichment_extraction(@extraction_definition.id, @extraction_job.id, @harvest_job.id, api_record, page)
+        end
 
         break if @extraction_job.reload.cancelled?
       end
