@@ -28,12 +28,14 @@ module Extraction
       end
 
       def enqueue_record_transformation(enrichment_extraction, enrichment_params)
-        return unless enrichment_params.harvest_job.present? && enrichment_extraction.document.successful?
+        harvest_job = enrichment_params.harvest_job
+
+        return unless harvest_job.present? && enrichment_extraction.document.successful?
         return if enrichment_params.extraction_definition.extract_text_from_file?
 
-        TransformationWorker.perform_async(enrichment_params.harvest_job.id, enrichment_params.page, enrichment_params.api_record['id'])
+        TransformationWorker.perform_async(harvest_job.id, enrichment_params.page, enrichment_params.api_record['id'])
 
-        harvest_report = enrichment_params.harvest_job.harvest_report
+        harvest_report = harvest_job.harvest_report
         harvest_report.increment_transformation_workers_queued! if harvest_report.present?
       end
 
