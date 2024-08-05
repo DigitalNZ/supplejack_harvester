@@ -11,7 +11,8 @@ module Extraction
           return unless enrichment_extraction.valid?
 
           enrichment_extraction.extract_and_save
-          handle_extraction_success(enrichment_extraction, enrichment_params)
+          enqueue_record_transformation(enrichment_extraction, enrichment_params)
+          update_harvest_report(enrichment_params)
         end
       end
 
@@ -26,11 +27,6 @@ module Extraction
         )
       end
 
-      def handle_extraction_success(enrichment_extraction, enrichment_params)
-        enqueue_record_transformation(enrichment_extraction, enrichment_params)
-        update_harvest_report(enrichment_params)
-      end
-
       def enqueue_record_transformation(enrichment_extraction, enrichment_params)
         return unless enrichment_params.harvest_job.present? && enrichment_extraction.document.successful?
         return if enrichment_params.extraction_definition.extract_text_from_file?
@@ -42,10 +38,11 @@ module Extraction
       end
 
       def update_harvest_report(enrichment_params)
-        return if enrichment_params.harvest_job.harvest_report.blank?
+        harvest_report = enrichment_params.harvest_job.harvest_report
+        return if harvest_report.blank?
 
-        enrichment_params.harvest_job.harvest_report.increment_pages_extracted!
-        enrichment_params.harvest_job.harvest_report.update(extraction_updated_time: Time.zone.now)
+        harvest_report.increment_pages_extracted!
+        harvest_report.update(extraction_updated_time: Time.zone.now)
       end
     end
   end
