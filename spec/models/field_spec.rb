@@ -21,6 +21,8 @@ RSpec.describe Field do
     it 'belongs to a transformation' do
       expect(subject.transformation_definition).to eq transformation_definition
     end
+
+    it { should have_and_belong_to_many(:schema_field_values) }
   end
 
   describe 'kinds' do
@@ -45,12 +47,13 @@ RSpec.describe Field do
     let(:schema)             { create(:schema) }
     let(:schema_field)       { create(:schema_field, schema:, name: 'document_source', kind: 'fixed') }
     let(:schema_field_value) { create(:schema_field_value, value: 'external', schema_field:) }
+    let(:schema_field_value_two) { create(:schema_field_value, value: 'internal', schema_field:) }
 
     let(:dynamic_schema_field) { create(:schema_field, schema:, name: 'internal_identifier', kind: 'dynamic') }
 
     let(:fixed_schema_field) { create(:schema_field, schema:, name: 'test', kind: 'fixed') }
 
-    let(:field)              { create(:field, transformation_definition:, schema_field:, schema_field_value:, name: 'test field') }
+    let(:field)              { create(:field, transformation_definition:, schema_field:, name: 'test field') }
     let(:custom_field)       { create(:field, transformation_definition:, name: 'hello') }
     let(:dynamic_field)      { create(:field, transformation_definition:, schema_field: dynamic_schema_field, block: 'Dynamic Block') }
     let(:fixed_field)        { create(:field, transformation_definition:, schema_field: fixed_schema_field) }
@@ -63,15 +66,26 @@ RSpec.describe Field do
 
     describe 'block' do
       it 'gets its block from a schema field value when the schema field is kind fixed' do
-        expect(field.block).to eq 'external'
+        field.schema_field_values << schema_field_value
+        field.save
+
+        expect(field.block).to eq "external"
       end
 
       it 'uses its own block when the schema field is type kind dynamic' do
         expect(dynamic_field.block).to eq 'Dynamic Block'
       end
 
-      it 'returns nil if the schema field is type fixed but it has no values' do
-        expect(fixed_field.block).to eq nil
+      it 'returns '' if the schema field is type fixed but it has no values' do
+        expect(fixed_field.block).to eq ''
+      end
+
+      it 'returns a block that is a combination of the selected fixed values when multiple fixed values have been chosen' do
+        field.schema_field_values << schema_field_value
+        field.schema_field_values << schema_field_value_two
+        field.save
+
+        expect(field.block).to eq 'external internal'
       end
     end
 

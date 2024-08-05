@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_08_04_223756) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_05_225835) do
   create_table "destinations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "url", null: false
@@ -70,10 +70,15 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_04_223756) do
     t.bigint "transformation_definition_id", null: false
     t.integer "kind", default: 0
     t.bigint "schema_field_id"
-    t.bigint "schema_field_value_id"
     t.index ["schema_field_id"], name: "index_fields_on_schema_field_id"
-    t.index ["schema_field_value_id"], name: "index_fields_on_schema_field_value_id"
     t.index ["transformation_definition_id"], name: "index_fields_on_transformation_definition_id"
+  end
+
+  create_table "fields_schema_field_values", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "field_id", null: false
+    t.bigint "schema_field_value_id", null: false
+    t.index ["field_id", "schema_field_value_id"], name: "idx_on_field_id_schema_field_value_id_ab00bc80ed"
+    t.index ["schema_field_value_id", "field_id"], name: "idx_on_schema_field_value_id_field_id_51496a1097"
   end
 
   create_table "harvest_definitions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

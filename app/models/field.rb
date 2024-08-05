@@ -6,6 +6,7 @@ class Field < ApplicationRecord
   belongs_to :transformation_definition
   belongs_to :schema_field, optional: true
   belongs_to :schema_field_value, optional: true
+  has_and_belongs_to_many :schema_field_values
 
   enum :kind, KINDS
 
@@ -22,7 +23,7 @@ class Field < ApplicationRecord
   def block
     return super unless schema_field.present? && schema_field.fixed?
 
-    schema_field_value&.value || ''
+    schema_field_values.map(&:value).join(' ') || ''
   end
 
   def to_h
