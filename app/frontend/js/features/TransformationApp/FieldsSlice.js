@@ -17,6 +17,7 @@ export const addField = createAsyncThunk(
       pipelineId,
       harvestDefinitionId,
       transformationDefinitionId,
+      schemaFieldId
     } = payload;
 
     const response = request
@@ -28,6 +29,7 @@ export const addField = createAsyncThunk(
             name: name,
             kind: kind,
             block: block,
+            schema_field_id: schemaFieldId
           },
         }
       )
@@ -124,6 +126,6 @@ export const {
   selectAll: selectAllFields,
 } = fieldsAdapter.getSelectors((state) => state.entities.fields);
 
-export const {} = actions;
+export const { } = actions;
 
 export default reducer;

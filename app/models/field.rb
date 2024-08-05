@@ -22,7 +22,7 @@ class Field < ApplicationRecord
   def block
     return super unless schema_field.present? && schema_field.fixed?
 
-    schema_field_value&.value
+    schema_field_value&.value || ''
   end
 
   def to_h
