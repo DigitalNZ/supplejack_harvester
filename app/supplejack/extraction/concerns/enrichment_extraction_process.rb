@@ -40,11 +40,9 @@ module Extraction
       end
 
       def update_harvest_report(enrichment_params)
-        return if enrichment_params.harvest_job.blank?
-
+        return unless enrichment_params&.harvest_job&.harvest_report
+      
         harvest_report = enrichment_params.harvest_job.harvest_report
-        return if harvest_report.blank?
-
         harvest_report.increment_pages_extracted!
         harvest_report.update(extraction_updated_time: Time.zone.now)
       end
