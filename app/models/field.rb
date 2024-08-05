@@ -32,6 +32,7 @@ class Field < ApplicationRecord
       block:,
       kind:,
       schema: schema?,
+      schema_field_kind: schema_field&.kind,
       created_at:,
       updated_at:
     }

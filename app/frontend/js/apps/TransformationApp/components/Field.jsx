@@ -28,7 +28,7 @@ import CodeEditor from "~/js/components/CodeEditor";
 
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
-  const { name, block, kind } = useSelector((state) =>
+  const { name, block, kind, schema_field_kind } = useSelector((state) =>
     selectFieldById(state, id)
   );
 
@@ -249,29 +249,33 @@ const Field = ({ id }) => {
                   </div>
                 )}
               </div>
+              {schema_field_kind != 'fixed' && (
+                <>
+                  <label className="form-label mt-4" htmlFor="block">
+                    Block{" "}
+                    <Tooltip data-bs-title="This is the code that is applied to create this field on the transformed record.">
+                      <i
+                        className="bi bi-question-circle"
+                        aria-label="help text"
+                      ></i>
+                    </Tooltip>
+                  </label>
 
-              <label className="form-label mt-4" htmlFor="block">
-                Block{" "}
-                <Tooltip data-bs-title="This is the code that is applied to create this field on the transformed record.">
-                  <i
-                    className="bi bi-question-circle"
-                    aria-label="help text"
-                  ></i>
-                </Tooltip>
-              </label>
+                  <CodeEditor
+                    initContent={block}
+                    onChange={(e) => setBlockValue(e.target.value)}
+                  />
 
-              <CodeEditor
-                initContent={block}
-                onChange={(e) => setBlockValue(e.target.value)}
-              />
-
-              {error && (
-                <div className="alert alert-danger mt-4" role="alert">
-                  <h4 className="alert-heading">{error.title}</h4>
-                  <hr />
-                  <p className="mb-0">{error.description}</p>
-                </div>
+                  {error && (
+                    <div className="alert alert-danger mt-4" role="alert">
+                      <h4 className="alert-heading">{error.title}</h4>
+                      <hr />
+                      <p className="mb-0">{error.description}</p>
+                    </div>
+                  )}
+                </>
               )}
+
             </div>
           </div>
         </div>

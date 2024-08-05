@@ -66,6 +66,7 @@ const FieldNavigationPanel = () => {
       );
     })
 
+    setSchemaFieldIds([]);
     handleClose();
   }
 
