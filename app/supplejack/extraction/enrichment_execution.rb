@@ -37,7 +37,7 @@ module Extraction
     end
 
     def process_enrichment(enrichment_params)
-      if @harvest_job.pipeline_job.run_enrichment_concurrently?
+      if @harvest_job && @harvest_job.pipeline_job.run_enrichment_concurrently?
         EnrichmentExtractionWorker.perform_async(enrichment_params)
       else
         process_enrichment_extraction(enrichment_params)

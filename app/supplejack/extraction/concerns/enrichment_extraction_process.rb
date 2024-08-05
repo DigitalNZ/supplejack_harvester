@@ -40,6 +40,8 @@ module Extraction
       end
 
       def update_harvest_report(enrichment_params)
+        return if enrichment_params.harvest_job.blank?
+
         harvest_report = enrichment_params.harvest_job.harvest_report
         return if harvest_report.blank?
 
