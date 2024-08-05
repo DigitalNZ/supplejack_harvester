@@ -15,7 +15,7 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
   let(:extraction_job)        { create(:extraction_job, extraction_definition:, harvest_job:, status: 'queued') }
   let(:request)               { create(:request, :figshare_initial_request, extraction_definition:) }
   let(:api_record)            { build(:api_record) }
-  let(:extraction_params)    { ExtractionParams.new(extraction_definition, extraction_job, harvest_job, api_record, 1) }
+  let(:extraction_params)      { ExtractionParams.new(extraction_definition, extraction_job, harvest_job, api_record, 1) }
 
   describe '#perform' do
     before do 
