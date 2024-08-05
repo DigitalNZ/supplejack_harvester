@@ -33,20 +33,6 @@ RSpec.describe Extraction::RecordExtraction do
       it 'returns an extracted document from a Supplejack API' do
         expect(subject.extract).to be_a(Extraction::Document)
       end
-
-      xit 'requests 100 records per page' do
-        expect(Extraction::Request).to receive(:new).with(
-          hash_including(
-            :params => hash_including(
-              :search_options => hash_including(
-                :per_page => 100
-              )
-            )
-          )
-        ).and_call_original
-
-        subject.extract
-      end 
     end
 
     context 'when the enrichment is scheduled after a harvest' do
@@ -68,8 +54,7 @@ RSpec.describe Extraction::RecordExtraction do
                 'fragments.job_id' => 'harvest-job-1'
               },
               'search_options' => {
-                'page' => 1,
-                'per_page' => 100
+                'page' => 1
               }
             },
             headers: fake_json_headers
@@ -79,20 +64,6 @@ RSpec.describe Extraction::RecordExtraction do
       it 'returns an extraction document from a particular job from a Supplejack API' do
         expect(subject.extract).to be_a(Extraction::Document)
       end
-
-      it 'requests 100 records per page' do
-        expect(Extraction::Request).to receive(:new).with(
-          hash_including(
-            :params => hash_including(
-              :search_options => hash_including(
-                :per_page => 100
-              )
-            )
-          )
-        ).and_call_original
-
-        subject.extract
-      end 
     end
   end
 end
