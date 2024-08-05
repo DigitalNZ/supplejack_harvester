@@ -24,7 +24,8 @@ module Extraction
     def extract_and_save_enrichment_documents(api_records)
       api_records.each_with_index do |api_record, index|
         page = page_from_index(index)
-        enrichment_params = ExtractionParams.new(@extraction_definition, @extraction_job, @harvest_job, api_record, page)
+        enrichment_params = ExtractionParams.new(@extraction_definition, @extraction_job, @harvest_job, api_record,
+                                                 page)
         process_enrichment(enrichment_params)
 
         break if extraction_cancelled?
@@ -42,7 +43,6 @@ module Extraction
         process_enrichment_extraction(enrichment_params)
       end
     end
-    
 
     def throttle
       sleep @extraction_definition.throttle / 1000.0
