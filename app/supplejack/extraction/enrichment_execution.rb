@@ -35,13 +35,17 @@ module Extraction
     end
 
     def process_enrichment(api_record, page)
+      extraction_definition_id = @extraction_definition.id
+      extraction_job_id = @extraction_job.id
+      harvest_job_id = @harvest_job.id
+      
       if @harvest_job.pipeline_job.run_enrichment_concurrently?
-        EnrichmentExtractionWorker.perform_async(@extraction_definition.id, @extraction_job.id, @harvest_job.id,
-                                                 api_record, page)
+        EnrichmentExtractionWorker.perform_async(extraction_definition_id, extraction_job_id, harvest_job_id, api_record, page)
       else
-        process_enrichment_extraction(@extraction_definition.id, @extraction_job.id, @harvest_job.id, api_record, page)
+        process_enrichment_extraction(extraction_definition_id, extraction_job_id, harvest_job_id, api_record, page)
       end
     end
+    
 
     def throttle
       sleep @extraction_definition.throttle / 1000.0

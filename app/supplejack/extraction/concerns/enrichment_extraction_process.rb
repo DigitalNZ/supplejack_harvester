@@ -11,23 +11,31 @@ module Extraction
           extraction_job = ExtractionJob.find(extraction_job_id)
           harvest_job = HarvestJob.find(harvest_job_id)
 
-          enrichment_extraction = Extraction::EnrichmentExtraction.new(extraction_definition.requests.last,
-                                                                       Extraction::ApiRecord.new(api_record), page, 
-                                                                       extraction_job.extraction_folder)
+          enrichment_extraction = build_enrichment_extraction(extraction_definition.requests.last,
+                                                              Extraction::ApiRecord.new(api_record), page, 
+                                                              extraction_job.extraction_folder)
           return unless enrichment_extraction.valid?
 
           enrichment_extraction.extract_and_save
-          enqueue_record_transformation(harvest_job,
-                                        extraction_definition,
-                                        api_record,
-                                        enrichment_extraction.document,
-                                        page)
-
-          update_harvest_report(harvest_job.harvest_report)
+          handle_extraction_success(harvest_job, extraction_definition, api_record, enrichment_extraction.document, page)
         end
       end
 
       private
+
+      def build_enrichment_extraction(extraction_definition, api_record, page, extraction_folder)
+        Extraction::EnrichmentExtraction.new(
+          extraction_definition.requests.last,
+          Extraction::ApiRecord.new(api_record),
+          page,
+          extraction_folder
+        )
+      end
+
+      def handle_extraction_success(harvest_job, extraction_definition, api_record, document, page)
+        enqueue_record_transformation(harvest_job, extraction_definition, api_record, document, page)
+        update_harvest_report(harvest_job.harvest_report)
+      end
 
       def enqueue_record_transformation(harvest_job, extraction_definition, api_record, document, page)
         return unless harvest_job.present? && document.successful?
