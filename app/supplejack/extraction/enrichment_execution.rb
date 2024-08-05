@@ -24,7 +24,8 @@ module Extraction
     def extract_and_save_enrichment_documents(api_records)
       api_records.each_with_index do |api_record, index|
         page = page_from_index(index)
-        process_enrichment(api_record, page)
+        enrichment_params = ExtractionParams.new(@extraction_definition, @extraction_job, @harvest_job, api_record, page)
+        process_enrichment(enrichment_params)
 
         break if extraction_cancelled?
       end
@@ -34,15 +35,11 @@ module Extraction
       @extraction_job.reload.cancelled?
     end
 
-    def process_enrichment(api_record, page)
-      extraction_definition_id = @extraction_definition.id
-      extraction_job_id = @extraction_job.id
-      harvest_job_id = @harvest_job.id
-      
+    def process_enrichment(enrichment_params)
       if @harvest_job.pipeline_job.run_enrichment_concurrently?
-        EnrichmentExtractionWorker.perform_async(extraction_definition_id, extraction_job_id, harvest_job_id, api_record, page)
+        EnrichmentExtractionWorker.perform_async(enrichment_params)
       else
-        process_enrichment_extraction(extraction_definition_id, extraction_job_id, harvest_job_id, api_record, page)
+        process_enrichment_extraction(enrichment_params)
       end
     end
     
