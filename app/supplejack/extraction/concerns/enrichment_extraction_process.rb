@@ -29,6 +29,7 @@ module Extraction
         :page
       )
 
+      # rubocop:disable Metrics/MethodLength
       def build_extraction_context(parsed_params)
         extraction_definition_id = parsed_params['extraction_definition_id']
         extraction_job_id = parsed_params['extraction_job_id']
@@ -45,6 +46,7 @@ module Extraction
           harvest_job, parsed_params['api_record'], parsed_params['page']
         )
       end
+      #rubocop:enable Metrics/MethodLength
 
       def build_enrichment_extraction(parsed_params, extraction_definition, extraction_job)
         Extraction::EnrichmentExtraction.new(
