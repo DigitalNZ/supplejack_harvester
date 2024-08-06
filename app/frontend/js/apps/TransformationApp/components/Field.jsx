@@ -58,6 +58,10 @@ const Field = ({ id }) => {
     );
   };
 
+  const handleAddFixedValueClick = () => {
+
+  }
+
   const handleHideClick = () => {
     dispatch(toggleDisplayField({ id: id, displayed: false }));
   };
@@ -171,6 +175,15 @@ const Field = ({ id }) => {
                   {saving ? " Saving..." : " Save"}
                 </button>
 
+                {schema_field_kind == 'fixed' && (
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={handleAddFixedValueClick}
+                  >
+                    + Add fixed value
+                  </button>
+                )}
+
                 <button
                   className="btn btn-outline-primary"
                   disabled={!saved || hasChanged() || running}
@@ -249,6 +262,7 @@ const Field = ({ id }) => {
                   </div>
                 )}
               </div>
+
               {schema_field_kind != 'fixed' && (
                 <>
                   <label className="form-label mt-4" htmlFor="block">
@@ -274,6 +288,10 @@ const Field = ({ id }) => {
                     </div>
                   )}
                 </>
+              )}
+
+              {schema_field_kind == 'fixed' && (
+                <p>Hello!</p>
               )}
 
             </div>

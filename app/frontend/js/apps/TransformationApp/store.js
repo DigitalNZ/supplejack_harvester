@@ -11,6 +11,7 @@ import appDetails from "/js/features/TransformationApp/AppDetailsSlice";
 import schemas from "/js/features/TransformationApp/SchemasSlice";
 
 import schemaFields from '/js/features/SchemaApp/SchemaFieldsSlice';
+import schemaFieldValues from '/js/features/SchemaApp/SchemaFieldValuesSlice';
 
 // ui
 import uiFields from "/js/features/TransformationApp/UiFieldsSlice";
@@ -31,7 +32,8 @@ export default function configureAppStore(preloadedState) {
         appDetails,
         sharedDefinitions,
         schemas,
-        schemaFields
+        schemaFields,
+        schemaFieldValues
       }),
       ui: combineReducers({
         fields: uiFields,

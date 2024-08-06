@@ -78,6 +78,7 @@ class TransformationDefinitionsController < ApplicationController
     @fields = @transformation_definition.fields.order(created_at: :desc).map(&:to_h)
     @schemas = Schema.all.order(created_at: :desc).map(&:to_h)
     @schema_fields = SchemaField.all.map(&:to_h)
+    @schema_field_values = SchemaFieldValue.all.map(&:to_h)
 
     @props = transformation_app_state
 
