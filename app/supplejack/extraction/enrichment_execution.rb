@@ -26,7 +26,7 @@ module Extraction
         page = page_from_index(index)
         enrichment_params = ExtractionParams.new(@extraction_definition.id, 
                                                  @extraction_job.id, 
-                                                 @harvest_job.id, 
+                                                 @harvest_job&.id, 
                                                  api_record,
                                                  page)
         process_enrichment(enrichment_params)

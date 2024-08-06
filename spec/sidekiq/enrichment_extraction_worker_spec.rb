@@ -15,7 +15,6 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
   let(:extraction_job)        { create(:extraction_job, extraction_definition:, harvest_job:, status: 'queued') }
   let(:request)               { create(:request, :figshare_initial_request, extraction_definition:) }
   let(:api_record)            { build(:api_record) }
-  let(:extraction_params)      { ExtractionParams.new(extraction_definition, extraction_job, harvest_job, api_record, 1) }
 
   describe '#perform' do
     before do 
@@ -26,9 +25,9 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
     xit 'creates a new enrichment extraction' do
       page = 1
 
-      expect(Extraction::EnrichmentExtraction).to receive(:new).with(request, api_record, page, extraction_job.extraction_folder).and_call_original
+      expect(Extraction::EnrichmentExtraction).to receive(:new).with(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1)).and_call_original
 
-      subject.perform(extraction_params)
+      subject.perform(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1).to_json)
     end
 
     context 'when the enrichment extraction is valid' do
@@ -39,19 +38,19 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
       it 'calls extract and save' do
         expect_any_instance_of(Extraction::EnrichmentExtraction).to receive(:extract_and_save).and_call_original
 
-        subject.perform(extraction_params)
+        subject.perform(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1).to_json)
       end
 
       it 'enqueues a record transformation' do
         expect(TransformationWorker).to receive(:perform_async)
 
-        subject.perform(extraction_params)
+        subject.perform(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1).to_json)
       end
 
       it 'updates the harvest report' do
         expect_any_instance_of(HarvestReport).to receive(:increment_pages_extracted!).and_call_original
 
-        subject.perform(extraction_params)
+        subject.perform(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1).to_json)
       end
     end
 
@@ -63,13 +62,13 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
       it 'does not call extract and save' do
         expect_any_instance_of(Extraction::EnrichmentExtraction).not_to receive(:extract_and_save).and_call_original
 
-        subject.perform(extraction_params)
+        subject.perform(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1).to_json)
       end
 
       it 'does not enqueue a record transformation' do
         expect(TransformationWorker).not_to receive(:perform_async)
 
-        subject.perform(extraction_params)
+        subject.perform(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1).to_json)
       end
     end
   end
