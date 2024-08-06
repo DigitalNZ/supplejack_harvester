@@ -37,10 +37,12 @@ module Extraction
     end
 
     def process_enrichment(enrichment_params)
+      json_params = enrichment_params.to_json
+
       if @harvest_job&.pipeline_job&.run_enrichment_concurrently?
-        EnrichmentExtractionWorker.perform_async(enrichment_params.to_json)
+        EnrichmentExtractionWorker.perform_async(json_params)
       else
-        process_enrichment_extraction(enrichment_params.to_json)
+        process_enrichment_extraction(json_params)
       end
     end
 
