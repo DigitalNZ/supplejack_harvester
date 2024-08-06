@@ -10,7 +10,7 @@ class Schema < ApplicationRecord
     {
       id:,
       name:,
-      fields: schema_fields.map(&:to_h),
+      schema_field_ids: schema_fields.map(&:id),
       created_at:,
       updated_at: 
     }
