@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import classNames from "classnames";
-import { isEmpty } from "lodash";
+import { isEmpty, filter, includes, map } from "lodash";
 
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -26,11 +26,26 @@ import { selectUiFieldById } from "~/js/features/TransformationApp/UiFieldsSlice
 import Tooltip from "~/js/components/Tooltip";
 import CodeEditor from "~/js/components/CodeEditor";
 
+import { selectSchemaFieldById } from "~/js/features/SchemaApp/SchemaFieldsSlice";
+import { selectAllSchemaFieldValues } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
+
+import FixedValue from '~/js/apps/TransformationApp/components/FixedValue';
+
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
-  const { name, block, kind, schema_field_kind } = useSelector((state) =>
+  const { name, block, kind, schema_field_kind, schema_field_id, schema_field_values } = useSelector((state) =>
     selectFieldById(state, id)
   );
+
+  const schemaField = useSelector((state) =>
+    selectSchemaFieldById(state, schema_field_id)
+  );
+
+  const schemaFieldValueIds = schemaField?.schema_field_value_ids || [];
+  const allSchemaFieldValues = useSelector(selectAllSchemaFieldValues);
+  const schemaFieldValues = filter(allSchemaFieldValues, (fieldValue) => {
+    return includes(schemaFieldValueIds, fieldValue.id)
+  });
 
   const rawRecord = useSelector(selectRawRecord);
 
@@ -51,6 +66,7 @@ const Field = ({ id }) => {
         name: nameValue,
         block: blockValue,
         kind: kindValue,
+        schemaFieldId: schema_field_id,
         harvestDefinitionId: appDetails.harvestDefinition.id,
         pipelineId: appDetails.pipeline.id,
         transformationDefinitionId: appDetails.transformationDefinition.id,
@@ -59,7 +75,19 @@ const Field = ({ id }) => {
   };
 
   const handleAddFixedValueClick = () => {
-
+    dispatch(
+      updateField({
+        id: id,
+        name: nameValue,
+        block: blockValue,
+        kind: kindValue,
+        harvestDefinitionId: appDetails.harvestDefinition.id,
+        pipelineId: appDetails.pipeline.id,
+        transformationDefinitionId: appDetails.transformationDefinition.id,
+        schemaFieldId: schema_field_id,
+        schemaFieldValueIds: [schemaFieldValues[0].id]
+      })
+    )
   }
 
   const handleHideClick = () => {
@@ -291,7 +319,9 @@ const Field = ({ id }) => {
               )}
 
               {schema_field_kind == 'fixed' && (
-                <p>Hello!</p>
+                map(schema_field_values, (id) => {
+                  return <FixedValue schemaFieldValues={schemaFieldValues} key={id} />
+                })
               )}
 
             </div>

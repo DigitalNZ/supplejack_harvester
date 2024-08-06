@@ -65,13 +65,6 @@ RSpec.describe Field do
     end
 
     describe 'block' do
-      it 'gets its block from a schema field value when the schema field is kind fixed' do
-        field.schema_field_values << schema_field_value
-        field.save
-
-        expect(field.block).to eq "external"
-      end
-
       it 'uses its own block when the schema field is type kind dynamic' do
         expect(dynamic_field.block).to eq 'Dynamic Block'
       end
@@ -80,12 +73,19 @@ RSpec.describe Field do
         expect(fixed_field.block).to eq ''
       end
 
-      it 'returns a block that is a combination of the selected fixed values when multiple fixed values have been chosen' do
+      it 'gets its block from a schema field value when the schema field is kind fixed' do
+        field.schema_field_values << schema_field_value
+        field.save
+
+        expect(field.block).to eq "\"external\""
+      end
+
+      it 'returns a block that is an array of the selected fixed values when multiple fixed values have been chosen' do
         field.schema_field_values << schema_field_value
         field.schema_field_values << schema_field_value_two
         field.save
 
-        expect(field.block).to eq 'external internal'
+        expect(field.block).to eq ["external", "internal"]
       end
     end
 

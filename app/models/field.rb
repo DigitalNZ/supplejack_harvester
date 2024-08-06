@@ -23,7 +23,13 @@ class Field < ApplicationRecord
   def block
     return super unless schema_field.present? && schema_field.fixed?
 
-    schema_field_values.map(&:value).join(' ') || ''
+    if schema_field_values.count > 1
+      schema_field_values.map(&:value)
+    elsif schema_field_values.count == 1
+      "\"#{schema_field_values.first.value}\"" 
+    else 
+      ''
+    end
   end
 
   def to_h
@@ -33,6 +39,7 @@ class Field < ApplicationRecord
       block:,
       kind:,
       schema: schema?,
+      schema_field_id: schema_field&.id,
       schema_field_kind: schema_field&.kind,
       schema_field_values: schema_field_values.map(&:id),
       created_at:,

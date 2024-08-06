@@ -70,6 +70,8 @@ export const updateField = createAsyncThunk(
       name,
       block,
       kind,
+      schemaFieldId,
+      schemaFieldValueIds
     } = payload;
 
     const response = request
@@ -80,6 +82,8 @@ export const updateField = createAsyncThunk(
             name: name,
             block: block,
             kind: kind,
+            schema_field_id: schemaFieldId,
+            schema_field_value_ids: schemaFieldValueIds
           },
         }
       )
