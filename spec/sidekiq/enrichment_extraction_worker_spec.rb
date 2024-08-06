@@ -22,10 +22,8 @@ RSpec.describe EnrichmentExtractionWorker, type: :job do
       stub_figshare_enrichment_page1(destination)
     end
 
-    xit 'creates a new enrichment extraction' do
-      page = 1
-
-      expect(Extraction::EnrichmentExtraction).to receive(:new).with(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1)).and_call_original
+    it 'creates a new enrichment extraction' do
+      expect(Extraction::EnrichmentExtraction).to receive(:new).and_call_original
 
       subject.perform(ExtractionParams.new(extraction_definition.id, extraction_job.id, harvest_job.id, api_record, 1).to_json)
     end

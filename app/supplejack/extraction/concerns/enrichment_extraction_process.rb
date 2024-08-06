@@ -34,11 +34,13 @@ module Extraction
         extraction_job_id = parsed_params['extraction_job_id']
         harvest_job_id = parsed_params['harvest_job_id']
 
+        extraction_definition = ExtractionDefinition.find(extraction_definition_id)
+        extraction_job = ExtractionJob.find(extraction_job_id) 
         harvest_job = HarvestJob.find(harvest_job_id) if harvest_job_id.present?
 
         ExtractionContext.new(
-          ExtractionDefinition.find(extraction_definition_id),
-          ExtractionJob.find(extraction_job_id),
+          extraction_definition,
+          extraction_job,
           build_enrichment_extraction(parsed_params, extraction_definition, extraction_job),
           harvest_job, parsed_params['api_record'], parsed_params['page']
         )
