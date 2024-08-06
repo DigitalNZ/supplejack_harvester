@@ -35,7 +35,7 @@ module Extraction
         harvest_job_id = parsed_params['harvest_job_id']
 
         extraction_definition = ExtractionDefinition.find(extraction_definition_id)
-        extraction_job = ExtractionJob.find(extraction_job_id) 
+        extraction_job = ExtractionJob.find(extraction_job_id)
         harvest_job = HarvestJob.find(harvest_job_id) if harvest_job_id.present?
 
         ExtractionContext.new(
