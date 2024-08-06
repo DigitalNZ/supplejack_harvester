@@ -41,7 +41,7 @@ const Field = ({ id }) => {
 
   const handleSaveClick = () => {
     dispatch(
-      updateField({
+      updateSchemaField({
         id: id,
         name: nameValue,
         kind: kindValue,
@@ -51,12 +51,12 @@ const Field = ({ id }) => {
   };
 
   const handleHideClick = () => {
-    dispatch(toggleDisplayField({ id: id, displayed: false }));
+    dispatch(toggleDisplaySchemaField({ id: id, displayed: false }));
   };
 
   const handleDeleteClick = () => {
     dispatch(
-      deleteField({
+      deleteSchemaField({
         id: id,
         schemaId: appDetails.schema.id,
       })
@@ -121,7 +121,7 @@ const Field = ({ id }) => {
         id={`field-${id}`}
         className={fieldClasses}
         data-testid="field"
-        onClick={() => dispatch(setActiveField(id))}
+        onClick={() => dispatch(setActiveSchemaField(id))}
       >
         <div className={cardClasses}>
           <div className="card-body">

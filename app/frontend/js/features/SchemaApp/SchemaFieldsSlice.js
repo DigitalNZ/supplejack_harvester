@@ -94,13 +94,13 @@ const schemaFieldsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(addSchemaField.fulfilled, (state, action) => {
-        fieldsAdapter.upsertOne(state, action.payload);
+        schemaFieldsAdapter.upsertOne(state, action.payload);
       })
       .addCase(deleteSchemaField.fulfilled, (state, action) => {
-        fieldsAdapter.removeOne(state, action.payload);
+        schemaFieldsAdapter.removeOne(state, action.payload);
       })
       .addCase(updateSchemaField.fulfilled, (state, action) => {
-        fieldsAdapter.setOne(state, action.payload);
+        schemaFieldsAdapter.setOne(state, action.payload);
       })
       .addCase(addFieldValue.fulfilled, (state, action) => {
         state.entities[action.payload.schema_field_id].schema_field_value_ids.push(action.payload.id)
