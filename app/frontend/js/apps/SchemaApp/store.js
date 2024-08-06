@@ -3,7 +3,7 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 // entities
 
 import schemaFields from '/js/features/SchemaApp/SchemaFieldsSlice';
-import fieldValues from '/js/features/SchemaApp/FieldValuesSlice';
+import schemaFieldValues from '/js/features/SchemaApp/SchemaFieldValuesSlice';
 import appDetails from '/js/features/SchemaApp/AppDetailsSlice';
 
 // ui
@@ -18,7 +18,7 @@ export default function configureAppStore(preloadedState) {
     reducer: combineReducers({
       entities: combineReducers({
         schemaFields,
-        fieldValues,
+        schemaFieldValues,
         appDetails
       }),
       ui: combineReducers({

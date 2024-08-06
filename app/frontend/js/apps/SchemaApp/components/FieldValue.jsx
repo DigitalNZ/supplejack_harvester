@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { useSelector, useDispatch } from 'react-redux';
-import { selectFieldValueById, deleteFieldValue } from "~/js/features/SchemaApp/FieldValuesSlice";
+import { selectSchemaFieldValueById, deleteSchemaFieldValue } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
 
 import { selectAppDetails } from '~/js/features/SchemaApp/AppDetailsSlice';
 
@@ -18,12 +18,12 @@ const FieldValue = ({ id, fieldId }) => {
   const handleShow = () => setShowModal(true);
 
   const { value } = useSelector((state) =>
-    selectFieldValueById(state, id)
+    selectSchemaFieldValueById(state, id)
   );
 
   const handleDeleteClick = () => {
     dispatch(
-      deleteFieldValue({
+      deleteSchemaFieldValue({
         id: id,
         schemaId: appDetails.schema.id,
         schemaFieldId: fieldId

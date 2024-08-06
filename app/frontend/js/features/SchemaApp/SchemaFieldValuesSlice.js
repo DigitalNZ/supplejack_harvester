@@ -5,8 +5,8 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
-export const addFieldValue = createAsyncThunk(
-  "fields/addFieldValueStatus",
+export const addSchemaFieldValue = createAsyncThunk(
+  "fields/addSchemaFieldValueStatus",
   async (payload) => {
     const {
       value,
@@ -33,8 +33,8 @@ export const addFieldValue = createAsyncThunk(
   }
 );
 
-export const deleteFieldValue = createAsyncThunk(
-  "fields/deleteFieldValueStatus",
+export const deleteSchemaFieldValue = createAsyncThunk(
+  "fields/deleteSchemaFieldValueStatus",
   async (payload) => {
 
     const {
@@ -83,19 +83,19 @@ export const deleteFieldValue = createAsyncThunk(
 //   }
 // );
 
-const fieldValuesAdapter = createEntityAdapter({
+const schemaFieldValuesAdapter = createEntityAdapter({
   sortComparer: (fieldOne, fieldTwo) =>
     fieldTwo.created_at.localeCompare(fieldOne.created_at),
 });
 
-const fieldValuesSlice = createSlice({
-  name: "fieldValuesSlice",
+const schemaFieldValuesSlice = createSlice({
+  name: "schemaFieldValuesSlice",
   initialState: {},
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(addFieldValue.fulfilled, (state, action) => {
-        fieldValuesAdapter.upsertOne(state, action.payload);
+      .addCase(addSchemaFieldValue.fulfilled, (state, action) => {
+        schemaFieldValuesAdapter.upsertOne(state, action.payload);
       })
     // .addCase(deleteField.fulfilled, (state, action) => {
     //   fieldsAdapter.removeOne(state, action.payload);
@@ -106,13 +106,13 @@ const fieldValuesSlice = createSlice({
   },
 });
 
-const { actions, reducer } = fieldValuesSlice;
+const { actions, reducer } = schemaFieldValuesSlice;
 
 export const {
-  selectById: selectFieldValueById,
-  selectIds: selectFieldValueIds,
-  selectAll: selectAllFieldValues,
-} = fieldValuesAdapter.getSelectors((state) => state.entities.fieldValues);
+  selectById: selectSchemaFieldValueById,
+  selectIds: selectSchemaFieldValueIds,
+  selectAll: selectAllSchemaFieldValues,
+} = schemaFieldValuesAdapter.getSelectors((state) => state.entities.schemaFieldValues);
 
 export const { } = actions;
 

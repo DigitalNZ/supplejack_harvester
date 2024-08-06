@@ -15,7 +15,7 @@ import {
 } from "~/js/features/SchemaApp/UiSchemaFieldsSlice";
 
 
-import { addFieldValue } from '~/js/features/SchemaApp/FieldValuesSlice';
+import { addSchemaFieldValue } from '~/js/features/SchemaApp/SchemaFieldValuesSlice';
 
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -105,7 +105,7 @@ const Field = ({ id }) => {
 
   const handleAddFieldValueClick = () => {
     dispatch(
-      addFieldValue({
+      addSchemaFieldValue({
         value: fieldValue,
         schemaFieldId: id,
         schemaId: appDetails.schema.id

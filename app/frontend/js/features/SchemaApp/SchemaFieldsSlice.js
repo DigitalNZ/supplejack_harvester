@@ -7,7 +7,7 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
-import { addFieldValue, deleteFieldValue } from '~/js/features/SchemaApp/FieldValuesSlice';
+import { addSchemaFieldValue, deleteSchemaFieldValue } from '~/js/features/SchemaApp/SchemaFieldValuesSlice';
 
 export const addSchemaField = createAsyncThunk(
   "fields/addSchemaFieldStatus",
@@ -102,10 +102,10 @@ const schemaFieldsSlice = createSlice({
       .addCase(updateSchemaField.fulfilled, (state, action) => {
         schemaFieldsAdapter.setOne(state, action.payload);
       })
-      .addCase(addFieldValue.fulfilled, (state, action) => {
+      .addCase(addSchemaFieldValue.fulfilled, (state, action) => {
         state.entities[action.payload.schema_field_id].schema_field_value_ids.push(action.payload.id)
       })
-      .addCase(deleteFieldValue.fulfilled, (state, action) => {
+      .addCase(deleteSchemaFieldValue.fulfilled, (state, action) => {
         const ids = filter(state.entities[action.meta.arg.schemaFieldId].schema_field_value_ids, (fieldId) => {
           return fieldId != action.payload;
         });
