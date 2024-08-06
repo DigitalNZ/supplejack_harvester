@@ -45,6 +45,7 @@ module Extraction
       if @harvest_job&.pipeline_job&.run_enrichment_concurrently?
         EnrichmentExtractionWorker.perform_async(json_params)
       else
+        throttle
         process_enrichment_extraction(json_params)
       end
     end
