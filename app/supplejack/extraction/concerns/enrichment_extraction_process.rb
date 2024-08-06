@@ -45,7 +45,7 @@ module Extraction
 
       def update_harvest_report(harvest_job)
         return unless harvest_job&.harvest_report
-      
+
         harvest_report = harvest_job.harvest_report
         harvest_report.increment_pages_extracted!
         harvest_report.update(extraction_updated_time: Time.zone.now)
