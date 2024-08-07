@@ -52,34 +52,33 @@ const SchemaFieldValue = ({ id, fieldId }) => {
   return (
     <>
 
-      <div className='border-bottom py-3'>
-        {!editing && (
-          <>
-            <div className="float-start">
-              {value}
-            </div>
 
-            <div className="float-end">
-              <ul className="list-inline my-0">
-                <li
-                  className="list-inline-item text-success"
-                  onClick={() => setEditing(true)}
-                >
-                  Edit
-                </li>
-                <li
-                  className="list-inline-item text-danger"
-                  onClick={() => handleShow()}
-                >
-                  Delete
-                </li>
-              </ul>
-            </div>
-          </>
-        )}
+      {!editing && (
+        <div className='border-bottom py-3 d-flex justify-content-between'>
+          {value}
 
-        {editing && (
-          <div className='row justify-content-between'>
+          <ul className="list-inline my-0">
+            <li
+              className="list-inline-item text-success"
+              onClick={() => setEditing(true)}
+            >
+              Edit
+            </li>
+            <li
+              className="list-inline-item text-danger"
+              onClick={() => handleShow()}
+            >
+              Delete
+            </li>
+          </ul>
+        </div>
+      )
+      }
+
+      {
+        editing && (
+          <div className='border-bottom row py-3 justify-content-between'>
+
             <div className='col-8'>
               <div className="row">
                 <label className="col-form-label col-sm-3" htmlFor="add-value">
@@ -101,13 +100,13 @@ const SchemaFieldValue = ({ id, fieldId }) => {
 
             <div className='col-2'>
               <button
-                className="btn btn-outline-primary me-2"
+                className="btn btn-outline-primary mx-2"
                 onClick={() => handleUpdateSchemaFieldValueClick()}
               >
                 Update
               </button>
               <span
-                className="text-danger"
+                className="text-danger mx-1"
                 onClick={() => setEditing(false)}
               >
                 Cancel
@@ -115,10 +114,9 @@ const SchemaFieldValue = ({ id, fieldId }) => {
             </div>
 
           </div>
-        )}
+        )
+      }
 
-        <div className='clearfix'></div>
-      </div>
 
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
