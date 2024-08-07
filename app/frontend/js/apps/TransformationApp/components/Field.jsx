@@ -30,6 +30,7 @@ import { selectSchemaFieldById } from "~/js/features/SchemaApp/SchemaFieldsSlice
 import { selectAllSchemaFieldValues } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
 
 import FixedValue from '~/js/apps/TransformationApp/components/FixedValue';
+import { c } from "@codemirror/legacy-modes/mode/clike";
 
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
@@ -59,6 +60,29 @@ const Field = ({ id }) => {
   const [blockValue, setBlockValue] = useState(block);
   const [showModal, setShowModal] = useState(false);
 
+  const [selectedSchemaFieldValues, setSelectedSchemaFieldValues] = useState(schema_field_values);
+
+  const updateSelectedSchemaFieldValueCb = (schemaFieldValue) => {
+
+    // Field
+
+    // SchemaFieldValues
+
+    // field << schema_field_value
+
+    console.log(schema_field_values);
+    // const schemaFieldValues = filter(selectedSchemaFieldValues, (value) => {
+    //   return value.id != schemaFieldValue.id;
+    // })
+
+    // setSelectedSchemaFieldValues(
+    //   [
+    //     ...schemaFieldValues,
+    //     schemaFieldValue
+    //   ]
+    // )
+  }
+
   const handleSaveClick = () => {
     dispatch(
       updateField({
@@ -75,6 +99,10 @@ const Field = ({ id }) => {
   };
 
   const handleAddFixedValueClick = () => {
+
+    // we need to know what values have been selected
+    // so that we can update the field
+
     dispatch(
       updateField({
         id: id,
@@ -320,7 +348,7 @@ const Field = ({ id }) => {
 
               {schema_field_kind == 'fixed' && (
                 map(schema_field_values, (id) => {
-                  return <FixedValue schemaFieldValues={schemaFieldValues} key={id} />
+                  return <FixedValue id={id} schemaFieldValues={schemaFieldValues} key={id} updateSelectedSchemaFieldValueCb={updateSelectedSchemaFieldValueCb} />
                 })
               )}
 

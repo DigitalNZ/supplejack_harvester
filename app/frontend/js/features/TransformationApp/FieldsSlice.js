@@ -74,6 +74,8 @@ export const updateField = createAsyncThunk(
       schemaFieldValueIds
     } = payload;
 
+    console.log(schemaFieldValueIds);
+
     const response = request
       .patch(
         `/pipelines/${pipelineId}/harvest_definitions/${harvestDefinitionId}/transformation_definitions/${transformationDefinitionId}/fields/${id}`,

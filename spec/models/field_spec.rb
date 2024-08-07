@@ -22,7 +22,7 @@ RSpec.describe Field do
       expect(subject.transformation_definition).to eq transformation_definition
     end
 
-    it { should have_and_belong_to_many(:schema_field_values) }
+    it { should have_many(:schema_field_values) }
   end
 
   describe 'kinds' do
@@ -85,7 +85,7 @@ RSpec.describe Field do
         field.schema_field_values << schema_field_value_two
         field.save
 
-        expect(field.block).to eq ["external", "internal"]
+        expect(field.block).to eq "[\"external\", \"internal\"]"
       end
     end
 

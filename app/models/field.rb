@@ -6,7 +6,9 @@ class Field < ApplicationRecord
   belongs_to :transformation_definition
   belongs_to :schema_field, optional: true
   belongs_to :schema_field_value, optional: true
-  has_and_belongs_to_many :schema_field_values
+
+  has_many :field_schema_field_values
+  has_many :schema_field_values, through: :field_schema_field_values
 
   enum :kind, KINDS
 
@@ -24,7 +26,7 @@ class Field < ApplicationRecord
     return super unless schema_field.present? && schema_field.fixed?
 
     if schema_field_values.count > 1
-      schema_field_values.map(&:value)
+      "#{schema_field_values.map(&:value)}"
     elsif schema_field_values.count == 1
       "\"#{schema_field_values.first.value}\"" 
     else 

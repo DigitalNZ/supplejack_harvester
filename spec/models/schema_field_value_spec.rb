@@ -11,7 +11,7 @@ RSpec.describe SchemaFieldValue, type: :model do
     end
 
     it { is_expected.to belong_to(:schema_field) }
-    it { should have_and_belong_to_many(:fields) }
+    it { should have_many(:fields) }
   end
 
   describe '#validations' do

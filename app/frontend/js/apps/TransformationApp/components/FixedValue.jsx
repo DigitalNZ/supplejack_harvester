@@ -2,7 +2,10 @@ import React from 'react';
 
 import { map } from 'lodash';
 
-const FixedValue = ({ schemaFieldValues }) => {
+const FixedValue = ({ id, schemaFieldValues, updateSelectedSchemaFieldValueCb }) => {
+  const handleFixedValueChange = (value) => {
+    updateSelectedSchemaFieldValueCb(value)
+  }
 
   return (
     <>
@@ -16,10 +19,12 @@ const FixedValue = ({ schemaFieldValues }) => {
             <div className="col-sm-10">
               <select
                 className="form-select"
+                defaultValue={id}
                 aria-label="Condition type"
+                onChange={(e) => { handleFixedValueChange(e.target.value) }}
               >
                 {map(schemaFieldValues, (value) => {
-                  return <option key={value.id} value={value.id}>{value.value}</option>
+                  return <option key={value.id} value={value.id}>{value.id} {value.value}</option>
                 })}
               </select>
             </div>
