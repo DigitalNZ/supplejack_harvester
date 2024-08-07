@@ -14,20 +14,11 @@ module Extraction
           return unless enrichment_extraction.valid?
 
           enrichment_extraction.extract_and_save
-          handle_harvest_job(extraction_context)
+          enqueue_harvest_processes(extraction_context)
         end
       end
 
       private
-
-      ExtractionContext = Struct.new(
-        :extraction_definition,
-        :extraction_job,
-        :enrichment_extraction,
-        :harvest_job,
-        :api_record,
-        :page
-      )
 
       # rubocop:disable Metrics/MethodLength
       def build_extraction_context(parsed_params)
@@ -43,7 +34,9 @@ module Extraction
           extraction_definition,
           extraction_job,
           build_enrichment_extraction(parsed_params, extraction_definition, extraction_job),
-          harvest_job, parsed_params['api_record'], parsed_params['page']
+          harvest_job,
+          parsed_params['api_record'],
+          parsed_params['page']
         )
       end
       # rubocop:enable Metrics/MethodLength
@@ -57,7 +50,7 @@ module Extraction
         )
       end
 
-      def handle_harvest_job(extraction_context)
+      def enqueue_harvest_processes(extraction_context)
         return if extraction_context.harvest_job.blank?
 
         enqueue_record_transformation(extraction_context)
