@@ -35,7 +35,7 @@ import { addFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldS
 
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
-  const { name, block, kind, schema_field_kind, schema_field_id, field_schema_field_value_ids } = useSelector((state) =>
+  const { name, block, kind, schema_field_kind, schema_field_id, field_schema_field_value_ids, schema } = useSelector((state) =>
     selectFieldById(state, id)
   );
 
@@ -187,18 +187,23 @@ const Field = ({ id }) => {
             <div className="d-flex d-row justify-content-between align-items-center">
               <div>
                 <h5 className="m-0 d-inline">{name}</h5>
+                {schema && (
+                  <span className='ms-2 badge bg-secondary'>schema</span>
+                )}
                 <span className={badgeClasses}>{badgeText()}</span>
               </div>
 
               <div className="hstack gap-2">
-                <button
-                  className="btn btn-outline-primary"
-                  disabled={!isSaveable()}
-                  onClick={handleSaveClick}
-                >
-                  <i className="bi bi-save" aria-hidden="true"></i>
-                  {saving ? " Saving..." : " Save"}
-                </button>
+                {schema_field_kind != 'fixed' && (
+                  <button
+                    className="btn btn-outline-primary"
+                    disabled={!isSaveable()}
+                    onClick={handleSaveClick}
+                  >
+                    <i className="bi bi-save" aria-hidden="true"></i>
+                    {saving ? " Saving..." : " Save"}
+                  </button>
+                )}
 
                 {schema_field_kind == 'fixed' && (
                   <button
@@ -234,30 +239,34 @@ const Field = ({ id }) => {
 
             <div className="mt-3 show" id={`field-${id}-content`}>
               <div className="row">
-                <div className={nameColumnClasses}>
-                  <div className="row">
-                    <label className="col-form-label col-sm-2" htmlFor="name">
-                      <strong>Name </strong>
-                      <Tooltip data-bs-title="This is the field name that the result of this transformation will appear under on the transformed record.">
-                        <i
-                          className="bi bi-question-circle"
-                          aria-label="help text"
-                        ></i>
-                      </Tooltip>
-                    </label>
 
-                    <div className="col-sm-10">
-                      <input
-                        id="name"
-                        type="text"
-                        className="form-control"
-                        required="required"
-                        defaultValue={name}
-                        onChange={(e) => setNameValue(e.target.value)}
-                      />
+                {!schema && (
+                  <div className={nameColumnClasses}>
+                    <div className="row">
+                      <label className="col-form-label col-sm-2" htmlFor="name">
+                        <strong>Name </strong>
+                        <Tooltip data-bs-title="This is the field name that the result of this transformation will appear under on the transformed record.">
+                          <i
+                            className="bi bi-question-circle"
+                            aria-label="help text"
+                          ></i>
+                        </Tooltip>
+                      </label>
+
+                      <div className="col-sm-10">
+                        <input
+                          id="name"
+                          type="text"
+                          className="form-control"
+                          required="required"
+                          defaultValue={name}
+                          onChange={(e) => setNameValue(e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
 
                 {kind != "field" && (
                   <div className="col-4">
