@@ -4,14 +4,14 @@ import { useSelector } from "react-redux";
 import { map } from 'lodash';
 
 import FieldNavigationPanel from "./components/FieldNavigationPanel";
-import Field from './components/Field';
+import SchemaField from './components/SchemaField';
 
 // actions from state
 
 import { selectSchemaFieldIds } from '~/js/features/SchemaApp/SchemaFieldsSlice';
 
 const SchemaApp = () => {
-  const fieldIds = useSelector(selectSchemaFieldIds);
+  const schemaFieldIds = useSelector(selectSchemaFieldIds);
 
   return (
     <>
@@ -22,8 +22,8 @@ const SchemaApp = () => {
 
         <div className='col-10'>
           <div className="row gy-4">
-            {map(fieldIds, (fieldId) => (
-              <Field id={fieldId} key={fieldId} />
+            {map(schemaFieldIds, (id) => (
+              <SchemaField id={id} key={id} />
             ))}
           </div>
         </div>

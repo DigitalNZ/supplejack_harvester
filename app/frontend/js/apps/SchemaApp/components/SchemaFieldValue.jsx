@@ -8,7 +8,7 @@ import { selectAppDetails } from '~/js/features/SchemaApp/AppDetailsSlice';
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 
-const FieldValue = ({ id, fieldId }) => {
+const SchemaFieldValue = ({ id, fieldId }) => {
   const appDetails = useSelector(selectAppDetails);
   const dispatch = useDispatch();
 
@@ -76,4 +76,4 @@ const FieldValue = ({ id, fieldId }) => {
   )
 }
 
-export default FieldValue;
+export default SchemaFieldValue;

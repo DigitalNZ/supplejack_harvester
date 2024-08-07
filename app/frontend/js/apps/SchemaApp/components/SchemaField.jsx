@@ -20,9 +20,9 @@ import { addSchemaFieldValue } from '~/js/features/SchemaApp/SchemaFieldValuesSl
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 
-import FieldValue from "~/js/apps/SchemaApp/components/FieldValue";
+import SchemaFieldValue from "~/js/apps/SchemaApp/components/SchemaFieldValue";
 
-const Field = ({ id }) => {
+const SchemaField = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
 
   const { name, kind, schema_field_value_ids } = useSelector((state) =>
@@ -33,7 +33,7 @@ const Field = ({ id }) => {
 
   const [nameValue, setNameValue] = useState(name);
   const [kindValue, setKindValue] = useState(kind);
-  const [fieldValue, setFieldValue] = useState('')
+  const [schemaFieldValue, setSchemaFieldValue] = useState('')
   const [showModal, setShowModal] = useState(false);
 
   const handleClose = () => setShowModal(false);
@@ -103,7 +103,7 @@ const Field = ({ id }) => {
     }
   };
 
-  const handleAddFieldValueClick = () => {
+  const handleAddSchemaFieldValueClick = () => {
     dispatch(
       addSchemaFieldValue({
         value: fieldValue,
@@ -112,7 +112,7 @@ const Field = ({ id }) => {
       })
     );
 
-    setFieldValue('');
+    setSchemaFieldValue('');
   };
 
   return (
@@ -212,7 +212,7 @@ const Field = ({ id }) => {
                           type="text"
                           className="form-control"
                           required="required"
-                          value={fieldValue}
+                          value={schemaFieldValue}
                           onChange={(e) => setFieldValue(e.target.value)}
                         />
                       </div>
@@ -222,7 +222,7 @@ const Field = ({ id }) => {
                   <div className='col-1'>
                     <button
                       className="btn btn-outline-primary"
-                      onClick={() => handleAddFieldValueClick()}
+                      onClick={() => handleAddSchemaFieldValueClick()}
                     >
                       Add
                     </button>
@@ -234,7 +234,7 @@ const Field = ({ id }) => {
               {schema_field_value_ids.length > 0 && (
                 <div className='border-top'>
                   {map(schema_field_value_ids, (fieldValueId) => (
-                    <FieldValue id={fieldValueId} key={fieldValueId} fieldId={id} />
+                    <SchemaFieldValue id={fieldValueId} key={fieldValueId} fieldId={id} />
                   ))}
                 </div>
               )}
@@ -264,4 +264,4 @@ const Field = ({ id }) => {
   )
 }
 
-export default Field;
+export default SchemaField;
