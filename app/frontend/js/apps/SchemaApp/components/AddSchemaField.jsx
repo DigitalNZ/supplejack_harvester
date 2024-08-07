@@ -6,12 +6,12 @@ import {
 } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import { selectAppDetails } from "~/js/features/SchemaApp/AppDetailsSlice";
 
-const AddField = () => {
+const AddSchemaField = () => {
   const dispatch = useDispatch();
   const appDetails = useSelector(selectAppDetails);
   const emptyFields = useSelector(hasEmptySchemaFields);
 
-  const addNewField = () => {
+  const addNewSchemaField = () => {
     dispatch(
       addSchemaField({
         name: "",
@@ -25,12 +25,12 @@ const AddField = () => {
       <button
         disabled={emptyFields}
         className="btn btn-outline-primary"
-        onClick={() => addNewField()}
+        onClick={() => addNewSchemaField()}
       >
-        + Add field
+        + Add schema field
       </button>
     </div>
   );
 };
 
-export default AddField;
+export default AddSchemaField;

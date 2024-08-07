@@ -1,8 +1,8 @@
 import React from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { selectAllSchemaFields } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import FieldNavigationListItem from "./FieldNavigationListItem";
-import AddField from "~/js/apps/SchemaApp/components/AddField";
+import AddField from "~/js/apps/SchemaApp/components/AddSchemaField";
 import Tooltip from "~/js/components/Tooltip";
 
 const FieldNavigationPanel = () => {
