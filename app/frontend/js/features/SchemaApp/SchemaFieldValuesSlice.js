@@ -55,33 +55,34 @@ export const deleteSchemaFieldValue = createAsyncThunk(
   }
 );
 
-// export const updateField = createAsyncThunk(
-//   "fields/updateFieldStatus",
-//   async (payload) => {
-//     const {
-//       id,
-//       schemaId,
-//       name,
-//       kind,
-//     } = payload;
+export const updateSchemaFieldValue = createAsyncThunk(
+  "fields/updateSchemaFieldValueStatus",
+  async (payload) => {
+    const {
+      id,
+      value,
+      schemaId,
+      schemaFieldId
+    } = payload;
 
-//     const response = request
-//       .patch(
-//         `/schemas/${schemaId}/schema_fields/${id}`,
-//         {
-//           schema_field: {
-//             name: name,
-//             kind: kind,
-//           },
-//         }
-//       )
-//       .then((response) => {
-//         return response.data;
-//       });
+    const response = request
+      .patch(
+        `/schemas/${schemaId}/schema_fields/${schemaFieldId}/schema_field_values/${id}`,
+        {
+          schema_field_value: {
+            value: value,
+            schema_field_id: schemaFieldId,
+            schema_id: schemaId
+          },
+        }
+      )
+      .then(function (response) {
+        return response.data;
+      });
 
-//     return response;
-//   }
-// );
+    return response;
+  }
+);
 
 const schemaFieldValuesAdapter = createEntityAdapter({
   sortComparer: (fieldOne, fieldTwo) =>
@@ -97,12 +98,9 @@ const schemaFieldValuesSlice = createSlice({
       .addCase(addSchemaFieldValue.fulfilled, (state, action) => {
         schemaFieldValuesAdapter.upsertOne(state, action.payload);
       })
-    // .addCase(deleteField.fulfilled, (state, action) => {
-    //   fieldsAdapter.removeOne(state, action.payload);
-    // })
-    // .addCase(updateField.fulfilled, (state, action) => {
-    //   fieldsAdapter.setOne(state, action.payload);
-    // });
+      .addCase(updateSchemaFieldValue.fulfilled, (state, action) => {
+        schemaFieldValuesAdapter.setOne(state, action.payload);
+      });
   },
 });
 

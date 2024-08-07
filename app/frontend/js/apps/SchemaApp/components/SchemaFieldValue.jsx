@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { useSelector, useDispatch } from 'react-redux';
-import { selectSchemaFieldValueById, deleteSchemaFieldValue } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
+import { selectSchemaFieldValueById, deleteSchemaFieldValue, updateSchemaFieldValue } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
 
 import { selectAppDetails } from '~/js/features/SchemaApp/AppDetailsSlice';
 
@@ -14,12 +14,29 @@ const SchemaFieldValue = ({ id, fieldId }) => {
 
   const [showModal, setShowModal] = useState(false);
 
+  const [editing, setEditing] = useState(false);
+
   const handleClose = () => setShowModal(false);
   const handleShow = () => setShowModal(true);
 
   const { value } = useSelector((state) =>
     selectSchemaFieldValueById(state, id)
   );
+
+  const [schemaFieldValue, setSchemaFieldValue] = useState(value);
+
+  const handleUpdateSchemaFieldValueClick = () => {
+    dispatch(
+      updateSchemaFieldValue({
+        id: id,
+        schemaId: appDetails.schema.id,
+        schemaFieldId: fieldId,
+        value: schemaFieldValue
+      })
+    )
+
+    setEditing(false);
+  }
 
   const handleDeleteClick = () => {
     dispatch(
@@ -34,24 +51,71 @@ const SchemaFieldValue = ({ id, fieldId }) => {
 
   return (
     <>
-      <div className='border-bottom py-3'>
-        <div className="float-start">
-          {value}
-        </div>
 
-        <div className="float-end">
-          <ul className="list-inline my-0">
-            <li className="list-inline-item text-success">
-              Edit
-            </li>
-            <li
-              className="list-inline-item text-danger"
-              onClick={() => handleShow()}
-            >
-              Delete
-            </li>
-          </ul>
-        </div>
+      <div className='border-bottom py-3'>
+        {!editing && (
+          <>
+            <div className="float-start">
+              {value}
+            </div>
+
+            <div className="float-end">
+              <ul className="list-inline my-0">
+                <li
+                  className="list-inline-item text-success"
+                  onClick={() => setEditing(true)}
+                >
+                  Edit
+                </li>
+                <li
+                  className="list-inline-item text-danger"
+                  onClick={() => handleShow()}
+                >
+                  Delete
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
+
+        {editing && (
+          <div className='row justify-content-between'>
+            <div className='col-8'>
+              <div className="row">
+                <label className="col-form-label col-sm-3" htmlFor="add-value">
+                  <strong>Edit value </strong>
+                </label>
+
+                <div className="col-sm-9">
+                  <input
+                    id="add-value"
+                    type="text"
+                    className="form-control"
+                    required="required"
+                    value={schemaFieldValue}
+                    onChange={(e) => setSchemaFieldValue(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className='col-2'>
+              <button
+                className="btn btn-outline-primary me-2"
+                onClick={() => handleUpdateSchemaFieldValueClick()}
+              >
+                Update
+              </button>
+              <span
+                className="text-danger"
+                onClick={() => setEditing(false)}
+              >
+                Cancel
+              </span>
+            </div>
+
+          </div>
+        )}
 
         <div className='clearfix'></div>
       </div>
