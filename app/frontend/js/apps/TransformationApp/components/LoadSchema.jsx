@@ -8,6 +8,9 @@ import { selectAllSchemas } from "~/js/features/TransformationApp/SchemasSlice";
 import { selectAllSchemaFields } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import Modal from "react-bootstrap/Modal";
 
+import { selectAllSchemaFieldValues } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
+import { addFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
+
 const LoadSchema = () => {
   const dispatch = useDispatch();
   const allSchemas = useSelector(selectAllSchemas);
@@ -22,6 +25,8 @@ const LoadSchema = () => {
 
   const [schemaValue, setSchemaValue] = useState('');
   const [schemaFieldIds, setSchemaFieldIds] = useState([]);
+
+  const allSchemaFieldValues = useSelector(selectAllSchemaFieldValues);
 
   const schemaFields = () => {
     const activeSchema = find(allSchemas, (schema) => { return schema.id == schemaValue });
@@ -52,8 +57,8 @@ const LoadSchema = () => {
   }
 
   const handleLoadFieldsClick = () => {
-    each(schemaFieldIds, (schemaFieldId) => {
-      dispatch(
+    each(schemaFieldIds, async (schemaFieldId) => {
+      const { payload } = await dispatch(
         addField({
           name: "",
           block: "",
@@ -64,6 +69,25 @@ const LoadSchema = () => {
           schemaFieldId: schemaFieldId
         })
       );
+
+      // if the schema field is fixed, add the first value into the field so the user starts with something
+
+      if (payload.schema_field_kind == 'fixed') {
+        const schemaFieldValues = filter(allSchemaFieldValues, (fieldValue) => {
+          return fieldValue.schema_field_id == schemaFieldId
+        });
+
+        if (schemaFieldValues) {
+          dispatch(
+            addFieldSchemaFieldValue(
+              {
+                fieldId: payload.id,
+                schemaFieldValueId: schemaFieldValues[0].id
+              }
+            )
+          )
+        }
+      }
     })
 
     setSchemaFieldIds([]);
