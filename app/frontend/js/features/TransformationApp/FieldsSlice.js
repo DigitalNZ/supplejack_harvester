@@ -7,7 +7,9 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
-import { addFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
+import { addFieldSchemaFieldValue, deleteFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
+
+import { filter } from 'lodash';
 
 export const addField = createAsyncThunk(
   "fields/addFieldStatus",
@@ -114,8 +116,14 @@ const fieldsSlice = createSlice({
         fieldsAdapter.upsertOne(state, action.payload);
       })
       .addCase(addFieldSchemaFieldValue.fulfilled, (state, action) => {
-        console.log(action.payload);
         state.entities[action.payload.field_id].field_schema_field_value_ids.push(action.payload.id)
+      })
+      .addCase(deleteFieldSchemaFieldValue.fulfilled, (state, action) => {
+        const ids = filter(state.entities[action.payload.fieldId].field_schema_field_value_ids, (fieldId) => {
+          return fieldId != action.payload.id;
+        });
+
+        state.entities[action.payload.fieldId].field_schema_field_value_ids = ids;
       })
       .addCase(deleteField.fulfilled, (state, action) => {
         fieldsAdapter.removeOne(state, action.payload);

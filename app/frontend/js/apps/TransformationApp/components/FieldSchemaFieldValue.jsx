@@ -3,15 +3,23 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { map } from 'lodash';
 
-import { selectFieldSchemaFieldValueById, updateFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
+import { selectFieldSchemaFieldValueById, updateFieldSchemaFieldValue, deleteFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
 
-const FieldSchemaFieldValue = ({ id, schemaFieldValues }) => {
-
+const FieldSchemaFieldValue = ({ id, schemaFieldValues, fieldId }) => {
   const fieldSchemaFieldValue = useSelector((state) =>
     selectFieldSchemaFieldValueById(state, id)
   );
 
   const dispatch = useDispatch();
+
+  const handleRemoveFieldSchemaFieldValueClick = () => {
+    dispatch(
+      deleteFieldSchemaFieldValue({
+        id: id,
+        fieldId: fieldId
+      })
+    )
+  }
 
   const handleFieldSchemaFieldValueChange = (value) => {
     dispatch(
@@ -33,7 +41,7 @@ const FieldSchemaFieldValue = ({ id, schemaFieldValues }) => {
               <strong>Fixed value </strong>
             </label>
 
-            <div className="col-sm-10">
+            <div className="col-sm-4">
               <select
                 className="form-select"
                 aria-label="Condition type"
@@ -44,6 +52,12 @@ const FieldSchemaFieldValue = ({ id, schemaFieldValues }) => {
                   return <option key={value.id} value={value.id}>{value.value}</option>
                 })}
               </select>
+            </div>
+
+            <div className="col-sm-4">
+              <p className='text-danger' onClick={() => { handleRemoveFieldSchemaFieldValueClick() }}>
+                Remove
+              </p>
             </div>
           </div>
         </div>

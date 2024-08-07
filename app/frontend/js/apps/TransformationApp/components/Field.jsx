@@ -316,8 +316,8 @@ const Field = ({ id }) => {
               )}
 
               {schema_field_kind == 'fixed' && (
-                map(field_schema_field_value_ids, (id) => {
-                  return <FieldSchemaFieldValue id={id} schemaFieldValues={schemaFieldValues} key={id} />
+                map(field_schema_field_value_ids, (schemaFieldValueId) => {
+                  return <FieldSchemaFieldValue id={schemaFieldValueId} schemaFieldValues={schemaFieldValues} key={schemaFieldValueId} fieldId={id} />
                 })
               )}
 

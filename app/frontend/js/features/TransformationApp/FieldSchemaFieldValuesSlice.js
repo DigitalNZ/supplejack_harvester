@@ -56,6 +56,26 @@ export const updateFieldSchemaFieldValue = createAsyncThunk(
   }
 );
 
+export const deleteFieldSchemaFieldValue = createAsyncThunk(
+  "fields/deleteFieldSchemaFieldValueStatus",
+  async (payload) => {
+    const { id, fieldId } = payload;
+
+    const response = request
+      .delete(
+        `/field_schema_field_values/${id}`
+      )
+      .then((response) => {
+        return {
+          id: id,
+          fieldId: fieldId
+        };
+      });
+
+    return response;
+  }
+);
+
 const fieldSchemaFieldValuesAdapter = createEntityAdapter();
 
 const fieldSchemaFieldValuesSlice = createSlice({
@@ -66,6 +86,9 @@ const fieldSchemaFieldValuesSlice = createSlice({
     builder
       .addCase(addFieldSchemaFieldValue.fulfilled, (state, action) => {
         fieldSchemaFieldValuesAdapter.upsertOne(state, action.payload);
+      })
+      .addCase(deleteFieldSchemaFieldValue.fulfilled, (state, action) => {
+        fieldSchemaFieldValuesAdapter.removeOne(state, action.payload);
       })
       .addCase(updateFieldSchemaFieldValue.fulfilled, (state, action) => {
         fieldSchemaFieldValuesAdapter.setOne(state, action.payload);

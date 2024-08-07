@@ -3,9 +3,6 @@
 class FieldSchemaFieldValuesController < ApplicationController
   before_action :find_field_schema_field_value, only: %i[update destroy]
 
-  # TODO
-  # Do we need this action?
-  # or are we just making them through the update on the fields controller?
   def create
     @field_schema_field_value = FieldSchemaFieldValue.new(field_schema_field_value_params)
 
