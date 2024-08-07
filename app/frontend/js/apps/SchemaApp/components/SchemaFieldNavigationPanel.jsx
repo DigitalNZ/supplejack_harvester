@@ -1,11 +1,11 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { selectAllSchemaFields } from "~/js/features/SchemaApp/SchemaFieldsSlice";
-import FieldNavigationListItem from "./FieldNavigationListItem";
-import AddField from "~/js/apps/SchemaApp/components/AddSchemaField";
+import SchemaFieldNavigationListItem from "./SchemaFieldNavigationListItem";
+import AddSchemaField from "~/js/apps/SchemaApp/components/AddSchemaField";
 import Tooltip from "~/js/components/Tooltip";
 
-const FieldNavigationPanel = () => {
+const SchemaFieldNavigationPanel = () => {
   const fields = useSelector(selectAllSchemaFields);
 
   return (
@@ -38,11 +38,11 @@ const FieldNavigationPanel = () => {
         </div>
 
         <div className="field-nav-panel__content">
-          <AddField />
+          <AddSchemaField />
 
           <ul className="field-nav nav nav-pills flex-column overflow-auto flex-nowrap">
             {fields.map((field) => {
-              return <FieldNavigationListItem id={field.id} key={field.id} />;
+              return <SchemaFieldNavigationListItem id={field.id} key={field.id} />;
             })}
           </ul>
         </div>
@@ -51,4 +51,4 @@ const FieldNavigationPanel = () => {
   );
 };
 
-export default FieldNavigationPanel;
+export default SchemaFieldNavigationPanel;

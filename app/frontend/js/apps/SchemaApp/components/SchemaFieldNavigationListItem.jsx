@@ -8,7 +8,7 @@ import {
 } from "~/js/features/SchemaApp/UiSchemaFieldsSlice";
 import classNames from "classnames";
 
-const FieldNavigationListItem = ({ id }) => {
+const SchemaFieldNavigationListItem = ({ id }) => {
   const dispatch = useDispatch();
   const { name } = useSelector((state) => selectSchemaFieldById(state, id));
   const { displayed } = useSelector((state) =>
@@ -44,4 +44,4 @@ const FieldNavigationListItem = ({ id }) => {
   );
 };
 
-export default FieldNavigationListItem;
+export default SchemaFieldNavigationListItem;

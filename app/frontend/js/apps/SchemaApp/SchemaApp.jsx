@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 
 import { map } from 'lodash';
 
-import FieldNavigationPanel from "./components/FieldNavigationPanel";
+import SchemaFieldNavigationPanel from "./components/SchemaFieldNavigationPanel";
 import SchemaField from './components/SchemaField';
 
 // actions from state
@@ -17,7 +17,7 @@ const SchemaApp = () => {
     <>
       <div className='row'>
         <div className='col-2'>
-          <FieldNavigationPanel />
+          <SchemaFieldNavigationPanel />
         </div>
 
         <div className='col-10'>
