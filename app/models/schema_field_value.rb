@@ -9,6 +9,7 @@ class SchemaFieldValue < ApplicationRecord
   def to_h
     {
       id:,
+      schema_field_id:,
       value:,
       created_at:,
       updated_at:

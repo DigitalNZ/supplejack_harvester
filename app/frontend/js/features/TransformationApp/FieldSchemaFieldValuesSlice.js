@@ -1,5 +1,3 @@
-import { some } from "lodash";
-
 import {
   createAsyncThunk,
   createSlice,
@@ -7,43 +5,30 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
-// export const updateField = createAsyncThunk(
-//   "fields/updateFieldStatus",
-//   async (payload) => {
-//     const {
-//       id,
-//       pipelineId,
-//       harvestDefinitionId,
-//       transformationDefinitionId,
-//       name,
-//       block,
-//       kind,
-//       schemaFieldId,
-//       schemaFieldValueIds
-//     } = payload;
+export const updateFieldSchemaFieldValue = createAsyncThunk(
+  "fields/updateFieldSchemaFieldValueStatus",
+  async (payload) => {
+    const {
+      id,
+      schemaFieldValueId
+    } = payload;
 
-//     console.log(schemaFieldValueIds);
+    const response = request
+      .patch(
+        `/field_schema_field_values/${id}`,
+        {
+          field_schema_field_value: {
+            schema_field_value_id: schemaFieldValueId
+          },
+        }
+      )
+      .then((response) => {
+        return response.data;
+      });
 
-//     const response = request
-//       .patch(
-//         `/pipelines/${pipelineId}/harvest_definitions/${harvestDefinitionId}/transformation_definitions/${transformationDefinitionId}/fields/${id}`,
-//         {
-//           field: {
-//             name: name,
-//             block: block,
-//             kind: kind,
-//             schema_field_id: schemaFieldId,
-//             schema_field_value_ids: schemaFieldValueIds
-//           },
-//         }
-//       )
-//       .then((response) => {
-//         return response.data;
-//       });
-
-//     return response;
-//   }
-// );
+    return response;
+  }
+);
 
 const fieldSchemaFieldValuesAdapter = createEntityAdapter();
 
@@ -53,9 +38,9 @@ const fieldSchemaFieldValuesSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-    // .addCase(updateField.fulfilled, (state, action) => {
-    //   fieldsAdapter.setOne(state, action.payload);
-    // });
+      .addCase(updateFieldSchemaFieldValue.fulfilled, (state, action) => {
+        fieldSchemaFieldValuesAdapter.setOne(state, action.payload);
+      });
   },
 });
 

@@ -18,7 +18,7 @@ class FieldSchemaFieldValuesController < ApplicationController
 
   def update
     if @field_schema_field_value.update(field_schema_field_value_params)
-      render json: @field.to_h
+      render json: @field_schema_field_value.to_h
     else
       render500
     end

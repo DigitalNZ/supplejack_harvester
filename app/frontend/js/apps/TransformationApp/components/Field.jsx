@@ -29,12 +29,11 @@ import CodeEditor from "~/js/components/CodeEditor";
 import { selectSchemaFieldById } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import { selectAllSchemaFieldValues } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
 
-import FixedValue from '~/js/apps/TransformationApp/components/FixedValue';
-import { c } from "@codemirror/legacy-modes/mode/clike";
+import FieldSchemaFieldValue from '~/js/apps/TransformationApp/components/FieldSchemaFieldValue';
 
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
-  const { name, block, kind, schema_field_kind, schema_field_id, schema_field_values } = useSelector((state) =>
+  const { name, block, kind, schema_field_kind, schema_field_id, field_schema_field_value_ids } = useSelector((state) =>
     selectFieldById(state, id)
   );
 
@@ -60,29 +59,6 @@ const Field = ({ id }) => {
   const [blockValue, setBlockValue] = useState(block);
   const [showModal, setShowModal] = useState(false);
 
-  const [selectedSchemaFieldValues, setSelectedSchemaFieldValues] = useState(schema_field_values);
-
-  const updateSelectedSchemaFieldValueCb = (schemaFieldValue) => {
-
-    // Field
-
-    // SchemaFieldValues
-
-    // field << schema_field_value
-
-    console.log(schema_field_values);
-    // const schemaFieldValues = filter(selectedSchemaFieldValues, (value) => {
-    //   return value.id != schemaFieldValue.id;
-    // })
-
-    // setSelectedSchemaFieldValues(
-    //   [
-    //     ...schemaFieldValues,
-    //     schemaFieldValue
-    //   ]
-    // )
-  }
-
   const handleSaveClick = () => {
     dispatch(
       updateField({
@@ -98,25 +74,21 @@ const Field = ({ id }) => {
     );
   };
 
-  const handleAddFixedValueClick = () => {
-
-    // we need to know what values have been selected
-    // so that we can update the field
-
-    dispatch(
-      updateField({
-        id: id,
-        name: nameValue,
-        block: blockValue,
-        kind: kindValue,
-        harvestDefinitionId: appDetails.harvestDefinition.id,
-        pipelineId: appDetails.pipeline.id,
-        transformationDefinitionId: appDetails.transformationDefinition.id,
-        schemaFieldId: schema_field_id,
-        schemaFieldValueIds: [schemaFieldValues[0].id]
-      })
-    )
-  }
+  // const handleAddFixedValueClick = () => {
+  //   dispatch(
+  //     updateField({
+  //       id: id,
+  //       name: nameValue,
+  //       block: blockValue,
+  //       kind: kindValue,
+  //       harvestDefinitionId: appDetails.harvestDefinition.id,
+  //       pipelineId: appDetails.pipeline.id,
+  //       transformationDefinitionId: appDetails.transformationDefinition.id,
+  //       schemaFieldId: schema_field_id,
+  //       schemaFieldValueIds: [schemaFieldValues[0].id]
+  //     })
+  //   )
+  // }
 
   const handleHideClick = () => {
     dispatch(toggleDisplayField({ id: id, displayed: false }));
@@ -234,7 +206,7 @@ const Field = ({ id }) => {
                 {schema_field_kind == 'fixed' && (
                   <button
                     className="btn btn-outline-primary"
-                    onClick={handleAddFixedValueClick}
+                  // onClick={handleAddFixedValueClick}
                   >
                     + Add fixed value
                   </button>
@@ -347,8 +319,8 @@ const Field = ({ id }) => {
               )}
 
               {schema_field_kind == 'fixed' && (
-                map(schema_field_values, (id) => {
-                  return <FixedValue id={id} schemaFieldValues={schemaFieldValues} key={id} updateSelectedSchemaFieldValueCb={updateSelectedSchemaFieldValueCb} />
+                map(field_schema_field_value_ids, (id) => {
+                  return <FieldSchemaFieldValue id={id} schemaFieldValues={schemaFieldValues} key={id} />
                 })
               )}
 
