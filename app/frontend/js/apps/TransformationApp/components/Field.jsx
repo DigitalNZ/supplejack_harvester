@@ -31,6 +31,8 @@ import { selectAllSchemaFieldValues } from "~/js/features/SchemaApp/SchemaFieldV
 
 import FieldSchemaFieldValue from '~/js/apps/TransformationApp/components/FieldSchemaFieldValue';
 
+import { addFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
+
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
   const { name, block, kind, schema_field_kind, schema_field_id, field_schema_field_value_ids } = useSelector((state) =>
@@ -74,21 +76,16 @@ const Field = ({ id }) => {
     );
   };
 
-  // const handleAddFixedValueClick = () => {
-  //   dispatch(
-  //     updateField({
-  //       id: id,
-  //       name: nameValue,
-  //       block: blockValue,
-  //       kind: kindValue,
-  //       harvestDefinitionId: appDetails.harvestDefinition.id,
-  //       pipelineId: appDetails.pipeline.id,
-  //       transformationDefinitionId: appDetails.transformationDefinition.id,
-  //       schemaFieldId: schema_field_id,
-  //       schemaFieldValueIds: [schemaFieldValues[0].id]
-  //     })
-  //   )
-  // }
+  const handleAddFixedValueClick = () => {
+    dispatch(
+      addFieldSchemaFieldValue(
+        {
+          fieldId: id,
+          schemaFieldValueId: schemaFieldValues[0].id
+        }
+      )
+    )
+  }
 
   const handleHideClick = () => {
     dispatch(toggleDisplayField({ id: id, displayed: false }));
@@ -206,7 +203,7 @@ const Field = ({ id }) => {
                 {schema_field_kind == 'fixed' && (
                   <button
                     className="btn btn-outline-primary"
-                  // onClick={handleAddFixedValueClick}
+                    onClick={handleAddFixedValueClick}
                   >
                     + Add fixed value
                   </button>

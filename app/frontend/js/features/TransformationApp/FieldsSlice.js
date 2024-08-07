@@ -7,6 +7,8 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
+import { addFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
+
 export const addField = createAsyncThunk(
   "fields/addFieldStatus",
   async (payload) => {
@@ -71,10 +73,7 @@ export const updateField = createAsyncThunk(
       block,
       kind,
       schemaFieldId,
-      schemaFieldValueIds
     } = payload;
-
-    console.log(schemaFieldValueIds);
 
     const response = request
       .patch(
@@ -85,7 +84,6 @@ export const updateField = createAsyncThunk(
             block: block,
             kind: kind,
             schema_field_id: schemaFieldId,
-            schema_field_value_ids: schemaFieldValueIds
           },
         }
       )
@@ -114,6 +112,10 @@ const fieldsSlice = createSlice({
     builder
       .addCase(addField.fulfilled, (state, action) => {
         fieldsAdapter.upsertOne(state, action.payload);
+      })
+      .addCase(addFieldSchemaFieldValue.fulfilled, (state, action) => {
+        console.log(action.payload);
+        state.entities[action.payload.field_id].field_schema_field_value_ids.push(action.payload.id)
       })
       .addCase(deleteField.fulfilled, (state, action) => {
         fieldsAdapter.removeOne(state, action.payload);

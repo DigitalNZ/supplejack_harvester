@@ -5,6 +5,32 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
+export const addFieldSchemaFieldValue = createAsyncThunk(
+  "fields/addFieldSchemaFieldValueStatus",
+  async (payload) => {
+    const {
+      fieldId,
+      schemaFieldValueId
+    } = payload;
+
+    const response = request
+      .post(
+        `/field_schema_field_values`,
+        {
+          field_schema_field_value: {
+            field_id: fieldId,
+            schema_field_value_id: schemaFieldValueId
+          },
+        }
+      )
+      .then(function (response) {
+        return response.data;
+      });
+
+    return response;
+  }
+);
+
 export const updateFieldSchemaFieldValue = createAsyncThunk(
   "fields/updateFieldSchemaFieldValueStatus",
   async (payload) => {
@@ -38,6 +64,9 @@ const fieldSchemaFieldValuesSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(addFieldSchemaFieldValue.fulfilled, (state, action) => {
+        fieldSchemaFieldValuesAdapter.upsertOne(state, action.payload);
+      })
       .addCase(updateFieldSchemaFieldValue.fulfilled, (state, action) => {
         fieldSchemaFieldValuesAdapter.setOne(state, action.payload);
       });
