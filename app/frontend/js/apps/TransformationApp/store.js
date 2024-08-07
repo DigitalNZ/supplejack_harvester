@@ -9,6 +9,7 @@ import fields from "/js/features/TransformationApp/FieldsSlice";
 import rawRecord from "/js/features/TransformationApp/RawRecordSlice";
 import appDetails from "/js/features/TransformationApp/AppDetailsSlice";
 import schemas from "/js/features/TransformationApp/SchemasSlice";
+import fieldSchemaFieldValues from "/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
 
 import schemaFields from '/js/features/SchemaApp/SchemaFieldsSlice';
 import schemaFieldValues from '/js/features/SchemaApp/SchemaFieldValuesSlice';
@@ -33,7 +34,8 @@ export default function configureAppStore(preloadedState) {
         sharedDefinitions,
         schemas,
         schemaFields,
-        schemaFieldValues
+        schemaFieldValues,
+        fieldSchemaFieldValues
       }),
       ui: combineReducers({
         fields: uiFields,

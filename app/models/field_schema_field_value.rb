@@ -3,4 +3,14 @@
 class FieldSchemaFieldValue < ApplicationRecord
   belongs_to :field
   belongs_to :schema_field_value
+
+  def to_h
+    {
+      id:,
+      field_id:,
+      schema_field_value_id:,
+      updated_at:,
+      created_at:
+    }
+  end
 end

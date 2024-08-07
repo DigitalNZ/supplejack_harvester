@@ -80,6 +80,8 @@ class TransformationDefinitionsController < ApplicationController
     @schema_fields = SchemaField.all.map(&:to_h)
     @schema_field_values = SchemaFieldValue.all.map(&:to_h)
 
+    @field_schema_field_values = @transformation_definition.fields.flat_map(&:field_schema_field_values).map(&:to_h)
+
     @props = transformation_app_state
 
     @extraction_jobs = if @harvest_definition.extraction_definition.present?

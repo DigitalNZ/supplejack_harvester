@@ -43,7 +43,7 @@ class Field < ApplicationRecord
       schema: schema?,
       schema_field_id: schema_field&.id,
       schema_field_kind: schema_field&.kind,
-      schema_field_values: schema_field_values.map(&:id),
+      field_schema_field_value_ids: field_schema_field_values.map(&:id),
       created_at:,
       updated_at:
     }
