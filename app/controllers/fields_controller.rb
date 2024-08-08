@@ -20,12 +20,6 @@ class FieldsController < ApplicationController
 
   def update
     if @field.update(field_params)
-      # schema_field_value_ids = params['field']['schema_field_value_ids'].map(&:to_i)
-      # schema_field_values = schema_field_value_ids.map { |id| SchemaFieldValue.find(id) }
-
-      # @field.schema_field_values = schema_field_values
-      # @field.save!
-
       update_last_edited_by([@field.transformation_definition])
       render json: @field.to_h
     else

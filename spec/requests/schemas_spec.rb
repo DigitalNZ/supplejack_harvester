@@ -30,10 +30,30 @@ RSpec.describe 'Schemas' do
 
       expected_state = {
         entities: {
-          fields: {}
+          schemaFields: {
+            ids: [],
+            entities: {}
+          },
+          schemaFieldValues: {
+            ids: [],
+            entities: {}
+          },
+          appDetails: {
+            schema: {
+              id: schema.id,
+              name: schema.name,
+              description: schema.description,
+              created_at: schema.created_at,
+              updated_at: schema.updated_at,
+              last_edited_by_id: schema.last_edited_by_id
+            }
+          }
         },
         ui: {
-          fields: {}
+          schemaFields: {
+            ids: [],
+            entities: {}
+          }
         },
         config: {
           environment: Rails.env

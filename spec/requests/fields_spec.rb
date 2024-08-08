@@ -76,22 +76,6 @@ RSpec.describe 'Fields' do
 
         expect(response.parsed_body['name']).to eq 'Description'
       end
-
-      context 'with schema fields' do
-        let(:schema) { create(:schema) }
-        let(:schema_field) { create(:schema_field, schema:, kind: 'fixed') }
-        let!(:schema_field_value) { create(:schema_field_value, value: 'test', schema_field:) }
-        let!(:schema_field_value_two) { create(:schema_field_value, value: 'testing', schema_field:) }
-
-        it 'associates provided schema field values with the field' do
-          patch pipeline_harvest_definition_transformation_definition_field_path(pipeline, harvest_definition, transformation_definition, field), params: {
-            field: { name: 'Description', schema_field_id: schema_field.id, schema_field_value_ids: [schema_field_value.id, schema_field_value_two.id] }
-          } 
-          
-          expect(response.parsed_body['block']).to eq 'test testing'
-          expect(response.parsed_body['schema_field_values']).to eq [schema_field_value.id, schema_field_value_two.id]
-        end
-      end
     end
   end
 
