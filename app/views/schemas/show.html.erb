@@ -28,9 +28,18 @@
     Are you sure you want to delete "<%= @schema.name %>"?
   </p>
 
-  <p>
-    This will also delete the fields associated with it.
+  <p class='text-danger'>
+    This will also delete the fields associated with it. The fields are used in the following pipelines:
   </p>
+
+  <ul class='list-unstyled'>
+    <% @schema.schema_fields.flat_map(&:referenced_pipelines).uniq.each do |pipeline| %>
+      <li>
+        <%= link_to(pipeline.name, pipeline_path(pipeline), target: '_blank', rel: 'noopener') %>
+      </li>
+    <% end %>
+  </ul>
+
 <% end %>
 
 <%= render layout: 'shared/create_modal',

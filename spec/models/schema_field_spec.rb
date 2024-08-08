@@ -14,6 +14,18 @@ RSpec.describe SchemaField, type: :model do
     it { is_expected.to have_many(:fields) }
   end
 
+  describe '#referenced_pipelines' do
+  let(:pipeline) { create(:pipeline, :figshare) }
+  let(:extraction_definition) { pipeline.harvest.extraction_definition }
+  let(:extraction_job) { create(:extraction_job, extraction_definition:) }
+  let(:transformation_definition) { create(:transformation_definition, pipeline:, extraction_job:) }
+  let!(:field) { create(:field, schema_field_id: subject.id, transformation_definition:) }
+
+    it 'returns an array of pipelines which references it' do
+      expect(subject.referenced_pipelines.map(&:id)).to include(pipeline.id)
+    end
+  end
+
   describe '#kinds' do
     kinds = { dynamic: 0, fixed: 1 }
 
