@@ -126,6 +126,25 @@
           </div>
         </div>
 
+         <div class='col-5'>
+          <%= form.label :run_enrichment_concurrently, class: 'form-label' do %>
+            Run Enrichments Concurrently
+
+            <span
+              data-bs-toggle="tooltip"
+              data-bs-title="Selecting this option when running your pipeline will run the extractions within an enrichment in parallel"><i class="bi bi-question-circle" aria-label="helper text"></i>
+            </span>
+          <% end %>
+        </div>
+
+        <div class='col-7'>
+          <div class='form-check'>
+            <%= label_tag do %>
+              <%= check_box('pipeline_job', 'run_enrichment_concurrently', { class: 'form-check-input' }) %>
+            <% end %>
+          </div>
+        </div>
+
       </div>
 
       <div class='d-grid mt-4'>

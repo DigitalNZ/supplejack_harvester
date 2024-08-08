@@ -34,7 +34,7 @@ class LoadWorker
   # :reek:UncommunicativeVariableName
   # this reek has been ignored as 'e' is the variable name wanted by Rubocop
   def process_batch(batch, api_record_id)
-    ::Retriable.retriable(tries: 5, base_interval: 1, multiplier: 2, on_retry: log_retry_attempt) do
+    ::Retriable.retriable(on_retry: log_retry_attempt) do
       Load::Execution.new(batch, @harvest_job, api_record_id).call
 
       @harvest_report.increment_records_loaded!(batch.count)

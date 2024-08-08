@@ -154,6 +154,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_06_235212) do
     t.timestamp "transformation_updated_time"
     t.timestamp "load_updated_time"
     t.timestamp "delete_updated_time"
+    t.string "definition_name"
     t.index ["harvest_job_id"], name: "index_harvest_reports_on_harvest_job_id"
     t.index ["pipeline_job_id"], name: "index_harvest_reports_on_pipeline_job_id"
   end
@@ -186,6 +187,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_06_235212) do
     t.bigint "schedule_id"
     t.bigint "launched_by_id"
     t.boolean "delete_previous_records", default: false, null: false
+    t.boolean "run_enrichment_concurrently", default: false, null: false
     t.index ["destination_id"], name: "index_pipeline_jobs_on_destination_id"
     t.index ["extraction_job_id"], name: "index_pipeline_jobs_on_extraction_job_id"
     t.index ["key"], name: "index_pipeline_jobs_on_key", unique: true

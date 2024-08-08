@@ -2,6 +2,8 @@
 
 module Extraction
   class EnrichmentExecution
+    include Extraction::Concerns::EnrichmentExtractionProcess
+
     def initialize(extraction_job)
       @extraction_job = extraction_job
       @extraction_definition = extraction_job.extraction_definition
@@ -21,26 +23,30 @@ module Extraction
 
     def extract_and_save_enrichment_documents(api_records)
       api_records.each_with_index do |api_record, index|
-        page = page_from_index(index)
+        enrichment_params = ExtractionParams.new(@extraction_definition.id,
+                                                 @extraction_job.id,
+                                                 @harvest_job&.id,
+                                                 api_record,
+                                                 page_from_index(index))
+        process_enrichment(enrichment_params)
 
-        ee = new_enrichment_extraction(api_record, page)
-        next unless ee.valid?
-
-        ee.extract_and_save
-        enqueue_record_transformation(api_record, ee.document, page)
-
-        update_harvest_report
-
-        throttle
-        break if @extraction_job.reload.cancelled?
+        break if extraction_cancelled?
       end
     end
 
-    def update_harvest_report
-      return if @harvest_report.blank?
+    def extraction_cancelled?
+      @extraction_job.reload.cancelled?
+    end
 
-      @harvest_report.increment_pages_extracted!
-      @harvest_report.update(extraction_updated_time: Time.zone.now)
+    def process_enrichment(enrichment_params)
+      json_params = enrichment_params.to_json
+
+      if @harvest_job&.pipeline_job&.run_enrichment_concurrently?
+        EnrichmentExtractionWorker.perform_async(json_params)
+      else
+        throttle
+        process_enrichment_extraction(json_params)
+      end
     end
 
     def throttle
@@ -49,19 +55,6 @@ module Extraction
 
     def page_from_index(index)
       ((@extraction_definition.page - 1) * @extraction_definition.per_page) + (index + 1)
-    end
-
-    def new_enrichment_extraction(api_record, page)
-      EnrichmentExtraction.new(@extraction_definition.requests.last, ApiRecord.new(api_record), page,
-                               @extraction_job.extraction_folder)
-    end
-
-    def enqueue_record_transformation(api_record, document, page)
-      return unless @harvest_job.present? && document.successful?
-      return if @extraction_definition.extract_text_from_file?
-
-      TransformationWorker.perform_async(@harvest_job.id, page, api_record['id'])
-      @harvest_report.increment_transformation_workers_queued! if @harvest_report.present?
     end
   end
 end

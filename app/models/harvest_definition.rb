@@ -9,13 +9,14 @@ class HarvestDefinition < ApplicationRecord
 
   belongs_to :transformation_definition, optional: true
 
+  # the before_destroy needs to be here (before any other dependent: :destroy statements)
+  before_destroy :destroy_associated_definitions, prepend: true
+
   has_many :harvest_jobs, dependent: :destroy
 
   validates :source_id, presence: true
 
   enum :kind, { harvest: 0, enrichment: 1 }
-
-  before_destroy :destroy_associated_definitions
 
   after_create do
     self.name = "#{pipeline.name.parameterize}__#{kind}-#{id}"
