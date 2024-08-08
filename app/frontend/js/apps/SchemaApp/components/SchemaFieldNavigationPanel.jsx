@@ -1,11 +1,14 @@
 import React from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { selectAllSchemaFields } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import SchemaFieldNavigationListItem from "./SchemaFieldNavigationListItem";
 import AddSchemaField from "~/js/apps/SchemaApp/components/AddSchemaField";
 import Tooltip from "~/js/components/Tooltip";
 
+import { toggleDisplaySchemaFields } from '~/js/features/SchemaApp/UiSchemaFieldsSlice';
+
 const SchemaFieldNavigationPanel = () => {
+  const dispatch = useDispatch();
   const fields = useSelector(selectAllSchemaFields);
 
   return (
@@ -24,12 +27,25 @@ const SchemaFieldNavigationPanel = () => {
             <ul className="dropdown-menu dropdown-menu-end">
               <li
                 className="dropdown-item card__control-acton"
+                onClick={() => {
+                  dispatch(
+                    toggleDisplaySchemaFields({
+                      fields: fields,
+                      displayed: false,
+                    })
+                  );
+                }}
               >
                 <i className="bi bi-eye-slash me-2"></i> Hide all fields
               </li>
 
               <li
                 className="dropdown-item card__control-acton"
+                onClick={() => {
+                  dispatch(
+                    toggleDisplaySchemaFields({ fields: fields, displayed: true })
+                  );
+                }}
               >
                 <i className="bi bi-eye me-2"></i> Show all fields
               </li>

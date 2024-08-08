@@ -44,6 +44,7 @@ class Field < ApplicationRecord
       schema_field_id: schema_field&.id,
       schema_field_kind: schema_field&.kind,
       field_schema_field_value_ids: field_schema_field_values.map(&:id),
+      pipeline_id: transformation_definition.pipeline_id,
       created_at:,
       updated_at:
     }

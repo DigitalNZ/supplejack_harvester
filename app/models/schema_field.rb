@@ -11,6 +11,7 @@ class SchemaField < ApplicationRecord
       name:,
       kind:,
       schema_field_value_ids: schema_field_values.map(&:id),
+      referenced_pipelines: fields.map(&:transformation_definition).map(&:pipeline).uniq.map(&:to_h),
       created_at:,
       updated_at:
     }

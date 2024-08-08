@@ -25,7 +25,7 @@ import SchemaFieldValue from "~/js/apps/SchemaApp/components/SchemaFieldValue";
 const SchemaField = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
 
-  const { name, kind, schema_field_value_ids } = useSelector((state) =>
+  const { name, kind, schema_field_value_ids, referenced_pipelines } = useSelector((state) =>
     selectSchemaFieldById(state, id)
   );
 
@@ -249,7 +249,30 @@ const SchemaField = ({ id }) => {
           <Modal.Title>Delete</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to delete the Schema field "{name}"?
+          <p>
+            Are you sure you want to delete the Schema field "{name}"?
+          </p>
+
+          {referenced_pipelines && (
+            <>
+              <p className='text-danger'>
+                It is being used in the following pipelines:
+              </p>
+
+              <ul className="list-unstyled mt-2">
+                {map(referenced_pipelines, (pipeline) => {
+                  return (
+                    <li key={pipeline.id}>
+                      <a href={`/pipelines/${pipeline.id}`} target="_blank">
+                        {pipeline.name}
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          )}
+
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
