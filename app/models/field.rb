@@ -5,8 +5,8 @@ class Field < ApplicationRecord
 
   belongs_to :transformation_definition
   belongs_to :schema_field, optional: true
-  belongs_to :schema_field_value, optional: true
 
+  # This is how a field refers to values associated with a schema field
   has_many :field_schema_field_values
   has_many :schema_field_values, through: :field_schema_field_values, dependent: :destroy
 
