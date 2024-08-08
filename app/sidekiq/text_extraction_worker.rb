@@ -43,6 +43,7 @@ class TextExtractionWorker < FileExtractionWorker
     `ocrmypdf \
       "#{@tmp_directory.shellescape}/#{file.shellescape}" \
       --sidecar "#{@tmp_directory.shellescape}/#{base_file_name.shellescape}.txt" - \
+      --force-ocr \
       --output-type=none -q`
     File.read("#{@tmp_directory}/#{base_file_name}.txt")
   end
