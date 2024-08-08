@@ -15,7 +15,7 @@ const SchemaFieldNavigationPanel = () => {
     <div className="card field-nav-panel">
       <div className="d-flex flex-column overflow-auto">
         <div className="field-nav-panel__header field-nav-panel__header--fields">
-          <Tooltip data-bs-title="PLACEHOLDER">
+          <Tooltip data-bs-title="Schema fields allow creating a controlled list of fields and values that can be referenced within a Transformation Definition. Updating the names or values here will affect Transformations which reference them">
             <h5>Schema fields</h5>
           </Tooltip>
 

@@ -77,7 +77,9 @@ const FieldNavigationPanel = () => {
         </div>
 
         <div className="field-nav-panel__header field-nav-panel__header--fields">
-          <h5>Schema Fields</h5>
+          <Tooltip data-bs-title="Schema Fields reference fields from a defined schema">
+            <h5>Schema Fields</h5>
+          </Tooltip>
         </div>
 
         <div className="field-nav-panel__content">
