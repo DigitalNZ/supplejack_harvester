@@ -19,6 +19,7 @@ AllCops:
     - "spec/sidekiq/**/*"
     - "spec/supplejack/**/*"
     - "spec/system/**/*"
+    - "spec/value_objects/**/*"
     # we might need to review all those migrations and create a new one
     # for referential integrity and follow the best practices from rubocop-rails:
     # - https://guides.rubyonrails.org/active_record_migrations.html#active-record-and-referential-integrity

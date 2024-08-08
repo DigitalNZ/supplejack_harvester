@@ -43,6 +43,28 @@ RSpec.describe Extraction::EnrichmentExecution do
 
         expect(extracted_files.count).to eq 40
       end
+
+      context 'when the enrichment is not set to run concurrently' do
+        it 'does not run the async worker' do
+          expect(EnrichmentExtractionWorker).to receive(:perform_async).exactly(0).times.and_call_original
+
+          described_class.new(full_job).call
+        end
+      end
+
+      context 'when the enrichment is set to run concurrently' do
+        let(:pipeline)              { create(:pipeline, :figshare) }
+        let(:pipeline_job)          { create(:pipeline_job, pipeline:, destination:, run_enrichment_concurrently: true) }
+        let(:harvest_definition)    { create(:harvest_definition, pipeline:) }
+        let(:harvest_job)           { create(:harvest_job, harvest_definition:, pipeline_job:) }
+        let(:extraction_job)        { create(:extraction_job, extraction_definition:, harvest_job:, status: 'queued') }
+
+        it 'schedules 40 enrichment extraction jobs' do
+          expect(EnrichmentExtractionWorker).to receive(:perform_async).exactly(40).times.and_call_original
+  
+          described_class.new(extraction_job).call
+        end
+      end
     end
 
     context 'when the enrichment extraction definition has a throttle' do

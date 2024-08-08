@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_25_030305) do
+ActiveRecord::Schema[7.1].define(version: 2024_08_05_030116) do
   create_table "destinations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "url", null: false
@@ -176,6 +176,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_25_030305) do
     t.bigint "schedule_id"
     t.bigint "launched_by_id"
     t.boolean "delete_previous_records", default: false, null: false
+    t.boolean "run_enrichment_concurrently", default: false, null: false
     t.index ["destination_id"], name: "index_pipeline_jobs_on_destination_id"
     t.index ["extraction_job_id"], name: "index_pipeline_jobs_on_extraction_job_id"
     t.index ["key"], name: "index_pipeline_jobs_on_key", unique: true

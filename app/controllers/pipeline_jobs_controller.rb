@@ -64,7 +64,7 @@ class PipelineJobsController < ApplicationController
 
   def pipeline_job_params
     params.require(:pipeline_job).permit(:pipeline_id, :key, :extraction_job_id, :destination_id,
-                                         :page_type, :pages, :delete_previous_records,
+                                         :page_type, :pages, :delete_previous_records, :run_enrichment_concurrently,
                                          harvest_definitions_to_run: [])
   end
 end
