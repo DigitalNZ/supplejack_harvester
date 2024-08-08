@@ -106,7 +106,7 @@ const SchemaField = ({ id }) => {
   const handleAddSchemaFieldValueClick = () => {
     dispatch(
       addSchemaFieldValue({
-        value: fieldValue,
+        value: schemaFieldValue,
         schemaFieldId: id,
         schemaId: appDetails.schema.id
       })
@@ -213,7 +213,7 @@ const SchemaField = ({ id }) => {
                           className="form-control"
                           required="required"
                           value={schemaFieldValue}
-                          onChange={(e) => setFieldValue(e.target.value)}
+                          onChange={(e) => setSchemaFieldValue(e.target.value)}
                         />
                       </div>
                     </div>
