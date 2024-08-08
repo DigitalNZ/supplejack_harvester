@@ -253,7 +253,7 @@ const SchemaField = ({ id }) => {
             Are you sure you want to delete the Schema field "{name}"?
           </p>
 
-          {referenced_pipelines && (
+          {referenced_pipelines.length > 0 && (
             <>
               <p className='text-danger'>
                 It is being used in the following pipelines:
