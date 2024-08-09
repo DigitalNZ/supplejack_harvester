@@ -15,7 +15,7 @@ const AddSchemaField = () => {
     dispatch(
       addSchemaField({
         name: "",
-        schemaId: appDetails.schema.id
+        schemaId: appDetails.schema.id,
       })
     );
   };

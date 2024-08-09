@@ -1,21 +1,28 @@
 import React, { useState } from "react";
 
-import { map, orderBy, filter, includes } from 'lodash';
+import { map, orderBy, filter, includes } from "lodash";
 
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from "react-redux";
 import classNames from "classnames";
 
-import { selectAppDetails } from '~/js/features/SchemaApp/AppDetailsSlice';
-
-import { selectSchemaFieldById, updateSchemaField, deleteSchemaField } from "~/js/features/SchemaApp/SchemaFieldsSlice";
+import { selectAppDetails } from "~/js/features/SchemaApp/AppDetailsSlice";
 
 import {
-  selectUiSchemaFieldById, toggleDisplaySchemaField,
+  selectSchemaFieldById,
+  updateSchemaField,
+  deleteSchemaField,
+} from "~/js/features/SchemaApp/SchemaFieldsSlice";
+
+import {
+  selectUiSchemaFieldById,
+  toggleDisplaySchemaField,
   setActiveSchemaField,
 } from "~/js/features/SchemaApp/UiSchemaFieldsSlice";
 
-
-import { addSchemaFieldValue, selectAllSchemaFieldValues } from '~/js/features/SchemaApp/SchemaFieldValuesSlice';
+import {
+  addSchemaFieldValue,
+  selectAllSchemaFieldValues,
+} from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
 
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -25,21 +32,24 @@ import SchemaFieldValue from "./SchemaFieldValue";
 const SchemaField = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
 
-  const { name, kind, schema_field_value_ids, referenced_pipelines } = useSelector((state) =>
-    selectSchemaFieldById(state, id)
-  );
+  const { name, kind, schema_field_value_ids, referenced_pipelines } =
+    useSelector((state) => selectSchemaFieldById(state, id));
 
   const allSchemaFieldValues = useSelector(selectAllSchemaFieldValues);
   const schemaFieldValues = filter(allSchemaFieldValues, (fieldValue) => {
-    return includes(schema_field_value_ids, fieldValue.id)
+    return includes(schema_field_value_ids, fieldValue.id);
   });
 
-  const sortedSchemaFieldValues = orderBy(schemaFieldValues, [schemaFieldValue => schemaFieldValue.value.toLowerCase()], ['asc'])
+  const sortedSchemaFieldValues = orderBy(
+    schemaFieldValues,
+    [(schemaFieldValue) => schemaFieldValue.value.toLowerCase()],
+    ["asc"]
+  );
   const dispatch = useDispatch();
 
   const [nameValue, setNameValue] = useState(name);
   const [kindValue, setKindValue] = useState(kind);
-  const [schemaFieldValue, setSchemaFieldValue] = useState('')
+  const [schemaFieldValue, setSchemaFieldValue] = useState("");
   const [showModal, setShowModal] = useState(false);
 
   const handleClose = () => setShowModal(false);
@@ -70,8 +80,9 @@ const SchemaField = ({ id }) => {
     handleClose();
   };
 
-  const { saved, deleting, saving, displayed, active } =
-    useSelector((state) => selectUiSchemaFieldById(state, id));
+  const { saved, deleting, saving, displayed, active } = useSelector((state) =>
+    selectUiSchemaFieldById(state, id)
+  );
 
   const fieldClasses = classNames("col-12", "collapse", {
     show: displayed,
@@ -114,11 +125,11 @@ const SchemaField = ({ id }) => {
       addSchemaFieldValue({
         value: schemaFieldValue,
         schemaFieldId: id,
-        schemaId: appDetails.schema.id
+        schemaId: appDetails.schema.id,
       })
     );
 
-    setSchemaFieldValue('');
+    setSchemaFieldValue("");
   };
 
   return (
@@ -163,8 +174,7 @@ const SchemaField = ({ id }) => {
 
             <div className="mt-3 show" id={`field-${id}-content`}>
               <div className="row">
-
-                <div className='col-8'>
+                <div className="col-8">
                   <div className="row">
                     <label className="col-form-label col-sm-3" htmlFor="name">
                       <strong>Field name </strong>
@@ -204,11 +214,14 @@ const SchemaField = ({ id }) => {
                 </div>
               </div>
 
-              {kind == 'fixed' && (
-                <div className='row my-4 justify-content-between'>
-                  <div className='col-8'>
+              {kind == "fixed" && (
+                <div className="row my-4 justify-content-between">
+                  <div className="col-8">
                     <div className="row">
-                      <label className="col-form-label col-sm-3" htmlFor="add-value">
+                      <label
+                        className="col-form-label col-sm-3"
+                        htmlFor="add-value"
+                      >
                         <strong>Add value </strong>
                       </label>
 
@@ -225,7 +238,7 @@ const SchemaField = ({ id }) => {
                     </div>
                   </div>
 
-                  <div className='col-1'>
+                  <div className="col-1">
                     <button
                       className="btn btn-outline-primary"
                       onClick={() => handleAddSchemaFieldValueClick()}
@@ -233,18 +246,20 @@ const SchemaField = ({ id }) => {
                       Add
                     </button>
                   </div>
-
                 </div>
               )}
 
               {schema_field_value_ids.length > 0 && (
-                <div className='border-top'>
+                <div className="border-top">
                   {map(sortedSchemaFieldValues, (schemaFieldValue) => (
-                    <SchemaFieldValue id={schemaFieldValue.id} key={schemaFieldValue.id} fieldId={id} />
+                    <SchemaFieldValue
+                      id={schemaFieldValue.id}
+                      key={schemaFieldValue.id}
+                      fieldId={id}
+                    />
                   ))}
                 </div>
               )}
-
             </div>
           </div>
         </div>
@@ -255,13 +270,11 @@ const SchemaField = ({ id }) => {
           <Modal.Title>Delete</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>
-            Are you sure you want to delete the Schema field "{name}"?
-          </p>
+          <p>Are you sure you want to delete the Schema field "{name}"?</p>
 
           {referenced_pipelines.length > 0 && (
             <>
-              <p className='text-danger'>
+              <p className="text-danger">
                 It is being used in the following pipelines:
               </p>
 
@@ -273,12 +286,11 @@ const SchemaField = ({ id }) => {
                         {pipeline.name}
                       </a>
                     </li>
-                  )
+                  );
                 })}
               </ul>
             </>
           )}
-
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
@@ -290,7 +302,7 @@ const SchemaField = ({ id }) => {
         </Modal.Footer>
       </Modal>
     </>
-  )
-}
+  );
+};
 
 export default SchemaField;

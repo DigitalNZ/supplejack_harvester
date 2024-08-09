@@ -8,21 +8,15 @@ import { request } from "~/js/utils/request";
 export const addFieldSchemaFieldValue = createAsyncThunk(
   "fields/addFieldSchemaFieldValueStatus",
   async (payload) => {
-    const {
-      fieldId,
-      schemaFieldValueId
-    } = payload;
+    const { fieldId, schemaFieldValueId } = payload;
 
     const response = request
-      .post(
-        `/field_schema_field_values`,
-        {
-          field_schema_field_value: {
-            field_id: fieldId,
-            schema_field_value_id: schemaFieldValueId
-          },
-        }
-      )
+      .post(`/field_schema_field_values`, {
+        field_schema_field_value: {
+          field_id: fieldId,
+          schema_field_value_id: schemaFieldValueId,
+        },
+      })
       .then(function (response) {
         return response.data;
       });
@@ -34,20 +28,14 @@ export const addFieldSchemaFieldValue = createAsyncThunk(
 export const updateFieldSchemaFieldValue = createAsyncThunk(
   "fields/updateFieldSchemaFieldValueStatus",
   async (payload) => {
-    const {
-      id,
-      schemaFieldValueId
-    } = payload;
+    const { id, schemaFieldValueId } = payload;
 
     const response = request
-      .patch(
-        `/field_schema_field_values/${id}`,
-        {
-          field_schema_field_value: {
-            schema_field_value_id: schemaFieldValueId
-          },
-        }
-      )
+      .patch(`/field_schema_field_values/${id}`, {
+        field_schema_field_value: {
+          schema_field_value_id: schemaFieldValueId,
+        },
+      })
       .then((response) => {
         return response.data;
       });
@@ -62,13 +50,11 @@ export const deleteFieldSchemaFieldValue = createAsyncThunk(
     const { id, fieldId } = payload;
 
     const response = request
-      .delete(
-        `/field_schema_field_values/${id}`
-      )
+      .delete(`/field_schema_field_values/${id}`)
       .then((response) => {
         return {
           id: id,
-          fieldId: fieldId
+          fieldId: fieldId,
         };
       });
 
@@ -102,8 +88,10 @@ export const {
   selectById: selectFieldSchemaFieldValueById,
   selectIds: selectFieldSchemaFieldValueIds,
   selectAll: selectAllFieldsSchemaFieldValues,
-} = fieldSchemaFieldValuesAdapter.getSelectors((state) => state.entities.fieldSchemaFieldValues);
+} = fieldSchemaFieldValuesAdapter.getSelectors(
+  (state) => state.entities.fieldSchemaFieldValues
+);
 
-export const { } = actions;
+export const {} = actions;
 
 export default reducer;

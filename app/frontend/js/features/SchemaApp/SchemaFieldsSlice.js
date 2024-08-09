@@ -7,26 +7,23 @@ import {
 } from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
-import { addSchemaFieldValue, deleteSchemaFieldValue } from '~/js/features/SchemaApp/SchemaFieldValuesSlice';
+import {
+  addSchemaFieldValue,
+  deleteSchemaFieldValue,
+} from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
 
 export const addSchemaField = createAsyncThunk(
   "fields/addSchemaFieldStatus",
   async (payload) => {
-    const {
-      name,
-      schemaId,
-    } = payload;
+    const { name, schemaId } = payload;
 
     const response = request
-      .post(
-        `/schemas/${schemaId}/schema_fields`,
-        {
-          schema_field: {
-            name: name,
-            schema_id: schemaId
-          },
-        }
-      )
+      .post(`/schemas/${schemaId}/schema_fields`, {
+        schema_field: {
+          name: name,
+          schema_id: schemaId,
+        },
+      })
       .then(function (response) {
         return response.data;
       });
@@ -38,13 +35,10 @@ export const addSchemaField = createAsyncThunk(
 export const deleteSchemaField = createAsyncThunk(
   "fields/deleteSchemaFieldStatus",
   async (payload) => {
-    const { id, schemaId } =
-      payload;
+    const { id, schemaId } = payload;
 
     const response = request
-      .delete(
-        `/schemas/${schemaId}/schema_fields/${id}`
-      )
+      .delete(`/schemas/${schemaId}/schema_fields/${id}`)
       .then((response) => {
         return id;
       });
@@ -56,23 +50,15 @@ export const deleteSchemaField = createAsyncThunk(
 export const updateSchemaField = createAsyncThunk(
   "fields/updateSchemaFieldStatus",
   async (payload) => {
-    const {
-      id,
-      schemaId,
-      name,
-      kind,
-    } = payload;
+    const { id, schemaId, name, kind } = payload;
 
     const response = request
-      .patch(
-        `/schemas/${schemaId}/schema_fields/${id}`,
-        {
-          schema_field: {
-            name: name,
-            kind: kind,
-          },
-        }
-      )
+      .patch(`/schemas/${schemaId}/schema_fields/${id}`, {
+        schema_field: {
+          name: name,
+          kind: kind,
+        },
+      })
       .then((response) => {
         return response.data;
       });
@@ -103,15 +89,21 @@ const schemaFieldsSlice = createSlice({
         schemaFieldsAdapter.setOne(state, action.payload);
       })
       .addCase(addSchemaFieldValue.fulfilled, (state, action) => {
-        state.entities[action.payload.schema_field_id].schema_field_value_ids.push(action.payload.id)
+        state.entities[
+          action.payload.schema_field_id
+        ].schema_field_value_ids.push(action.payload.id);
       })
       .addCase(deleteSchemaFieldValue.fulfilled, (state, action) => {
-        const ids = filter(state.entities[action.meta.arg.schemaFieldId].schema_field_value_ids, (fieldId) => {
-          return fieldId != action.payload;
-        });
+        const ids = filter(
+          state.entities[action.meta.arg.schemaFieldId].schema_field_value_ids,
+          (fieldId) => {
+            return fieldId != action.payload;
+          }
+        );
 
-        state.entities[action.meta.arg.schemaFieldId].schema_field_value_ids = ids;
-      })
+        state.entities[action.meta.arg.schemaFieldId].schema_field_value_ids =
+          ids;
+      });
   },
 });
 
@@ -123,6 +115,6 @@ export const {
   selectAll: selectAllSchemaFields,
 } = schemaFieldsAdapter.getSelectors((state) => state.entities.schemaFields);
 
-export const { } = actions;
+export const {} = actions;
 
 export default reducer;

@@ -83,4 +83,3 @@ if (schemaAppHTMLElement !== null) {
     </React.StrictMode>
   );
 }
-

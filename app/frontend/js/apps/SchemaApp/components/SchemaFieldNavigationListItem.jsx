@@ -20,7 +20,9 @@ const SchemaFieldNavigationListItem = ({ id }) => {
   const handleListItemClick = () => {
     const desiredDisplaySetting = !displayed;
 
-    dispatch(toggleDisplaySchemaField({ id: id, displayed: desiredDisplaySetting }));
+    dispatch(
+      toggleDisplaySchemaField({ id: id, displayed: desiredDisplaySetting })
+    );
 
     if (desiredDisplaySetting == true) {
       dispatch(setActiveSchemaField(id));

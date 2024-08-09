@@ -29,15 +29,21 @@ import CodeEditor from "~/js/components/CodeEditor";
 import { selectSchemaFieldById } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import { selectAllSchemaFieldValues } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
 
-import FieldSchemaFieldValue from '~/js/apps/TransformationApp/components/FieldSchemaFieldValue';
+import FieldSchemaFieldValue from "~/js/apps/TransformationApp/components/FieldSchemaFieldValue";
 
 import { addFieldSchemaFieldValue } from "~/js/features/TransformationApp/FieldSchemaFieldValuesSlice";
 
 const Field = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
-  const { name, block, kind, schema_field_kind, schema_field_id, field_schema_field_value_ids, schema } = useSelector((state) =>
-    selectFieldById(state, id)
-  );
+  const {
+    name,
+    block,
+    kind,
+    schema_field_kind,
+    schema_field_id,
+    field_schema_field_value_ids,
+    schema,
+  } = useSelector((state) => selectFieldById(state, id));
 
   const schemaField = useSelector((state) =>
     selectSchemaFieldById(state, schema_field_id)
@@ -46,10 +52,14 @@ const Field = ({ id }) => {
   const schemaFieldValueIds = schemaField?.schema_field_value_ids || [];
   const allSchemaFieldValues = useSelector(selectAllSchemaFieldValues);
   const schemaFieldValues = filter(allSchemaFieldValues, (fieldValue) => {
-    return includes(schemaFieldValueIds, fieldValue.id)
+    return includes(schemaFieldValueIds, fieldValue.id);
   });
 
-  const sortedSchemaFieldValues = orderBy(schemaFieldValues, [schemaFieldValue => schemaFieldValue.value.toLowerCase()], ['asc'])
+  const sortedSchemaFieldValues = orderBy(
+    schemaFieldValues,
+    [(schemaFieldValue) => schemaFieldValue.value.toLowerCase()],
+    ["asc"]
+  );
 
   const rawRecord = useSelector(selectRawRecord);
 
@@ -82,14 +92,12 @@ const Field = ({ id }) => {
 
   const handleAddFixedValueClick = () => {
     dispatch(
-      addFieldSchemaFieldValue(
-        {
-          fieldId: id,
-          schemaFieldValueId: sortedSchemaFieldValues[0].id
-        }
-      )
-    )
-  }
+      addFieldSchemaFieldValue({
+        fieldId: id,
+        schemaFieldValueId: sortedSchemaFieldValues[0].id,
+      })
+    );
+  };
 
   const handleHideClick = () => {
     dispatch(toggleDisplayField({ id: id, displayed: false }));
@@ -196,13 +204,13 @@ const Field = ({ id }) => {
               <div>
                 <h5 className="m-0 d-inline">{name}</h5>
                 {schema && (
-                  <span className='ms-2 badge bg-secondary'>schema</span>
+                  <span className="ms-2 badge bg-secondary">schema</span>
                 )}
                 <span className={badgeClasses}>{badgeText()}</span>
               </div>
 
               <div className="hstack gap-2">
-                {schema_field_kind != 'fixed' && (
+                {schema_field_kind != "fixed" && (
                   <button
                     className="btn btn-outline-primary"
                     disabled={!isSaveable()}
@@ -213,7 +221,7 @@ const Field = ({ id }) => {
                   </button>
                 )}
 
-                {schema_field_kind == 'fixed' && (
+                {schema_field_kind == "fixed" && (
                   <button
                     className="btn btn-outline-primary"
                     onClick={handleAddFixedValueClick}
@@ -247,7 +255,6 @@ const Field = ({ id }) => {
 
             <div className="mt-3 show" id={`field-${id}-content`}>
               <div className="row">
-
                 {!schema && (
                   <div className={nameColumnClasses}>
                     <div className="row">
@@ -275,7 +282,6 @@ const Field = ({ id }) => {
                     </div>
                   </div>
                 )}
-
 
                 {kind != "field" && (
                   <div className="col-4">
@@ -306,7 +312,7 @@ const Field = ({ id }) => {
                 )}
               </div>
 
-              {schema_field_kind != 'fixed' && (
+              {schema_field_kind != "fixed" && (
                 <>
                   <label className="form-label mt-4" htmlFor="block">
                     Block{" "}
@@ -333,12 +339,17 @@ const Field = ({ id }) => {
                 </>
               )}
 
-              {schema_field_kind == 'fixed' && (
+              {schema_field_kind == "fixed" &&
                 map(field_schema_field_value_ids, (schemaFieldValueId) => {
-                  return <FieldSchemaFieldValue id={schemaFieldValueId} schemaFieldValues={sortedSchemaFieldValues} key={schemaFieldValueId} fieldId={id} />
-                })
-              )}
-
+                  return (
+                    <FieldSchemaFieldValue
+                      id={schemaFieldValueId}
+                      schemaFieldValues={sortedSchemaFieldValues}
+                      key={schemaFieldValueId}
+                      fieldId={id}
+                    />
+                  );
+                })}
             </div>
           </div>
         </div>

@@ -1,6 +1,10 @@
 import { createSlice, createEntityAdapter } from "@reduxjs/toolkit";
 
-import { addSchemaField, deleteSchemaField, updateSchemaField } from "./SchemaFieldsSlice";
+import {
+  addSchemaField,
+  deleteSchemaField,
+  updateSchemaField,
+} from "./SchemaFieldsSlice";
 
 const uiSchemaFieldsAdapter = createEntityAdapter();
 
@@ -94,7 +98,10 @@ export const selectDisplayedSchemaFieldIds = (state) => {
     .map((field) => field.id);
 };
 
-export const { toggleDisplaySchemaField, toggleDisplaySchemaFields, setActiveSchemaField } =
-  actions;
+export const {
+  toggleDisplaySchemaField,
+  toggleDisplaySchemaFields,
+  setActiveSchemaField,
+} = actions;
 
 export default reducer;

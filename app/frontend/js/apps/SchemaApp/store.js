@@ -2,13 +2,13 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
 // entities
 
-import schemaFields from '/js/features/SchemaApp/SchemaFieldsSlice';
-import schemaFieldValues from '/js/features/SchemaApp/SchemaFieldValuesSlice';
-import appDetails from '/js/features/SchemaApp/AppDetailsSlice';
+import schemaFields from "/js/features/SchemaApp/SchemaFieldsSlice";
+import schemaFieldValues from "/js/features/SchemaApp/SchemaFieldValuesSlice";
+import appDetails from "/js/features/SchemaApp/AppDetailsSlice";
 
 // ui
 
-import uiSchemaFields from '/js/features/SchemaApp/UiSchemaFieldsSlice';
+import uiSchemaFields from "/js/features/SchemaApp/UiSchemaFieldsSlice";
 
 // config
 import config from "/js/features/ConfigSlice";
@@ -19,14 +19,14 @@ export default function configureAppStore(preloadedState) {
       entities: combineReducers({
         schemaFields,
         schemaFieldValues,
-        appDetails
+        appDetails,
       }),
       ui: combineReducers({
-        schemaFields: uiSchemaFields
+        schemaFields: uiSchemaFields,
       }),
       config,
     }),
-    preloadedState
+    preloadedState,
   });
 
   return store;

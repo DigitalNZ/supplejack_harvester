@@ -8,11 +8,7 @@ import { request } from "~/js/utils/request";
 export const addSchemaFieldValue = createAsyncThunk(
   "fields/addSchemaFieldValueStatus",
   async (payload) => {
-    const {
-      value,
-      schemaId,
-      schemaFieldId
-    } = payload;
+    const { value, schemaId, schemaFieldId } = payload;
 
     const response = request
       .post(
@@ -21,7 +17,7 @@ export const addSchemaFieldValue = createAsyncThunk(
           schema_field_value: {
             value: value,
             schema_field_id: schemaFieldId,
-            schema_id: schemaId
+            schema_id: schemaId,
           },
         }
       )
@@ -36,12 +32,7 @@ export const addSchemaFieldValue = createAsyncThunk(
 export const deleteSchemaFieldValue = createAsyncThunk(
   "fields/deleteSchemaFieldValueStatus",
   async (payload) => {
-
-    const {
-      id,
-      schemaId,
-      schemaFieldId
-    } = payload;
+    const { id, schemaId, schemaFieldId } = payload;
 
     const response = request
       .delete(
@@ -58,12 +49,7 @@ export const deleteSchemaFieldValue = createAsyncThunk(
 export const updateSchemaFieldValue = createAsyncThunk(
   "fields/updateSchemaFieldValueStatus",
   async (payload) => {
-    const {
-      id,
-      value,
-      schemaId,
-      schemaFieldId
-    } = payload;
+    const { id, value, schemaId, schemaFieldId } = payload;
 
     const response = request
       .patch(
@@ -72,7 +58,7 @@ export const updateSchemaFieldValue = createAsyncThunk(
           schema_field_value: {
             value: value,
             schema_field_id: schemaFieldId,
-            schema_id: schemaId
+            schema_id: schemaId,
           },
         }
       )
@@ -110,8 +96,10 @@ export const {
   selectById: selectSchemaFieldValueById,
   selectIds: selectSchemaFieldValueIds,
   selectAll: selectAllSchemaFieldValues,
-} = schemaFieldValuesAdapter.getSelectors((state) => state.entities.schemaFieldValues);
+} = schemaFieldValuesAdapter.getSelectors(
+  (state) => state.entities.schemaFieldValues
+);
 
-export const { } = actions;
+export const {} = actions;
 
 export default reducer;

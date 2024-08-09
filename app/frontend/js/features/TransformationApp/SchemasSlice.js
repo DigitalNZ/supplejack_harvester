@@ -1,11 +1,15 @@
-import { createAsyncThunk, createSlice, createEntityAdapter } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  createEntityAdapter,
+} from "@reduxjs/toolkit";
 import { request } from "~/js/utils/request";
 
 const SchemasSlice = createSlice({
   name: "schemas",
   initialState: {},
   reducers: {},
-  extraReducers: (builder) => { },
+  extraReducers: (builder) => {},
 });
 
 const schemasAdapter = createEntityAdapter();

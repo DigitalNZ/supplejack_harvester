@@ -5,7 +5,7 @@ import SchemaFieldNavigationListItem from "./SchemaFieldNavigationListItem";
 import AddSchemaField from "./AddSchemaField";
 import Tooltip from "~/js/components/Tooltip";
 
-import { toggleDisplaySchemaFields } from '~/js/features/SchemaApp/UiSchemaFieldsSlice';
+import { toggleDisplaySchemaFields } from "~/js/features/SchemaApp/UiSchemaFieldsSlice";
 
 const SchemaFieldNavigationPanel = () => {
   const dispatch = useDispatch();
@@ -43,7 +43,10 @@ const SchemaFieldNavigationPanel = () => {
                 className="dropdown-item card__control-acton"
                 onClick={() => {
                   dispatch(
-                    toggleDisplaySchemaFields({ fields: fields, displayed: true })
+                    toggleDisplaySchemaFields({
+                      fields: fields,
+                      displayed: true,
+                    })
                   );
                 }}
               >
@@ -58,7 +61,9 @@ const SchemaFieldNavigationPanel = () => {
 
           <ul className="field-nav nav nav-pills flex-column overflow-auto flex-nowrap">
             {fields.map((field) => {
-              return <SchemaFieldNavigationListItem id={field.id} key={field.id} />;
+              return (
+                <SchemaFieldNavigationListItem id={field.id} key={field.id} />
+              );
             })}
           </ul>
         </div>

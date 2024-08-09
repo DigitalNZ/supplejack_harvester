@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 
-import { useSelector, useDispatch } from 'react-redux';
-import { selectSchemaFieldValueById, deleteSchemaFieldValue, updateSchemaFieldValue } from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectSchemaFieldValueById,
+  deleteSchemaFieldValue,
+  updateSchemaFieldValue,
+} from "~/js/features/SchemaApp/SchemaFieldValuesSlice";
 
-import { selectAppDetails } from '~/js/features/SchemaApp/AppDetailsSlice';
+import { selectAppDetails } from "~/js/features/SchemaApp/AppDetailsSlice";
 
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -31,19 +35,19 @@ const SchemaFieldValue = ({ id, fieldId }) => {
         id: id,
         schemaId: appDetails.schema.id,
         schemaFieldId: fieldId,
-        value: schemaFieldValue
+        value: schemaFieldValue,
       })
-    )
+    );
 
     setEditing(false);
-  }
+  };
 
   const handleDeleteClick = () => {
     dispatch(
       deleteSchemaFieldValue({
         id: id,
         schemaId: appDetails.schema.id,
-        schemaFieldId: fieldId
+        schemaFieldId: fieldId,
       })
     );
     handleClose();
@@ -51,10 +55,8 @@ const SchemaFieldValue = ({ id, fieldId }) => {
 
   return (
     <>
-
-
       {!editing && (
-        <div className='border-bottom py-3 d-flex justify-content-between'>
+        <div className="border-bottom py-3 d-flex justify-content-between">
           {value}
 
           <ul className="list-inline my-0">
@@ -72,51 +74,45 @@ const SchemaFieldValue = ({ id, fieldId }) => {
             </li>
           </ul>
         </div>
-      )
-      }
+      )}
 
-      {
-        editing && (
-          <div className='border-bottom row py-3 justify-content-between'>
+      {editing && (
+        <div className="border-bottom row py-3 justify-content-between">
+          <div className="col-8">
+            <div className="row">
+              <label className="col-form-label col-sm-3" htmlFor="add-value">
+                <strong>Edit value </strong>
+              </label>
 
-            <div className='col-8'>
-              <div className="row">
-                <label className="col-form-label col-sm-3" htmlFor="add-value">
-                  <strong>Edit value </strong>
-                </label>
-
-                <div className="col-sm-9">
-                  <input
-                    id="add-value"
-                    type="text"
-                    className="form-control"
-                    required="required"
-                    value={schemaFieldValue}
-                    onChange={(e) => setSchemaFieldValue(e.target.value)}
-                  />
-                </div>
+              <div className="col-sm-9">
+                <input
+                  id="add-value"
+                  type="text"
+                  className="form-control"
+                  required="required"
+                  value={schemaFieldValue}
+                  onChange={(e) => setSchemaFieldValue(e.target.value)}
+                />
               </div>
             </div>
-
-            <div className='col-2'>
-              <button
-                className="btn btn-outline-primary mx-2"
-                onClick={() => handleUpdateSchemaFieldValueClick()}
-              >
-                Update
-              </button>
-              <span
-                className="text-danger mx-1"
-                onClick={() => setEditing(false)}
-              >
-                Cancel
-              </span>
-            </div>
-
           </div>
-        )
-      }
 
+          <div className="col-2">
+            <button
+              className="btn btn-outline-primary mx-2"
+              onClick={() => handleUpdateSchemaFieldValueClick()}
+            >
+              Update
+            </button>
+            <span
+              className="text-danger mx-1"
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </span>
+          </div>
+        </div>
+      )}
 
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
@@ -135,7 +131,7 @@ const SchemaFieldValue = ({ id, fieldId }) => {
         </Modal.Footer>
       </Modal>
     </>
-  )
-}
+  );
+};
 
 export default SchemaFieldValue;
