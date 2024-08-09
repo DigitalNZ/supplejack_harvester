@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateFieldSchemaFieldValues < ActiveRecord::Migration[7.1]
   def change
     create_table :field_schema_field_values do |t|

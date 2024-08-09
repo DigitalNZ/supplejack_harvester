@@ -24,16 +24,6 @@ class SchemasController < ApplicationController
     end
   end
 
-  def destroy
-    if @schema.destroy
-      redirect_to schemas_path, notice: t('.success')
-    else
-      flash.alert = t('.failure')
-
-      redirect_to schema_path(@schema)
-    end
-  end
-
   def update
     if @schema.update(schema_params)
       flash.notice = t('.success')
@@ -43,6 +33,16 @@ class SchemasController < ApplicationController
       flash.alert = t('.failure')
 
       render 'show'
+    end
+  end
+
+  def destroy
+    if @schema.destroy
+      redirect_to schemas_path, notice: t('.success')
+    else
+      flash.alert = t('.failure')
+
+      redirect_to schema_path(@schema)
     end
   end
 

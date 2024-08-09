@@ -91,9 +91,9 @@ group :test do
   gem 'capybara-screenshot'
   gem 'factory_bot_rails'
   gem 'faker'
+  gem 'rails-controller-testing'
   gem 'selenium-webdriver'
   gem 'shoulda-matchers'
-  gem 'rails-controller-testing'
 
   # generates code coverage reports
   gem 'simplecov'

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { addField } from "~/js/features/TransformationApp/FieldsSlice";
-import { find, filter, map, includes, each } from "lodash";
+import { find, filter, map, includes, each, orderBy } from "lodash";
 
 import { selectAppDetails } from "~/js/features/TransformationApp/AppDetailsSlice";
 import { selectAllSchemas } from "~/js/features/TransformationApp/SchemasSlice";
@@ -77,12 +77,14 @@ const LoadSchema = () => {
           return fieldValue.schema_field_id == schemaFieldId
         });
 
+        const sortedSchemaFieldValues = orderBy(schemaFieldValues, [schemaFieldValue => schemaFieldValue.value.toLowerCase()], ['asc'])
+
         if (schemaFieldValues) {
           dispatch(
             addFieldSchemaFieldValue(
               {
                 fieldId: payload.id,
-                schemaFieldValueId: schemaFieldValues[0].id
+                schemaFieldValueId: sortedSchemaFieldValues[0].id
               }
             )
           )

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SchemaFieldValuesController < ApplicationController
   include LastEditedBy
 
@@ -9,7 +11,7 @@ class SchemaFieldValuesController < ApplicationController
     @schema_field_value = SchemaFieldValue.new(schema_field_value_params)
 
     if @schema_field_value.save
-      update_last_edited_by([@schema_field_value.schema_field.schema])      
+      update_last_edited_by([@schema_field_value.schema_field.schema])
       render json: @schema_field_value
     else
       render500
@@ -18,7 +20,7 @@ class SchemaFieldValuesController < ApplicationController
 
   def update
     if @schema_field_value.update(schema_field_value_params)
-      update_last_edited_by([@schema_field_value.schema_field.schema])   
+      update_last_edited_by([@schema_field_value.schema_field.schema])
       render json: @schema_field_value
     else
       render500
@@ -27,7 +29,7 @@ class SchemaFieldValuesController < ApplicationController
 
   def destroy
     if @schema_field_value.destroy
-      update_last_edited_by([@schema_field_value.schema_field.schema])      
+      update_last_edited_by([@schema_field_value.schema_field.schema])
       render json: {}, status: :ok
     else
       render500

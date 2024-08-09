@@ -2,6 +2,6 @@
 
 FactoryBot.define do
   factory :schema_field do
-    name        { 'title' }
+    name { 'title' }
   end
 end

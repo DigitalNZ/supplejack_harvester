@@ -5,12 +5,7 @@ module TransformationReduxState
 
   def transformation_app_state
     {
-      entities: {
-        fields: fields_slice, rawRecord: raw_record_slice,
-        appDetails: app_details_slice, sharedDefinitions: shared_definitions_slice, 
-        schemas: schema_slice, schemaFields: schema_fields_slice, schemaFieldValues: schema_field_values_slice,
-        fieldSchemaFieldValues: field_schema_field_values_slice
-      },
+      entities: entities_slice,
       ui: {
         fields: ui_fields_slice, appDetails: ui_app_details_slice
       },
@@ -19,6 +14,14 @@ module TransformationReduxState
   end
 
   private
+
+  def entities_slice
+    {
+      fields: fields_slice, rawRecord: raw_record_slice, appDetails: app_details_slice,
+      sharedDefinitions: shared_definitions_slice, schemas: schema_slice, schemaFields: schema_fields_slice,
+      schemaFieldValues: schema_field_values_slice, fieldSchemaFieldValues: field_schema_field_values_slice
+    }
+  end
 
   def schema_slice
     {

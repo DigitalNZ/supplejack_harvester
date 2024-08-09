@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SchemaField < ApplicationRecord
   belongs_to :schema
   has_many :schema_field_values, dependent: :destroy
@@ -6,7 +8,7 @@ class SchemaField < ApplicationRecord
   enum :kind, { dynamic: 0, fixed: 1 }
 
   def referenced_pipelines
-    fields.map(&:transformation_definition).map(&:pipeline).uniq
+    fields.map { |x| x.transformation_definition.pipeline }.uniq
   end
 
   def to_h

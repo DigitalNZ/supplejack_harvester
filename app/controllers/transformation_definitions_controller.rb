@@ -7,6 +7,7 @@ class TransformationDefinitionsController < ApplicationController
   before_action :find_harvest_definition
   before_action :find_transformation_definition, only: %i[show update destroy clone]
   before_action :find_extraction_jobs, only: %i[create update]
+  before_action :assign_schema_variables, only: %i[show]
   before_action :assign_show_variables, only: %i[show update]
 
   def show; end
@@ -76,10 +77,6 @@ class TransformationDefinitionsController < ApplicationController
 
   def assign_show_variables
     @fields = @transformation_definition.fields.order(created_at: :desc).map(&:to_h)
-    @schemas = Schema.all.order(created_at: :desc).map(&:to_h)
-    @schema_fields = SchemaField.all.map(&:to_h)
-    @schema_field_values = SchemaFieldValue.all.map(&:to_h)
-
     @field_schema_field_values = @transformation_definition.fields.flat_map(&:field_schema_field_values).map(&:to_h)
 
     @props = transformation_app_state
@@ -89,6 +86,12 @@ class TransformationDefinitionsController < ApplicationController
                        else
                          []
                        end
+  end
+
+  def assign_schema_variables
+    @schemas = Schema.order(created_at: :desc).map(&:to_h)
+    @schema_fields = SchemaField.all.map(&:to_h)
+    @schema_field_values = SchemaFieldValue.all.map(&:to_h)
   end
 
   def find_pipeline
@@ -117,12 +120,8 @@ class TransformationDefinitionsController < ApplicationController
 
   def transformation_definition_params
     safe_params = params.require(:transformation_definition).permit(
-      :pipeline_id,
-      :content_source_id,
-      :name,
-      :extraction_job_id,
-      :record_selector,
-      :kind
+      :pipeline_id, :content_source_id, :name, :extraction_job_id,
+      :record_selector, :kind
     )
     merge_last_edited_by(safe_params)
   end

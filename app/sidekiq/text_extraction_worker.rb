@@ -44,13 +44,12 @@ class TextExtractionWorker < FileExtractionWorker
     `ocrmypdf \
       "#{@tmp_directory.shellescape}/#{file.shellescape}" \
       --sidecar "#{@tmp_directory.shellescape}/#{base_file_name.shellescape}.txt" - \
-      --redo-ocr \
-      --output-type=none -q`
+      --redo-ocr --output-type=none -q`
 
     if File.exist?("#{@tmp_directory}/#{base_file_name}.txt")
       File.read("#{@tmp_directory}/#{base_file_name}.txt")
     else
-      "OCR failed"
+      'OCR failed'
     end
   end
 

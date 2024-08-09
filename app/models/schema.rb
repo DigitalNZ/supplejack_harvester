@@ -12,7 +12,7 @@ class Schema < ApplicationRecord
       name:,
       schema_field_ids: schema_fields.map(&:id),
       created_at:,
-      updated_at: 
+      updated_at:
     }
   end
 end
