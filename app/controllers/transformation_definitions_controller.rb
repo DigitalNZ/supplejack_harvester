@@ -7,7 +7,7 @@ class TransformationDefinitionsController < ApplicationController
   before_action :find_harvest_definition
   before_action :find_transformation_definition, only: %i[show update destroy clone]
   before_action :find_extraction_jobs, only: %i[create update]
-  before_action :assign_schema_variables, only: %i[show]
+  before_action :assign_schema_variables, only: %i[show update]
   before_action :assign_show_variables, only: %i[show update]
 
   def show; end
