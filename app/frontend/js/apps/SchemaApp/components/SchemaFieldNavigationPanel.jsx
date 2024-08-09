@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectAllSchemaFields } from "~/js/features/SchemaApp/SchemaFieldsSlice";
 import SchemaFieldNavigationListItem from "./SchemaFieldNavigationListItem";
-import AddSchemaField from "~/js/apps/SchemaApp/components/AddSchemaField";
+import AddSchemaField from "./AddSchemaField";
 import Tooltip from "~/js/components/Tooltip";
 
 import { toggleDisplaySchemaFields } from '~/js/features/SchemaApp/UiSchemaFieldsSlice';

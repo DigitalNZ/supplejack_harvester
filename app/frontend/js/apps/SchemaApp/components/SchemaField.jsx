@@ -20,7 +20,7 @@ import { addSchemaFieldValue } from '~/js/features/SchemaApp/SchemaFieldValuesSl
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 
-import SchemaFieldValue from "~/js/apps/SchemaApp/components/SchemaFieldValue";
+import SchemaFieldValue from "./SchemaFieldValue";
 
 const SchemaField = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
