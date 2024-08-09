@@ -155,3 +155,14 @@ en:
     destroy:
       success: User removed successfully
       failure: There was an issue deleting the user
+
+  schemas:
+    create:
+      success: Schema created successfully
+      failure: There was an issue creating your Schema
+    update:
+      success: Schema updated successfully
+      failure: There was an issue updating your Schema
+    destroy:
+      success: Schema deleted successfully
+      failure: There was an issue deleting your Schema

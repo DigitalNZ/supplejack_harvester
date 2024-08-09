@@ -1,5 +1,6 @@
 <% id ||= 'create-modal' %>
 <% modal_heading ||= 'Create transformation definition' %>
+<% kind ||= 'harvest' %>
 <% modal_subheading ||= '' %>
 <% model ||= TransformationDefinition.new %>
 <% confirmation_button_text ||= 'Create harvest transformation' %>
@@ -29,7 +30,7 @@
                                id: "js-transformation-definition-form-#{harvest_definition.id}" do |form| %>
 
           <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
-          <%= form.hidden_field :kind, value: 'harvest' %>
+          <%= form.hidden_field :kind, value: kind %>
 
           <div class="row gy-3 align-items-center">
             <% if model.persisted? %>

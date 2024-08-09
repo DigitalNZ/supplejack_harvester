@@ -96,6 +96,29 @@ RSpec.describe TextExtractionWorker, type: :job do
           expect(process).to eq 'Extracted from PDF using OCRmyPDF'
         end
       end
+
+      context 'when the PDF is invalid' do
+        before do
+          FileUtils.cp("#{Rails.root}/spec/support/invalid_pdf.pdf", "#{extraction_job.extraction_folder}/example__1234__01.json")
+        end
+
+        it 'fails gracefully when dealing with an invalid PDF' do
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
+
+          TextExtractionWorker.new.perform(extraction_job.id)
+
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+    
+          expect(extracted_files.count).to eq 1
+
+          document = JSON.parse(File.read(extracted_files.first))
+          text = JSON.parse(document['body'])['text'] 
+
+          expect(text).to include('OCR failed')
+        end
+      end
     end
 
     context 'when the PDF extraction is part of a harvest' do

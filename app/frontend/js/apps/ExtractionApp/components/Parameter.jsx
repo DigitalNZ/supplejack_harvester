@@ -286,7 +286,7 @@ const Parameter = ({ id }) => {
                               return (
                                 <option
                                   value={parameter.name}
-                                  ref={valueInputRef}
+                                  ref={contentInputRef}
                                 >
                                   {parameter.name}
                                 </option>

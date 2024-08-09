@@ -60,6 +60,14 @@ Rails.application.routes.draw do
     post :test, on: :collection
   end
 
+  resources :schemas do
+    resources :schema_fields, only: %i[create update destroy] do
+      resources :schema_field_values, only: %i[create update destroy]
+    end
+  end
+
+  resources :field_schema_field_values, only: %i[create update destroy]
+
   mount Sidekiq::Web => '/sidekiq'
 
   get '/status', to: proc { [200, { 'Cache-Control' => 'no-store, must-revalidate, private, max-age=0' }, ['ok']] }

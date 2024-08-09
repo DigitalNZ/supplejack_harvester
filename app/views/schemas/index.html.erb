@@ -1,0 +1,60 @@
+<%= content_for(:title) { 'Schemas' } %>
+
+<%= content_for :header do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <h1 class="header__title">Schemas</h1>
+
+  <div class="header__actions">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
+      <i class="bi bi-plus" aria-hidden="true"></i>Create new schema
+    </button>
+  </div>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<%- if @schemas.any? %>
+  <div class='row'>
+    <%- @schemas.each do |schema| %>
+      <div class='col-3'>
+        <%= link_to schema, class: 'card card--clickable mb-3' do %>
+          <div class='card-body'>
+            <h5 class='card-title'><%= schema.name %></h5>
+          </div>
+        <% end %>
+      </div>
+    <%- end %>
+  </div>
+
+  <%= render 'shared/pagination_below_table', items: @schemas %>
+<% else %>
+  <p>There are currently no schemas.</p>
+<% end %>
+
+<%= render layout: 'shared/create_modal',
+           locals: { modal_heading: 'Create new schema', button_text: 'Create schema' } do %>
+  <%= vertical_form_with model: @schema do |form| %>
+
+    <div class='row gy-3 align-items-center'>
+      <div class="col-4">
+        <%= form.label :name, 'Schema Name', class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.text_field :name, class: { 'form-control': true, 'is-invalid': @schema.errors[:name].any? } %>
+      </div>
+
+      <div class="col-4">
+        <%= form.label :description, 'Schema Description', class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.text_area :description,
+                           class: { 'form-control': true, 'is-invalid': @schema.errors[:description].any? } %>
+      </div>
+    </div>
+
+    <div class='d-grid mt-4'>
+      <button type="submit" class="btn btn-primary">Create schema</button>
+    </div>
+  <% end %>
+<% end %>

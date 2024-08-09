@@ -38,4 +38,13 @@ class Pipeline < ApplicationRecord
 
     harvest_definitions.any?(&:ready_to_run?)
   end
+
+  def to_h
+    {
+      id:,
+      name:,
+      created_at:,
+      updated_at:
+    }
+  end
 end

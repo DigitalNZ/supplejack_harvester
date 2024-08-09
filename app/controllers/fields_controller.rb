@@ -12,7 +12,7 @@ class FieldsController < ApplicationController
 
     if @field.save
       update_last_edited_by([@field.transformation_definition])
-      render json: @field
+      render json: @field.to_h
     else
       render500
     end
@@ -21,7 +21,7 @@ class FieldsController < ApplicationController
   def update
     if @field.update(field_params)
       update_last_edited_by([@field.transformation_definition])
-      render json: @field
+      render json: @field.to_h
     else
       render500
     end
@@ -65,6 +65,6 @@ class FieldsController < ApplicationController
   end
 
   def field_params
-    params.require(:field).permit(:name, :block, :transformation_definition_id, :kind)
+    params.require(:field).permit(:name, :block, :transformation_definition_id, :kind, :schema_field_id)
   end
 end

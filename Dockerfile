@@ -1,16 +1,18 @@
-FROM ruby:3.2.2-alpine3.19
+FROM ruby:3.2-alpine3.20
 
 WORKDIR /app
 
 ARG BUILD_PACKAGES="build-base curl-dev git"
 # AWS CLI is used to run the S3 extraction
-ARG DEV_PACKAGES="bash mysql-client mariadb-dev yaml-dev zlib-dev nodejs yarn libxml2 libxml2-dev libxslt libxslt-dev gmp-dev openjdk8-jre python3 py3-pip aws-cli tesseract-ocr tesseract-ocr-data-eng ocrmypdf"
+ARG DEV_PACKAGES="bash mysql-client mariadb-dev yaml-dev zlib-dev nodejs yarn libxml2 libxml2-dev libxslt libxslt-dev gmp-dev openjdk8-jre python3 py3-pip aws-cli"
 ARG RUBY_PACKAGES="tzdata"
 
 WORKDIR /app
 
 # Install packages
 RUN apk add --update --no-cache $BUILD_PACKAGES $DEV_PACKAGES $RUBY_PACKAGES
+
+RUN apk add tesseract-ocr tesseract-ocr-data-eng ocrmypdf --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 
 COPY Gemfile Gemfile.lock ./
 

@@ -1,11 +1,14 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectAllFields } from "~/js/features/TransformationApp/FieldsSlice";
+
 import { filter } from "lodash";
 import FieldNavigationListItem from "./FieldNavigationListItem";
 import AddField from "~/js/apps/TransformationApp/components/AddField";
 import { toggleDisplayFields } from "~/js/features/TransformationApp/UiFieldsSlice";
 import Tooltip from "~/js/components/Tooltip";
+
+import LoadSchema from "~/js/apps/TransformationApp/components/LoadSchema";
 
 const FieldNavigationPanel = () => {
   const dispatch = useDispatch();
@@ -15,6 +18,9 @@ const FieldNavigationPanel = () => {
   const conditions = filter(allFields, ["kind", "reject_if"]).concat(
     filter(allFields, ["kind", "delete_if"])
   );
+
+  const customFields = filter(fields, ["schema", false]);
+  const schemaFields = filter(fields, ["schema", true]);
 
   return (
     <div className="card field-nav-panel">
@@ -71,8 +77,24 @@ const FieldNavigationPanel = () => {
         </div>
 
         <div className="field-nav-panel__header field-nav-panel__header--fields">
+          <Tooltip data-bs-title="Schema Fields reference fields from a defined schema">
+            <h5>Schema Fields</h5>
+          </Tooltip>
+        </div>
+
+        <div className="field-nav-panel__content">
+          <LoadSchema />
+
+          <ul className="field-nav nav nav-pills flex-column overflow-auto flex-nowrap">
+            {schemaFields.map((field) => {
+              return <FieldNavigationListItem id={field.id} key={field.id} />;
+            })}
+          </ul>
+        </div>
+
+        <div className="field-nav-panel__header field-nav-panel__header--fields">
           <Tooltip data-bs-title="Fields define the resulting attributes of your transformed record">
-            <h5>Fields</h5>
+            <h5>Custom Fields</h5>
           </Tooltip>
 
           <div className="btn-group card__control">
@@ -110,7 +132,7 @@ const FieldNavigationPanel = () => {
           <AddField kind="field" />
 
           <ul className="field-nav nav nav-pills flex-column overflow-auto flex-nowrap">
-            {fields.map((field) => {
+            {customFields.map((field) => {
               return <FieldNavigationListItem id={field.id} key={field.id} />;
             })}
           </ul>

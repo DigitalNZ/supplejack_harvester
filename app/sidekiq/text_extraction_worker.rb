@@ -40,11 +40,17 @@ class TextExtractionWorker < FileExtractionWorker
 
   def ocr_pdf(file)
     base_file_name = File.basename(file, File.extname(file))
+
     `ocrmypdf \
       "#{@tmp_directory.shellescape}/#{file.shellescape}" \
       --sidecar "#{@tmp_directory.shellescape}/#{base_file_name.shellescape}.txt" - \
-      --output-type=none -q`
-    File.read("#{@tmp_directory}/#{base_file_name}.txt")
+      --redo-ocr --output-type=none -q`
+
+    if File.exist?("#{@tmp_directory}/#{base_file_name}.txt")
+      File.read("#{@tmp_directory}/#{base_file_name}.txt")
+    else
+      'OCR failed'
+    end
   end
 
   def saved_response

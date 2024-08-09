@@ -108,5 +108,27 @@
           display: action_name.in?(%w[new create])
         ) %>
 
+    <%= breadcrumb_item(
+          text: 'Schemas',
+          path: schemas_path,
+          active: current_page?(schemas_path),
+          display: request.path.include?(schemas_path)
+        ) %>
+
+    <%= breadcrumb_item(
+          text: @schema&.name_in_database,
+          path: begin
+            schema_path(schema_id)
+          rescue StandardError
+            nil
+          end,
+          active: begin
+            current_page?(schema_path(schema_id))
+          rescue StandardError
+            false
+          end,
+          display: request.path.match?(%r{^/schemas/\d+})
+        ) %>
+
   </ol>
 </nav>
