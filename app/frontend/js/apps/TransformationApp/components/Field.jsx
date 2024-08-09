@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import classNames from "classnames";
-import { isEmpty, filter, includes, map } from "lodash";
+import { isEmpty, filter, includes, map, orderBy } from "lodash";
 
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -49,6 +49,8 @@ const Field = ({ id }) => {
     return includes(schemaFieldValueIds, fieldValue.id)
   });
 
+  const sortedSchemaFieldValues = orderBy(schemaFieldValues, [schemaFieldValue => schemaFieldValue.value.toLowerCase()], ['asc'])
+
   const rawRecord = useSelector(selectRawRecord);
 
   const { saved, deleting, saving, running, error, hasRun, displayed, active } =
@@ -83,7 +85,7 @@ const Field = ({ id }) => {
       addFieldSchemaFieldValue(
         {
           fieldId: id,
-          schemaFieldValueId: schemaFieldValues[0].id
+          schemaFieldValueId: sortedSchemaFieldValues[0].id
         }
       )
     )
@@ -333,7 +335,7 @@ const Field = ({ id }) => {
 
               {schema_field_kind == 'fixed' && (
                 map(field_schema_field_value_ids, (schemaFieldValueId) => {
-                  return <FieldSchemaFieldValue id={schemaFieldValueId} schemaFieldValues={schemaFieldValues} key={schemaFieldValueId} fieldId={id} />
+                  return <FieldSchemaFieldValue id={schemaFieldValueId} schemaFieldValues={sortedSchemaFieldValues} key={schemaFieldValueId} fieldId={id} />
                 })
               )}
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { map } from 'lodash';
+import { map, orderBy, filter, includes } from 'lodash';
 
 import { useSelector, useDispatch } from 'react-redux';
 import classNames from "classnames";
@@ -15,7 +15,7 @@ import {
 } from "~/js/features/SchemaApp/UiSchemaFieldsSlice";
 
 
-import { addSchemaFieldValue } from '~/js/features/SchemaApp/SchemaFieldValuesSlice';
+import { addSchemaFieldValue, selectAllSchemaFieldValues } from '~/js/features/SchemaApp/SchemaFieldValuesSlice';
 
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -29,6 +29,12 @@ const SchemaField = ({ id }) => {
     selectSchemaFieldById(state, id)
   );
 
+  const allSchemaFieldValues = useSelector(selectAllSchemaFieldValues);
+  const schemaFieldValues = filter(allSchemaFieldValues, (fieldValue) => {
+    return includes(schema_field_value_ids, fieldValue.id)
+  });
+
+  const sortedSchemaFieldValues = orderBy(schemaFieldValues, [schemaFieldValue => schemaFieldValue.value.toLowerCase()], ['asc'])
   const dispatch = useDispatch();
 
   const [nameValue, setNameValue] = useState(name);
@@ -233,8 +239,8 @@ const SchemaField = ({ id }) => {
 
               {schema_field_value_ids.length > 0 && (
                 <div className='border-top'>
-                  {map(schema_field_value_ids, (fieldValueId) => (
-                    <SchemaFieldValue id={fieldValueId} key={fieldValueId} fieldId={id} />
+                  {map(sortedSchemaFieldValues, (schemaFieldValue) => (
+                    <SchemaFieldValue id={schemaFieldValue.id} key={schemaFieldValue.id} fieldId={id} />
                   ))}
                 </div>
               )}
