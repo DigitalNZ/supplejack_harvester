@@ -5,10 +5,7 @@ module TransformationReduxState
 
   def transformation_app_state
     {
-      entities: {
-        fields: fields_slice, rawRecord: raw_record_slice,
-        appDetails: app_details_slice, sharedDefinitions: shared_definitions_slice
-      },
+      entities: entities_slice,
       ui: {
         fields: ui_fields_slice, appDetails: ui_app_details_slice
       },
@@ -18,10 +15,46 @@ module TransformationReduxState
 
   private
 
+  def entities_slice
+    {
+      fields: fields_slice, rawRecord: raw_record_slice, appDetails: app_details_slice,
+      sharedDefinitions: shared_definitions_slice, schemas: schema_slice, schemaFields: schema_fields_slice,
+      schemaFieldValues: schema_field_values_slice, fieldSchemaFieldValues: field_schema_field_values_slice
+    }
+  end
+
+  def schema_slice
+    {
+      ids: @schemas.pluck(:id),
+      entities: @schemas.index_by { |schema| schema[:id] }
+    }
+  end
+
+  def schema_fields_slice
+    {
+      ids: @schema_fields.pluck(:id),
+      entities: @schema_fields.index_by { |field| field[:id] }
+    }
+  end
+
+  def schema_field_values_slice
+    {
+      ids: @schema_field_values.pluck(:id),
+      entities: @schema_field_values.index_by { |field| field[:id] }
+    }
+  end
+
   def fields_slice
     {
       ids: @fields.pluck(:id),
       entities: @fields.index_by { |field| field[:id] }
+    }
+  end
+
+  def field_schema_field_values_slice
+    {
+      ids: @field_schema_field_values.pluck(:id),
+      entities: @field_schema_field_values.index_by { |value| value[:id] }
     }
   end
 
