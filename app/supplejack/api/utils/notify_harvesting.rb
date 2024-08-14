@@ -17,12 +17,14 @@ module Api
       private
 
       def find_source
+        Rails.logger.info("NotifyHarvesting requesting source object \"#{@source_id}\"")
         @api_source.index(
           source: { source_id: @source_id }
         ).body.first
       end
 
       def update_harvesting(id)
+        Rails.logger.info("NotifyHarvesting update source #{id}")
         @api_source.put(
           id, source: { harvesting: @harvesting }
         )
