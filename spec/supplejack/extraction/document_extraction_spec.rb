@@ -115,6 +115,25 @@ RSpec.describe Extraction::DocumentExtraction do
         described_class.new(request, extraction_job.extraction_folder, previous_extraction).extract
       end
     end
+
+    context 'when the extraction requires JavaScript' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://www.javascriptexample.com') }
+      let(:request)               { create(:request, extraction_definition:) }
+
+      before do
+        stub_request(:get, 'https://www.javascriptexample.com').and_return(fake_response("javascript_example"))
+      end
+
+      it 'evaluates the JavaScript and saves the HTML as a document' do 
+        document = subject.extract
+        document_html = Nokogiri::HTML(document.body).xpath('/body').to_html
+        expect(document_html).to include('This heading is rendered with JavaScript')
+      end
+
+      it 'handles parameters in the URL' do
+
+      end
+    end
   end
 
   describe '#save' do

@@ -47,6 +47,7 @@ gem 'nokogiri'
 gem 'sidekiq'
 gem 'yomu'
 gem 'zlib'
+gem 'selenium-webdriver'
 
 # transformation related
 gem 'webmock'
@@ -92,7 +93,6 @@ group :test do
   gem 'factory_bot_rails'
   gem 'faker'
   gem 'rails-controller-testing'
-  gem 'selenium-webdriver'
   gem 'shoulda-matchers'
 
   # generates code coverage reports
