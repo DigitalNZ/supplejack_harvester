@@ -24,7 +24,9 @@ module Api
       end
 
       def update_harvesting(id)
-        Rails.logger.info("NotifyHarvesting update source #{id}")
+        Rails.logger.info("NotifyHarvesting update source with id \"#{id}\"")
+        return if id.empty?
+
         @api_source.put(
           id, source: { harvesting: @harvesting }
         )

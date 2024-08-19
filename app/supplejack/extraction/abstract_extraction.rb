@@ -9,7 +9,7 @@ module Extraction
         @document = Extraction::Request.new(url:, params:, headers:).send(http_method)
       end
     rescue StandardError => e
-      ::Sidekiq.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
+      ::Rails.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
     end
 
     def save

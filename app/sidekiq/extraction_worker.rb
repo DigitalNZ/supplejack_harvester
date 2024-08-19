@@ -5,7 +5,7 @@ class ExtractionWorker < ApplicationWorker
     @job = ExtractionJob.find(job['args'].first)
     @job.errored!
     @job.update(error_message: job['error_message'])
-    Sidekiq.logger.warn "Failed #{job['class']} with #{job['args']}: #{job['error_message']}"
+    Rails.logger.warn "Failed #{job['class']} with #{job['args']}: #{job['error_message']}"
   end
 
   def child_perform(extraction_job)

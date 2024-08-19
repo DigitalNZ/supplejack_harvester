@@ -23,7 +23,7 @@ class LoadWorker
   def log_retry_attempt
     proc do |exception, try, elapsed_time, next_interval|
       if defined?(Sidekiq)
-        ::Sidekiq.logger.info("
+        Rails.logger.info("
           #{exception.class}: '#{exception.message}':
           #{try} tries in #{elapsed_time} seconds and
           #{next_interval} seconds until the next try.")
@@ -41,7 +41,7 @@ class LoadWorker
       @harvest_report.update(load_updated_time: Time.zone.now)
     end
   rescue StandardError => e
-    ::Sidekiq.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
+    Rails.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
   end
 
   def job_start
