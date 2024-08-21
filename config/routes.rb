@@ -66,6 +66,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :jobs, only: %i[index]
+
   resources :field_schema_field_values, only: %i[create update destroy]
 
   mount Sidekiq::Web => '/sidekiq'
