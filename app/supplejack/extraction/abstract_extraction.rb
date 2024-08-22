@@ -6,7 +6,7 @@ module Extraction
 
     def extract
       ::Retriable.retriable do
-        Extraction::Request.new(url:, params:, headers:).send(http_method)
+        @document = Extraction::Request.new(url:, params:, headers:).send(http_method)
       end
     rescue StandardError => e
       ::Sidekiq.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
