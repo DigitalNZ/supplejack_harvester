@@ -117,7 +117,7 @@ RSpec.describe Extraction::DocumentExtraction do
     end
 
     context 'when the extraction requires JavaScript' do
-      let(:extraction_definition) { create(:extraction_definition, base_url: 'file:///Users/richardmatthews/webspace/pco/harvester/spec/stub_responses/javascript_example.html', evaluate_javascript: true) }
+      let(:extraction_definition) { create(:extraction_definition, base_url: "file://#{Rails.root.join('spec/stub_responses/javascript_example.html')}", evaluate_javascript: true) }
       let(:request)               { create(:request, extraction_definition:) }
 
       context 'when the extraction is successful' do
@@ -140,7 +140,7 @@ RSpec.describe Extraction::DocumentExtraction do
           it 'evaluates dynamic parameters that are part of the request' do
             document = subject.extract
     
-            expect(document.url).to eq "file:///Users/richardmatthews/webspace/pco/harvester/spec/stub_responses/javascript_example.html?test=one&testing=two"
+            expect(document.url).to eq "file://#{Rails.root.join('spec/stub_responses/javascript_example.html')}?test=one&testing=two"
           end
         end
       end

@@ -44,10 +44,10 @@ gem 'faraday-follow_redirects'
 gem 'jsonpath'
 gem 'minitar'
 gem 'nokogiri'
+gem 'selenium-webdriver'
 gem 'sidekiq'
 gem 'yomu'
 gem 'zlib'
-gem 'selenium-webdriver'
 
 # transformation related
 gem 'webmock'

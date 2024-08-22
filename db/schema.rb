@@ -42,7 +42,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_08_21_041648) do
     t.boolean "extract_text_from_file", default: false, null: false
     t.string "fragment_source_id"
     t.string "fragment_key"
-    t.boolean "evaluate_javascript", default: false
+    t.boolean "evaluate_javascript", default: false, null: false
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_extraction_definitions_on_name", unique: true
