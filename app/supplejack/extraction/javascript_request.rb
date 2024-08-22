@@ -35,9 +35,12 @@ module Extraction
     def document(status)
       Document.new(
         url: full_url,
-        status: status,
         method: 'GET',
-        body: @driver.page_source || ""
+        params: @params&.to_query || {},
+        request_headers: [],
+        status: status,
+        body: @driver.page_source || "",
+        response_headers: []
       )
     end
 

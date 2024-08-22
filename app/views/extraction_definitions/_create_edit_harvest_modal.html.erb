@@ -115,18 +115,18 @@
                   ), {}, class: 'form-select' %>
             </div>
 
-            <div class="col-4 js-html d-none">
+            <div class="col-4">
               <%= form.label :extract_text_from_file, class: 'form-label' do %>
                 Evaluate JavaScript
 
                 <span
                     data-bs-toggle="tooltip"
-                    data-bs-title="If this HTML document is rendered with JavaScript, you can download the file using a headless chrome process to evaluate it. Note when choosing to do this that POST requests and Header parameters are unsupported."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                    data-bs-title="If this document is rendered with JavaScript, you can download the file using a headless chrome process to evaluate it. Note when choosing to do this that POST requests and Header parameters are unsupported."><i class="bi bi-question-circle" aria-label="helper text"></i>
                 </span>
               <% end %>
             </div>
 
-            <div class="col-8 js-html d-none">
+            <div class="col-8">
               <%= form.select :evaluate_javascript, options_for_select(
                     [%w[No false], %w[Yes true]], model.evaluate_javascript
                   ), {}, class: 'form-select' %>

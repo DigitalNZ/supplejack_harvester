@@ -10,6 +10,18 @@ module Extraction
       @response = response
     end
 
+    def extract
+      ::Retriable.retriable do
+        @document = if @extraction_definition.evaluate_javascript?
+          Extraction::JavascriptRequest.new(url:, params:).get
+        else
+          Extraction::Request.new(url:, params:, headers:).send(http_method)
+        end
+      end
+    rescue StandardError => e
+      ::Sidekiq.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
+    end
+
     private
 
     def file_path
