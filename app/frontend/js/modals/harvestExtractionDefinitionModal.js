@@ -16,16 +16,38 @@ if (updateExtractionDefinitionModal || createExtractionDefinitionModal) {
     "js-extraction-definition-split-dropdown"
   );
 
+  toggleHTMLElements(extractionDefinitionFormat.value);
+
+  extractionDefinitionFormat.addEventListener("change", (event) => {
+    toggleHTMLElements(event.target.value);
+
+    if (splitDropdown != null) {
+      toggleSplitElements(event.target.value);
+    }
+  });
+
   if (splitDropdown != null) {
     toggleSplitElements(extractionDefinitionFormat.value);
-
-    extractionDefinitionFormat.addEventListener("change", (event) => {
-      toggleSplitElements(event.target.value);
-    });
 
     splitDropdown.addEventListener("change", () => {
       toggleSplitElements(extractionDefinitionFormat.value);
     });
+  }
+
+  // This hides and shows elements to do with the HTML extraction option
+
+  function toggleHTMLElements(format) {
+    const elements = document.getElementsByClassName("js-html");
+
+    if (format == 'HTML') {
+      each(elements, (element) => {
+        element.classList.remove("d-none");
+      });
+    } else {
+      each(elements, (element) => {
+        element.classList.add("d-none");
+      });
+    }
   }
 
   // This hides and shows elements to do with splitting a document on the ExtractionDefinition modal.

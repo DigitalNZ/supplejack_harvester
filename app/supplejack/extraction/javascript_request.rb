@@ -1,0 +1,53 @@
+# frozen_string_literal: true
+
+module Extraction
+  class JavascriptRequest
+    def initialize(url:, params:)
+      @url = url
+      @params = params
+      @driver = driver
+
+      @document
+    end
+
+    def get
+      begin
+        @driver.get(full_url)
+        @document = document(200)
+      rescue
+        @document = document(500)
+      end
+      
+      # Quit after assigning the document so that the browser process is stopped
+      @driver.quit
+
+      @document
+    end
+
+    private
+
+    def full_url
+      return @url unless @params.present?
+
+      "#{@url}?#{@params.to_query}"
+    end
+
+    def document(status)
+      Document.new(
+        url: full_url,
+        status: status,
+        method: 'GET',
+        body: @driver.page_source || ""
+      )
+    end
+
+    def driver
+      options = Selenium::WebDriver::Chrome::Options.new
+      options.add_argument('--ignore-certificate-errors')
+      options.add_argument('--disable-popup-blocking')
+      options.add_argument('--disable-translate')
+      options.add_argument('--headless')
+      Selenium::WebDriver.for(:chrome, options: options)
+    end
+  end
+end
