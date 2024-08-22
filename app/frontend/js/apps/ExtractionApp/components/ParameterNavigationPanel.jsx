@@ -140,7 +140,6 @@ const ParameterNavigationPanel = () => {
         </div>
 
         <div className="field-nav-panel__content">
-
           {!appDetails.extractionDefinition.evaluate_javascript && (
             <AddParameter buttonText="+ Add" kind="header" />
           )}
@@ -156,13 +155,10 @@ const ParameterNavigationPanel = () => {
           )}
 
           <ul className="field-nav nav nav-pills flex-column overflow-auto flex-nowrap">
-
-
             <ParameterNavigationList
               requestId={uiAppDetails.activeRequest}
               kind="header"
             />
-
           </ul>
         </div>
 

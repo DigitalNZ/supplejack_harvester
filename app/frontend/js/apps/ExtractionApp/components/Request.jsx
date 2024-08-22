@@ -14,7 +14,7 @@ import Tooltip from "~/js/components/Tooltip";
 
 import RequestFragment from "~/js/apps/ExtractionApp/components/RequestFragment";
 
-const Request = ({ }) => {
+const Request = ({}) => {
   const dispatch = useDispatch();
   const appDetails = useSelector(selectAppDetails);
   const requestIds = useSelector(selectRequestIds);
@@ -151,8 +151,7 @@ const Request = ({ }) => {
             <Tooltip data-bs-title="You cannot add change the HTTP method when your extraction needs to be evaluated with JavaScript">
               <div className="d-grid gap-2">
                 <button disabled="true" className="btn btn-outline-primary">
-                  <i className="bi bi-arrow-down-up" aria-hidden="true"></i>{" "}
-                  GET
+                  <i className="bi bi-arrow-down-up" aria-hidden="true"></i> GET
                 </button>
               </div>
             </Tooltip>
