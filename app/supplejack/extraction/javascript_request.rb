@@ -14,10 +14,9 @@ module Extraction
         @document = document(200)
       rescue StandardError
         @document = document(500)
+      ensure
+        @driver.quit
       end
-
-      # Quit after assigning the document so that the browser process is stopped
-      @driver.quit
 
       @document
     end
