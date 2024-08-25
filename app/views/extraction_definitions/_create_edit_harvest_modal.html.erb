@@ -115,7 +115,7 @@
                   ), {}, class: 'form-select' %>
             </div>
 
-            <div class="col-4">
+            <div class="col-4 js-evaluate-js d-none">
               <%= form.label :extract_text_from_file, class: 'form-label' do %>
                 Evaluate JavaScript
 
@@ -126,7 +126,7 @@
               <% end %>
             </div>
 
-            <div class="col-8">
+            <div class="col-8 js-evaluate-js d-none">
               <%= form.select :evaluate_javascript, options_for_select(
                     [%w[No false], %w[Yes true]], model.evaluate_javascript
                   ), {}, class: 'form-select' %>
