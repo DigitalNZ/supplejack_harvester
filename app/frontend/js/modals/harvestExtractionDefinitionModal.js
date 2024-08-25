@@ -25,7 +25,6 @@ if (updateExtractionDefinitionModal || createExtractionDefinitionModal) {
     toggleEvaluateJavascriptElements(extractionDefinitionFormat.value);
   }
 
-
   if (splitDropdown != null) {
     toggleSplitElements(extractionDefinitionFormat.value);
 
@@ -35,10 +34,10 @@ if (updateExtractionDefinitionModal || createExtractionDefinitionModal) {
   }
 
   function toggleEvaluateJavascriptElements(format) {
+    const evaluateJavascriptElements =
+      document.getElementsByClassName("js-evaluate-js");
 
-    const evaluateJavascriptElements = document.getElementsByClassName('js-evaluate-js');
-
-    if (format == 'HTML') {
+    if (format == "HTML") {
       each(evaluateJavascriptElements, (container) => {
         container.classList.remove("d-none");
       });
