@@ -39,6 +39,7 @@ import "/js/CollapseScroll";
 import "/js/modals/displayErroringModal";
 import "/js/modals/transformationDefinitionSettingsModal";
 import "/js/modals/harvestExtractionDefinitionModal";
+import "/js/modals/enrichmentExtractionDefinitionModal";
 import "/js/SubmittingSelect";
 import "/js/AutoComplete";
 import "/js/editor";

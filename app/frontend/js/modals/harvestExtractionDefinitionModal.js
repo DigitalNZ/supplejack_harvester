@@ -16,16 +16,36 @@ if (updateExtractionDefinitionModal || createExtractionDefinitionModal) {
     "js-extraction-definition-split-dropdown"
   );
 
-  if (splitDropdown != null) {
-    toggleSplitElements(extractionDefinitionFormat.value);
-
+  if (extractionDefinitionFormat != null) {
     extractionDefinitionFormat.addEventListener("change", (event) => {
       toggleSplitElements(event.target.value);
+      toggleEvaluateJavascriptElements(event.target.value);
     });
+
+    toggleEvaluateJavascriptElements(extractionDefinitionFormat.value);
+  }
+
+  if (splitDropdown != null) {
+    toggleSplitElements(extractionDefinitionFormat.value);
 
     splitDropdown.addEventListener("change", () => {
       toggleSplitElements(extractionDefinitionFormat.value);
     });
+  }
+
+  function toggleEvaluateJavascriptElements(format) {
+    const evaluateJavascriptElements =
+      document.getElementsByClassName("js-evaluate-js");
+
+    if (format == "HTML") {
+      each(evaluateJavascriptElements, (container) => {
+        container.classList.remove("d-none");
+      });
+    } else {
+      each(evaluateJavascriptElements, (element) => {
+        element.classList.add("d-none");
+      });
+    }
   }
 
   // This hides and shows elements to do with splitting a document on the ExtractionDefinition modal.

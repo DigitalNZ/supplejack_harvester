@@ -70,7 +70,8 @@
             </div>
             <div class="col-8">
               <% options = find_options_from_validations(ExtractionDefinition, :format) %>
-              <%= form.select :format, options, {}, class: 'form-select' %>
+              <%= form.select :format, options, {}, class: 'form-select js-enrichment-format-select',
+                                                    data: { 'enrichment-definition-id' => enrichment_definition.id } %>
             </div>
 
             <div class="col-4">
@@ -117,7 +118,7 @@
                               {}, class: 'form-select') %>
             </div>
 
-                        <div class="col-4">
+            <div class="col-4">
               <%= form.label :extract_text_from_file, class: 'form-label' do %>
                 Extract text from file
 
@@ -131,6 +132,23 @@
             <div class="col-8">
               <%= form.select :extract_text_from_file, options_for_select(
                     [%w[No false], %w[Yes true]], model.extract_text_from_file
+                  ), {}, class: 'form-select' %>
+            </div>
+
+            <div class="col-4 js-evaluate-js-<%= enrichment_definition.id %> d-none">
+              <%= form.label :extract_text_from_file, class: 'form-label' do %>
+                Evaluate JavaScript
+
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="If this document is rendered with JavaScript, you can download the file using a headless chrome process to evaluate it. Note when choosing to do this that POST requests and Header parameters are unsupported."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="col-8 js-evaluate-js-<%= enrichment_definition.id %> d-none">
+              <%= form.select :evaluate_javascript, options_for_select(
+                    [%w[No false], %w[Yes true]], model.evaluate_javascript
                   ), {}, class: 'form-select' %>
             </div>
           </div>

@@ -115,6 +115,45 @@ RSpec.describe Extraction::DocumentExtraction do
         described_class.new(request, extraction_job.extraction_folder, previous_extraction).extract
       end
     end
+
+    context 'when the extraction requires JavaScript' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: "file://#{Rails.root.join('spec/stub_responses/javascript_example.html')}", evaluate_javascript: true) }
+      let(:request)               { create(:request, extraction_definition:) }
+
+      context 'when the extraction is successful' do
+        it 'evaluates the JavaScript and saves the HTML as a document' do 
+          document = subject.extract
+  
+          document_html = Nokogiri::HTML(document.body).xpath('//body').to_html
+          expect(document_html).to include('This heading is rendered with JavaScript')
+        end
+
+        it 'returns a successful status code' do
+          document = subject.extract
+          expect(document.status).to eq 200
+        end
+  
+        context 'when the request has dynamic parameters' do
+          let!(:parameter_one) { create(:parameter, kind: 'query', name: 'test', content: '"one"', request:, content_type: 1) }
+          let!(:parameter_two) { create(:parameter, kind: 'query', name: 'testing', content: '"two"', request:, content_type: 1) }
+  
+          it 'evaluates dynamic parameters that are part of the request' do
+            document = subject.extract
+    
+            expect(document.url).to eq "file://#{Rails.root.join('spec/stub_responses/javascript_example.html')}?test=one&testing=two"
+          end
+        end
+      end
+
+      context 'when the extraction is not successful' do
+        let(:extraction_definition) { create(:extraction_definition, base_url: 'http://test.url.abc', evaluate_javascript: true) }
+
+        it 'returns an unsuccessful status code' do
+          document = subject.extract
+          expect(document.status).to eq 500
+        end
+      end
+    end
   end
 
   describe '#save' do

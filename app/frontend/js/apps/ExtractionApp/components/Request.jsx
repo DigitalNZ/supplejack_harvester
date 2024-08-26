@@ -10,6 +10,7 @@ import {
 } from "~/js/features/ExtractionApp/RequestsSlice";
 import { selectAppDetails } from "~/js/features/ExtractionApp/AppDetailsSlice";
 import { selectUiAppDetails } from "~/js/features/ExtractionApp/UiAppDetailsSlice";
+import Tooltip from "~/js/components/Tooltip";
 
 import RequestFragment from "~/js/apps/ExtractionApp/components/RequestFragment";
 
@@ -110,39 +111,51 @@ const Request = ({}) => {
             </p>
           </div>
 
-          <div className="dropdown">
-            <button
-              className="btn btn-outline-primary dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i className="bi bi-arrow-down-up" aria-hidden="true"></i>{" "}
-              {http_method}
-            </button>
-            <ul className="dropdown-menu">
-              <li>
-                <a
-                  className="dropdown-item"
-                  onClick={() => {
-                    handleHttpMethodClick("GET");
-                  }}
-                >
-                  GET
-                </a>
-              </li>
-              <li>
-                <a
-                  className="dropdown-item"
-                  onClick={() => {
-                    handleHttpMethodClick("POST");
-                  }}
-                >
-                  POST
-                </a>
-              </li>
-            </ul>
-          </div>
+          {!appDetails.extractionDefinition.evaluate_javascript && (
+            <div className="dropdown">
+              <button
+                className="btn btn-outline-primary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i className="bi bi-arrow-down-up" aria-hidden="true"></i>{" "}
+                {http_method}
+              </button>
+              <ul className="dropdown-menu">
+                <li>
+                  <a
+                    className="dropdown-item"
+                    onClick={() => {
+                      handleHttpMethodClick("GET");
+                    }}
+                  >
+                    GET
+                  </a>
+                </li>
+                <li>
+                  <a
+                    className="dropdown-item"
+                    onClick={() => {
+                      handleHttpMethodClick("POST");
+                    }}
+                  >
+                    POST
+                  </a>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {appDetails.extractionDefinition.evaluate_javascript && (
+            <Tooltip data-bs-title="You cannot add change the HTTP method when your extraction needs to be evaluated with JavaScript">
+              <div className="d-grid gap-2">
+                <button disabled="true" className="btn btn-outline-primary">
+                  <i className="bi bi-arrow-down-up" aria-hidden="true"></i> GET
+                </button>
+              </div>
+            </Tooltip>
+          )}
         </div>
 
         <strong className="float-start me-2">URL</strong>

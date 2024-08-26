@@ -44,6 +44,7 @@ gem 'faraday-follow_redirects'
 gem 'jsonpath'
 gem 'minitar'
 gem 'nokogiri'
+gem 'selenium-webdriver'
 gem 'sidekiq'
 gem 'yomu'
 gem 'zlib'
@@ -61,6 +62,7 @@ gem 'retriable'
 gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 
 # For detecting filetype when extracting text from a file
+gem 'aws-sdk-s3'
 gem 'marcel'
 
 group :development, :test do
@@ -92,7 +94,6 @@ group :test do
   gem 'factory_bot_rails'
   gem 'faker'
   gem 'rails-controller-testing'
-  gem 'selenium-webdriver'
   gem 'shoulda-matchers'
 
   # generates code coverage reports

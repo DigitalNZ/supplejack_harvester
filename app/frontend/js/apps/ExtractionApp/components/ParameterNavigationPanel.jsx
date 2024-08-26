@@ -12,8 +12,11 @@ import Tooltip from "~/js/components/Tooltip";
 import AddParameter from "./AddParameter";
 import ParameterNavigationList from "./ParameterNavigationList";
 
+import { selectAppDetails } from "~/js/features/TransformationApp/AppDetailsSlice";
+
 const ParameterNavigationPanel = () => {
   const dispatch = useDispatch();
+  const appDetails = useSelector(selectAppDetails);
   const uiAppDetails = useSelector(selectUiAppDetails);
 
   let allParameters = useSelector(selectAllParameters);
@@ -137,7 +140,19 @@ const ParameterNavigationPanel = () => {
         </div>
 
         <div className="field-nav-panel__content">
-          <AddParameter buttonText="+ Add" kind="header" />
+          {!appDetails.extractionDefinition.evaluate_javascript && (
+            <AddParameter buttonText="+ Add" kind="header" />
+          )}
+
+          {appDetails.extractionDefinition.evaluate_javascript && (
+            <Tooltip data-bs-title="You cannot add a header parameter when your extraction needs to be evaluated with JavaScript">
+              <div className="d-grid gap-2">
+                <button disabled="true" className="btn btn-outline-primary">
+                  + Add
+                </button>
+              </div>
+            </Tooltip>
+          )}
 
           <ul className="field-nav nav nav-pills flex-column overflow-auto flex-nowrap">
             <ParameterNavigationList

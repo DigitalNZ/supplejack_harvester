@@ -115,6 +115,23 @@
                   ), {}, class: 'form-select' %>
             </div>
 
+            <div class="col-4 js-evaluate-js d-none">
+              <%= form.label :extract_text_from_file, class: 'form-label' do %>
+                Evaluate JavaScript
+
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="If this document is rendered with JavaScript, you can download the file using a headless chrome process to evaluate it. Note when choosing to do this that POST requests and Header parameters are unsupported."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="col-8 js-evaluate-js d-none">
+              <%= form.select :evaluate_javascript, options_for_select(
+                    [%w[No false], %w[Yes true]], model.evaluate_javascript
+                  ), {}, class: 'form-select' %>
+            </div>
+
             <div class="col-4 js-split d-none js-extraction-definition-split-dropdown-container">
               <%= form.label :split, class: 'form-label' do %>
                 Split
