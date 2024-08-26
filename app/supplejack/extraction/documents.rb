@@ -18,10 +18,9 @@ module Extraction
 
     def [](key)
       @current_page = key&.to_i || 1
-      return nil unless in_bounds?(@current_page)
+      return nil unless documents_filepath.present?
 
-      page = @current_page % DOCUMENTS_PER_FOLDER
-      @documents[@current_page] = Document.load_from_file(documents_filepath[page - 1])
+      @documents[@current_page] = Document.load_from_file(documents_filepath)
     end
 
     def total_pages
@@ -34,17 +33,8 @@ module Extraction
 
     private
 
-    def in_bounds?(current_page)
-      current_page.in?(1..total_pages)
-    end
-
-    # The enrichments rely on the files being ordered by page number
-    # so that the index [2005] gives back page 2005 etc.
-    # If the pages and indexes do not match up, records will be enriched with data that is not meant for them
     def documents_filepath
-      @documents_filepath = Dir.glob("#{@folder}/#{folder_number}/*.json").sort_by do |page|
-        page.match(/__(?<record_id>.+)__(?<page>.+).json/)[:page].to_i
-      end
+      @documents_filepath = Dir.glob("#{@folder}/#{folder_number}/*__#{format('%09d', @current_page)[-9..]}.json").first
     end
 
     def folder_number
