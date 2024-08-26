@@ -37,12 +37,12 @@ RSpec.describe Extraction::Documents do
     end
 
     it 'converts key to integer for the current_page' do
-      subject['10']
-      expect(subject.current_page).to eq 10
+      subject['130']
+      expect(subject.current_page).to eq 130
     end
 
     it 'returns nil when index is out of bounds' do
-      expect(subject[10]).to be_nil
+      expect(subject[200]).to be_nil
       expect(subject[0]).to be_nil
       expect(subject[-1]).to be_nil
     end
@@ -50,17 +50,17 @@ RSpec.describe Extraction::Documents do
     it 'returns pages based on their page number, rather than their order in the file system' do
       documents = Extraction::Documents.new(Rails.root.join("spec/support/enrichment_documents"))
 
-      expect(documents[1].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111115__000000001.json')
-      expect(documents[2].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111113__000000002.json') 
-      expect(documents[3].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111114__000000003.json')
-      expect(documents[4].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111112__000000004.json')
-      expect(documents[5].file_path).to include('test_enrichment-extraction-118__thisisatestid111111111111111111__000000005.json')
+      expect(documents[1].file_path).to include('1/test_enrichment-extraction-118__thisisatestid1111111111111111116__000000001.json')
+      expect(documents[2].file_path).to include('1/test_enrichment-extraction-118__thisisatestid1111111111111111117__000000002.json') 
+      expect(documents[140].file_path).to include('2/test_enrichment-extraction-118__thisisatestid1111111111111111155__000000140.json')
     end
   end
 
   describe '#total_pages' do
+    subject { Extraction::Documents.new(Rails.root.join("spec/support/enrichment_documents")) }
+
     it 'returns the number of documents into the folder' do
-      expect(subject.total_pages).to eq Dir.glob("#{extraction_job.extraction_folder}/*").length
+      expect(subject.total_pages).to eq (subject.total_folders.size - 1) * 100 + Dir.glob("#{subject.instance_variable_get(:@folder)}/#{subject.total_folders.size}/*").size
     end
   end
 end

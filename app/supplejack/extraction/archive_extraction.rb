@@ -76,6 +76,7 @@ module Extraction
     def file_path
       page_str = format('%09d', extraction_definition.page)[-9..]
       name_str = extraction_definition.name.parameterize(separator: '_')
+      folder_number = ((extraction_definition.page || 1) / Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
       "#{@extraction_folder}/#{name_str}__-__#{page_str}.json"
     end
 

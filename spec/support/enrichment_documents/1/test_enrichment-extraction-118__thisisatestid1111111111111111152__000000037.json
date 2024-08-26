@@ -1,0 +1,12 @@
+{
+  "url": "",
+  "method": "",
+  "params": {},
+  "request_headers": {
+    "User-Agent": "Supplejack Harvester v2.0",
+    "Content-Type": "application/json"
+  },
+  "status": 200,
+  "response_headers": {},
+  "body": ""
+}
