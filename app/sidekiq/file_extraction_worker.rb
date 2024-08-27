@@ -71,10 +71,8 @@ class FileExtractionWorker
   end
 
   def move_extracted_documents_into_tmp_directory
-    Dir.children(@extraction_folder).each do |file|
-      next if file == 'tmp'
-
-      FileUtils.move("#{@extraction_folder}/#{file}", "#{@tmp_directory}/#{file}")
+    Dir.glob("#{@extraction_folder}/**/*.*").each do |file|
+      FileUtils.move(file, "#{@tmp_directory}/#{File.basename(file)}")
     end
   end
 

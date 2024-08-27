@@ -14,12 +14,14 @@ class TextExtractionWorker < FileExtractionWorker
   end
 
   def create_document(extracted_text, filename, process)
+    folder_number = (@page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
+
     Extraction::Document.new(
       url: saved_response['url'], method: saved_response['method'],
       params: saved_response['params'], request_headers: saved_response['request_headers'],
       status: saved_response['status'], response_headers: saved_response['response_headers'],
       body: { text: extracted_text, process: }.to_json
-    ).save("#{@extraction_folder}/#{filename}")
+    ).save("#{@extraction_folder}/#{folder_number}/#{filename}")
   end
 
   private
