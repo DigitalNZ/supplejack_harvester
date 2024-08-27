@@ -63,6 +63,6 @@ class ExtractionJob < ApplicationRecord
   #
   # @return Integer
   def extraction_folder_size_in_bytes
-    Dir.glob("#{extraction_folder}/*").sum { |f| File.size(f) }
+    Dir.glob("#{extraction_folder}/**/*.*").sum { |f| File.size(f) }
   end
 end

@@ -18,7 +18,7 @@ module Extraction
 
     def [](key)
       @current_page = key&.to_i || 1
-      return nil unless documents_filepath.present?
+      return nil if documents_filepath.blank?
 
       @documents[@current_page] = Document.load_from_file(documents_filepath)
     end

@@ -8,21 +8,25 @@ RSpec.describe TextExtractionWorker, type: :job do
   let(:extraction_job) { create(:extraction_job, extraction_definition:) }
 
   describe "#perform" do
+    before do
+      Dir.mkdir("#{extraction_job.extraction_folder}/1")
+    end
+
     context 'when the PDF extraction is not part of a harvest' do
 
       context 'when the PDF has a text layer' do
         before do
-          FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/example__1234__01.json")
+          FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/1/example__1234__000000001.json")
         end
 
         it 'converts a PDF into raw text' do
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 
           TextExtractionWorker.new.perform(extraction_job.id)
 
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
         end
@@ -30,7 +34,7 @@ RSpec.describe TextExtractionWorker, type: :job do
         it 'signifies if content has been extracted from a PDF' do
           TextExtractionWorker.new.perform(extraction_job.id)
 
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 
@@ -51,7 +55,7 @@ RSpec.describe TextExtractionWorker, type: :job do
         it 'names the new files following as it was originally' do
           TextExtractionWorker.new.perform(extraction_job.id)
 
-          expect(File.exist?("#{extraction_job.extraction_folder}/1/example__1234__01.json")).to eq(true)
+          expect(File.exist?("#{extraction_job.extraction_folder}/1/example__1234__000000001.json")).to eq(true)
         end
 
         it 'does not enqueue Transformation Workers' do
@@ -63,7 +67,7 @@ RSpec.describe TextExtractionWorker, type: :job do
 
       context 'when the PDF does not have a text layer' do
         before do
-          FileUtils.cp("#{Rails.root}/spec/support/example_needing_ocr.pdf", "#{extraction_job.extraction_folder}/1/example__1234__01.json")
+          FileUtils.cp("#{Rails.root}/spec/support/example_needing_ocr.pdf", "#{extraction_job.extraction_folder}/1/example__1234__000000001.json")
         end
 
         it 'OCRs the PDF to add a text layer' do
@@ -99,7 +103,7 @@ RSpec.describe TextExtractionWorker, type: :job do
 
       context 'when the PDF is invalid' do
         before do
-          FileUtils.cp("#{Rails.root}/spec/support/invalid_pdf.pdf", "#{extraction_job.extraction_folder}/1/example__1234__01.json")
+          FileUtils.cp("#{Rails.root}/spec/support/invalid_pdf.pdf", "#{extraction_job.extraction_folder}/1/example__1234__000000001.json")
         end
 
         it 'fails gracefully when dealing with an invalid PDF' do
@@ -123,7 +127,7 @@ RSpec.describe TextExtractionWorker, type: :job do
 
     context 'when the PDF extraction is part of a harvest' do
       before do
-        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/1/example__1234__01.json")
+        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/1/example__1234__000000001.json")
       end
 
       let!(:harvest_report)    { create(:harvest_report, pipeline_job:, harvest_job:) }
@@ -152,7 +156,7 @@ RSpec.describe TextExtractionWorker, type: :job do
 
     context 'when the PDF extraction is part of an enrichment' do
       before do
-        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/1/example__1234__01.json")
+        FileUtils.cp("#{Rails.root}/spec/support/example.pdf", "#{extraction_job.extraction_folder}/1/example__1234__000000001.json")
       end
 
       let(:destination) { create(:destination) }

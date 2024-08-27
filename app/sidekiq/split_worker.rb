@@ -15,7 +15,6 @@ class SplitWorker < FileExtractionWorker
   def create_document(records, saved_response)
     page_str = format('%09d', @page)[-9..]
     name_str = @extraction_definition.name.parameterize(separator: '_')
-    folder_number = (@page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
 
     Extraction::Document.new(
       url: saved_response['url'], method: saved_response['method'],
@@ -23,5 +22,9 @@ class SplitWorker < FileExtractionWorker
       status: saved_response['status'], response_headers: saved_response['response_headers'],
       body: "<?xml version=\"1.0\"?><root><records>#{records.map(&:to_xml).join}</records></root>"
     ).save("#{@extraction_folder}/#{folder_number}/#{name_str}__-__#{page_str}.json")
+  end
+
+  def folder_number
+    (@page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
   end
 end
