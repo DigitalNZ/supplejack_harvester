@@ -45,6 +45,10 @@ module Extraction
       }
     end
 
+    def folder_number(page = 1)
+      (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
+    end
+
     def http_method
       return 'get' if @request.nil?
 

@@ -38,8 +38,7 @@ module Extraction
     def file_path
       name_str = @extraction_definition.name.parameterize(separator: '_')
       page_str = format('%09d', @page)[-9..]
-      folder_number = ((@page || 1) / Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
-      "#{@extraction_folder}/#{folder_number}/#{name_str}__#{@record['id']}__#{page_str}.json"
+      "#{@extraction_folder}/#{folder_number(@page)}/#{name_str}__#{@record['id']}__#{page_str}.json"
     end
 
     def fragment_url

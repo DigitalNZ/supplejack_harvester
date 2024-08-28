@@ -34,11 +34,13 @@ module Extraction
     private
 
     def documents_filepath
-      @documents_filepath = Dir.glob("#{@folder}/#{folder_number}/*__#{format('%09d', @current_page)[-9..]}.json").first
+      folder_number = folder_number(@current_page)
+      page_number = format('%09d', @current_page)[-9..]
+      @documents_filepath = Dir.glob("#{@folder}/#{folder_number}/*__#{page_number}.json").first
     end
 
-    def folder_number
-      ((@current_page || 1) / DOCUMENTS_PER_FOLDER.to_f).ceil
+    def folder_number(page = 1)
+      (page / DOCUMENTS_PER_FOLDER.to_f).ceil
     end
   end
 end
