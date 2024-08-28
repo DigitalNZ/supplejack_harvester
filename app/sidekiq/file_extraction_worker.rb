@@ -83,4 +83,8 @@ class FileExtractionWorker
   def create_document
     raise 'create_document not defined in child class'
   end
+
+  def folder_number(page = 1)
+    (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
+  end
 end

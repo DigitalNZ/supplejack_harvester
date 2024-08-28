@@ -21,10 +21,6 @@ class SplitWorker < FileExtractionWorker
       params: saved_response['params'], request_headers: saved_response['request_headers'],
       status: saved_response['status'], response_headers: saved_response['response_headers'],
       body: "<?xml version=\"1.0\"?><root><records>#{records.map(&:to_xml).join}</records></root>"
-    ).save("#{@extraction_folder}/#{folder_number}/#{name_str}__-__#{page_str}.json")
-  end
-
-  def folder_number
-    (@page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
+    ).save("#{@extraction_folder}/#{folder_number(@page)}/#{name_str}__-__#{page_str}.json")
   end
 end

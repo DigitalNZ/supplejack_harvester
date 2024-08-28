@@ -19,14 +19,10 @@ class TextExtractionWorker < FileExtractionWorker
       params: saved_response['params'], request_headers: saved_response['request_headers'],
       status: saved_response['status'], response_headers: saved_response['response_headers'],
       body: { text: extracted_text, process: }.to_json
-    ).save("#{@extraction_folder}/#{folder_number}/#{filename}")
+    ).save("#{@extraction_folder}/#{folder_number(@page)}/#{filename}")
   end
 
   private
-
-  def folder_number
-    (@page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
-  end
 
   def extract_text(loaded_file, file)
     mimetype = Marcel::MimeType.for(loaded_file)
