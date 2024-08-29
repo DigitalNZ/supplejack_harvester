@@ -27,7 +27,16 @@ To get up and running:
 bundle install
 yarn
 cp config/application.yml.example config/application.yml
+
 # Update the values config/application.yml
+# ActiveRecord encryption keys can be generated with:
+bin/rails db:encryption:init
+
+# Secret key base can be generated with:
+bin/rails secret
+
+# OTP encryption keys can be generated with:
+openssl rand -base64 10 | base64
 
 # Create the database and run the migrations
 bin/rails db:create
