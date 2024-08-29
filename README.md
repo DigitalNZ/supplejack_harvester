@@ -11,10 +11,9 @@ It uses the following technologies:
 - MySQL
 - Sidekiq
 
+## Setup
 
-# Setup
-
-This application was developed using Ruby 3.2.2 on Rails 7.
+This application was developed using Ruby 3.2.5 on Rails 7.1.
 
 To get up and running:
 
@@ -28,16 +27,18 @@ To get up and running:
 bundle install
 yarn
 cp config/application.yml.example config/application.yml
-# update the values config/application.yml
+# Update the values config/application.yml
+
+# Create the database and run the migrations
 bin/rails db:create
 bin/rails db:migrate
-bin/rails fixtures:load
 
 # To run the application you can do:
-foreman start -f Procfile.dev
+bin/dev
 
 # or to run the processes seperately:
 bundle exec rails s
+bundle exec sidekiq
 bin/vite dev
 ```
 
