@@ -48,7 +48,7 @@ class ExtractionJob < ApplicationRecord
   def delete_folder
     return unless Dir.exist?(extraction_folder)
 
-    FileUtils.rm Dir.glob("#{extraction_folder}/*")
+    FileUtils.rm_rf Dir.glob("#{extraction_folder}/*")
     Dir.rmdir(extraction_folder)
   end
 

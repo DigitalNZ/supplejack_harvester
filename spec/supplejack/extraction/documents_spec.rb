@@ -56,11 +56,38 @@ RSpec.describe Extraction::Documents do
     end
   end
 
+  describe '#total_folders' do
+    context 'when there are folders' do
+      before do
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/1")
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/2")
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/3")
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/4")
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/5")
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/tmp")
+      end
+
+      it 'returns the number of folders excluding the tmp' do
+        expect(subject.total_folders).to eq 5
+      end
+    end
+  end
+
   describe '#total_pages' do
     subject { Extraction::Documents.new(Rails.root.join("spec/support/enrichment_documents")) }
 
     it 'returns the number of documents into the folder' do
-      expect(subject.total_pages).to eq (subject.total_folders.size - 1) * 100 + Dir.glob("#{subject.instance_variable_get(:@folder)}/#{subject.total_folders.size}/*").size
+      expect(subject.total_pages).to eq (subject.total_folders - 1) * 100 + Dir.glob("#{subject.instance_variable_get(:@folder)}/#{subject.total_folders}/*").size
+    end
+
+    context 'when there are no folders' do
+      before do
+        allow(subject).to receive(:total_folders).and_return(0)
+      end
+
+      it 'returns 0' do
+        expect(subject.total_pages).to eq 0
+      end
     end
   end
 end

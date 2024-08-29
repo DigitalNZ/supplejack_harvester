@@ -11,7 +11,8 @@ RSpec.describe SplitWorker, type: :job do
   describe '#perform' do
     context 'when the request is not paginated' do
       before do
-        FileUtils.cp("#{Rails.root}/spec/support/split_example.json", "#{extraction_job.extraction_folder}/split_example.json")
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/1")
+        FileUtils.cp("#{Rails.root}/spec/support/split_example.json", "#{extraction_job.extraction_folder}/1/split_example.json")
       end
 
       it 'splits a large file into chunks of 100' do
@@ -66,7 +67,8 @@ RSpec.describe SplitWorker, type: :job do
 
     context 'when the split is not part of a harvest' do
       before do
-        FileUtils.cp("#{Rails.root}/spec/support/split_example.json", "#{extraction_job.extraction_folder}/split_example.json")
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/1")
+        FileUtils.cp("#{Rails.root}/spec/support/split_example.json", "#{extraction_job.extraction_folder}/1/split_example.json")
       end
 
       it 'does not enqueue Transformation Workers' do
@@ -78,7 +80,8 @@ RSpec.describe SplitWorker, type: :job do
 
     context 'when the split is part of a harvest' do
       before do
-        FileUtils.cp("#{Rails.root}/spec/support/split_example.json", "#{extraction_job.extraction_folder}/split_example.json")
+        FileUtils.mkdir_p("#{extraction_job.extraction_folder}/1")
+        FileUtils.cp("#{Rails.root}/spec/support/split_example.json", "#{extraction_job.extraction_folder}/1/split_example.json")
       end
 
       let!(:harvest_report)    { create(:harvest_report, pipeline_job:, harvest_job:) }

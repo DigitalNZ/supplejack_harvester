@@ -9,7 +9,7 @@ RSpec.describe TextExtractionWorker, type: :job do
 
   describe "#perform" do
     before do
-      Dir.mkdir("#{extraction_job.extraction_folder}/1")
+      FileUtils.mkdir_p("#{extraction_job.extraction_folder}/1")
     end
 
     context 'when the PDF extraction is not part of a harvest' do
@@ -20,13 +20,13 @@ RSpec.describe TextExtractionWorker, type: :job do
         end
 
         it 'converts a PDF into raw text' do
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").reject{ |f| f.ends_with?("/tmp") }.select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 
           TextExtractionWorker.new.perform(extraction_job.id)
 
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").reject{ |f| f.ends_with?("/tmp") }.select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
         end
@@ -34,7 +34,7 @@ RSpec.describe TextExtractionWorker, type: :job do
         it 'signifies if content has been extracted from a PDF' do
           TextExtractionWorker.new.perform(extraction_job.id)
 
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").reject{ |f| f.ends_with?("/tmp") }.select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 
@@ -71,13 +71,13 @@ RSpec.describe TextExtractionWorker, type: :job do
         end
 
         it 'OCRs the PDF to add a text layer' do
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").reject{ |f| f.ends_with?("/tmp") }.select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 
           TextExtractionWorker.new.perform(extraction_job.id)
 
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").reject{ |f| f.ends_with?("/tmp") }.select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 
@@ -90,7 +90,7 @@ RSpec.describe TextExtractionWorker, type: :job do
         it 'signifies if content has been extracted using OCR' do
           TextExtractionWorker.new.perform(extraction_job.id)
 
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").reject{ |f| f.ends_with?("/tmp") }.select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 
@@ -107,13 +107,13 @@ RSpec.describe TextExtractionWorker, type: :job do
         end
 
         it 'fails gracefully when dealing with an invalid PDF' do
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").reject{ |f| f.ends_with?("/tmp") }.select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 
           TextExtractionWorker.new.perform(extraction_job.id)
 
-          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
+          extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").reject{ |f| f.ends_with?("/tmp") }.select { |e| File.file? e }
 
           expect(extracted_files.count).to eq 1
 

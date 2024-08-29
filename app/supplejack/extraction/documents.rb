@@ -24,11 +24,13 @@ module Extraction
     end
 
     def total_pages
-      ((total_folders.size - 1) * DOCUMENTS_PER_FOLDER) + Dir.glob("#{@folder}/#{total_folders.size}/*").size
+      return 0 if total_folders.zero?
+
+      ((total_folders - 1) * DOCUMENTS_PER_FOLDER) + Dir.glob("#{@folder}/#{total_folders}/*").count
     end
 
     def total_folders
-      Dir.glob("#{@folder}/*")
+      Dir.children(@folder).count { |f| !f.ends_with?('tmp') }
     end
 
     private

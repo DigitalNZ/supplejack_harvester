@@ -2,12 +2,14 @@
 
 class SplitWorker < FileExtractionWorker
   def process_extracted_documents
-    Dir.children(@tmp_directory).each do |file|
-      saved_response = JSON.parse(File.read("#{@tmp_directory}/#{file}"))
+    Dir.children(@tmp_directory).each do |folder|
+      Dir.children("#{@tmp_directory}/#{folder}").each do |file|
+        saved_response = JSON.parse(File.read("#{@tmp_directory}/#{folder}/#{file}"))
 
-      Nokogiri::XML(saved_response['body']).xpath(@extraction_definition.split_selector).each_slice(100) do |records|
-        create_document(records, saved_response)
-        @page += 1
+        Nokogiri::XML(saved_response['body']).xpath(@extraction_definition.split_selector).each_slice(100) do |records|
+          create_document(records, saved_response)
+          @page += 1
+        end
       end
     end
   end
