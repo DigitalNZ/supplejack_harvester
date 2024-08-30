@@ -11,3 +11,25 @@
 #   puts "Processing #{file.split('/').last}"
 #   require file
 # end
+
+# Seed users
+users = [{
+  email: 'harvester@localhost',
+  username: 'harvester',
+  role: :harvester
+}, {
+  email: 'admin@localhost',
+  username: 'admin',
+  role: :admin
+}]
+
+users.each do |user|
+  User.find_or_create_by!(email: user[:email]) do |u|
+    u.username = user[:username]
+    u.password = 'password'
+    u.password_confirmation = 'password'
+    u.role = user[:role]
+    u.otp_required_for_login = false
+    u.enforce_two_factor = false
+  end
+end
