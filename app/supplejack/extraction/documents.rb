@@ -6,6 +6,7 @@
 module Extraction
   # Currently used for the view to generate kaminari paginations
   class Documents
+    DOCUMENTS_PER_FOLDER = 100
     attr_reader :current_page, :per_page, :limit_value
 
     def initialize(folder)
@@ -17,28 +18,31 @@ module Extraction
 
     def [](key)
       @current_page = key&.to_i || 1
-      return nil unless in_bounds?(@current_page)
+      return nil if documents_filepath.blank?
 
-      @documents[@current_page] ||= Document.load_from_file(documents_filepath[@current_page - 1])
+      @documents[@current_page] = Document.load_from_file(documents_filepath)
     end
 
     def total_pages
-      documents_filepath.length
+      return 0 if total_folders.zero?
+
+      ((total_folders - 1) * DOCUMENTS_PER_FOLDER) + Dir.glob("#{@folder}/#{total_folders}/*").count
+    end
+
+    def total_folders
+      Dir.children(@folder).count { |f| !f.ends_with?('tmp') }
     end
 
     private
 
-    def in_bounds?(current_page)
-      current_page.in?(1..documents_filepath.length)
+    def documents_filepath
+      folder_number = folder_number(@current_page)
+      page_number = format('%09d', @current_page)[-9..]
+      @documents_filepath = Dir.glob("#{@folder}/#{folder_number}/*__#{page_number}.json").first
     end
 
-    # The enrichments rely on the files being ordered by page number
-    # so that the index [2005] gives back page 2005 etc.
-    # If the pages and indexes do not match up, records will be enriched with data that is not meant for them
-    def documents_filepath
-      @documents_filepath ||= Dir.glob("#{@folder}/*.json").sort_by do |page|
-        page.match(/__(?<record_id>.+)__(?<page>.+).json/)[:page].to_i
-      end
+    def folder_number(page = 1)
+      (page / DOCUMENTS_PER_FOLDER.to_f).ceil
     end
   end
 end

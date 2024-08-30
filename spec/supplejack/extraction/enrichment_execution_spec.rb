@@ -24,7 +24,7 @@ RSpec.describe Extraction::EnrichmentExecution do
         described_class.new(sample_job).call
 
         expect(File.exist?(sample_job.extraction_folder)).to be true
-        extracted_files = Dir.glob("#{sample_job.extraction_folder}/*").select { |e| File.file? e }
+        extracted_files = Dir.glob("#{sample_job.extraction_folder}/**/*.*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 20
       end
@@ -39,7 +39,7 @@ RSpec.describe Extraction::EnrichmentExecution do
         described_class.new(full_job).call
 
         expect(File.exist?(full_job.extraction_folder)).to be true
-        extracted_files = Dir.glob("#{full_job.extraction_folder}/*").select { |e| File.file? e }
+        extracted_files = Dir.glob("#{full_job.extraction_folder}/**/*.*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 40
       end
@@ -93,7 +93,7 @@ RSpec.describe Extraction::EnrichmentExecution do
         described_class.new(job).call
 
         expect(File.exist?(job.extraction_folder)).to be true
-        extracted_files = Dir.glob("#{job.extraction_folder}/*").select { |e| File.file? e }
+        extracted_files = Dir.glob("#{job.extraction_folder}/**/*.*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 1
       end
