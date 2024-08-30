@@ -5,100 +5,120 @@
 
   <h1 class="header__title">Pipelines</h1>
 
-  <div class="clearfix"></div>
-<% end %>
-
-<%= form_with url: '/pipelines', method: :get, class: 'row justify-content-end mb-5' do |form| %>
-  <div class="col-auto pe-2">
-    <div class="search">
-      <%= form.text_field(
-            :search,
-            value: params[:search],
-            placeholder: 'Search by name, description, source_id, last edited by',
-            class: 'form-control search__input'
-          ) %>
-      <%= form.label :search, class: 'search__label' do %>
-        <i aria-hidden="true" class="bi bi-search"></i>
-        Search by name, description, source_id, last edited by
-      <% end %>
-
-      <% if params[:search].present? %>
-        <button type="button" class="btn btn-secondary search__clear" data-clear-field="search">
-          Clear
-          <i aria-hidden="true" class="bi bi-plus"></i>
-        </button>
-      <% end %>
-    </div>
-  </div>
-  <div class="col-auto ps-0">
-    <button class="btn btn-primary" type="submit">Search</button>
-  </div>
-
-  <div class="col-auto pe-0">
-    <%= form.label :format, 'Format:', class: 'col-form-label' %>
-  </div>
-  <div class="col-auto">
-    <%= form.select(
-          :format,
-          [['All formats', '']] + ExtractionDefinition::FORMATS.map { |format| [format, format] },
-          { selected: params[:format].in?([nil, '', 'All formats']) ? 'All formats' : params[:format] },
-          class: 'form-select', 'data-submitting-select': true
-        ) %>
-  </div>
-
-  <div class="col-auto pe-0">
-    <%= form.label :sort_by, 'Sort by:', class: 'col-form-label' %>
-  </div>
-  <div class="col-auto">
-    <%= form.select(
-          :sort_by,
-          [['Last Edited', 'updated_at'], ['Alphabetical', 'name']],
-          { selected: @sort_by.keys.first },
-          class: 'form-select', 'data-submitting-select': true
-        ) %>
-  </div>
-<% end %>
-
-<div class='row'>
-
-  <div class='col-3 mb-3'>
-    <button type="button" class="card mb-3 card--create-cta d-flex h-100" data-bs-toggle="modal" data-bs-target="#create-modal">
-      <div class="card-body align-items-center d-flex justify-content-center">
-        <h2 class="card-title">+ Create new pipeline</h5>
-      </div>
+  <div class="header__actions">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
+        + Create new pipeline
     </button>
   </div>
 
-  <%- @pipelines.each do |pipeline| %>
-    <div class='col-3 mb-3'>
-      <%= link_to pipeline, class: 'card card--clickable mb-3 d-flex h-100' do %>
-        <div class="card-body">
-          <h2 class="card-title"><%= pipeline.name %></h2>
-          <h3 class="card-subtitle">
-            <%= last_edited_by(pipeline) %>
-          </h3>
-          <div>
-            <span class="badge bg-light text-dark">
-              <%= pipeline.harvest_definitions.harvest.count %> Harvest
-            </span>
-            <span class="badge bg-light text-dark">
-              <%= pipeline.harvest_definitions.enrichment.count %> Enrichments
-            </span>
+  <div class="clearfix"></div>
 
-            <% if pipeline.schedules.any? %>
-              <span class="badge bg-primary">
-                Scheduled
-              </span>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
+  <div class='mt-4'></div>
+  <ul class="nav nav-tabs">
+
+    <li class='nav-item'>
+      <%= link_to 'All', pipelines_path, class: "nav-link #{'active' if params['status'].nil?}" %>
+    </li>
+
+    <li class='nav-item'>
+      <%= link_to 'Queued', pipelines_path(status: 'queued'),
+                  class: "nav-link #{'active' if params['status'] == 'queued'}" %>
+    </li>
+
+    <li class='nav-item'>
+      <%= link_to 'Running', pipelines_path(status: 'running'),
+                  class: "nav-link #{'active' if params['status'] == 'running'}" %>
+    </li>
+
+    <li class='nav-item'>
+      <%= link_to 'Errored', pipelines_path(status: 'errored'),
+                  class: "nav-link #{'active' if params['status'] == 'errored'}" %>
+    </li>
+  </ul>
+<% end %>
+
+<% if params['status'].nil? %>
+  <%= form_with url: '/pipelines', method: :get, class: 'row mb-5' do |form| %>
+    <div class="col-auto pe-2">
+      <div class="search">
+        <%= form.text_field(
+              :search,
+              value: params[:search],
+              placeholder: 'Search by name, description, source_id, last edited by',
+              class: 'form-control search__input'
+            ) %>
+        <%= form.label :search, class: 'search__label' do %>
+          <i aria-hidden="true" class="bi bi-search"></i>
+          Search by name, description, source_id, last edited by
+        <% end %>
+
+        <% if params[:search].present? %>
+          <button type="button" class="btn btn-secondary search__clear" data-clear-field="search">
+            Clear
+            <i aria-hidden="true" class="bi bi-plus"></i>
+          </button>
+        <% end %>
+      </div>
     </div>
-  <%- end %>
 
-</div>
+    <div class="col-4 ps-0">
+      <button class="btn btn-primary" type="submit">Search</button>
+    </div>
 
-<%= render 'shared/pagination_below_table', items: @pipelines %>
+    <div class="col-auto pe-0">
+      <%= form.label :format, 'Format:', class: 'col-form-label' %>
+    </div>
+    <div class="col-auto">
+      <%= form.select(
+            :format,
+            [['All formats', '']] + ExtractionDefinition::FORMATS.map { |format| [format, format] },
+            { selected: params[:format].in?([nil, '', 'All formats']) ? 'All formats' : params[:format] },
+            class: 'form-select', 'data-submitting-select': true
+          ) %>
+    </div>
+
+    <div class="col-auto pe-0">
+      <%= form.label :sort_by, 'Sort by:', class: 'col-form-label' %>
+    </div>
+    <div class="col-auto">
+      <%= form.select(
+            :sort_by,
+            [['Last Edited', 'updated_at'], ['Alphabetical', 'name']],
+            { selected: @sort_by.keys.first },
+            class: 'form-select', 'data-submitting-select': true
+          ) %>
+    </div>
+  <% end %>
+<% end %>
+
+<%- @pipelines.each do |pipeline| %>
+  <%= link_to pipeline, class: 'card card--clickable mb-3' do %>
+    <div class="card-body">
+      <h2 class="card-title"><%= pipeline.name %></h2>
+      <h3 class="card-subtitle">
+        <%= last_edited_by(pipeline) %>
+      </h3>
+      <div>
+        <span class="badge bg-light text-dark">
+          <%= pipeline.harvest_definitions.harvest.count %> Harvest
+        </span>
+        <span class="badge bg-light text-dark">
+          <%= pipeline.harvest_definitions.enrichment.count %> Enrichments
+        </span>
+
+        <% if pipeline.schedules.any? %>
+          <span class="badge bg-primary">
+            Scheduled
+          </span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<%- end %>
+
+<% if params['status'].nil? %>
+  <%= render 'shared/pagination_below_table', items: @pipelines %>
+<% end %>
 
 <%= render layout: 'shared/create_modal',
            locals: { modal_heading: 'Create new pipeline', button_text: 'Create pipeline' } do %>

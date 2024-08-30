@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class HarvestReport < ApplicationRecord
+
+  scope :completed, -> { where(extraction_status: 'completed', transformation_status: 'completed', load_status: 'completed', delete_status: 'completed') }
+
   belongs_to :pipeline_job, optional: true
   belongs_to :harvest_job, optional: true
 

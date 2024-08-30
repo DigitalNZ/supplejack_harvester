@@ -3,14 +3,29 @@
 class PipelinesController < ApplicationController
   include LastEditedBy
 
+  VALID_STATUSES = %w[queued running errored]
+
   before_action :find_pipeline, only: %w[destroy clone]
   before_action :assign_show_pipeline, only: %w[show update]
   before_action :assign_show_variables, only: %w[show update]
   before_action :assign_destinations, only: %w[show update]
 
   def index
-    @pipelines = pipelines
     @pipeline = Pipeline.new
+
+    if params['status'].nil? || VALID_STATUSES.exclude?(params['status'])
+      @pipelines = pipelines
+    elsif params['status'] == 'queued'
+      @pipelines = PipelineJob.where.missing(:harvest_reports).map(&:pipeline).uniq
+    else
+      @pipelines = HarvestReport
+                    .completed
+                    .invert_where
+                    .order(created_at: :desc)
+                    .select { |report| report.status == params['status'] }
+                    .map { |report| report.pipeline_job.pipeline }
+                    .uniq
+    end
   end
 
   def show; end

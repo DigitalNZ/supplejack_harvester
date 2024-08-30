@@ -21,6 +21,29 @@ RSpec.describe HarvestReport do
     end
   end
 
+  describe '#completed' do
+    let!(:queued) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'queued', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:running_one) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:running_two) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:completed) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+    end
+
+    it 'returns all jobs that are completed' do
+      expect(HarvestReport.completed.count).to eq 1
+    end
+  end
+  
   describe 'status checks' do
     %w[extraction transformation load].each do |type|
       described_class::STATUSES.each do |status|
