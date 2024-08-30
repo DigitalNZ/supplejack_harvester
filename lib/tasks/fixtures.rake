@@ -4,7 +4,7 @@ namespace :fixtures do
   desc 'Clears the extraction folder, loads the fixtures and launches the job for testing'
   task load: :environment do
     puts 'Clearing the extraction folder...'
-    FileUtils.rm Dir.glob("#{ExtractionJob::EXTRACTIONS_FOLDER}/*/*")
+    FileUtils.rm_rf Dir.glob("#{ExtractionJob::EXTRACTIONS_FOLDER}/*/*")
     FileUtils.rmdir Dir.glob("#{ExtractionJob::EXTRACTIONS_FOLDER}/*")
 
     puts 'Resetting the DB...'

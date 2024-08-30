@@ -16,7 +16,7 @@ module Extraction
 
     def save_entries(extraction_folder)
       each_entry(extraction_folder) do |_, name|
-        current_document = build_doc("#{extraction_folder}/#{name}")
+        current_document = build_doc("#{extraction_folder}/#{folder_number(extraction_definition.page)}/#{name}")
         save(current_document)
         next_page
       end
@@ -76,7 +76,7 @@ module Extraction
     def file_path
       page_str = format('%09d', extraction_definition.page)[-9..]
       name_str = extraction_definition.name.parameterize(separator: '_')
-      "#{@extraction_folder}/#{name_str}__-__#{page_str}.json"
+      "#{@extraction_folder}/#{folder_number(extraction_definition.page)}/#{name_str}__-__#{page_str}.json"
     end
 
     def url

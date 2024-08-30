@@ -22,7 +22,7 @@ RSpec.describe Extraction::Execution do
         subject.call
 
         expect(File.exist?(full_job.extraction_folder)).to be true
-        extracted_files = Dir.glob("#{full_job.extraction_folder}/*").select { |e| File.file? e }
+        extracted_files = Dir.glob("#{full_job.extraction_folder}/**/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 5
       end
@@ -35,7 +35,7 @@ RSpec.describe Extraction::Execution do
         subject.call
 
         expect(File.exist?(sample_job.extraction_folder)).to be true
-        extracted_files = Dir.glob("#{sample_job.extraction_folder}/*").select { |e| File.file? e }
+        extracted_files = Dir.glob("#{sample_job.extraction_folder}/**/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 1
       end
@@ -69,7 +69,7 @@ RSpec.describe Extraction::Execution do
         subject.call
 
         expect(File.exist?(extraction_job.extraction_folder)).to be true
-        extracted_files = Dir.glob("#{extraction_job.extraction_folder}/*").select { |e| File.file? e }
+        extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*").select { |e| File.file? e }
 
         expect(extracted_files.count).to eq 2
       end

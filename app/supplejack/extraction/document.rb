@@ -23,6 +23,9 @@ module Extraction
     end
 
     def save(file_path)
+      # Create the directory if it doesn't exist
+      FileUtils.mkdir_p(File.dirname(file_path))
+
       File.write(file_path, to_json)
       # If the file fails to be converted to a JSON document
       # write the original file to the filepath as a binary
