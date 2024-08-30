@@ -38,9 +38,10 @@ bin/rails secret
 # OTP encryption keys can be generated with:
 openssl rand -base64 10 | base64
 
-# Create the database and run the migrations
+# Create the database, run the migrations and seed data (users)
 bin/rails db:create
 bin/rails db:migrate
+bin/rails db:seed
 
 # To run the application you can do:
 bin/dev
