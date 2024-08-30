@@ -29,11 +29,6 @@
       <%= link_to 'Running', pipelines_path(status: 'running'),
                   class: "nav-link #{'active' if params['status'] == 'running'}" %>
     </li>
-
-    <li class='nav-item'>
-      <%= link_to 'Errored', pipelines_path(status: 'errored'),
-                  class: "nav-link #{'active' if params['status'] == 'errored'}" %>
-    </li>
   </ul>
 <% end %>
 

@@ -21,6 +21,52 @@ RSpec.describe HarvestReport do
     end
   end
 
+  describe '#active' do
+    let!(:queued) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'queued', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:running_one) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:running_two) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:completed) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+    end
+
+    it 'returns reports that are not completed' do
+      expect(HarvestReport.active.count).to eq 3
+    end
+  end
+
+  describe '#running' do
+    let!(:queued) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'queued', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:running_one) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:running_two) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed', transformation_status: 'queued',
+                              load_status: 'queued', delete_status: 'queued')
+    end
+    let!(:completed) do
+      create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'completed',
+                              transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+    end
+
+    it 'returns running reports' do
+      expect(HarvestReport.running.count).to eq(2)
+    end
+  end
+
   describe '#completed' do
     let!(:queued) do
       create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'queued', transformation_status: 'queued',
