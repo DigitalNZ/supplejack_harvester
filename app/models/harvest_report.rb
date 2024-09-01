@@ -6,16 +6,11 @@ class HarvestReport < ApplicationRecord
                             load_status: 'completed', delete_status: 'completed')
                     }
 
+  scope :active, -> {completed.invert_where.order(created_at: :desc) }
+  scope :running, -> { active.select { |report| report.status == 'running' } }
+
   belongs_to :pipeline_job, optional: true
   belongs_to :harvest_job, optional: true
-
-  def self.active
-    HarvestReport.completed.invert_where.order(created_at: :desc)
-  end
-
-  def self.running
-    active.select { |report| report.status == 'running' }
-  end
 
   STATUSES = %w[queued cancelled running completed errored].freeze
 
