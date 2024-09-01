@@ -1,6 +1,14 @@
 # frozen_string_literal: true
 
 class HarvestReport < ApplicationRecord
+  scope :completed, lambda {
+                      where(extraction_status: 'completed', transformation_status: 'completed',
+                            load_status: 'completed', delete_status: 'completed')
+                    }
+
+  scope :active, -> { completed.invert_where.order(created_at: :desc) }
+  scope :running, -> { active.select { |report| report.status == 'running' } }
+
   belongs_to :pipeline_job, optional: true
   belongs_to :harvest_job, optional: true
 
@@ -18,8 +26,7 @@ class HarvestReport < ApplicationRecord
   enum :kind, { harvest: 0, enrichment: 1 }
 
   METRICS = %w[
-    pages_extracted records_transformed
-    records_loaded records_rejected
+    pages_extracted records_transformed records_loaded records_rejected
     records_deleted transformation_workers_queued
     transformation_workers_completed load_workers_queued
     load_workers_completed delete_workers_queued
@@ -31,8 +38,7 @@ class HarvestReport < ApplicationRecord
     extraction_end_time transformation_start_time
     transformation_updated_time transformation_end_time
     load_start_time load_updated_time
-    load_end_time delete_start_time
-    delete_updated_time delete_end_time
+    load_end_time delete_start_time delete_updated_time delete_end_time
   ].freeze
 
   def completed?

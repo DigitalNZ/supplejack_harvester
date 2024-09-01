@@ -9,8 +9,17 @@ class PipelinesController < ApplicationController
   before_action :assign_destinations, only: %w[show update]
 
   def index
-    @pipelines = pipelines
     @pipeline = Pipeline.new
+    status = params['status']
+
+    @pipelines = if status == 'queued'
+                   PipelineJob.where.missing(:harvest_reports).map(&:pipeline).uniq
+                 elsif status == 'running'
+                   HarvestReport.running.map { |report| report.pipeline_job.pipeline }
+                                .uniq
+                 else
+                   pipelines
+                 end
   end
 
   def show; end
