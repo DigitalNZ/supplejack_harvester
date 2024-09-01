@@ -6,7 +6,7 @@ class HarvestReport < ApplicationRecord
                             load_status: 'completed', delete_status: 'completed')
                     }
 
-  scope :active, -> {completed.invert_where.order(created_at: :desc) }
+  scope :active, -> { completed.invert_where.order(created_at: :desc) }
   scope :running, -> { active.select { |report| report.status == 'running' } }
 
   belongs_to :pipeline_job, optional: true
