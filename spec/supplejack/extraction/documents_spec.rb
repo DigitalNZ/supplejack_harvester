@@ -41,10 +41,10 @@ RSpec.describe Extraction::Documents do
       expect(subject.current_page).to eq 130
     end
 
-    it 'returns nil when index is out of bounds' do
-      expect(subject[200]).to be_nil
-      expect(subject[0]).to be_nil
-      expect(subject[-1]).to be_nil
+    it 'returns a blank document when index is out of bounds' do
+      expect(subject[200]).to be_a(Extraction::Document)
+      expect(subject[0]).to be_a(Extraction::Document)
+      expect(subject[-1]).to be_a(Extraction::Document)
     end
 
     it 'returns pages based on their page number, rather than their order in the file system' do

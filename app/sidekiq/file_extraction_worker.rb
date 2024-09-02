@@ -55,6 +55,7 @@ class FileExtractionWorker
 
   def api_record_id(page)
     return nil unless @extraction_job.extraction_definition.enrichment?
+    return nil if @extraction_job.documents[page].file_path.nil?
 
     @extraction_job.documents[page].file_path.match(/__(?<record_id>.+)__/)[:record_id]
   end

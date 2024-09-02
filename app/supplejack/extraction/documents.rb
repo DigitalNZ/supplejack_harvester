@@ -18,7 +18,9 @@ module Extraction
 
     def [](key)
       @current_page = key&.to_i || 1
-      return nil if documents_filepath.blank?
+      if documents_filepath.blank?
+        return @documents[@current_page] = Document.new(documents_filepath, body: '{"message":"File does not exist in filesystem"}') 
+      end
 
       @documents[@current_page] = Document.load_from_file(documents_filepath)
     end
