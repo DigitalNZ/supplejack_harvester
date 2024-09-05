@@ -11,21 +11,39 @@ RSpec.describe LoadWorker, type: :job do
     create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [enrichment_definition.id], key: 'test')
   end
 
+  def stub_notice_to_api
+    notifier = instance_double('Api::Utils::NotifyHarvesting')
+    expect(notifier).to receive(:call)
+    expect(Api::Utils::NotifyHarvesting).to receive(:new) { notifier }
+  end
+
   describe '#perform' do
     let(:harvest_job) { create(:harvest_job, :completed, harvest_definition:, pipeline_job:) }
     let!(:harvest_report) do
-      create(:harvest_report, harvest_job:, pipeline_job:, extraction_status: 'completed',
-                              transformation_status: 'completed', delete_status: 'completed', load_workers_queued: 1)
+      create(
+        :harvest_report,
+        harvest_job:,
+        pipeline_job:,
+        extraction_status: 'completed',
+        transformation_status: 'completed',
+        delete_status: 'completed',
+        load_workers_queued: 1
+      )
     end
 
     let!(:field) do
-      create(:field, name: 'title', block: "JsonPath.new('title').on(record).first",
-                     transformation_definition: enrichment_definition.transformation_definition)
+      create(
+        :field,
+        name: 'title',
+        block: "JsonPath.new('title').on(record).first",
+        transformation_definition: enrichment_definition.transformation_definition
+      )
     end
 
     context 'when the harvest has completed' do
       it 'queues scoped enrichments that are ready to be run' do
         expect(HarvestWorker).to receive(:perform_async)
+        stub_notice_to_api
 
         expect do
           described_class.new.perform(harvest_job.id, '[]')
@@ -42,6 +60,7 @@ RSpec.describe LoadWorker, type: :job do
           pipeline_job:,
           key: "test__enrichment-#{enrichment_definition.id}"
         )
+        stub_notice_to_api
 
         expect do
           described_class.new.perform(harvest_job.id, '[]')
@@ -71,12 +90,13 @@ RSpec.describe LoadWorker, type: :job do
       end
 
       it 'retries the Load Execution' do
+        stub_notice_to_api
         expect(Load::Execution).to receive(:new).exactly(2).times
-
         described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]")
       end
 
       it 'still increments the number of workers completed' do
+        stub_notice_to_api
         expect(harvest_report.load_workers_queued).to eq 1
         expect(harvest_report.load_workers_completed).to eq 0
 

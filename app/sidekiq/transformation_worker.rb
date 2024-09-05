@@ -65,14 +65,23 @@ class TransformationWorker
     return if records.empty?
 
     LoadWorker.perform_async(@harvest_job.id, records.to_json, @api_record_id)
+    Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
     @harvest_report.increment_load_workers_queued!
   end
 
   def queue_delete_worker(records)
     return if records.empty?
 
-    DeleteWorker.perform_async(records.to_json, @harvest_job.pipeline_job.destination.id, @harvest_report.id)
+    DeleteWorker.perform_async(records.to_json, destination.id, @harvest_report.id)
     @harvest_report.increment_delete_workers_queued!
+  end
+
+  def source_id
+    @harvest_job.pipeline_job.pipeline.harvest.source_id
+  end
+
+  def destination
+    @harvest_job.pipeline_job.destination
   end
 
   def records

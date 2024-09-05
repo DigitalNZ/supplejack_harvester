@@ -51,7 +51,7 @@ RSpec.describe Load::Execution do
       let(:harvest_job)        { create(:harvest_job, harvest_definition:, pipeline_job:) }
 
       before do
-        stub_request(:post, 'http://www.localhost:3000/harvester/records/record_id/fragments.json')
+        stub_request(:post, 'http://www.localhost:3000/harvester/records/record_id/fragments')
           .with(
             body: "{\"fragment\":{\"title\":[\"title\"],\"description\":[\"description\"],\"source_id\":\"test\",\"priority\":0,\"job_id\":\"#{harvest_job.name}\"},\"required_fragments\":null}",
             headers: {

@@ -23,7 +23,7 @@ class LoadWorker
   def log_retry_attempt
     proc do |exception, try, elapsed_time, next_interval|
       if defined?(Sidekiq)
-        ::Sidekiq.logger.info("
+        Rails.logger.info("
           #{exception.class}: '#{exception.message}':
           #{try} tries in #{elapsed_time} seconds and
           #{next_interval} seconds until the next try.")
@@ -41,7 +41,7 @@ class LoadWorker
       @harvest_report.update(load_updated_time: Time.zone.now)
     end
   rescue StandardError => e
-    ::Sidekiq.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
+    Rails.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
   end
 
   def job_start
@@ -52,9 +52,20 @@ class LoadWorker
     @harvest_report.increment_load_workers_completed!
     @harvest_report.reload
 
-    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
+    if @harvest_report.load_workers_completed?
+      @harvest_report.load_completed!
+      Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
+    end
 
     @harvest_job.pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
     @harvest_job.execute_delete_previous_records
+  end
+
+  def source_id
+    @harvest_job.pipeline_job.pipeline.harvest.source_id
+  end
+
+  def destination
+    @harvest_job.pipeline_job.destination
   end
 end
