@@ -11,7 +11,7 @@ module Api
 
       def call
         source = find_source
-        return unless source.present?
+        return if source.blank?
 
         id = source['_id']
         update_harvesting(id)
