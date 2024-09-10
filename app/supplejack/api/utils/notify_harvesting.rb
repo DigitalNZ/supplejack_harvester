@@ -10,7 +10,10 @@ module Api
       end
 
       def call
-        id = find_source['_id']
+        source = find_source
+        return if source.blank?
+
+        id = source['_id']
         update_harvesting(id)
       end
 
