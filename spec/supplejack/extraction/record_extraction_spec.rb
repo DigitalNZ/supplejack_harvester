@@ -35,6 +35,16 @@ RSpec.describe Extraction::RecordExtraction do
       end
     end
 
+    context 'when the extraction definition specifies specific fields and subdocuments' do
+      let(:extraction_definition) { create(:extraction_definition, :enrichment, destination:, fields: 'id,internal_identifier', include_sub_documents: false) }
+
+      let(:subject) { described_class.new(request, 1) }
+
+      it 'specifies the requested fields in the API request' do
+        expect(subject.extract).to be_a(Extraction::Document)
+      end
+    end
+
     context 'when the enrichment is scheduled after a harvest' do
       let(:pipeline)           { create(:pipeline, name: 'NLNZCat') }
       let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }

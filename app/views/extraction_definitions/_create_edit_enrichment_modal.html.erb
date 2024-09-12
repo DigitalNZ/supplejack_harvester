@@ -174,6 +174,30 @@
                     [%w[No false], %w[Yes true]], model.evaluate_javascript
                   ), {}, class: 'form-select' %>
             </div>
+
+            <div class="col-4">
+              <%= form.label :fields, class: 'form-label' do %>
+                Enrichment fields
+                <span
+                  data-bs-toggle="tooltip"
+                  data-bs-title="Specify the fields that you need from the API as a comma seperated list."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+            <div class="col-8">
+              <%= form.text_field :fields, class: 'form-control' %>
+            </div>
+
+            <div class="col-4">
+              <%= form.label :include_sub_documents, class: 'form-label' do %>
+                Include Subdocuments
+              <% end %>
+            </div>
+            <div class="col-8">
+              <%= form.select :include_sub_documents, options_for_select(
+                    [%w[No false], %w[Yes true]], model.include_sub_documents
+                  ), {}, class: 'form-select' %>
+            </div>
           </div>
 
           <div class='float-end mt-4'>

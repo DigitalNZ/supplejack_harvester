@@ -20,8 +20,23 @@ module Extraction
       {
         search: active_filter.merge(fragment_filter),
         search_options: { page: @page },
-        api_key: api_source.api_key
-      }
+        api_key: api_source.api_key,
+        record_includes: 
+    }.merge(
+      if @extraction_definition.fields.present?
+        {
+          fields: @extraction_definition.fields.split(','),
+        }
+      else
+        {}
+      end
+    )
+    end
+
+    def record_includes
+      return [] if @extraction_definition.include_sub_documents?
+
+      'null'
     end
 
     def active_filter

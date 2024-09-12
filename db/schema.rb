@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_09_09_234254) do
+ActiveRecord::Schema[7.1].define(version: 2024_09_12_210418) do
   create_table "destinations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "url", null: false
@@ -43,6 +43,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_09_234254) do
     t.string "fragment_source_id"
     t.string "fragment_key"
     t.boolean "evaluate_javascript", default: false, null: false
+    t.text "fields"
+    t.boolean "include_sub_documents", default: true, null: false
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_extraction_definitions_on_name", unique: true
