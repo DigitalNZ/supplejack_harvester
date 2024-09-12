@@ -29,7 +29,7 @@ module Extraction
 
     def extraction_definition_fields
       fields = @extraction_definition.fields
-      return { fields: fields.split(',') } if fields.present?
+      return { fields: fields.split(',').map(&:squish) } if fields.present?
 
       {}
     end
