@@ -38,6 +38,17 @@ RSpec.describe Extraction::RecordExtraction do
     context 'when the extraction definition specifies specific fields and subdocuments' do
       let(:extraction_definition) { create(:extraction_definition, :enrichment, destination:, fields: 'id,internal_identifier', include_sub_documents: false) }
 
+      before do
+        stub_request(:get, "http://www.localhost:3000/harvester/records?api_key=testkey&fields%5B%5D=id&fields%5B%5D=internal_identifier&record_includes=null&search%5Bfragments.source_id%5D=test&search%5Bstatus%5D=active&search_options%5Bpage%5D=1").
+        with(
+          headers: {
+         'Accept'=>'*/*',
+         'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+         'Content-Type'=>'application/json',
+         'User-Agent'=>'Supplejack Harvester v2.0'
+          }).to_return(fake_response('test_api_records_1'))
+      end
+
       let(:subject) { described_class.new(request, 1) }
 
       it 'specifies the requested fields in the API request' do
