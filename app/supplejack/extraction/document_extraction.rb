@@ -15,7 +15,7 @@ module Extraction
         @document = if @extraction_definition.evaluate_javascript?
                       Extraction::JavascriptRequest.new(url:, params:).get
                     else
-                      Extraction::Request.new(url:, params:, headers:).send(http_method)
+                      Extraction::Request.new(url:, params:, headers:, method: http_method).send(http_method)
                     end
       end
     rescue StandardError => e

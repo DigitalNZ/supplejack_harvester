@@ -10,10 +10,16 @@ module Extraction
 
     attr_reader :url, :params, :headers
 
-    def initialize(url:, params: {}, headers: {})
+    def initialize(url:, params: {}, headers: {}, method: 'get')
       headers ||= {}
       @connection = connection(url, params, headers)
-      @url        = @connection.build_url
+
+      if method == 'get'
+        @url = @connection.build_url
+      else
+        @url = url
+      end
+      
       @params     = @connection.params
       @headers    = @connection.headers
     end
@@ -23,7 +29,7 @@ module Extraction
     end
 
     def post
-      Response.new(@connection.post(url, normalized_params.to_json, headers))
+      Response.new(connection(url, {}, headers).post(url, normalized_params.to_json, headers))
     end
 
     private
