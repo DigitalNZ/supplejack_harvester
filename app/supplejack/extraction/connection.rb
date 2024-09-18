@@ -14,12 +14,12 @@ module Extraction
       headers ||= {}
       @connection = connection(url, params, headers)
 
-      if method == 'get'
-        @url = @connection.build_url
-      else
-        @url = url
-      end
-      
+      @url = if method == 'get'
+               @connection.build_url
+             else
+               url
+             end
+
       @params     = @connection.params
       @headers    = @connection.headers
     end
