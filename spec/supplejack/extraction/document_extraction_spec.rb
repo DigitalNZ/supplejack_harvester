@@ -33,6 +33,7 @@ RSpec.describe Extraction::DocumentExtraction do
             'X-Forwarded-For' => 'ab.cd.ef.gh',
             'Authorization' => 'Token'
           },
+          method: 'get',
           params: {
             'page' => '1',
             'itemsPerPage' => '10',
@@ -82,6 +83,7 @@ RSpec.describe Extraction::DocumentExtraction do
             'User-Agent' => 'Supplejack Harvester v2.0',
             'X-Forwarded-For' => '3'
           },
+          method: 'get',
           params: {
             'page' => '1',
             'itemsPerPage' => '10',
@@ -105,6 +107,7 @@ RSpec.describe Extraction::DocumentExtraction do
             'Content-Type' => 'application/json',
             'User-Agent' => 'Supplejack Harvester v2.0'
           },
+          method: 'get',
           params: {
             'page' => '2',
             'itemsPerPage' => '10',

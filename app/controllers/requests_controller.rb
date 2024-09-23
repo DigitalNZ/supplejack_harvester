@@ -63,7 +63,7 @@ class RequestsController < ApplicationController
   end
 
   def api_response
-    Extraction::RecordExtraction.new(@request, page_param).extract
+    Extraction::RecordExtraction.new(@extraction_definition.requests.first, page_param).extract
   end
 
   def api_record

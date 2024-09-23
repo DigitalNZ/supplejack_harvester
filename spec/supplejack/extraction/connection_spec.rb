@@ -47,7 +47,7 @@ RSpec.describe Extraction::Connection do
 
   describe '#post' do
     before do
-      stub_request(:post, 'https://google.com/hello?page=1&supplejack=jack')
+      stub_request(:post, 'https://google.com/hello')
         .with(
           body: '{"supplejack":"jack","page":1}',
           headers: {
@@ -60,7 +60,7 @@ RSpec.describe Extraction::Connection do
     end
 
     it 'sends the provided params in the payload' do
-      conn = described_class.new(url: 'https://google.com/hello', params: { supplejack: 'jack', page: '1' })
+      conn = described_class.new(url: 'https://google.com/hello', params: { supplejack: 'jack', page: '1' }, headers: {}, method: 'post')
       conn.post
     end
   end
