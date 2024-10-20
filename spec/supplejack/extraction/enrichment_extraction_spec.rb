@@ -35,6 +35,25 @@ RSpec.describe Extraction::EnrichmentExtraction do
       end
     end
 
+    context 'when the extraction requires JavaScript' do
+      let(:ed) { create(:extraction_definition, :enrichment, destination:, extraction_jobs: [extraction_job], base_url: "file://#{Rails.root.join('spec/stub_responses')}", evaluate_javascript: true) }
+      let!(:parameter)   { create(:parameter, content: "javascript_example.html", kind: 'slug', request: request_two, content_type: 'static') }
+
+      context 'when the extraction is successful' do
+        it 'evaluates the JavaScript and saves the HTML as a document' do 
+          document = subject.extract
+  
+          document_html = Nokogiri::HTML(document.body).xpath('//body').to_html
+          expect(document_html).to include('This heading is rendered with JavaScript')
+        end
+
+        it 'returns a successful status code' do
+          document = subject.extract
+          expect(document.status).to eq 200
+        end
+      end
+    end
+
     context 'when record extraction fails' do
       before do
         subject
