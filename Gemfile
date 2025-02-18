@@ -63,6 +63,7 @@ gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 
 # For detecting filetype when extracting text from a file
 gem 'aws-sdk-s3'
+gem "aws-sdk-sqs"
 gem 'marcel'
 
 group :development, :test do

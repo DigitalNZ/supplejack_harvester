@@ -8,6 +8,15 @@ namespace :s3 do
   ## EXAMPLE
   # extraction_definition = The extraction definition to associate the result of the S3 extraction with
   # S3ExtractionExecution.new(extraction_definition.id, "#{args[:source]}/FOLDER_NAME", 'file-pattern').call
+
+  task :extract, [:source] => [:environment] do |_task, args|
+
+    historic_harvest = HarvestDefinition.find_by(source_id: "historic-legislation")
+
+    p "Extracting Historic Legislation..."
+    S3ExtractionExecution.new(historic_harvest.extraction_definition.id, "",
+      "").call
+  end
 end
 
 class S3ExtractionExecution
@@ -48,8 +57,8 @@ class S3ExtractionExecution
     p 'Converting files from S3 into extraction job format...'
 
     page = 1
-
-    Dir["#{@directory_path}/#{@job_id}/**/*.xml"].each_slice(100) do |batch|
+    
+    Dir["#{@directory_path}/#{@job_id}/**/*.xml"].each_slice(Extraction::Documents::DOCUMENTS_PER_FOLDER).with_index do |batch, index|
       page_str = format('%09d', page)[-9..]
       name_str = @extraction_definition.name.parameterize(separator: '_')
 
@@ -62,12 +71,16 @@ class S3ExtractionExecution
         params: '', request_headers: [],
         status: '', response_headers: [],
         body:
-      ).save("#{@extraction_job.extraction_folder}/#{name_str}__-__#{page_str}.json")
+      ).save("#{@extraction_job.extraction_folder}/#{folder_number(index + 1)}/#{name_str}__-__#{page_str}.json")
 
       page += 1
     end
 
     @extraction_job.completed!
+  end
+
+  def folder_number(page = 1)
+    (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
   end
   # rubocop:enable Metrics/AbcSize
   # rubocop:enable Metrics/MethodLength
