@@ -11,6 +11,8 @@ Rails.application.routes.draw do
     delete 'cancel_account' => 'devise/registrations#destroy', as: :cancel_account
   end
 
+  resources :pipeline_activity, only: %i[show]
+
   root 'home#index'
 
   resources :users, only: %i[index show edit update destroy] do
