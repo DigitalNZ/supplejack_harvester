@@ -6,79 +6,133 @@ RSpec.describe "Api::PipelineJobs", type: :request do
   let!(:destination)        { create(:destination) }
   let!(:pipeline) { create(:pipeline) }
   let!(:harvest_definition) { create(:harvest_definition, pipeline:) }
+  let(:admin_user) { create(:user, api_key: 'key', role: :admin) }
+  let(:user) { create(:user, api_key: 'key') }
 
   describe "POST /create" do
-    context 'When the job is successful' do
-      it "creates a pipeline job" do
-        expect do
+    context 'when the user is using an admin api key' do
+      context 'When the job is successful' do
+        it "creates a pipeline job" do
+          expect do
+            post api_pipeline_jobs_path, params: {
+              pipeline_job: {
+                destination_id: destination.id,
+                pipeline_id: pipeline.id
+              },
+            },
+            headers: { 
+              "Authorization" => "Token token=#{admin_user.api_key}"
+            }
+          end.to change(PipelineJob, :count).by(1)
+        end
+
+        it "queues a PipelineWorker" do
+          expect(PipelineWorker).to receive(:perform_async)
+
+          post api_pipeline_jobs_path, params: {
+            pipeline_job: {
+              destination_id: destination.id,   
+              pipeline_id: pipeline.id
+            },
+          },
+          headers: { 
+            "Authorization" => "Token token=#{admin_user.api_key}"
+          }
+        end
+    
+        it "returns that the job is successful" do
           post api_pipeline_jobs_path, params: {
             pipeline_job: {
               destination_id: destination.id,
               pipeline_id: pipeline.id
+            },
+          },
+          headers: { 
+            "Authorization" => "Token token=#{admin_user.api_key}"
+          }
+
+          parsed_response = JSON.parse(response.body)
+
+          expect(parsed_response['status']).to eq('success')
+        end
+      end
+
+      context 'When the job fails' do
+        it "does not create a pipeline job" do
+          expect do
+            post api_pipeline_jobs_path, params: {
+              pipeline_job: {
+                destination_id: nil,
+                pipeline_id: pipeline.id
+              },
+            },
+            headers: { 
+              "Authorization" => "Token token=#{admin_user.api_key}"
             }
-          }
-        end.to change(PipelineJob, :count).by(1)
-      end
+          end.to change(PipelineJob, :count).by(0)
+        end
 
-      it "queues a PipelineWorker" do
-        expect(PipelineWorker).to receive(:perform_async)
-
-        post api_pipeline_jobs_path, params: {
-          pipeline_job: {
-            destination_id: destination.id,   
-            pipeline_id: pipeline.id
+        it "returns that the job failed" do
+          post api_pipeline_jobs_path, params: {
+            pipeline_job: {
+              destination_id: nil,
+              pipeline_id: pipeline.id  
+            },
+          },
+          headers: {
+            "Authorization" => "Token token=#{admin_user.api_key}"
           }
-        }
+
+          parsed_response = JSON.parse(response.body)
+
+          expect(parsed_response['status']).to eq('failed')
+        end
+
+        it "does not queue a PipelineWorker" do
+          expect(PipelineWorker).not_to receive(:perform_async)
+
+          post api_pipeline_jobs_path, params: {
+            pipeline_job: {
+              destination_id: nil,   
+              pipeline_id: pipeline.id
+            },
+          },
+          headers: {
+            "Authorization" => "Token token=#{admin_user.api_key}"
+          }
+        end
       end
-  
-      it "returns that the job is successful" do
+    end
+
+    context 'when the user is not using an admin api key' do
+      it "returns a 401" do
         post api_pipeline_jobs_path, params: {
           pipeline_job: {
             destination_id: destination.id,
             pipeline_id: pipeline.id
-          }
+          },
+        },
+        headers: {
+          "Authorization" => "Token token=#{user.api_key}"
         }
 
-        parsed_response = JSON.parse(response.body)
-
-        expect(parsed_response['status']).to eq('success')
+        expect(response).to have_http_status(:unauthorized)
       end
     end
 
-    context 'When the job fails' do
-      it "does not create a pipeline job" do
-        expect do
-          post api_pipeline_jobs_path, params: {
-            pipeline_job: {
-              destination_id: nil,
-              pipeline_id: pipeline.id
-            }
-          }
-        end.to change(PipelineJob, :count).by(0)
-      end
-
-      it "returns that the job failed" do
+    context 'when the user is not using an api key' do
+      it "returns a 401" do
         post api_pipeline_jobs_path, params: {
           pipeline_job: {
-            destination_id: nil,
+            destination_id: destination.id,
             pipeline_id: pipeline.id  
-          }
+          },
+        },
+        headers: {
+          "Authorization" => "Token token="
         }
 
-        parsed_response = JSON.parse(response.body)
-
-        expect(parsed_response['status']).to eq('failed')
-      end
-
-      it "does not queue a PipelineWorker" do
-        expect(PipelineWorker).not_to receive(:perform_async)
-
-        post api_pipeline_jobs_path, params: {
-          pipeline_job: {
-            destination_id: nil,   
-            pipeline_id: pipeline.id
-          }
-        }
+        expect(response).to have_http_status(:unauthorized)
       end
     end
   end

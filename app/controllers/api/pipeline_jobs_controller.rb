@@ -2,10 +2,6 @@
 
 module Api
   class PipelineJobsController < ApplicationController
-    skip_before_action :authenticate_user!
-    skip_before_action :setup_two_factor_authentication
-    skip_before_action :verify_authenticity_token
-
     def create
       pipeline = Pipeline.find(pipeline_job_params['pipeline_id'])
 

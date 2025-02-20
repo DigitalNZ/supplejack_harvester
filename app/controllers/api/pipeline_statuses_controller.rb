@@ -2,9 +2,6 @@
 
 module Api
   class PipelineStatusesController < ApplicationController
-    skip_before_action :authenticate_user!
-    skip_before_action :setup_two_factor_authentication
-
     before_action :find_pipeline
 
     def show
@@ -32,6 +29,14 @@ module Api
       return 'running' if running_jobs?
 
       'inactive'
+    end
+    
+    private
+
+    def authenticate_api_key
+      authenticate_or_request_with_http_token do |token, options|
+        User.find_by(api_key: token).admin?
+      end
     end
   end
 end
