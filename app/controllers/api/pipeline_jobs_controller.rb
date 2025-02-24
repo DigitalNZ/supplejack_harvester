@@ -6,15 +6,15 @@ module Api
       pipeline = Pipeline.find(pipeline_job_params['pipeline_id'])
 
       @pipeline_job = PipelineJob.new(
-        pipeline_id: pipeline.id, 
-        harvest_definitions_to_run: pipeline.harvest_definitions.map(&:id), 
+        pipeline_id: pipeline.id,
+        harvest_definitions_to_run: pipeline.harvest_definitions.map(&:id),
         destination_id: pipeline_job_params['destination_id'],
         key: SecureRandom.hex
       )
 
       if @pipeline_job.save
         PipelineWorker.perform_async(@pipeline_job.id)
-        render json:  { status: 'success' }
+        render json: { status: 'success' }
       else
         render json: { status: 'failed' }
       end

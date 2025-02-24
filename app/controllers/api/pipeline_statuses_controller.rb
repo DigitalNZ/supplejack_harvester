@@ -30,11 +30,9 @@ module Api
 
       'inactive'
     end
-    
-    private
 
     def authenticate_api_key
-      authenticate_or_request_with_http_token do |token, options|
+      authenticate_or_request_with_http_token do |token, _options|
         User.find_by(api_key: token).admin?
       end
     end
