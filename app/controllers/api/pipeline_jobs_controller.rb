@@ -8,7 +8,8 @@ module Api
       @pipeline_job = PipelineJob.new(
         pipeline_id: pipeline.id, 
         harvest_definitions_to_run: pipeline.harvest_definitions.map(&:id), 
-        destination_id: pipeline_job_params['destination_id']
+        destination_id: pipeline_job_params['destination_id'],
+        key: SecureRandom.hex
       )
 
       if @pipeline_job.save
