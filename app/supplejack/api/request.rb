@@ -9,21 +9,13 @@ module Api
       end
     end
 
-    def get(path, params)
-      @connection.get(path, params)
-    end
+    delegate :get, to: :@connection
 
-    def post(path, params)
-      @connection.post(path, params)
-    end
+    delegate :post, to: :@connection
 
-    def put(path, params)
-      @connection.put(path, params)
-    end
+    delegate :put, to: :@connection
 
-    def delete(path)
-      @connection.delete(path)
-    end
+    delegate :delete, to: :@connection
 
     private
 
