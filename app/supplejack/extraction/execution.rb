@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'zlib'
-require 'archive/tar/minitar'
+require 'minitar'
 
 module Extraction
   # Performs the work as defined in the document extraction
