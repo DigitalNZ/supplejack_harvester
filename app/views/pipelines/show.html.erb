@@ -84,7 +84,7 @@
                           'card', 'card--create-cta', 'd-flex',
                           'card--create-cta-disabled': !@harvest_definition.completed_harvest_jobs?
                         ) %>"
-              <% if @harvest_definition.completed_harvest_jobs? %>
+              <% if !@harvest_definition.completed_harvest_jobs? %>
                 data-bs-toggle="tooltip" data-bs-placement="top"
                 data-bs-title="You need to run the harvest before you can add an enrichment"
               <% else %>
