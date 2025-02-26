@@ -26,29 +26,6 @@
     {
       "warning_type": "Unscoped Find",
       "warning_code": 82,
-      "fingerprint": "10b7e0993b71887c2d7dd30be4473f773190435a5a9cd2f2a24a117ac248056f",
-      "check_name": "UnscopedFind",
-      "message": "Unscoped call to `TransformationDefinition#find`",
-      "file": "app/controllers/fields_controller.rb",
-      "line": 48,
-      "link": "https://brakemanscanner.org/docs/warning_types/unscoped_find/",
-      "code": "TransformationDefinition.find(params[:transformation_definition_id])",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "FieldsController",
-        "method": "find_transformation_definition"
-      },
-      "user_input": "params[:transformation_definition_id]",
-      "confidence": "Weak",
-      "cwe_id": [
-        285
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "Unscoped Find",
-      "warning_code": 82,
       "fingerprint": "12f738df84807a67ad1e551e36cd8f316abb7d48f3bf0b4f5552a03c53433b77",
       "check_name": "UnscopedFind",
       "message": "Unscoped call to `FieldSchemaFieldValue#find`",
@@ -70,25 +47,50 @@
       "note": ""
     },
     {
-      "warning_type": "Unscoped Find",
-      "warning_code": 82,
-      "fingerprint": "261c1a2f6e3d6a5dcc68742d402e2ac22dd3e7cb28583003adef70a3493ee6f2",
-      "check_name": "UnscopedFind",
-      "message": "Unscoped call to `TransformationDefinition#find`",
-      "file": "app/controllers/raw_records_controller.rb",
-      "line": 29,
-      "link": "https://brakemanscanner.org/docs/warning_types/unscoped_find/",
-      "code": "TransformationDefinition.find(params[:transformation_definition_id])",
+      "warning_type": "Dangerous Eval",
+      "warning_code": 13,
+      "fingerprint": "13686982330c02c10d639b6e0d2f55e50479b1b5c6a1da4797d9d04f40d3128f",
+      "check_name": "Evaluation",
+      "message": "Dynamic code evaluation",
+      "file": "app/models/parameter.rb",
+      "line": 24,
+      "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
+      "code": "eval(content)",
       "render_path": null,
       "location": {
         "type": "method",
-        "class": "RawRecordsController",
-        "method": "find_transformation_definition"
+        "class": "Parameter",
+        "method": "dynamic_evaluation"
       },
-      "user_input": "params[:transformation_definition_id]",
+      "user_input": null,
       "confidence": "Weak",
       "cwe_id": [
-        285
+        913,
+        95
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Dangerous Eval",
+      "warning_code": 13,
+      "fingerprint": "2720c6d8496212c1ff4dab602221d52ec76a28ce4b3a2d06f91ab6ea025cb711",
+      "check_name": "Evaluation",
+      "message": "Dynamic code evaluation",
+      "file": "app/models/stop_condition.rb",
+      "line": 9,
+      "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
+      "code": "eval(content)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "StopCondition",
+        "method": "evaluate"
+      },
+      "user_input": null,
+      "confidence": "Weak",
+      "cwe_id": [
+        913,
+        95
       ],
       "note": ""
     },
@@ -135,52 +137,6 @@
       "note": ""
     },
     {
-      "warning_type": "File Access",
-      "warning_code": 16,
-      "fingerprint": "7501c46c81f7d45a1f7629d9a9321e68c6e4afa3e5465264e7574ef1bfbbf062",
-      "check_name": "FileAccess",
-      "message": "Model attribute used in file name",
-      "file": "app/sidekiq/split_worker.rb",
-      "line": 19,
-      "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
-      "code": "FileUtils.remove_dir(\"#{ExtractionJob.find(extraction_job_id).extraction_folder}/tmp\")",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "SplitWorker",
-        "method": "perform"
-      },
-      "user_input": "ExtractionJob.find(extraction_job_id).extraction_folder",
-      "confidence": "Medium",
-      "cwe_id": [
-        22
-      ],
-      "note": "Not concerned about this as the FileUtils needs to find the file to be removed based on the Extraction Job record extraction folder information which is generated automatically by the system so should be safe from user input meddling."
-    },
-    {
-      "warning_type": "Unscoped Find",
-      "warning_code": 82,
-      "fingerprint": "80cd626861db94d291b01519b71b81522b32db087a8eb1ecbbbc1cb99de52884",
-      "check_name": "UnscopedFind",
-      "message": "Unscoped call to `Request#find`",
-      "file": "app/controllers/requests_controller.rb",
-      "line": 8,
-      "link": "https://brakemanscanner.org/docs/warning_types/unscoped_find/",
-      "code": "Request.find(params[:previous_request_id])",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "RequestsController",
-        "method": "show"
-      },
-      "user_input": "params[:previous_request_id]",
-      "confidence": "Weak",
-      "cwe_id": [
-        285
-      ],
-      "note": ""
-    },
-    {
       "warning_type": "Unscoped Find",
       "warning_code": 82,
       "fingerprint": "b6ca2c9a96ef1c619aa2f8ee1cd35181a4580c8001bad4dd95bdccf807d3f746",
@@ -204,48 +160,26 @@
       "note": ""
     },
     {
-      "warning_type": "File Access",
-      "warning_code": 16,
-      "fingerprint": "bb860236c85b4d0635d9f905e4bcf004e8a36210f000e0d163cede879ea07a81",
-      "check_name": "FileAccess",
-      "message": "Model attribute used in file name",
-      "file": "app/sidekiq/file_extraction_worker.rb",
-      "line": 19,
-      "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
-      "code": "FileUtils.remove_dir(\"#{ExtractionJob.find(extraction_job_id).extraction_folder}/tmp\")",
+      "warning_type": "Dangerous Eval",
+      "warning_code": 13,
+      "fingerprint": "e4a3269319190afae45770e458490b48d313bb63b7fb461f0dd1db06aee5bddc",
+      "check_name": "Evaluation",
+      "message": "Dynamic code evaluation",
+      "file": "app/supplejack/transformation/field_execution.rb",
+      "line": 15,
+      "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
+      "code": "eval(field.block)",
       "render_path": null,
       "location": {
         "type": "method",
-        "class": "FileExtractionWorker",
-        "method": "perform"
+        "class": "Transformation::FieldExecution",
+        "method": "execute"
       },
-      "user_input": "ExtractionJob.find(extraction_job_id).extraction_folder",
-      "confidence": "Medium",
-      "cwe_id": [
-        22
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "Unscoped Find",
-      "warning_code": 82,
-      "fingerprint": "bbebeaefcd2656802772ec7874fe108c948ebf9071ff4fbe16d1b6b56625da15",
-      "check_name": "UnscopedFind",
-      "message": "Unscoped call to `TransformationDefinition#find`",
-      "file": "app/controllers/transformation_definitions_controller.rb",
-      "line": 88,
-      "link": "https://brakemanscanner.org/docs/warning_types/unscoped_find/",
-      "code": "TransformationDefinition.find(params[:id])",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "TransformationDefinitionsController",
-        "method": "find_transformation_definition"
-      },
-      "user_input": "params[:id]",
+      "user_input": null,
       "confidence": "Weak",
       "cwe_id": [
-        285
+        913,
+        95
       ],
       "note": ""
     },
@@ -273,6 +207,5 @@
       "note": ""
     }
   ],
-  "updated": "2024-08-09 15:48:58 +1200",
-  "brakeman_version": "6.1.2"
+  "brakeman_version": "7.0.0"
 }
