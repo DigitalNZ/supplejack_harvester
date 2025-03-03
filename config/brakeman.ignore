@@ -70,6 +70,30 @@
       "note": ""
     },
     {
+      "warning_type": "Dangerous Eval",
+      "warning_code": 13,
+      "fingerprint": "13686982330c02c10d639b6e0d2f55e50479b1b5c6a1da4797d9d04f40d3128f",
+      "check_name": "Evaluation",
+      "message": "Dynamic code evaluation",
+      "file": "app/models/parameter.rb",
+      "line": 24,
+      "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
+      "code": "eval(content)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Parameter",
+        "method": "dynamic_evaluation"
+      },
+      "user_input": null,
+      "confidence": "Weak",
+      "cwe_id": [
+        913,
+        95
+      ],
+      "note": ""
+    },
+    {
       "warning_type": "Unscoped Find",
       "warning_code": 82,
       "fingerprint": "261c1a2f6e3d6a5dcc68742d402e2ac22dd3e7cb28583003adef70a3493ee6f2",
@@ -89,6 +113,30 @@
       "confidence": "Weak",
       "cwe_id": [
         285
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Dangerous Eval",
+      "warning_code": 13,
+      "fingerprint": "2720c6d8496212c1ff4dab602221d52ec76a28ce4b3a2d06f91ab6ea025cb711",
+      "check_name": "Evaluation",
+      "message": "Dynamic code evaluation",
+      "file": "app/models/stop_condition.rb",
+      "line": 9,
+      "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
+      "code": "eval(content)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "StopCondition",
+        "method": "evaluate"
+      },
+      "user_input": null,
+      "confidence": "Weak",
+      "cwe_id": [
+        913,
+        95
       ],
       "note": ""
     },
@@ -250,6 +298,30 @@
       "note": ""
     },
     {
+      "warning_type": "Dangerous Eval",
+      "warning_code": 13,
+      "fingerprint": "e4a3269319190afae45770e458490b48d313bb63b7fb461f0dd1db06aee5bddc",
+      "check_name": "Evaluation",
+      "message": "Dynamic code evaluation",
+      "file": "app/supplejack/transformation/field_execution.rb",
+      "line": 15,
+      "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
+      "code": "eval(field.block)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Transformation::FieldExecution",
+        "method": "execute"
+      },
+      "user_input": null,
+      "confidence": "Weak",
+      "cwe_id": [
+        913,
+        95
+      ],
+      "note": ""
+    },
+    {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
       "fingerprint": "f5e669317bee950124a897fa88bf46c1390150265b6b6d4c7c294c09766e8298",
@@ -273,6 +345,5 @@
       "note": ""
     }
   ],
-  "updated": "2024-08-09 15:48:58 +1200",
-  "brakeman_version": "6.1.2"
+  "brakeman_version": "7.0.0"
 }
