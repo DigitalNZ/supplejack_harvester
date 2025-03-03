@@ -81,9 +81,9 @@
             <button
               type="button"
               class="<%= class_names(
-                          'card', 'card--create-cta', 'd-flex',
-                          'card--create-cta-disabled': !@harvest_definition.completed_harvest_jobs?
-                        ) %>"
+                           'card', 'card--create-cta', 'd-flex',
+                           'card--create-cta-disabled': !@harvest_definition.completed_harvest_jobs?
+                         ) %>"
               <% if !@harvest_definition.completed_harvest_jobs? %>
                 data-bs-toggle="tooltip" data-bs-placement="top"
                 data-bs-title="You need to run the harvest before you can add an enrichment"
@@ -179,14 +179,14 @@
 <% end %>
 
 <%= render layout: 'shared/create_modal',
-            locals: { modal_heading: 'Add enrichment', id: 'add-enrichment',
-                      modal_subheading: 'Add a source_id to identify records from this enrichment' } do %>
+           locals: { modal_heading: 'Add enrichment', id: 'add-enrichment',
+                     modal_subheading: 'Add a source_id to identify records from this enrichment' } do %>
   <div class='d-grid mt-4'>
     <%= vertical_form_with model: [@pipeline, @enrichment_definition] do |form| %>
       <div class='row gy-3 align-items-center'>
         <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
         <%= form.hidden_field :kind, value: 'enrichment' %>
-        <%= form.hidden_field :priority, value: (@pipeline.harvest_definitions.last&.priority || 0) - 1  %>
+        <%= form.hidden_field :priority, value: (@pipeline.harvest_definitions.last&.priority || 0) - 1 %>
 
         <div class="col-4">
           <%= form.label :source_id, class: 'form-label' do %>
