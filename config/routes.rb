@@ -13,6 +13,11 @@ Rails.application.routes.draw do
 
   root 'home#index'
 
+  namespace :api do
+    resources :pipeline_statuses, only: %i[show]
+    resources :pipeline_jobs, only: %i[create]
+  end
+
   resources :users, only: %i[index show edit update destroy] do
     collection do
       resource :two_factor_setups, only: %i[show create destroy]
