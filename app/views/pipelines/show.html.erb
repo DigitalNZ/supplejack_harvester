@@ -61,61 +61,73 @@
   </ul>
 <% end %>
 
-<% if @pipeline.harvest_definitions.any?(&:harvest?) %>
+<% if @pipeline.harvest_definitions.any? %>
 
-  <%= render partial: 'pipelines/harvest_definition' %>
+  <% if @pipeline.harvest_definitions.any?(&:harvest?) %>
+    <%= render partial: 'pipelines/harvest_definition' %>
+    <span class='definition-group__bridge'></span>
+  <% end %>
+
+  <div class='card px-5 pt-5 mb-5'>
+    <% if @pipeline.enrichments.any? %>
+      <% @pipeline.enrichments.each do |enrichment_definition| %>
+        <%= render partial: 'pipelines/enrichment_definition', locals: { enrichment_definition: } %>
+      <% end %>
+    <% end %>
+
+    <div class='row definition-group definition-group--spacer'>
+      <div class='col-12'>
+        <% if @pipeline.harvest_definitions.any?(&:harvest?) %>
+            <button
+              type="button"
+              class="<%= class_names(
+                           'card', 'card--create-cta', 'd-flex',
+                           'card--create-cta-disabled': !@harvest_definition.completed_harvest_jobs?
+                         ) %>"
+              <% if !@harvest_definition.completed_harvest_jobs? %>
+                data-bs-toggle="tooltip" data-bs-placement="top"
+                data-bs-title="You need to run the harvest before you can add an enrichment"
+              <% else %>
+                data-bs-toggle="modal"
+                data-bs-target="#add-enrichment"
+              <% end %>>
+
+            <div class="card-body align-items-center d-flex justify-content-center">
+              <p class='card-text'>+ Add Enrichment</p>
+            </div>
+          </button>
+        <% else %>
+            <button
+              type="button"
+              class="<%= class_names('card', 'card--create-cta', 'd-flex') %>"
+                data-bs-toggle="modal"
+                data-bs-target="#add-enrichment">
+
+              <div class="card-body align-items-center d-flex justify-content-center">
+                <p class='card-text'>+ Add Enrichment</p>
+              </div>
+            </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
 
 <% else %>
 
-  <div class='row definition-group'>
-    <div class='col-12'>
-      <button
-        type="button"
-        class="card card--create-cta d-flex"
-        data-bs-toggle="modal"
-        data-bs-target="#add-harvest">
+  <div class='col-12'>
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle w-100 harvest-card card card--create-cta d-flex h-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
         <div class="card-body align-items-center d-flex justify-content-center">
-          <p class='card-text'>+ Add harvest</p>
+          + Add block
         </div>
       </button>
+      <ul class="dropdown-menu w-100">
+        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-harvest">Add Harvest</a></li>
+        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-enrichment">Add Enrichment</a></li>
+      </ul>
     </div>
   </div>
 
-<% end %>
-
-<% if @pipeline.enrichments.any? %>
-
-  <% @pipeline.enrichments.each do |enrichment_definition| %>
-
-    <%= render partial: 'pipelines/enrichment_definition', locals: { enrichment_definition: } %>
-
-  <% end %>
-<% end %>
-
-<% if @harvest_definition.ready_to_run? %>
-  <div class='row definition-group definition-group--spacer'>
-    <span class='definition-group__bridge'></span>
-    <div class='col-12'>
-        <button
-          type="button"
-          class="<%= class_names(
-                       'card', 'card--create-cta', 'd-flex',
-                       'card--create-cta-disabled': !@harvest_definition.completed_harvest_jobs?
-                     ) %>"
-          <% if !@harvest_definition.completed_harvest_jobs? %>
-            data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="You need to run the harvest before you can add an enrichment"
-          <% else %>
-            data-bs-toggle="modal"
-            data-bs-target="#add-enrichment"
-          <% end %>>
-
-        <div class="card-body align-items-center d-flex justify-content-center">
-          <p class='card-text'>+ Add Enrichment</p>
-        </div>
-      </button>
-    </div>
-  </div>
 <% end %>
 
 <%# -- Modals -- %>
@@ -168,41 +180,39 @@
   </div>
 <% end %>
 
-<% if @pipeline.harvest.present? %>
-  <%= render layout: 'shared/create_modal',
-             locals: { modal_heading: 'Add enrichment', id: 'add-enrichment',
-                       modal_subheading: 'Add a source_id to identify records from this enrichment' } do %>
-    <div class='d-grid mt-4'>
-      <%= vertical_form_with model: [@pipeline, @enrichment_definition] do |form| %>
-        <div class='row gy-3 align-items-center'>
-          <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
-          <%= form.hidden_field :kind, value: 'enrichment' %>
-          <%= form.hidden_field :priority, value: @pipeline.harvest_definitions.last.priority - 1 %>
+<%= render layout: 'shared/create_modal',
+           locals: { modal_heading: 'Add enrichment', id: 'add-enrichment',
+                     modal_subheading: 'Add a source_id to identify records from this enrichment' } do %>
+  <div class='d-grid mt-4'>
+    <%= vertical_form_with model: [@pipeline, @enrichment_definition] do |form| %>
+      <div class='row gy-3 align-items-center'>
+        <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
+        <%= form.hidden_field :kind, value: 'enrichment' %>
+        <%= form.hidden_field :priority, value: (@pipeline.harvest_definitions.last&.priority || 0) - 1 %>
 
-          <div class="col-4">
-            <%= form.label :source_id, class: 'form-label' do %>
-              Source ID
+        <div class="col-4">
+          <%= form.label :source_id, class: 'form-label' do %>
+            Source ID
 
-              <span
-                data-bs-toggle="tooltip"
-                data-bs-title="This is used as a way to identify records from this enrichment. This needs to be different than the harvest source ID."><i class="bi bi-question-circle" aria-label="helper text"></i>
-            <% end %>
-          </div>
-          <div class='col-8'>
-            <%= form.text_field :source_id,
-                                class: {
-                                  'form-control': true,
-                                  'is-invalid': @enrichment_definition.errors[:source_id].any?
-                                } %>
-          </div>
+            <span
+              data-bs-toggle="tooltip"
+              data-bs-title="This is used as a way to identify records from this enrichment. This needs to be different than the harvest source ID."><i class="bi bi-question-circle" aria-label="helper text"></i>
+          <% end %>
         </div>
-
-        <div class='d-grid mt-4'>
-          <button type="submit" class="btn btn-primary">Add to pipeline</button>
+        <div class='col-8'>
+          <%= form.text_field :source_id,
+                              class: {
+                                'form-control': true,
+                                'is-invalid': @enrichment_definition.errors[:source_id].any?
+                              } %>
         </div>
-      <% end %>
-    </div>
-  <% end %>
+      </div>
+
+      <div class='d-grid mt-4'>
+        <button type="submit" class="btn btn-primary">Add to pipeline</button>
+      </div>
+    <% end %>
+  </div>
 <% end %>
 
 <% if @harvest_definition.persisted? %>

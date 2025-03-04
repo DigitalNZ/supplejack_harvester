@@ -1,6 +1,4 @@
 <div class='card p-4 definition-group--spacer'>
-  <span class='definition-group__bridge'></span>
-
   <div class='d-flex'>
     <div class='me-auto'>
 
@@ -13,6 +11,18 @@
         } do %>
         <h4><%= enrichment_definition.source_id %> </h4>
       <% end %>
+
+      <%= render layout: 'shared/inline_editable_element', locals:
+        {
+          id: "harvest-definition-#{enrichment_definition.id}-priority",
+          model: enrichment_definition,
+          attribute: :priority,
+          url: pipeline_harvest_definition_path(@pipeline, enrichment_definition)
+        } do %>
+        <%= enrichment_definition.priority %>
+      <% end %>
+
+      <br>
     </div>
 
     <div>

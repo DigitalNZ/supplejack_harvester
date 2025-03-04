@@ -31,10 +31,6 @@
             <%= form.hidden_field :per_page, value: 20 %>
             <%= form.hidden_field :total_selector, value: '$.meta.total_pages' %>
 
-            <% if !model.persisted? %>
-              <%= form.hidden_field :source_id, value: @pipeline.harvest.source_id %>
-            <% end %>
-
             <% if model.persisted? %>
               <div class="col-4">
                 <%= form.label :name, 'Name', class: 'form-label' %>
@@ -44,25 +40,24 @@
               </div>
             <% end %>
 
-            <% if model.persisted? %>
-              <div class="col-4">
-                <%= form.label :source_id, class: 'form-label' do %>
-                  Source ID
+            <div class="col-4">
+              <%= form.label :source_id, class: 'form-label' do %>
+                Target Source ID
 
-                  <span
-                      data-bs-toggle="tooltip"
-                      data-bs-title="The Source ID of the harvest you want to enrich"><i class="bi bi-question-circle" aria-label="helper text"></i>
-                  </span>
-                <% end %>
-              </div>
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="The Source ID of the harvest you want to enrich"><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
 
-              <div class='col-8'>
-                <%= form.text_field :source_id,
-                                    class: {
-                                      'form-control': true
-                                    }, required: true %>
-              </div>
-            <% end %>
+            <div class='col-8'>
+              <%= form.text_field :source_id,
+                                  value: @pipeline.harvest&.source_id,
+                                  class: {
+                                    'form-control': true
+                                  }, required: true %>
+            </div>
 
             <div class="col-4">
               <%= form.label :base_url, class: 'form-label' do %>

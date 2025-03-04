@@ -57,6 +57,7 @@
 
       <% @pipeline_jobs.each.with_index(1) do |pipeline_job, index| %>
         <% pipeline_job.harvest_definitions_to_run.zip(pipeline_job.harvest_reports) do |definition_id, report| %>
+
           <% if report.present? %>
             <% badge_classes = class_names(
                  'badge',
@@ -67,7 +68,7 @@
                ) %>
 
               <tr>
-                <td><%= report.definition_name || report.harvest_job.name %></td>
+                <td><%= report.harvest_job.name %></td>
                 <td>
                   <% if pipeline_job.schedule.present? %>
                     Schedule
