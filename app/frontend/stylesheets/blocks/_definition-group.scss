@@ -7,11 +7,10 @@
   margin-right: 0;
 
   @include modifier('spacer') {
-    margin-top: 4rem;
+    margin-bottom: 4rem;
   }
 
   @include element('bridge') {
-    position: absolute;
     width: 0px;
     height: 64px;
     top: -64px;
@@ -20,5 +19,6 @@
     right: 0;
     margin: auto;
     padding: 0;
+    display: block;
   }
 }

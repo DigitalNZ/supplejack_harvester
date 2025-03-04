@@ -77,7 +77,7 @@ class TransformationWorker
   end
 
   def source_id
-    @harvest_job.pipeline_job.pipeline.harvest.source_id
+    @harvest_job.pipeline_job.pipeline.harvest_definitions.first.source_id
   end
 
   def destination
