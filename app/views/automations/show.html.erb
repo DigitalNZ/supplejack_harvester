@@ -1,0 +1,302 @@
+<%= content_for :header do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <h1 class="header__title"><%= @automation.name %></h1>
+
+  <div class="header__actions">
+    <%= button_to automation_path(@automation), 
+                method: :delete,
+                class: 'btn btn-danger' do %>
+      <i class="bi bi-trash"></i> Delete Automation
+    <% end %>
+  </div>
+
+  <div class="clearfix"></div>
+
+<% end %>
+<div class="py-4">
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Automation Overview</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6>Destination</h6>
+              <p><%= @automation.destination.name %></p>
+              
+              <h6>Status</h6>
+              <p>
+                <span class="badge <%= status_badge_class(@automation.status) %>"><%= @automation.status.humanize %></span>
+              </p>
+              
+              <h6>Total Steps</h6>
+              <p><%= @steps.count %></p>
+            </div>
+            <div class="col-md-6">
+              <h6>Total Duration</h6>
+              <p><%= distance_of_time_in_words(@total_duration) if @total_duration.positive? %></p>
+              
+              <h6>Active Processing Time</h6>
+              <p>
+                <%= distance_of_time_in_words(@active_duration) if @active_duration.positive? %>
+                <% if @total_duration.positive? %>
+                  (<%= (@active_duration.to_f / @total_duration * 100).round(1) %>% of total time)
+                <% end %>
+              </p>
+              
+              <h6>Queue Time</h6>
+              <p>
+                <%= distance_of_time_in_words(@queue_duration) if @queue_duration.positive? %>
+                <% if @total_duration.positive? %>
+                  (<%= (@queue_duration.to_f / @total_duration * 100).round(1) %>% of total time)
+                <% end %>
+              </p>
+              
+              <h6>Started At</h6>
+              <p><%= @start_time&.strftime('%B %d, %Y %H:%M:%S') || 'N/A' %></p>
+              
+              <h6>Latest Update</h6>
+              <p><%= @end_time&.strftime('%B %d, %Y %H:%M:%S') || 'N/A' %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Aggregated Pipeline Metrics</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <div class="card h-100">
+                <div class="card-body text-center">
+                  <h3 class="text-primary"><%= number_with_delimiter(@total_metrics[:pages_extracted]) %></h3>
+                  <p class="text-muted mb-0">Total Pages Extracted</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="card h-100">
+                <div class="card-body text-center">
+                  <h3 class="text-primary"><%= number_with_delimiter(@total_metrics[:records_transformed]) %></h3>
+                  <p class="text-muted mb-0">Total Transformations</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="card h-100">
+                <div class="card-body text-center">
+                  <h3 class="text-primary"><%= number_with_delimiter(@total_metrics[:records_loaded]) %></h3>
+                  <p class="text-muted mb-0">Total Records Processed</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="card h-100">
+                <div class="card-body text-center">
+                  <h3 class="text-warning"><%= number_with_delimiter(@total_metrics[:records_rejected]) %></h3>
+                  <p class="text-muted mb-0">Total Transformations Rejected</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="card h-100">
+                <div class="card-body text-center">
+                  <h3 class="text-danger"><%= number_with_delimiter(@total_metrics[:records_deleted]) %></h3>
+                  <p class="text-muted mb-0">Total Records Marked for Deletion</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">Step-by-Step Pipeline Metrics</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Step</th>
+                  <th>Pipeline</th>
+                  <th>Status</th>
+                  <th>Job</th>
+                  <th>Pages Extracted</th>
+                  <th>Transformations</th>
+                  <th>Records Processed</th>
+                  <th>Transformations Rejected</th>
+                  <th>Marked for Deletion</th>
+                  <th>Total Duration</th>
+                  <th>Active Time</th>
+                  <th>Queue Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @step_metrics.each do |step_data| %>
+                  <tr>
+                    <td><%= step_data[:step].position + 1 %></td>
+                    <td><%= step_data[:step].pipeline.name %></td>
+                    <td>
+                      <span class="badge <%= status_badge_class(step_data[:step].status) %>">
+                        <%= step_data[:step].status.present? ? step_data[:step].status.humanize : 'Not Started' %>
+                      </span>
+                    </td>
+                    <td>
+                      <% if step_data[:step].pipeline_job %>
+                        <%= link_to pipeline_pipeline_job_path(step_data[:step].pipeline, step_data[:step].pipeline_job),
+                                  class: 'badge bg-light text-dark',
+                                  title: "View job details" do %>
+                          Job #<%= step_data[:step].pipeline_job.id %>
+                        <% end %>
+                      <% else %>
+                        —
+                      <% end %>
+                    </td>
+                    <% if step_data[:metrics].present? %>
+                      <td><%= number_with_delimiter(step_data[:metrics][:pages_extracted]) %></td>
+                      <td><%= number_with_delimiter(step_data[:metrics][:records_transformed]) %></td>
+                      <td><%= number_with_delimiter(step_data[:metrics][:records_loaded]) %></td>
+                      <td><%= number_with_delimiter(step_data[:metrics][:records_rejected]) %></td>
+                      <td><%= number_with_delimiter(step_data[:metrics][:records_deleted]) %></td>
+                      <td><%= distance_of_time_in_words(step_data[:metrics][:duration]) if step_data[:metrics][:duration]&.positive? %></td>
+                      <td><%= distance_of_time_in_words(step_data[:metrics][:active_time]) if step_data[:metrics][:active_time]&.positive? %></td>
+                      <td><%= distance_of_time_in_words(step_data[:metrics][:queue_time]) if step_data[:metrics][:queue_time]&.positive? %></td>
+                    <% else %>
+                      <td colspan="9" class="text-center text-muted">No metrics available</td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if @steps.any? { |step| step.pipeline_job&.harvest_reports&.any? } %>
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">Overall Performance Analysis</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h6 class="card-title">Aggregated Transformation Efficiency</h6>
+                    <% if @total_metrics[:records_transformed] > 0 %>
+                      <% transformation_efficiency = (@total_metrics[:records_loaded].to_f / @total_metrics[:records_transformed] * 100).round(2) %>
+                      <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: <%= transformation_efficiency %>%;" 
+                             aria-valuenow="<%= transformation_efficiency %>" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                          <%= transformation_efficiency %>%
+                        </div>
+                      </div>
+                      <p class="text-muted small">
+                        <%= number_with_delimiter(@total_metrics[:records_loaded]) %> records processed through to load stage from
+                        <%= number_with_delimiter(@total_metrics[:records_transformed]) %> total transformations across all pipelines
+                      </p>
+                    <% else %>
+                      <p class="text-muted">No transformation data available</p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h6 class="card-title">Aggregated Rejection Rate</h6>
+                    <% if @total_metrics[:records_transformed] > 0 %>
+                      <% rejection_rate = (@total_metrics[:records_rejected].to_f / @total_metrics[:records_transformed] * 100).round(2) %>
+                      <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-warning" 
+                             role="progressbar" 
+                             style="width: <%= rejection_rate %>%;" 
+                             aria-valuenow="<%= rejection_rate %>" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                          <%= rejection_rate %>%
+                        </div>
+                      </div>
+                      <p class="text-muted small">
+                        <%= number_with_delimiter(@total_metrics[:records_rejected]) %> transformations rejected from
+                        <%= number_with_delimiter(@total_metrics[:records_transformed]) %> total transformations across all pipelines
+                      </p>
+                    <% else %>
+                      <p class="text-muted">No rejection data available</p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h6 class="card-title">Aggregated Processing Rate</h6>
+                    <% if @active_duration > 0 && @total_metrics[:records_loaded] > 0 %>
+                      <% records_per_second = (@total_metrics[:records_loaded].to_f / @active_duration).round(2) %>
+                      <% records_per_minute = (records_per_second * 60).round(2) %>
+                      <p class="text-muted">
+                        <strong><%= records_per_second %></strong> transformations processed per second
+                        (<strong><%= records_per_minute %></strong> per minute)
+                      </p>
+                    <% else %>
+                      <p class="text-muted">No processing rate data available</p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h6 class="card-title">Time Efficiency</h6>
+                    <% if @total_duration > 0 %>
+                      <% active_percentage = (@active_duration.to_f / @total_duration * 100).round(2) %>
+                      <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-info" 
+                             role="progressbar" 
+                             style="width: <%= active_percentage %>%;" 
+                             aria-valuenow="<%= active_percentage %>" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                          <%= active_percentage %>%
+                        </div>
+                      </div>
+                      <p class="text-muted small">
+                        <%= distance_of_time_in_words(@active_duration) %> of active processing time out of
+                        <%= distance_of_time_in_words(@total_duration) %> total duration
+                      </p>
+                    <% else %>
+                      <p class="text-muted">No time efficiency data available</p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div> 

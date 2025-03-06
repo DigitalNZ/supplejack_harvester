@@ -11,6 +11,7 @@ class HarvestReport < ApplicationRecord
 
   belongs_to :pipeline_job, optional: true
   belongs_to :harvest_job, optional: true
+  belongs_to :automation_step, optional: true
 
   STATUSES = %w[queued cancelled running completed errored].freeze
 
@@ -80,6 +81,7 @@ class HarvestReport < ApplicationRecord
     return 'queued'    if statuses.all?('queued')
     return 'cancelled' if considered_cancelled?
     return 'completed' if statuses.all?('completed')
+    return 'errored' if statuses.any?('errored')
 
     'running' if considered_running?
   end

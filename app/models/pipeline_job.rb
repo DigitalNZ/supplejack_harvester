@@ -13,6 +13,7 @@ class PipelineJob < ApplicationRecord
 
   has_many :harvest_reports, dependent: :destroy
   has_many :harvest_jobs, dependent: :destroy
+  belongs_to :automation_step, optional: true
 
   enum :page_type, { all_available_pages: 0, set_number: 1 }
 
@@ -20,6 +21,25 @@ class PipelineJob < ApplicationRecord
 
   with_options if: :set_number? do
     validates :pages, presence: true
+  end
+
+  # Check if this job is part of an automation
+  def from_automation?
+    automation_step.present?
+  end
+
+  # Trigger the next step in the automation if this job is from an automation and has completed
+  def trigger_next_automation_step
+    return unless from_automation? && harvest_reports.all?(&:completed?)
+    
+    # Find the current step and the next step in the automation
+    current_step = automation_step
+    next_step = current_step.next_step
+    
+    # If there's a next step, continue the automation
+    if next_step.present?
+      AutomationWorker.perform_async(current_step.automation_id, next_step.id)
+    end
   end
 
   def enqueue_enrichment_jobs(job_id)

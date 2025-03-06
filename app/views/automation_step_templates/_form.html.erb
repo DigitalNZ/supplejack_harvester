@@ -1,0 +1,55 @@
+<%= form_with(model: [@automation_template, automation_step_template]) do |form| %>
+  <% if automation_step_template.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(automation_step_template.errors.count, "error") %> prohibited this step template from being saved:</h4>
+      <ul>
+        <% automation_step_template.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form.hidden_field :position %>
+
+  <div class="mb-3">
+    <%= form.label :pipeline_id, "Pipeline", class: "form-label" %>
+    <%= form.select :pipeline_id, 
+                   @pipelines.map { |p| [p.name, p.id] }, 
+                   { include_blank: "Select a pipeline" }, 
+                   { class: "form-select", required: true, data: { controller: "pipeline-select" } } %>
+    <small class="form-text text-muted">
+      Select a pipeline to view and choose its associated harvest definitions.
+    </small>
+  </div>
+
+  <% if @automation_template.destination.present? %>
+    <div class="mb-3">
+      <label class="form-label">Destination</label>
+      <p class="form-text">
+        This step will use the destination from the template: 
+        <strong><%= @automation_template.destination.name %></strong>
+      </p>
+      <small class="text-muted">To change the destination, edit the template settings.</small>
+    </div>
+  <% else %>
+    <div class="mb-3">
+      <label class="form-label">Destination</label>
+      <p class="form-text">
+        <span class="text-warning">No destination set for this template.</span>
+      </p>
+      <small class="text-muted">When creating an automation from this template, you'll need to set a destination.</small>
+    </div>
+  <% end %>
+
+  <div class="mb-4" id="harvest-definitions-container">
+    <% if @harvest_definitions.present? %>
+      <%= render 'harvest_definitions', harvest_definitions: @harvest_definitions %>
+    <% end %>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", automation_template_path(@automation_template), class: "btn btn-secondary" %>
+  </div>
+<% end %> 

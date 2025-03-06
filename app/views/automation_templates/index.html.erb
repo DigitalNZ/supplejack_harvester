@@ -1,0 +1,119 @@
+<%= content_for(:title) { 'Automation Templates' } %>
+
+<%= content_for :header do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <h1 class="header__title">Automation Templates</h1>
+
+  <div class="header__actions">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
+        + Create new template
+    </button>
+  </div>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<%= form_with url: '/automation_templates', method: :get, class: 'row mb-5' do |form| %>
+  <div class="col-auto pe-2">
+    <div class="search">
+      <%= form.text_field(
+            :search,
+            value: params[:search],
+            placeholder: 'Search by name, description, destination',
+            class: 'form-control search__input'
+          ) %>
+      <%= form.label :search, class: 'search__label' do %>
+        <i aria-hidden="true" class="bi bi-search"></i>
+        Search by name, description, destination
+      <% end %>
+
+      <% if params[:search].present? %>
+        <button type="button" class="btn btn-secondary search__clear" data-clear-field="search">
+          Clear
+          <i aria-hidden="true" class="bi bi-plus"></i>
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="col ps-0">
+    <button class="btn btn-primary" type="submit">Search</button>
+  </div>
+
+  <div class="col-auto pe-0">
+    <%= form.label :sort_by, 'Sort by:', class: 'col-form-label' %>
+  </div>
+  <div class="col-auto">
+    <%= form.select(
+          :sort_by,
+          [['Last Edited', 'updated_at'], ['Alphabetical', 'name']],
+          { selected: params[:sort_by] || 'updated_at' },
+          class: 'form-select', 'data-submitting-select': true
+        ) %>
+  </div>
+<% end %>
+
+<%- @automation_templates.each do |template| %>
+  <%= link_to automation_template_path(template), class: 'card card--clickable mb-3' do %>
+    <div class="card-body">
+      <h2 class="card-title"><%= template.name %></h2>
+      <h3 class="card-subtitle">
+        <% if template.automations.exists? %>
+          <% last_automation = template.automations.order(created_at: :desc).first %>
+          Last run <%= time_ago_in_words(last_automation.created_at) %> ago
+        <% end %>
+      </h3>
+      <div>
+          <% if template.automations.exists? %>
+          <% last_automation = template.automations.order(created_at: :desc).first %>
+          <span class="badge <%= status_badge_class(last_automation.status) %>"><%= last_automation.status.humanize %></span>
+        <% end %>
+        <% if template.destination %>
+          <span class="badge bg-light text-dark">
+            <%= template.destination.name %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<%- end %>
+
+<% if @automation_templates.respond_to?(:total_pages) %>
+  <%= render 'shared/pagination_below_table', items: @automation_templates %>
+<% end %>
+
+<%= render layout: 'shared/create_modal',
+           locals: { modal_heading: 'Create new automation template', button_text: 'Create template' } do %>
+  <%= vertical_form_with model: AutomationTemplate.new do |form| %>
+    <div class='row gy-3 align-items-center'>
+      <div class="col-4">
+        <%= form.label :name, 'Template Name', class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.text_field :name, class: 'form-control' %>
+      </div>
+
+      <div class="col-4">
+        <%= form.label :description, 'Template Description', class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.text_area :description, class: 'form-control' %>
+      </div>
+
+      <div class="col-4">
+        <%= form.label :destination_id, 'Destination', class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.select :destination_id,
+                        options_from_collection_for_select(@destinations, :id, :name),
+                        { include_blank: 'Select a destination' },
+                        class: 'form-select' %>
+      </div>
+    </div>
+
+    <div class='d-grid mt-4'>
+      <button type="submit" class="btn btn-primary">Create template</button>
+    </div>
+  <% end %>
+<% end %> 

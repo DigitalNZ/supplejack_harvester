@@ -24,6 +24,30 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :automations, only: [:show, :destroy] do
+    member do
+      post :run
+    end
+    
+    resources :automation_steps, only: [] do
+      collection do
+        get :get_harvest_definitions
+      end
+    end
+  end
+
+  resources :automation_templates do
+    member do
+      post :run_automation
+    end
+    
+    resources :automation_step_templates do
+      collection do
+        get :get_harvest_definitions
+      end
+    end
+  end
+
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
 
