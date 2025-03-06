@@ -7,8 +7,23 @@ RSpec.describe AutomationTemplate do
 
   it { is_expected.to belong_to(:destination) }
   it { is_expected.to have_many(:automation_step_templates).dependent(:destroy) }
-  it { is_expected.to have_many(:automations) }
+  it { is_expected.to have_many(:automations).dependent(:destroy) }
   it { is_expected.to validate_presence_of(:name) }
+
+  describe 'when destroyed' do
+    it 'deletes all associated automations' do
+      template = create(:automation_template)
+      automation1 = create(:automation, automation_template: template)
+      automation2 = create(:automation, automation_template: template)
+      
+      expect {
+        template.destroy
+      }.to change { Automation.count }.by(-2)
+      
+      expect(Automation.exists?(automation1.id)).to be_falsey
+      expect(Automation.exists?(automation2.id)).to be_falsey
+    end
+  end
 
   describe '#run_automation' do
     let(:user) { create(:user) }

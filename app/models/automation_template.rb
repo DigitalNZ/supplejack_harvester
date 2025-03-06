@@ -2,7 +2,7 @@
 
 class AutomationTemplate < ApplicationRecord
   has_many :automation_step_templates, -> { order(position: :asc) }, dependent: :destroy
-  has_many :automations, dependent: :nullify
+  has_many :automations, dependent: :destroy
   belongs_to :destination
   belongs_to :last_edited_by, class_name: 'User', optional: true
 

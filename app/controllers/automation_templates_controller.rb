@@ -46,8 +46,17 @@ class AutomationTemplatesController < ApplicationController
   end
   
   def destroy
+    automations_count = @automation_template.automations.count
+    template_name = @automation_template.name
     @automation_template.destroy
-    redirect_to automation_templates_path, notice: 'Automation template was successfully destroyed.'
+    
+    if automations_count > 0
+      message = "Automation template '#{template_name}' was successfully deleted along with #{automations_count} automation#{'s' if automations_count != 1}."
+    else
+      message = "Automation template '#{template_name}' was successfully deleted."
+    end
+    
+    redirect_to automation_templates_path, notice: message
   end
   
   def run_automation

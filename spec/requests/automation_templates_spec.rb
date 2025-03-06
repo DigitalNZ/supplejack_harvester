@@ -123,6 +123,30 @@ RSpec.describe 'AutomationTemplates' do
       delete automation_template_path(automation_template)
       expect(response).to redirect_to(automation_templates_path)
     end
+    
+    it 'destroys all associated automations' do
+      # Create automations associated with the template
+      create_list(:automation, 3, automation_template: automation_template)
+      
+      expect {
+        delete automation_template_path(automation_template)
+      }.to change(Automation, :count).by(-3)
+    end
+    
+    it 'includes the count of deleted automations in the notice message' do
+      create_list(:automation, 2, automation_template: automation_template)
+      
+      delete automation_template_path(automation_template)
+      
+      expect(flash[:notice]).to include("along with 2 automations")
+    end
+    
+    it 'displays a simple message when no automations are deleted' do
+      delete automation_template_path(automation_template)
+      
+      expect(flash[:notice]).to include("successfully deleted")
+      expect(flash[:notice]).not_to include("along with")
+    end
   end
 
   describe 'POST /automation_templates/:id/run_automation' do

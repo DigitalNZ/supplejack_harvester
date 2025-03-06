@@ -12,12 +12,12 @@
       <%= link_to 'View Last Run', automation_path(@last_automation_run), 
                   class: 'btn btn-outline-secondary me-2' %>
     <% end %>
-    <%= form_with url: run_automation_automation_template_path(@automation_template), method: :post, class: 'd-inline' do %>
-      <%= button_tag 'Run Automation',
-                     type: 'submit',
-                     class: 'btn btn-success',
-                     data: { confirm: 'Create and run an automation from this template?' } %>
-    <% end %>
+    <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#run-automation-modal">
+      Run Automation
+    </button>
+    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-template-modal">
+      <i class="bi bi-trash"></i> Delete Template
+    </button>
   </div>
 
   <div class="clearfix"></div>
@@ -75,11 +75,9 @@
                                   class: 'dropdown-item' %>
                     </li>
                     <li>
-                      <%= button_to 'Delete Step',
-                                  automation_template_automation_step_template_path(@automation_template, step),
-                                  method: :delete,
-                                  class: 'dropdown-item text-danger',
-                                  data: { confirm: 'Are you sure you want to delete this step?' } %>
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#delete-step-modal-<%= step.id %>">
+                        Delete Step
+                      </button>
                     </li>
                   </ul>
                 </div>
@@ -179,6 +177,90 @@
           </div>
         <% else %>
           <p class="mb-0">No automations have been created from this template yet.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# Delete Template Modal %>
+<div
+  class="modal fade"
+  id="delete-template-modal"
+  tabindex="-1"
+  aria-labelledby="Delete template"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Automation Template</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this template?</p>
+        <p class="text-danger"><strong>Warning:</strong> This will also delete all automations created from this template and cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <%= button_to automation_template_path(@automation_template), method: :delete, class: 'btn btn-danger' do %>
+          <i class="bi bi-trash"></i> Delete Template
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# Delete Step Modals - One for each step %>
+<% @step_templates.each do |step| %>
+  <div
+    class="modal fade"
+    id="delete-step-modal-<%= step.id %>"
+    tabindex="-1"
+    aria-labelledby="Delete step"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete Step</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete this step (<%= step.pipeline.name %>)?</p>
+          <p>This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <%= button_to automation_template_automation_step_template_path(@automation_template, step),
+                      method: :delete,
+                      class: 'btn btn-danger' do %>
+            Delete Step
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<%# Run Automation Modal %>
+<div
+  class="modal fade"
+  id="run-automation-modal"
+  tabindex="-1"
+  aria-labelledby="Run automation"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Run Automation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Create and run an automation from this template?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <%= form_with url: run_automation_automation_template_path(@automation_template), method: :post do %>
+          <%= button_tag 'Run Automation', type: 'submit', class: 'btn btn-success' %>
         <% end %>
       </div>
     </div>
