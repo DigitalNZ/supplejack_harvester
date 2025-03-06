@@ -33,33 +33,33 @@
               </p>
               
               <h6>Total Steps</h6>
-              <p><%= @steps.count %></p>
+              <p><%= @automation_summary.steps.count %></p>
             </div>
             <div class="col-md-6">
               <h6>Total Duration</h6>
-              <p><%= distance_of_time_in_words(@total_duration) if @total_duration.positive? %></p>
+              <p><%= distance_of_time_in_words(@automation_summary.total_duration) if @automation_summary.total_duration.positive? %></p>
               
               <h6>Active Processing Time</h6>
               <p>
-                <%= distance_of_time_in_words(@active_duration) if @active_duration.positive? %>
-                <% if @total_duration.positive? %>
-                  (<%= (@active_duration.to_f / @total_duration * 100).round(1) %>% of total time)
+                <%= distance_of_time_in_words(@automation_summary.active_duration) if @automation_summary.active_duration.positive? %>
+                <% if @automation_summary.total_duration.positive? %>
+                  (<%= (@automation_summary.active_duration.to_f / @automation_summary.total_duration * 100).round(1) %>% of total time)
                 <% end %>
               </p>
               
               <h6>Queue Time</h6>
               <p>
-                <%= distance_of_time_in_words(@queue_duration) if @queue_duration.positive? %>
-                <% if @total_duration.positive? %>
-                  (<%= (@queue_duration.to_f / @total_duration * 100).round(1) %>% of total time)
+                <%= distance_of_time_in_words(@automation_summary.queue_duration) if @automation_summary.queue_duration.positive? %>
+                <% if @automation_summary.total_duration.positive? %>
+                  (<%= (@automation_summary.queue_duration.to_f / @automation_summary.total_duration * 100).round(1) %>% of total time)
                 <% end %>
               </p>
               
               <h6>Started At</h6>
-              <p><%= @start_time&.strftime('%B %d, %Y %H:%M:%S') || 'N/A' %></p>
+              <p><%= @automation_summary.start_time&.strftime('%B %d, %Y %H:%M:%S') || 'N/A' %></p>
               
               <h6>Latest Update</h6>
-              <p><%= @end_time&.strftime('%B %d, %Y %H:%M:%S') || 'N/A' %></p>
+              <p><%= @automation_summary.end_time&.strftime('%B %d, %Y %H:%M:%S') || 'N/A' %></p>
             </div>
           </div>
         </div>
@@ -78,7 +78,7 @@
             <div class="col-md-4 mb-3">
               <div class="card h-100">
                 <div class="card-body text-center">
-                  <h3 class="text-primary"><%= number_with_delimiter(@total_metrics[:pages_extracted]) %></h3>
+                  <h3 class="text-primary"><%= number_with_delimiter(@automation_summary.total_metrics[:pages_extracted]) %></h3>
                   <p class="text-muted mb-0">Total Pages Extracted</p>
                 </div>
               </div>
@@ -86,7 +86,7 @@
             <div class="col-md-4 mb-3">
               <div class="card h-100">
                 <div class="card-body text-center">
-                  <h3 class="text-primary"><%= number_with_delimiter(@total_metrics[:records_transformed]) %></h3>
+                  <h3 class="text-primary"><%= number_with_delimiter(@automation_summary.total_metrics[:records_transformed]) %></h3>
                   <p class="text-muted mb-0">Total Transformations</p>
                 </div>
               </div>
@@ -94,7 +94,7 @@
             <div class="col-md-4 mb-3">
               <div class="card h-100">
                 <div class="card-body text-center">
-                  <h3 class="text-primary"><%= number_with_delimiter(@total_metrics[:records_loaded]) %></h3>
+                  <h3 class="text-primary"><%= number_with_delimiter(@automation_summary.total_metrics[:records_loaded]) %></h3>
                   <p class="text-muted mb-0">Total Records Processed</p>
                 </div>
               </div>
@@ -102,7 +102,7 @@
             <div class="col-md-6 mb-3">
               <div class="card h-100">
                 <div class="card-body text-center">
-                  <h3 class="text-warning"><%= number_with_delimiter(@total_metrics[:records_rejected]) %></h3>
+                  <h3 class="text-warning"><%= number_with_delimiter(@automation_summary.total_metrics[:records_rejected]) %></h3>
                   <p class="text-muted mb-0">Total Transformations Rejected</p>
                 </div>
               </div>
@@ -110,7 +110,7 @@
             <div class="col-md-6 mb-3">
               <div class="card h-100">
                 <div class="card-body text-center">
-                  <h3 class="text-danger"><%= number_with_delimiter(@total_metrics[:records_deleted]) %></h3>
+                  <h3 class="text-danger"><%= number_with_delimiter(@automation_summary.total_metrics[:records_deleted]) %></h3>
                   <p class="text-muted mb-0">Total Records Marked for Deletion</p>
                 </div>
               </div>
@@ -147,7 +147,7 @@
                 </tr>
               </thead>
               <tbody>
-                <% @step_metrics.each do |step_data| %>
+                <% @automation_summary.step_metrics.each do |step_data| %>
                   <tr>
                     <td><%= step_data[:step].position + 1 %></td>
                     <td><%= step_data[:step].pipeline.name %></td>
@@ -189,7 +189,7 @@
     </div>
   </div>
 
-  <% if @steps.any? { |step| step.pipeline_job&.harvest_reports&.any? } %>
+  <% if @automation_summary.steps.any? { |step| step.pipeline_job&.harvest_reports&.any? } %>
     <div class="row mb-4">
       <div class="col-md-12">
         <div class="card">
@@ -202,8 +202,8 @@
                 <div class="card h-100">
                   <div class="card-body">
                     <h6 class="card-title">Aggregated Transformation Efficiency</h6>
-                    <% if @total_metrics[:records_transformed] > 0 %>
-                      <% transformation_efficiency = (@total_metrics[:records_loaded].to_f / @total_metrics[:records_transformed] * 100).round(2) %>
+                    <% if @automation_summary.total_metrics[:records_transformed] > 0 %>
+                      <% transformation_efficiency = (@automation_summary.total_metrics[:records_loaded].to_f / @automation_summary.total_metrics[:records_transformed] * 100).round(2) %>
                       <div class="progress mb-2" style="height: 20px;">
                         <div class="progress-bar bg-success" 
                              role="progressbar" 
@@ -215,8 +215,8 @@
                         </div>
                       </div>
                       <p class="text-muted small">
-                        <%= number_with_delimiter(@total_metrics[:records_loaded]) %> records processed through to load stage from
-                        <%= number_with_delimiter(@total_metrics[:records_transformed]) %> total transformations across all pipelines
+                        <%= number_with_delimiter(@automation_summary.total_metrics[:records_loaded]) %> records processed through to load stage from
+                        <%= number_with_delimiter(@automation_summary.total_metrics[:records_transformed]) %> total transformations across all pipelines
                       </p>
                     <% else %>
                       <p class="text-muted">No transformation data available</p>
@@ -228,8 +228,8 @@
                 <div class="card h-100">
                   <div class="card-body">
                     <h6 class="card-title">Aggregated Rejection Rate</h6>
-                    <% if @total_metrics[:records_transformed] > 0 %>
-                      <% rejection_rate = (@total_metrics[:records_rejected].to_f / @total_metrics[:records_transformed] * 100).round(2) %>
+                    <% if @automation_summary.total_metrics[:records_transformed] > 0 %>
+                      <% rejection_rate = (@automation_summary.total_metrics[:records_rejected].to_f / @automation_summary.total_metrics[:records_transformed] * 100).round(2) %>
                       <div class="progress mb-2" style="height: 20px;">
                         <div class="progress-bar bg-warning" 
                              role="progressbar" 
@@ -241,8 +241,8 @@
                         </div>
                       </div>
                       <p class="text-muted small">
-                        <%= number_with_delimiter(@total_metrics[:records_rejected]) %> transformations rejected from
-                        <%= number_with_delimiter(@total_metrics[:records_transformed]) %> total transformations across all pipelines
+                        <%= number_with_delimiter(@automation_summary.total_metrics[:records_rejected]) %> transformations rejected from
+                        <%= number_with_delimiter(@automation_summary.total_metrics[:records_transformed]) %> total transformations across all pipelines
                       </p>
                     <% else %>
                       <p class="text-muted">No rejection data available</p>
@@ -254,8 +254,8 @@
                 <div class="card h-100">
                   <div class="card-body">
                     <h6 class="card-title">Aggregated Processing Rate</h6>
-                    <% if @active_duration > 0 && @total_metrics[:records_loaded] > 0 %>
-                      <% records_per_second = (@total_metrics[:records_loaded].to_f / @active_duration).round(2) %>
+                    <% if @automation_summary.active_duration > 0 && @automation_summary.total_metrics[:records_loaded] > 0 %>
+                      <% records_per_second = (@automation_summary.total_metrics[:records_loaded].to_f / @automation_summary.active_duration).round(2) %>
                       <% records_per_minute = (records_per_second * 60).round(2) %>
                       <p class="text-muted">
                         <strong><%= records_per_second %></strong> transformations processed per second
@@ -271,8 +271,8 @@
                 <div class="card h-100">
                   <div class="card-body">
                     <h6 class="card-title">Time Efficiency</h6>
-                    <% if @total_duration > 0 %>
-                      <% active_percentage = (@active_duration.to_f / @total_duration * 100).round(2) %>
+                    <% if @automation_summary.total_duration > 0 %>
+                      <% active_percentage = (@automation_summary.active_duration.to_f / @automation_summary.total_duration * 100).round(2) %>
                       <div class="progress mb-2" style="height: 20px;">
                         <div class="progress-bar bg-info" 
                              role="progressbar" 
@@ -284,8 +284,8 @@
                         </div>
                       </div>
                       <p class="text-muted small">
-                        <%= distance_of_time_in_words(@active_duration) %> of active processing time out of
-                        <%= distance_of_time_in_words(@total_duration) %> total duration
+                        <%= distance_of_time_in_words(@automation_summary.active_duration) %> of active processing time out of
+                        <%= distance_of_time_in_words(@automation_summary.total_duration) %> total duration
                       </p>
                     <% else %>
                       <p class="text-muted">No time efficiency data available</p>
