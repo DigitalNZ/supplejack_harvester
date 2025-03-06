@@ -9,7 +9,9 @@ class Pipeline < ApplicationRecord
 
   has_many :pipeline_jobs, dependent: :destroy
   has_many :schedules, dependent: :destroy
-
+  has_many :automation_step_templates, dependent: :destroy
+  has_many :automation_templates, -> { distinct }, through: :automation_step_templates
+  
   validates :name, presence: true, uniqueness: true
 
   def self.search(words, format)

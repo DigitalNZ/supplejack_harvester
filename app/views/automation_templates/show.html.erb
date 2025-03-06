@@ -84,7 +84,7 @@
               </div>
               <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
-                  <h6 class="mb-0"><%= step.pipeline.name %></h6>
+                  <h6 class="mb-0"><%= link_to step.pipeline.name, pipeline_path(step.pipeline) %></h6>
                   <% if @last_automation_run&.automation_steps&.find_by(position: index)&.pipeline_job %>
                     <%= link_to pipeline_pipeline_job_path(@last_automation_run.automation_steps.find_by(position: index).pipeline_job.pipeline, @last_automation_run.automation_steps.find_by(position: index).pipeline_job),
                               class: 'badge bg-light text-dark',
@@ -98,7 +98,11 @@
                   <% harvest_defs_to_show = step.harvest_definitions.present? ? step.harvest_definitions : step.pipeline.harvest_definitions %>
                   <% harvest_defs_to_show.each do |hd| %>
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                      <small><%= hd.name %></small>
+                      <small>
+                        <%= hd.name %>
+                        <br/>
+                        (Fragment priority: <%= hd.priority %>)
+                      </small>
                       <% 
                         report = nil
                         if @last_automation_run

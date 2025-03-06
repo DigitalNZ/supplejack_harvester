@@ -39,6 +39,7 @@ Rails.application.routes.draw do
   resources :automation_templates do
     member do
       post :run_automation
+      get :automations
     end
     
     resources :automation_step_templates do
@@ -56,6 +57,8 @@ Rails.application.routes.draw do
     end
 
     resources :schedules
+
+    resources :automation_templates, only: [:index]
 
     resources :harvest_definitions, only: %i[create update destroy] do
       resources :extraction_definitions, only: %i[show create update destroy] do

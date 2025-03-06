@@ -1,57 +1,91 @@
-<%= content_for(:title) { 'Automation Templates' } %>
+<%= content_for(:title) { @pipeline ? "#{@pipeline.name} - Automation Templates" : 'Automation Templates' } %>
 
 <%= content_for :header do %>
   <%= render 'shared/breadcrumb_nav' %>
 
-  <h1 class="header__title">Automation Templates</h1>
-
-  <div class="header__actions">
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
-        + Create new template
-    </button>
-  </div>
-
-  <div class="clearfix"></div>
-<% end %>
-
-<%= form_with url: '/automation_templates', method: :get, class: 'row mb-5' do |form| %>
-  <div class="col-auto pe-2">
-    <div class="search">
-      <%= form.text_field(
-            :search,
-            value: params[:search],
-            placeholder: 'Search by name, description, destination',
-            class: 'form-control search__input'
-          ) %>
-      <%= form.label :search, class: 'search__label' do %>
-        <i aria-hidden="true" class="bi bi-search"></i>
-        Search by name, description, destination
-      <% end %>
-
-      <% if params[:search].present? %>
-        <button type="button" class="btn btn-secondary search__clear" data-clear-field="search">
-          Clear
-          <i aria-hidden="true" class="bi bi-plus"></i>
-        </button>
+  <% if @pipeline %>
+    <div class='float-start'>
+      <h1><%= @pipeline.name %></h1>
+      <% if @pipeline.description.present? %>
+        <p><%= @pipeline.description %></p>
       <% end %>
     </div>
-  </div>
 
-  <div class="col ps-0">
-    <button class="btn btn-primary" type="submit">Search</button>
-  </div>
+    <div class='clearfix'></div>
 
-  <div class="col-auto pe-0">
-    <%= form.label :sort_by, 'Sort by:', class: 'col-form-label' %>
-  </div>
-  <div class="col-auto">
-    <%= form.select(
-          :sort_by,
-          [['Last Edited', 'updated_at'], ['Alphabetical', 'name']],
-          { selected: params[:sort_by] || 'updated_at' },
-          class: 'form-select', 'data-submitting-select': true
-        ) %>
-  </div>
+    <div class='mt-4'></div>
+    <ul class="nav nav-tabs">
+      <li class='nav-item'>
+        <%= link_to 'Pipeline', pipeline_path(@pipeline), class: 'nav-link' %>
+      </li>
+
+      <li class='nav-item'>
+        <%= link_to "Schedules (#{@pipeline.schedules.count})", pipeline_schedules_path(@pipeline), class: 'nav-link' %>
+      </li>
+
+      <li class='nav-item'>
+        <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link' %>
+      </li>
+
+      <li class='nav-item'>
+        <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})", 
+                    pipeline_automation_templates_path(@pipeline), 
+                    class: 'nav-link active' %>
+      </li>
+    </ul>
+  <% else %>
+    <h1 class="header__title">Automation Templates</h1>
+
+    <div class="header__actions">
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
+          + Create new template
+      </button>
+    </div>
+
+    <div class="clearfix"></div>
+  <% end %>
+<% end %>
+
+<% unless @pipeline %>
+  <%= form_with url: '/automation_templates', method: :get, class: 'row mb-5' do |form| %>
+    <div class="col-auto pe-2">
+      <div class="search">
+        <%= form.text_field(
+              :search,
+              value: params[:search],
+              placeholder: 'Search by name, description, destination',
+              class: 'form-control search__input'
+            ) %>
+        <%= form.label :search, class: 'search__label' do %>
+          <i aria-hidden="true" class="bi bi-search"></i>
+          Search by name, description, destination
+        <% end %>
+
+        <% if params[:search].present? %>
+          <button type="button" class="btn btn-secondary search__clear" data-clear-field="search">
+            Clear
+            <i aria-hidden="true" class="bi bi-plus"></i>
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="col ps-0">
+      <button class="btn btn-primary" type="submit">Search</button>
+    </div>
+
+    <div class="col-auto pe-0">
+      <%= form.label :sort_by, 'Sort by:', class: 'col-form-label' %>
+    </div>
+    <div class="col-auto">
+      <%= form.select(
+            :sort_by,
+            [['Last Edited', 'updated_at'], ['Alphabetical', 'name']],
+            { selected: params[:sort_by] || 'updated_at' },
+            class: 'form-select', 'data-submitting-select': true
+          ) %>
+    </div>
+  <% end %>
 <% end %>
 
 <%- @automation_templates.each do |template| %>
@@ -81,6 +115,39 @@
 
 <% if @automation_templates.respond_to?(:total_pages) %>
   <%= render 'shared/pagination_below_table', items: @automation_templates %>
+<% end %>
+
+<% if @pipeline %>
+  <div
+    class="modal fade"
+    id="clone-pipeline">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Clone and edit new pipeline</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Please name the new pipeline which you are cloning</p>
+
+          <%= vertical_form_with(
+            model: @pipeline,
+            url: clone_pipeline_path(@pipeline), 
+            method: :post
+          ) do |f| %>
+
+            <%= f.text_field :name, required: true, class: 'form-control', value: "[CLONE] #{@pipeline.name}" %>
+
+            <br>
+
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Clone and edit new</button>
+
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
 <% end %>
 
 <%= render layout: 'shared/create_modal',

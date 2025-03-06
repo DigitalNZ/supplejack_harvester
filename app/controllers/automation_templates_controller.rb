@@ -4,10 +4,15 @@ class AutomationTemplatesController < ApplicationController
   include LastEditedBy
 
   before_action :set_automation_template, only: [:show, :edit, :update, :destroy, :run_automation, :automations]
+  before_action :set_pipeline, only: [:index], if: -> { params[:pipeline_id].present? }
   
   def index
     @automation_template = AutomationTemplate.new
-    @automation_templates = automation_templates
+    @automation_templates = if @pipeline
+                              @pipeline.automation_templates.page(params[:page])
+                            else
+                              automation_templates
+                            end
     @destinations = Destination.all
   end
   
@@ -77,6 +82,10 @@ class AutomationTemplatesController < ApplicationController
   
   def set_automation_template
     @automation_template = AutomationTemplate.find(params[:id])
+  end
+  
+  def set_pipeline
+    @pipeline = Pipeline.find(params[:pipeline_id])
   end
   
   def automation_template_params
