@@ -24,7 +24,7 @@ class AutomationsController < ApplicationController
   private
   
   def set_automation
-    @automation = Automation.find(params[:id])
+    @automation = current_user.accessible_automations.find(params[:id])
   end
   
   def automation_params

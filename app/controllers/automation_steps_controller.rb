@@ -13,6 +13,6 @@ class AutomationStepsController < ApplicationController
   private
   
   def set_automation
-    @automation = Automation.find(params[:automation_id])
+    @automation = current_user.accessible_automations.find(params[:automation_id])
   end
 end 
