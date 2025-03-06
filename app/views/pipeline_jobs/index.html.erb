@@ -72,6 +72,8 @@
                 <td>
                   <% if pipeline_job.schedule.present? %>
                     Schedule
+                  <% elsif pipeline_job.automation_step.present? %>
+                    <%= link_to 'Automation', automation_path(pipeline_job.automation_step.automation) %>
                   <% else %>
                     <%= pipeline_job.launched_by&.username %>
                   <% end %>

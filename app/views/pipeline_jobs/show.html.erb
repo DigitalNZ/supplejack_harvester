@@ -22,25 +22,83 @@
 <% end %>
 
 <%- @pipeline_job.harvest_reports.each do |report| %>
-
   <div class='card p-4 definition-group--spacer'>
-
     <div class='d-flex'>
       <div class='me-auto'>
         <h4 class='mb-4'><%= report.harvest_job.harvest_definition.source_id %> </h4>
       </div>
     </div>
 
+    <%# Performance Overview %>
+    <div class='row mb-4'>
+      <div class='col-md-6'>
+        <div class='card'>
+          <div class='card-header bg-primary text-white'>
+            <h5 class='mb-0'>Pipeline Transformation Efficiency</h5>
+          </div>
+          <div class='card-body'>
+            <% if report.records_transformed > 0 %>
+              <% transformation_efficiency = (report.records_loaded.to_f / report.records_transformed * 100).round(2) %>
+              <div class='progress mb-2' style='height: 20px;'>
+                <div class='progress-bar bg-success'
+                     role='progressbar'
+                     style='width: <%= transformation_efficiency %>%;'
+                     aria-valuenow='<%= transformation_efficiency %>'
+                     aria-valuemin='0'
+                     aria-valuemax='100'>
+                  <%= transformation_efficiency %>%
+                </div>
+              </div>
+              <p class='text-muted small'>
+                <%= number_with_delimiter(report.records_loaded) %> records processed through to load stage from
+                <%= number_with_delimiter(report.records_transformed) %> total transformations
+              </p>
+            <% else %>
+              <p class='text-muted'>No transformation data available</p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class='col-md-6'>
+        <div class='card'>
+          <div class='card-header bg-primary text-white'>
+            <h5 class='mb-0'>Pipeline Rejection Rate</h5>
+          </div>
+          <div class='card-body'>
+            <% if report.records_transformed > 0 && report.records_rejected %>
+              <% rejection_rate = (report.records_rejected.to_f / report.records_transformed * 100).round(2) %>
+              <div class='progress mb-2' style='height: 20px;'>
+                <div class='progress-bar bg-warning'
+                     role='progressbar'
+                     style='width: <%= rejection_rate %>%;'
+                     aria-valuenow='<%= rejection_rate %>'
+                     aria-valuemin='0'
+                     aria-valuemax='100'>
+                  <%= rejection_rate %>%
+                </div>
+              </div>
+              <p class='text-muted small'>
+                <%= number_with_delimiter(report.records_rejected) %> transformations rejected from
+                <%= number_with_delimiter(report.records_transformed) %> total transformations
+              </p>
+            <% else %>
+              <p class='text-muted'>No rejection data available</p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Processing Pipeline %>
     <div class='row'>
       <div class='col'>
         <div class='card harvest-card'>
           <div class='card-body'>
             <h5 class='card-title'>Extraction</h5>
-
             <p><%= report.extraction_status %></p>
-            <p><%= report.pages_extracted %> pages</p>
+            <p><%= number_with_delimiter(report.pages_extracted) %> pages</p>
           </div>
-
           <i class='bi bi-arrow-right harvest-card__right-arrow'></i>
         </div>
       </div>
@@ -49,16 +107,14 @@
         <div class='card harvest-card'>
           <div class='card-body'>
             <h5 class='card-title'>Transformation</h5>
-
             <p><%= report.transformation_status %></p>
             <p>
-              <%= report.records_transformed %> transformed
+              <%= number_with_delimiter(report.records_transformed) %> transformations
               <% if report.transformation_definition.fields.any?(&:reject_if?) %>
-                | <%= report.records_rejected %> rejected
+                | <%= number_with_delimiter(report.records_rejected) %> rejected
               <% end %>
             </p>
           </div>
-
           <i class='bi bi-arrow-right harvest-card__right-arrow'></i>
         </div>
       </div>
@@ -67,11 +123,9 @@
         <div class='harvest-card card'>
           <div class='card-body'>
             <h5 class='card-title'>Load</h5>
-
             <p><%= report.load_status %></p>
-            <p><%= report.records_loaded %> records</p>
+            <p><%= number_with_delimiter(report.records_loaded) %> processed</p>
           </div>
-
           <% if report.transformation_definition.fields.any?(&:delete_if?) %>
             <i class='bi bi-arrow-right harvest-card__right-arrow'></i>
           <% end %>
@@ -83,15 +137,60 @@
           <div class='card'>
             <div class='card-body'>
               <h5 class='card-title'>Delete</h5>
-
               <p><%= report.load_status %></p>
-              <p><%= report.records_deleted %> deleted</p>
+              <p><%= number_with_delimiter(report.records_deleted) %> marked for deletion</p>
             </div>
-
           </div>
         </div>
       <% end %>
     </div>
-  </div>
 
+    <%# Processing Rate %>
+    <div class='row mt-4'>
+      <div class='col-md-12'>
+        <div class='card'>
+          <div class='card-header bg-info text-white'>
+            <h5 class='mb-0'>Processing Statistics</h5>
+          </div>
+          <div class='card-body'>
+            <div class='row'>
+              <div class='col-md-4'>
+                <h6>Total Duration</h6>
+                <p><%= distance_of_time_in_words(report.duration_seconds) if report.duration_seconds %></p>
+              </div>
+              <div class='col-md-4'>
+                <h6>Started At</h6>
+                <p><%= report.extraction_start_time&.strftime('%B %d, %Y %H:%M:%S') %></p>
+              </div>
+              <div class='col-md-4'>
+                <h6>Latest Update</h6>
+                <p>
+                  <% latest_time = [
+                    report.extraction_end_time,
+                    report.transformation_end_time,
+                    report.load_end_time,
+                    report.delete_end_time
+                  ].compact.max %>
+                  <%= latest_time&.strftime('%B %d, %Y %H:%M:%S') %>
+                </p>
+              </div>
+            </div>
+            <% if report.records_loaded > 0 && report.duration_seconds && report.duration_seconds > 0 %>
+              <div class='row mt-3'>
+                <div class='col-md-12'>
+                  <h6>Processing Rate</h6>
+                  <p>
+                    <% records_per_second = (report.records_loaded.to_f / report.duration_seconds).round(2) %>
+                    <% records_per_minute = (records_per_second * 60).round(2) %>
+                    <strong><%= records_per_second %></strong> transformations processed per second
+                    (<strong><%= records_per_minute %></strong> per minute)
+                  </p>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 <% end %>

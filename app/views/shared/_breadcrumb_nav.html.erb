@@ -3,6 +3,8 @@
 <% transformation_id = @transformation_definition&.id %>
 <% harvest_definition_id = @harvest_definition&.id %>
 <% destination_id = @destination&.id %>
+<% automation_template_id = @automation_template&.id %>
+<% automation_id = @automation&.id %>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
@@ -106,6 +108,49 @@
           text: 'New',
           active: action_name.in?(%w[new create]),
           display: action_name.in?(%w[new create])
+        ) %>
+
+    <%= breadcrumb_item(
+          text: 'Automation Templates',
+          path: automation_templates_path,
+          active: current_page?(automation_templates_path),
+          display: request.path.include?(automation_templates_path) || request.path.match?(%r{^/automations})
+        ) %>
+
+    <%= breadcrumb_item(
+          text: @automation_template&.name,
+          path: begin
+            automation_template_path(automation_template_id)
+          rescue StandardError
+            nil
+          end,
+          active: begin
+            current_page?(automation_template_path(automation_template_id))
+          rescue StandardError
+            false
+          end,
+          display: request.path.match?(%r{^/automation_templates/\d+})
+        ) %>
+
+    <%= breadcrumb_item(
+          text: 'Automations',
+          active: request.path.match?(%r{^/automations}) && !request.path.include?('/automation_templates'),
+          display: request.path.match?(%r{^/automations}) && !request.path.include?('/automation_templates')
+        ) %>
+
+    <%= breadcrumb_item(
+          text: @automation&.name,
+          path: begin
+            automation_path(automation_id)
+          rescue StandardError
+            nil
+          end,
+          active: begin
+            current_page?(automation_path(automation_id))
+          rescue StandardError
+            false
+          end,
+          display: request.path.match?(%r{^/automations/\d+})
         ) %>
 
     <%= breadcrumb_item(
