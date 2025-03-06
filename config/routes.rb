@@ -16,6 +16,11 @@ Rails.application.routes.draw do
   namespace :api do
     resources :pipeline_statuses, only: %i[show]
     resources :pipeline_jobs, only: %i[create]
+    resources :automation_templates, only: [] do
+      member do
+        post :run
+      end
+    end
   end
 
   resources :users, only: %i[index show edit update destroy] do
