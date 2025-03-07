@@ -4,10 +4,12 @@ class Automation < ApplicationRecord
   belongs_to :destination
   belongs_to :automation_template
 
-  has_many :automation_steps, -> { order(position: :asc) }, dependent: :destroy
+  has_many :automation_steps, -> { order(position: :asc) },
+           dependent: :destroy,
+           inverse_of: :automation
 
   validates :name, presence: true
-  validates :destination, presence: { message: 'must be selected' }
+  validates :destination, presence: { message: I18n.t('automation.validations.destination') }
 
   def run
     # Get the first step in order
@@ -24,18 +26,16 @@ class Automation < ApplicationRecord
   end
 
   def status
-    step_statuses = automation_steps.map do |step|
-      step.pipeline_job&.harvest_reports&.map(&:status)&.uniq
-    end.flatten.compact
+    statuses = collect_step_statuses
 
-    return 'not_started' if step_statuses.empty? || step_statuses.all?('not_started')
-    return 'running' if step_statuses.any?('running') || step_statuses.count != automation_steps.count
-    return 'cancelled' if step_statuses.any?('cancelled')
-    return 'completed' if step_statuses.all?('completed')
-    return 'failed' if step_statuses.any?('errored')
-    return 'queued' if step_statuses.any?('queued')
+    return 'not_started' if not_started?(statuses)
+    return 'running' if running?(statuses)
+    return 'cancelled' if cancelled?(statuses)
+    return 'completed' if completed?(statuses)
+    return 'failed' if failed?(statuses)
+    return 'queued' if queued?(statuses)
 
-    'running'
+    'running' # Default fallback
   end
 
   def total_harvest_definitions
@@ -51,24 +51,66 @@ class Automation < ApplicationRecord
     # If no harvest definition IDs are selected, use all of them
     harvest_definitions = pipeline.harvest_definitions if harvest_definitions.blank?
 
+    create_job_with_definitions(step, pipeline, harvest_definitions)
+  end
+
+  private
+
+  def create_job_with_definitions(step, pipeline, harvest_definitions)
     # Generate a unique key for this pipeline job
     key = SecureRandom.hex(10)
 
-    # Use the automation's destination
-    destination_id = destination.id
-
     # Create the pipeline job
-    pipeline_job = PipelineJob.create!(
+    pipeline_job = build_pipeline_job(step, pipeline, key, harvest_definitions)
+
+    # Queue the job
+    queue_pipeline_job(pipeline_job)
+
+    pipeline_job
+  end
+
+  def build_pipeline_job(step, pipeline, key, harvest_definitions)
+    PipelineJob.create!(
       pipeline:,
       key:,
-      destination_id:,
+      destination_id: destination.id,
       harvest_definitions_to_run: harvest_definitions.pluck(:id).map(&:to_s),
       launched_by_id: step.launched_by_id,
       automation_step: step
     )
+  end
 
+  def queue_pipeline_job(pipeline_job)
     PipelineWorker.perform_async(pipeline_job.id)
+  end
 
-    pipeline_job
+  def collect_step_statuses
+    automation_steps.map do |step|
+      step.pipeline_job&.harvest_reports&.map(&:status)&.uniq
+    end.flatten.compact
+  end
+
+  def not_started?(statuses)
+    statuses.empty? || statuses.all?('not_started')
+  end
+
+  def running?(statuses)
+    statuses.any?('running') || statuses.count != automation_steps.count
+  end
+
+  def cancelled?(statuses)
+    statuses.any?('cancelled')
+  end
+
+  def completed?(statuses)
+    statuses.all?('completed')
+  end
+
+  def failed?(statuses)
+    statuses.any?('errored')
+  end
+
+  def queued?(statuses)
+    statuses.any?('queued')
   end
 end

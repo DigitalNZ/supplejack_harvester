@@ -15,4 +15,9 @@ class AutomationStepTemplate < ApplicationRecord
   def display_name
     "#{position + 1}. #{pipeline.name}"
   end
+
+  # Updates the position attribute safely
+  def update_position(new_position)
+    update(position: new_position)
+  end
 end

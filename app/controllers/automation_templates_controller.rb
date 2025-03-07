@@ -34,7 +34,7 @@ class AutomationTemplatesController < ApplicationController
     @automation_template = AutomationTemplate.new(automation_template_params)
 
     if @automation_template.save
-      redirect_to automation_templates_path, notice: 'Automation template was successfully created.'
+      redirect_to automation_templates_path, notice: I18n.t('automation_templates.create.success')
     else
       @destinations = Destination.all
       render :new
@@ -44,7 +44,7 @@ class AutomationTemplatesController < ApplicationController
   def update
     if @automation_template.update(automation_template_params)
       redirect_to automation_template_path(@automation_template),
-                  notice: 'Automation template was successfully updated.'
+                  notice: I18n.t('automation_templates.update.success')
     else
       @destinations = Destination.all
       render :edit
@@ -56,13 +56,11 @@ class AutomationTemplatesController < ApplicationController
     template_name = @automation_template.name
     @automation_template.destroy
 
-    if automations_count.positive?
-      message = "Automation template '#{template_name}' was successfully deleted along with #{automations_count} automation#{if automations_count != 1
-                                                                                                                               's'
-                                                                                                                             end}."
-    else
-      message = "Automation template '#{template_name}' was successfully deleted."
-    end
+    plural = automations_count == 1 ? '' : 's'
+    message = I18n.t('automation_templates.destroy.success',
+                     name: template_name,
+                     count: automations_count,
+                     plural:)
 
     redirect_to automation_templates_path, notice: message
   end

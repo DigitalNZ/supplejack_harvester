@@ -21,7 +21,8 @@ class AutomationStepTemplatesController < ApplicationController
     @automation_step_template = @automation_template.automation_step_templates.build(automation_step_template_params)
 
     if @automation_step_template.save
-      redirect_to automation_template_path(@automation_template), notice: 'Step template was successfully added.'
+      redirect_to automation_template_path(@automation_template),
+                  notice: I18n.t('automation_step_templates.create.success')
     else
       @pipelines = Pipeline.all
       render :new
@@ -30,7 +31,8 @@ class AutomationStepTemplatesController < ApplicationController
 
   def update
     if @automation_step_template.update(automation_step_template_params)
-      redirect_to automation_template_path(@automation_template), notice: 'Step template was successfully updated.'
+      redirect_to automation_template_path(@automation_template),
+                  notice: I18n.t('automation_step_templates.update.success')
     else
       @pipelines = Pipeline.all
       @selected_pipeline = @automation_step_template.pipeline
@@ -44,13 +46,14 @@ class AutomationStepTemplatesController < ApplicationController
 
     # Reorder positions of remaining steps
     @automation_template.automation_step_templates.order(:position).each_with_index do |step, index|
-      step.update_column(:position, index) if step.position != index
+      step.update_position(index) if step.position != index
     end
 
-    redirect_to automation_template_path(@automation_template), notice: 'Step template was successfully removed.'
+    redirect_to automation_template_path(@automation_template),
+                notice: I18n.t('automation_step_templates.destroy.success')
   end
 
-  def get_harvest_definitions
+  def harvest_definitions
     @pipeline = Pipeline.find(params[:pipeline_id])
     @harvest_definitions = @pipeline.harvest_definitions
 

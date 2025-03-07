@@ -9,16 +9,16 @@ class AutomationsController < ApplicationController
 
   def destroy
     @automation.destroy
-    redirect_to automation_templates_path, notice: 'Automation was successfully destroyed.'
+    redirect_to automation_templates_path, notice: I18n.t('automations.destroy.success')
   end
 
   def run
     if @automation.can_run?
       @automation.run
-      redirect_to automation_path(@automation), notice: 'Automation has been started.'
+      redirect_to automation_path(@automation), notice: I18n.t('automations.start.success')
     else
       redirect_to automation_path(@automation),
-                  alert: 'Cannot run automation without steps. Please add at least one step.'
+                  alert: I18n.t('automations.start.error')
     end
   end
 
