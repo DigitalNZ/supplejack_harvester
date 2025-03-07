@@ -2,8 +2,10 @@
 
 FactoryBot.define do
   factory :harvest_job do
-    harvest_definition
-    extraction_job
+    # These associations are required
+    association :pipeline_job
+    association :harvest_definition
+    association :extraction_job
     key { SecureRandom.hex }
 
     trait(:completed) do
