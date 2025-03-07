@@ -45,18 +45,39 @@ module Extraction
     end
 
     def fragment_filter
-      if @harvest_job&.target_job_id.present?
-        { 'fragments.job_id' => @harvest_job.target_job_id }
-      elsif @harvest_job&.pipeline_job&.automation_step.present?
-        job_names = @harvest_job.pipeline_job.automation_step.automation.automation_steps
-                                .map(&:pipeline_job)
-                                .flat_map(&:harvest_jobs)
-                                .map(&:name)
-                                .select { |name| name.include?('__harvest-') }
-        { 'fragments.job_id' => job_names }
-      else
-        { 'fragments.source_id' => @extraction_definition.source_id }
-      end
+      return target_job_fragment_filter if target_job?
+      return automation_step_fragment_filter if automation_step?
+
+      source_fragment_filter
+    end
+
+    def target_job?
+      @harvest_job&.target_job_id.present?
+    end
+
+    def target_job_fragment_filter
+      { 'fragments.job_id' => @harvest_job.target_job_id }
+    end
+
+    def automation_step?
+      @harvest_job&.pipeline_job&.automation_step.present?
+    end
+
+    def automation_step_fragment_filter
+      job_names = automation_step_job_names
+      { 'fragments.job_id' => job_names }
+    end
+
+    def automation_step_job_names
+      @harvest_job.pipeline_job.automation_step.automation.automation_steps
+                  .map(&:pipeline_job)
+                  .flat_map(&:harvest_jobs)
+                  .map(&:name)
+                  .select { |name| name.include?('__harvest-') }
+    end
+
+    def source_fragment_filter
+      { 'fragments.source_id' => @extraction_definition.source_id }
     end
 
     def api_source

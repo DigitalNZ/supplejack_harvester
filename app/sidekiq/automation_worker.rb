@@ -8,31 +8,49 @@ class AutomationWorker
   # @param automation_id [Integer] The ID of the automation to process
   # @param step_id [Integer] The ID of the step to process
   def perform(automation_id, step_id)
+    initialize_models(automation_id, step_id)
+    process_step(automation_id, step_id)
+  end
+
+  private
+
+  def initialize_models(automation_id, step_id)
     @automation = Automation.find(automation_id)
     @step = AutomationStep.find(step_id)
+  end
 
-    # If the step already has a harvest report that's completed, check if we need to move to the next step
-    if @step.pipeline_job.present? && @step.pipeline_job.harvest_reports.map(&:status).uniq.all?('completed')
+  def process_step(automation_id, step_id)
+    if step_completed?
       handle_next_step
       return
     end
 
-    # If the step already has a harvest report (regardless of status),
-    # we'll schedule a check later - don't create a new one
-    if @step.pipeline_job.present?
-      # Check back in 30 seconds to see if the job has completed
-      self.class.perform_in(30.seconds, automation_id, step_id)
+    if step_has_job?
+      schedule_job_check(automation_id, step_id)
       return
     end
 
     # Otherwise, create and start a new pipeline job for this step
     create_and_run_pipeline_job
-
-    # Schedule a check to see if the job has completed
-    self.class.perform_in(30.seconds, automation_id, step_id)
+    schedule_job_check(automation_id, step_id)
   end
 
-  private
+  def step_completed?
+    @step.pipeline_job.present? && all_reports_completed?
+  end
+
+  def all_reports_completed?
+    @step.pipeline_job.harvest_reports.map(&:status).uniq.all?('completed')
+  end
+
+  def step_has_job?
+    @step.pipeline_job.present?
+  end
+
+  def schedule_job_check(automation_id, step_id)
+    # Check back in 30 seconds to see if the job has completed
+    self.class.perform_in(30.seconds, automation_id, step_id)
+  end
 
   def create_and_run_pipeline_job
     # Create a new pipeline job using the automation's create_pipeline_job method

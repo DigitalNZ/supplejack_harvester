@@ -18,19 +18,14 @@ class AutomationStep < ApplicationRecord
     "#{position + 1}. #{pipeline.name}"
   end
 
+  # Returns the status of this step
+  # Prioritizes statuses in a logical order
   def status
-    return 'not_started' if pipeline_job&.harvest_reports.blank?
+    return 'not_started' if no_reports?
 
-    statuses = pipeline_job&.harvest_reports&.map(&:status)&.uniq
+    statuses = report_statuses
 
-    return 'not_started' if statuses.blank? || statuses.include?('not_started')
-    return 'cancelled' if statuses.include?('cancelled')
-    return 'completed' if statuses.all?('completed')
-    return 'errored' if statuses.include?('errored')
-    return 'running' if statuses.include?('running')
-    return 'queued' if statuses.include?('queued')
-
-    'running'
+    status_from_statuses(statuses)
   end
 
   def next_step
@@ -43,5 +38,50 @@ class AutomationStep < ApplicationRecord
   # For compatibility with existing code that might expect destination_id
   def destination_id
     destination&.id
+  end
+
+  private
+
+  def no_reports?
+    pipeline_job&.harvest_reports.blank?
+  end
+
+  def report_statuses
+    pipeline_job&.harvest_reports&.map(&:status)&.uniq || []
+  end
+
+  def status_from_statuses(statuses)
+    return 'not_started' if not_started?(statuses)
+    return 'cancelled' if cancelled?(statuses)
+    return 'completed' if completed?(statuses)
+    return 'errored' if errored?(statuses)
+    return 'running' if running?(statuses)
+    return 'queued' if queued?(statuses)
+
+    'running' # Default fallback
+  end
+
+  def not_started?(statuses)
+    statuses.blank? || statuses.include?('not_started')
+  end
+
+  def cancelled?(statuses)
+    statuses.include?('cancelled')
+  end
+
+  def completed?(statuses)
+    statuses.all?('completed')
+  end
+
+  def errored?(statuses)
+    statuses.include?('errored')
+  end
+
+  def running?(statuses)
+    statuses.include?('running')
+  end
+
+  def queued?(statuses)
+    statuses.include?('queued')
   end
 end

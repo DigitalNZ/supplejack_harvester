@@ -1,18 +1,15 @@
 # frozen_string_literal: true
 
 module AutomationsHelper
+  # Map of status to CSS class names for automation steps
+  STEP_STATUS_MAPPING = {
+    'completed' => 'completed',
+    'running' => 'running',
+    'errored' => 'errored',
+    'queued' => 'queued'
+  }.freeze
+
   def step_status_class(status)
-    case status
-    when 'completed'
-      'completed'
-    when 'running'
-      'running'
-    when 'errored'
-      'errored'
-    when 'queued'
-      'queued'
-    else
-      'not-started'
-    end
+    STEP_STATUS_MAPPING[status] || 'not-started'
   end
 end
