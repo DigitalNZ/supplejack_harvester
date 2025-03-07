@@ -15,4 +15,4 @@ module AutomationsHelper
       'not-started'
     end
   end
-end 
+end

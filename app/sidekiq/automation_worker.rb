@@ -16,7 +16,7 @@ class AutomationWorker
       handle_next_step
       return
     end
-    
+
     # If the step already has a harvest report (regardless of status),
     # we'll schedule a check later - don't create a new one
     if @step.pipeline_job.present?
@@ -24,28 +24,29 @@ class AutomationWorker
       self.class.perform_in(30.seconds, automation_id, step_id)
       return
     end
-    
+
     # Otherwise, create and start a new pipeline job for this step
     create_and_run_pipeline_job
-    
+
     # Schedule a check to see if the job has completed
     self.class.perform_in(30.seconds, automation_id, step_id)
   end
-  
+
   private
-  
+
   def create_and_run_pipeline_job
     # Create a new pipeline job using the automation's create_pipeline_job method
-    pipeline_job = @automation.create_pipeline_job(@step)
+    @automation.create_pipeline_job(@step)
   end
-  
+
   def handle_next_step
     next_step = @step.next_step
-    
+
     # If there's another step, queue a worker to handle it
-    if next_step.present?
-      self.class.perform_async(@automation.id, next_step.id)
-    end
+    return if next_step.blank?
+
+    self.class.perform_async(@automation.id, next_step.id)
+
     # Otherwise, the automation is complete
   end
-end 
+end

@@ -37,4 +37,4 @@ class AutomationTemplateSearchQuery
     destination_ids = Destination.where('name LIKE ?', @words).pluck(:id)
     AutomationTemplate.where(destination_id: destination_ids).pluck(:id)
   end
-end 
+end

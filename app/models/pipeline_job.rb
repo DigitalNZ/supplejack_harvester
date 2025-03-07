@@ -31,15 +31,15 @@ class PipelineJob < ApplicationRecord
   # Trigger the next step in the automation if this job is from an automation and has completed
   def trigger_next_automation_step
     return unless from_automation? && harvest_reports.all?(&:completed?)
-    
+
     # Find the current step and the next step in the automation
     current_step = automation_step
     next_step = current_step.next_step
-    
+
     # If there's a next step, continue the automation
-    if next_step.present?
-      AutomationWorker.perform_async(current_step.automation_id, next_step.id)
-    end
+    return if next_step.blank?
+
+    AutomationWorker.perform_async(current_step.automation_id, next_step.id)
   end
 
   def enqueue_enrichment_jobs(job_id)

@@ -47,12 +47,12 @@ module Extraction
     def fragment_filter
       if @harvest_job&.target_job_id.present?
         { 'fragments.job_id' => @harvest_job.target_job_id }
-      elsif @harvest_job&.pipeline_job&.automation_step&.present?
+      elsif @harvest_job&.pipeline_job&.automation_step.present?
         job_names = @harvest_job.pipeline_job.automation_step.automation.automation_steps
-                              .map(&:pipeline_job)
-                              .flat_map(&:harvest_jobs)
-                              .map(&:name)
-                              .select { |name| name.include?('__harvest-') }
+                                .map(&:pipeline_job)
+                                .flat_map(&:harvest_jobs)
+                                .map(&:name)
+                                .select { |name| name.include?('__harvest-') }
         { 'fragments.job_id' => job_names }
       else
         { 'fragments.source_id' => @extraction_definition.source_id }

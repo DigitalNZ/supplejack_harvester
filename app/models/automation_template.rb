@@ -12,9 +12,9 @@ class AutomationTemplate < ApplicationRecord
   # @param user [User] Optional user to set as the launcher of the automation steps
   def create_automation(user = nil)
     automation = Automation.new(
-      name: name,
-      description: description,
-      destination_id: destination_id,
+      name:,
+      description:,
+      destination_id:,
       automation_template_id: id
     )
 
@@ -33,30 +33,29 @@ class AutomationTemplate < ApplicationRecord
 
     automation
   end
-  
+
   # Create and run a new automation from this template
   # @param user [User] Optional user to set as the launcher of the automation steps
   # @return [Array] Array containing [automation, status_message, success_flag]
   def run_automation(user = nil)
-    running_automations = automations.select { |a| a.status != 'completed' && a.status != 'failed' && a.status != 'cancelled' }
-    
+    running_automations = automations.select do |a|
+      a.status != 'completed' && a.status != 'failed' && a.status != 'cancelled'
+    end
+
     if running_automations.any?
-      return [nil, "Cannot run automation - an automation from this template is already running", false]
+      return [nil, 'Cannot run automation - an automation from this template is already running', false]
     end
 
     # Create the automation
     automation = create_automation(user)
-    
-    if automation.persisted?
-      # Run the automation if it has steps
-      if automation.can_run?
-        automation.run
-        return [automation, "Automation was successfully created and started", true]
-      else
-        return [automation, "Automation was created but couldn't be started - no steps defined", false]
-      end
-    else
-      return [nil, "Failed to create automation from template", false]
+
+    return [nil, 'Failed to create automation from template', false] unless automation.persisted?
+    # Run the automation if it has steps
+    unless automation.can_run?
+      return [automation, "Automation was created but couldn't be started - no steps defined", false]
     end
+
+    automation.run
+    [automation, 'Automation was successfully created and started', true]
   end
-end 
+end

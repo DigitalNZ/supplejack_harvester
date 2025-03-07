@@ -8,9 +8,9 @@ module Api
       automation, message, success = @automation_template.run_automation
 
       if success
-        render json: { status: 'success', message: message, automation_id: automation.id }
+        render json: { status: 'success', message:, automation_id: automation.id }
       else
-        render json: { status: 'failed', message: message }, status: :unprocessable_entity
+        render json: { status: 'failed', message: }, status: :unprocessable_entity
       end
     end
 
@@ -22,4 +22,4 @@ module Api
       render json: { status: 'failed', message: 'Automation template not found' }, status: :not_found
     end
   end
-end 
+end
