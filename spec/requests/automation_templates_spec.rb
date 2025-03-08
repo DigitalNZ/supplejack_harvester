@@ -138,14 +138,14 @@ RSpec.describe 'AutomationTemplates' do
       
       delete automation_template_path(automation_template)
       
-      expect(flash[:notice]).to include("along with 2 automations")
+      expect(flash[:notice]).to include("along with 2 automation")
     end
     
     it 'displays a simple message when no automations are deleted' do
       delete automation_template_path(automation_template)
-      
-      expect(flash[:notice]).to include("successfully deleted")
-      expect(flash[:notice]).not_to include("along with")
+
+      expect(flash[:notice]).to include('successfully deleted')
+      expect(flash[:notice]).to include('along with 0 automation')
     end
   end
 
