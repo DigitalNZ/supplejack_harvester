@@ -181,7 +181,7 @@ en:
     update:
       success: Automation template was successfully updated.
     destroy:
-      success: "Automation template '%{name}' was successfully deleted along with %{count} automation%{plural}."
+      success: "Automation template '%{name}' was successfully deleted along with %{count} automation."
 
   automations:
     destroy:

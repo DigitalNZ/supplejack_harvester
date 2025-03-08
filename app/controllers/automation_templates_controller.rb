@@ -56,11 +56,9 @@ class AutomationTemplatesController < ApplicationController
     template_name = @automation_template.name
     @automation_template.destroy
 
-    plural = automations_count == 1 ? '' : 's'
     message = I18n.t('automation_templates.destroy.success',
                      name: template_name,
-                     count: automations_count,
-                     plural:)
+                     count: automations_count)
 
     redirect_to automation_templates_path, notice: message
   end
