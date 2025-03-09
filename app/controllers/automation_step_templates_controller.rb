@@ -42,11 +42,13 @@ class AutomationStepTemplatesController < ApplicationController
   end
 
   def destroy
+    position = @automation_step_template.position
     @automation_step_template.destroy
 
-    # Reorder positions of remaining steps
-    @automation_template.automation_step_templates.order(:position).each_with_index do |step, index|
-      step.update_position(index) if step.position != index
+    # Reorder positions of remaining steps - update steps that were after the deleted one
+    @automation_template.reload
+    @automation_template.automation_step_templates.where('position > ?', position).find_each do |step|
+      step.update_position(step.position - 1)
     end
 
     redirect_to automation_template_path(@automation_template),
@@ -56,9 +58,15 @@ class AutomationStepTemplatesController < ApplicationController
   def harvest_definitions
     @pipeline = Pipeline.find(params[:pipeline_id])
     @harvest_definitions = @pipeline.harvest_definitions
+    
+    # Create a new step template if none exists (for get_harvest_definitions route)
+    @automation_step_template ||= @automation_template.automation_step_templates.build
 
     render partial: 'harvest_definitions', locals: { harvest_definitions: @harvest_definitions }
   end
+
+  # Alias for harvest_definitions to match the route
+  alias get_harvest_definitions harvest_definitions
 
   private
 

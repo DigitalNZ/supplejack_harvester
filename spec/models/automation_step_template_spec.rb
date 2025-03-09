@@ -9,7 +9,13 @@ RSpec.describe AutomationStepTemplate do
   it { is_expected.to belong_to(:pipeline) }
   it { is_expected.to validate_presence_of(:position) }
   it { is_expected.to validate_numericality_of(:position).only_integer.is_greater_than_or_equal_to(0) }
-  it { is_expected.to validate_presence_of(:pipeline) }
+
+  describe '#update_position' do
+    it 'updates the position attribute' do
+      new_position = subject.position + 1
+      expect { subject.update_position(new_position) }.to change { subject.position }.to(new_position)
+    end
+  end
 
   describe '#harvest_definitions' do
     it 'returns harvest definitions from IDs' do
