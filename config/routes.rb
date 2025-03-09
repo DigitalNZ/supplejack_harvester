@@ -36,7 +36,7 @@ Rails.application.routes.draw do
     
     resources :automation_steps, only: [] do
       collection do
-        get :get_harvest_definitions
+        get :harvest_definitions
       end
     end
   end
@@ -49,7 +49,7 @@ Rails.application.routes.draw do
     
     resources :automation_step_templates do
       collection do
-        get :get_harvest_definitions
+        get :harvest_definitions
       end
     end
   end

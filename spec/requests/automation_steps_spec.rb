@@ -13,9 +13,9 @@ RSpec.describe 'AutomationSteps' do
     sign_in(user)
   end
 
-  describe 'GET /automations/:automation_id/automation_steps/get_harvest_definitions' do
+  describe 'GET /automations/:automation_id/automation_steps/harvest_definitions' do
     it 'returns harvest definitions for the selected pipeline' do
-      get get_harvest_definitions_automation_automation_steps_path(automation), params: { pipeline_id: pipeline.id }, xhr: true
+      get harvest_definitions_automation_automation_steps_path(automation), params: { pipeline_id: pipeline.id }, xhr: true
       
       expect(response).to have_http_status :ok
       expect(response.body).to include harvest_definition.name

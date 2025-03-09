@@ -123,7 +123,7 @@ RSpec.describe 'AutomationStepTemplates' do
     end
   end
 
-  describe 'GET /automation_templates/:automation_template_id/automation_step_templates/get_harvest_definitions' do
+  describe 'GET /automation_templates/:automation_template_id/automation_step_templates/harvest_definitions' do
     let(:harvest_definition) { create(:harvest_definition, pipeline: pipeline) }
 
     before do
@@ -131,7 +131,7 @@ RSpec.describe 'AutomationStepTemplates' do
     end
 
     it 'returns harvest definitions for the selected pipeline' do
-      get get_harvest_definitions_automation_template_automation_step_templates_path(automation_template), params: { pipeline_id: pipeline.id }, xhr: true
+      get harvest_definitions_automation_template_automation_step_templates_path(automation_template), params: { pipeline_id: pipeline.id }, xhr: true
       
       expect(response).to have_http_status :ok
       expect(response.body).to include harvest_definition.name

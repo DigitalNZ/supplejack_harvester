@@ -59,14 +59,11 @@ class AutomationStepTemplatesController < ApplicationController
     @pipeline = Pipeline.find(params[:pipeline_id])
     @harvest_definitions = @pipeline.harvest_definitions
 
-    # Create a new step template if none exists (for get_harvest_definitions route)
+    # Create a new step template if needed
     @automation_step_template ||= @automation_template.automation_step_templates.build
 
     render partial: 'harvest_definitions', locals: { harvest_definitions: @harvest_definitions }
   end
-
-  # Alias for harvest_definitions to match the route
-  alias get_harvest_definitions harvest_definitions
 
   private
 
