@@ -33,18 +33,40 @@ RSpec.describe 'Automations' do
                extraction_status: 'completed',
                transformation_status: 'completed',
                load_status: 'completed',
+               delete_status: 'completed',
                pages_extracted: 10, records_transformed: 8, records_loaded: 5,
+               records_rejected: 3, records_deleted: 1,
                extraction_start_time: 1.hour.ago, extraction_end_time: 55.minutes.ago,
                transformation_end_time: 50.minutes.ago, load_end_time: 45.minutes.ago)
       end
 
-      it 'shows metrics for the automation' do
+      it 'shows metrics for the automation in the step-by-step table' do
         get automation_path(automation)
 
         expect(response).to have_http_status :ok
-        expect(response.body).to include '10' # pages extracted
-        expect(response.body).to include '8' # records transformed
-        expect(response.body).to include '5' # records loaded
+        
+        # Check that metrics appear in the step data
+        expect(response.body).to include('10') # pages extracted
+        expect(response.body).to include('8') # records transformed
+        expect(response.body).to include('5') # records loaded
+        expect(response.body).to include('3') # records rejected
+        expect(response.body).to include('1') # records deleted
+      end
+      
+      it 'shows total metrics in the totals row' do
+        get automation_path(automation)
+        
+        expect(response).to have_http_status :ok
+        
+        # Check for the totals row
+        expect(response.body).to include('<td colspan="4" class="text-start">Totals:</td>')
+        
+        # Check that totals appear
+        expect(response.body).to include('10') # total pages extracted
+        expect(response.body).to include('8') # total records transformed
+        expect(response.body).to include('5') # total records loaded
+        expect(response.body).to include('3') # total records rejected
+        expect(response.body).to include('1') # total records deleted
       end
     end
   end

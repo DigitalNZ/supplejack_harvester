@@ -29,67 +29,6 @@
       </div>
     </div>
 
-    <%# Performance Overview %>
-    <div class='row mb-4'>
-      <div class='col-md-6'>
-        <div class='card'>
-          <div class='card-header bg-primary text-white'>
-            <h5 class='mb-0'>Pipeline Transformation Efficiency</h5>
-          </div>
-          <div class='card-body'>
-            <% if report.records_transformed > 0 %>
-              <% transformation_efficiency = (report.records_loaded.to_f / report.records_transformed * 100).round(2) %>
-              <div class='progress mb-2' style='height: 20px;'>
-                <div class='progress-bar bg-success'
-                     role='progressbar'
-                     style='width: <%= transformation_efficiency %>%;'
-                     aria-valuenow='<%= transformation_efficiency %>'
-                     aria-valuemin='0'
-                     aria-valuemax='100'>
-                  <%= transformation_efficiency %>%
-                </div>
-              </div>
-              <p class='text-muted small'>
-                <%= number_with_delimiter(report.records_loaded) %> records processed through to load stage from
-                <%= number_with_delimiter(report.records_transformed) %> total transformations
-              </p>
-            <% else %>
-              <p class='text-muted'>No transformation data available</p>
-            <% end %>
-          </div>
-        </div>
-      </div>
-
-      <div class='col-md-6'>
-        <div class='card'>
-          <div class='card-header bg-primary text-white'>
-            <h5 class='mb-0'>Pipeline Rejection Rate</h5>
-          </div>
-          <div class='card-body'>
-            <% if report.records_transformed > 0 && report.records_rejected %>
-              <% rejection_rate = (report.records_rejected.to_f / report.records_transformed * 100).round(2) %>
-              <div class='progress mb-2' style='height: 20px;'>
-                <div class='progress-bar bg-warning'
-                     role='progressbar'
-                     style='width: <%= rejection_rate %>%;'
-                     aria-valuenow='<%= rejection_rate %>'
-                     aria-valuemin='0'
-                     aria-valuemax='100'>
-                  <%= rejection_rate %>%
-                </div>
-              </div>
-              <p class='text-muted small'>
-                <%= number_with_delimiter(report.records_rejected) %> transformations rejected from
-                <%= number_with_delimiter(report.records_transformed) %> total transformations
-              </p>
-            <% else %>
-              <p class='text-muted'>No rejection data available</p>
-            <% end %>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <%# Processing Pipeline %>
     <div class='row'>
       <div class='col'>
