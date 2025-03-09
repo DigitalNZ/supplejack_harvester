@@ -1,7 +1,7 @@
 <%= form_with(model: [@automation_template, automation_step_template]) do |form| %>
   <% if automation_step_template.errors.any? %>
     <div class="alert alert-danger">
-      <h4><%= pluralize(automation_step_template.errors.count, "error") %> prohibited this step template from being saved:</h4>
+      <h4><%= pluralize(automation_step_template.errors.count, 'error') %> prohibited this step template from being saved:</h4>
       <ul>
         <% automation_step_template.errors.each do |error| %>
           <li><%= error.full_message %></li>
@@ -13,11 +13,11 @@
   <%= form.hidden_field :position %>
 
   <div class="mb-3">
-    <%= form.label :pipeline_id, "Pipeline", class: "form-label" %>
-    <%= form.select :pipeline_id, 
-                   @pipelines.map { |p| [p.name, p.id] }, 
-                   { include_blank: "Select a pipeline" }, 
-                   { class: "form-select", required: true, data: { controller: "pipeline-select" } } %>
+    <%= form.label :pipeline_id, 'Pipeline', class: 'form-label' %>
+    <%= form.select :pipeline_id,
+                    @pipelines.map { |p| [p.name, p.id] },
+                    { include_blank: 'Select a pipeline' },
+                    { class: 'form-select', required: true, data: { controller: 'pipeline-select' } } %>
     <small class="form-text text-muted">
       Select a pipeline to view and choose its associated harvest definitions.
     </small>
@@ -27,7 +27,7 @@
     <div class="mb-3">
       <label class="form-label">Destination</label>
       <p class="form-text">
-        This step will use the destination from the template: 
+        This step will use the destination from the template:
         <strong><%= @automation_template.destination.name %></strong>
       </p>
       <small class="text-muted">To change the destination, edit the template settings.</small>
@@ -49,7 +49,7 @@
   </div>
 
   <div class="d-flex justify-content-between">
-    <%= form.submit class: "btn btn-primary" %>
-    <%= link_to "Cancel", automation_template_path(@automation_template), class: "btn btn-secondary" %>
+    <%= form.submit class: 'btn btn-primary' %>
+    <%= link_to 'Cancel', automation_template_path(@automation_template), class: 'btn btn-secondary' %>
   </div>
-<% end %> 
+<% end %>

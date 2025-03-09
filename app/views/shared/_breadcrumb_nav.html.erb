@@ -134,8 +134,8 @@
 
     <%= breadcrumb_item(
           text: 'Automations',
-          active: request.path.match?(%r{^/automations}) && !request.path.include?('/automation_templates'),
-          display: request.path.match?(%r{^/automations}) && !request.path.include?('/automation_templates')
+          active: request.path.match?(%r{^/automations}) && request.path.exclude?('/automation_templates'),
+          display: request.path.match?(%r{^/automations}) && request.path.exclude?('/automation_templates')
         ) %>
 
     <%= breadcrumb_item(

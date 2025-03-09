@@ -28,8 +28,8 @@
       </li>
 
       <li class='nav-item'>
-        <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})", 
-                    pipeline_automation_templates_path(@pipeline), 
+        <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})",
+                    pipeline_automation_templates_path(@pipeline),
                     class: 'nav-link active' %>
       </li>
     </ul>
@@ -131,10 +131,10 @@
           <p>Please name the new pipeline which you are cloning</p>
 
           <%= vertical_form_with(
-            model: @pipeline,
-            url: clone_pipeline_path(@pipeline), 
-            method: :post
-          ) do |f| %>
+                model: @pipeline,
+                url: clone_pipeline_path(@pipeline),
+                method: :post
+              ) do |f| %>
 
             <%= f.text_field :name, required: true, class: 'form-control', value: "[CLONE] #{@pipeline.name}" %>
 
@@ -183,4 +183,4 @@
       <button type="submit" class="btn btn-primary">Create template</button>
     </div>
   <% end %>
-<% end %> 
+<% end %>

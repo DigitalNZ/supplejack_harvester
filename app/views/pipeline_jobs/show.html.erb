@@ -166,11 +166,11 @@
                 <h6>Latest Update</h6>
                 <p>
                   <% latest_time = [
-                    report.extraction_end_time,
-                    report.transformation_end_time,
-                    report.load_end_time,
-                    report.delete_end_time
-                  ].compact.max %>
+                       report.extraction_end_time,
+                       report.transformation_end_time,
+                       report.load_end_time,
+                       report.delete_end_time
+                     ].compact.max %>
                   <%= latest_time&.strftime('%B %d, %Y %H:%M:%S') %>
                 </p>
               </div>
