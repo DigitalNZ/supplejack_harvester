@@ -113,10 +113,8 @@
                         <br>
                         (Fragment priority: <%= hd.priority %>)
                       </small>
-                      <% 
-                        report = find_harvest_report(@last_automation_run, hd, index)
-                        status = harvest_report_status(report)
-                      %>
+                      <% report = find_harvest_report(@last_automation_run, hd, index) %>
+                      <% status = harvest_report_status(report) %>
                       <small>
                         <span class="badge <%= status[:badge_class] %>">
                           <%= status[:status_text] %>
@@ -223,9 +221,11 @@
         <div class="mb-3">
           <h6>Example Request (curl)</h6>
           <div class="bg-light p-3 rounded">
-            <pre class="mb-0"><code>curl -X POST "<%= request.base_url %>/api/automation_templates/<%= @automation_template.id %>/run" \
-  -H "Authorization: Token token=[YOUR_API_KEY]" \
-  -H "Content-Type: application/json"</code></pre>
+            <pre class="mb-0">
+              curl -X POST "<%= request.base_url %>/api/automation_templates/<%= @automation_template.id %>/run" \
+              -H "Authorization: Token token=[YOUR_API_KEY]" \
+              -H "Content-Type: application/json"
+            </code>
           </div>
         </div>
 

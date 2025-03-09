@@ -9,30 +9,40 @@ module AutomationTemplatesHelper
   def find_harvest_report(last_automation_run, harvest_definition, position)
     return nil unless last_automation_run
 
-    last_automation_run
-      .automation_steps
-      .find_by(position: position)
-      &.pipeline_job
-      &.harvest_reports
-      &.find do |report|
-        report.harvest_job&.harvest_definition_id == harvest_definition.id
-      end
+    step = last_automation_run.automation_steps.find_by(position: position)
+    return nil unless step&.pipeline_job
+
+    job = step.pipeline_job
+    job.harvest_reports&.find do |report|
+      report.harvest_job&.harvest_definition_id == harvest_definition.id
+    end
   end
 
   # Gets a formatted status for a harvest report
   # @param report [HarvestReport, nil] The harvest report
   # @return [Hash] A hash containing :badge_class and :status_text
   def harvest_report_status(report)
-    if report
-      {
-        badge_class: status_badge_class(report.status),
-        status_text: report.status.humanize
-      }
-    else
-      {
-        badge_class: 'bg-secondary',
-        status_text: 'Not started'
-      }
-    end
+    report ? active_report_status(report) : default_report_status
   end
-end 
+
+  private
+
+  # Returns status for an active report
+  # @param report [HarvestReport] The harvest report
+  # @return [Hash] A hash containing :badge_class and :status_text
+  def active_report_status(report)
+    {
+      badge_class: status_badge_class(report.status),
+      status_text: report.status.humanize
+    }
+  end
+
+  # Returns default status when no report exists
+  # @return [Hash] A hash containing :badge_class and :status_text
+  def default_report_status
+    {
+      badge_class: 'bg-secondary',
+      status_text: 'Not started'
+    }
+  end
+end

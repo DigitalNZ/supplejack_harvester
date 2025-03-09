@@ -21,8 +21,9 @@
     <% pipelines_classes = class_names('nav-link', active: request.path.include?('pipelines')) %>
     <% destinations_classes = class_names('nav-link', active: request.path.include?('destinations')) %>
     <% schemas_classes = class_names('nav-link', active: request.path.include?('schemas')) %>
+    <% display_automations = request.path.include?('automations') && request.path.exclude?('automation_templates') %>
     <% automations_classes = class_names('nav-link',
-                                         active: request.path.include?('automations') && request.path.exclude?('automation_templates')) %>
+                                         active: display_automations) %>
     <% automation_templates_classes = class_names('nav-link', active: request.path.include?('automation_templates')) %>
 
     <div class="collapse navbar-collapse justify-content-between" id="navbar-nav">

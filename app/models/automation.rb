@@ -86,7 +86,10 @@ class Automation < ApplicationRecord
 
   def collect_step_statuses
     automation_steps.map do |step|
-      step.pipeline_job&.harvest_reports&.map(&:status)&.uniq
+      next unless step.pipeline_job
+
+      reports = step.pipeline_job.harvest_reports
+      reports&.map(&:status)&.uniq
     end.flatten.compact
   end
 

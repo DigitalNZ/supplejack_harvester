@@ -104,7 +104,9 @@
             <div class="col-md-4 mb-3">
               <div class="card h-100">
                 <div class="card-body text-center">
-                  <h3 class="text-primary"><%= number_with_delimiter(@automation_summary.total_metrics[:records_loaded]) %></h3>
+                  <h3 class="text-primary">
+                    <%= number_with_delimiter(@automation_summary.total_metrics[:records_loaded]) %>
+                  </h3>
                   <p class="text-muted mb-0">Total Records Processed</p>
                 </div>
               </div>
@@ -112,7 +114,9 @@
             <div class="col-md-6 mb-3">
               <div class="card h-100">
                 <div class="card-body text-center">
-                  <h3 class="text-warning"><%= number_with_delimiter(@automation_summary.total_metrics[:records_rejected]) %></h3>
+                  <h3 class="text-warning">
+                    <%= number_with_delimiter(@automation_summary.total_metrics[:records_rejected]) %>
+                  </h3>
                   <p class="text-muted mb-0">Total Transformations Rejected</p>
                 </div>
               </div>
@@ -120,7 +124,9 @@
             <div class="col-md-6 mb-3">
               <div class="card h-100">
                 <div class="card-body text-center">
-                  <h3 class="text-danger"><%= number_with_delimiter(@automation_summary.total_metrics[:records_deleted]) %></h3>
+                  <h3 class="text-danger">
+                    <%= number_with_delimiter(@automation_summary.total_metrics[:records_deleted]) %>
+                  </h3>
                   <p class="text-muted mb-0">Total Records Marked for Deletion</p>
                 </div>
               </div>
@@ -228,8 +234,9 @@
                   <div class="card-body">
                     <h6 class="card-title">Aggregated Transformation Efficiency</h6>
                     <% if @automation_summary.total_metrics[:records_transformed] > 0 %>
-                      <% transformation_efficiency = (@automation_summary.total_metrics[:records_loaded].to_f /
-                                                    @automation_summary.total_metrics[:records_transformed] * 100).round(2) %>
+                      <% records_loaded = @automation_summary.total_metrics[:records_loaded].to_f %>
+                      <% records_transformed = @automation_summary.total_metrics[:records_transformed] %>
+                      <% transformation_efficiency = (records_loaded / records_transformed * 100).round(2) %>
                       <div class="progress mb-2" style="height: 20px;">
                         <div class="progress-bar bg-success"
                              role="progressbar"

@@ -47,7 +47,10 @@ class AutomationStep < ApplicationRecord
   end
 
   def report_statuses
-    pipeline_job&.harvest_reports&.map(&:status)&.uniq || []
+    return [] unless pipeline_job
+
+    reports = pipeline_job.harvest_reports
+    reports&.map(&:status)&.uniq || []
   end
 
   def status_from_statuses(statuses)

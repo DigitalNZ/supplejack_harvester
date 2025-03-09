@@ -130,7 +130,7 @@ class AutomationTimeHelper
     total_active_duration = 0
 
     steps.each do |step|
-      next unless step.pipeline_job&.start_time && step.pipeline_job&.end_time
+      next unless step.pipeline_job&.start_time && step.pipeline_job.end_time
 
       active_duration = (step.pipeline_job.end_time - step.pipeline_job.start_time).to_i
       total_active_duration += active_duration
