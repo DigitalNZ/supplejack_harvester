@@ -8,10 +8,6 @@
   <div class="header__actions mb-4">
     <%= link_to 'Edit Template', edit_automation_template_path(@automation_template),
                 class: 'btn btn-outline-primary me-2' %>
-    <% if @last_automation_run.present? %>
-      <%= link_to 'View Last Run', automation_path(@last_automation_run),
-                  class: 'btn btn-outline-secondary me-2' %>
-    <% end %>
     <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#run-automation-modal">
       Run Automation
     </button>

@@ -86,6 +86,37 @@ RSpec.describe Automation do
                delete_status: 'completed')
         expect(subject.status).to eq('failed')
       end
+      
+      it 'does not return completed if not all steps have reports, even if all existing reports are completed' do
+        # Create first step with a completed report
+        create(:harvest_report, pipeline_job: pipeline_job, harvest_job: harvest_job, 
+               extraction_status: 'completed', 
+               transformation_status: 'completed', 
+               load_status: 'completed',
+               delete_status: 'completed')
+        
+        # Create a second step with no reports (not started yet)
+        second_step = create(:automation_step, automation: subject, launched_by: user, pipeline: pipeline, position: 1)
+        
+        # Status should be running because second step has no pipeline job yet
+        expect(subject.status).to eq('running')
+      end
+      
+      it 'does not return completed if some steps have a pipeline job but no reports' do
+        # Create first step with a completed report
+        create(:harvest_report, pipeline_job: pipeline_job, harvest_job: harvest_job, 
+               extraction_status: 'completed', 
+               transformation_status: 'completed', 
+               load_status: 'completed',
+               delete_status: 'completed')
+        
+        # Create a second step with a pipeline job but no reports
+        second_step = create(:automation_step, automation: subject, launched_by: user, pipeline: pipeline, position: 1)
+        create(:pipeline_job, automation_step: second_step, pipeline: pipeline)
+        
+        # Status should be running because second step has a pipeline job but no reports
+        expect(subject.status).to eq('running')
+      end
     end
   end
   

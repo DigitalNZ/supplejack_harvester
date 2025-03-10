@@ -88,11 +88,17 @@ class Automation < ApplicationRecord
   end
 
   def not_started?(statuses)
-    statuses.empty? || statuses.all?('not_started')
+    # An automation is not started if there are no statuses
+    # or if all reported statuses are 'not_started'
+    statuses.empty? || (statuses.all?('not_started') && automation_steps.count == statuses.count)
   end
 
   def running?(statuses)
-    statuses.any?('running') || statuses.count != automation_steps.count
+    # An automation is running if any status is 'running'
+    # or if not all steps have reported their status yet (some steps might be pending)
+    statuses.any?('running') || !automation_steps.all? do |step|
+      step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
+    end
   end
 
   def cancelled?(statuses)
@@ -100,7 +106,13 @@ class Automation < ApplicationRecord
   end
 
   def completed?(statuses)
-    statuses.all?('completed')
+    # First check if all steps have a pipeline job with reports
+    all_steps_have_reports = automation_steps.all? do |step|
+      step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
+    end
+
+    # Then verify all reported statuses are 'completed'
+    all_steps_have_reports && statuses.all?('completed')
   end
 
   def failed?(statuses)

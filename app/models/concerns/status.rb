@@ -4,16 +4,29 @@
 module Status
   extend ActiveSupport::Concern
 
-  def status_from_statuses(statuses)
-    return 'not_started' if respond_to?(:not_started?, true) && not_started?(statuses)
-    return 'cancelled' if respond_to?(:cancelled?, true) && cancelled?(statuses)
-    return 'completed' if respond_to?(:completed?, true) && completed?(statuses)
-    return 'errored' if respond_to?(:errored?, true) && errored?(statuses)
-    return 'failed' if respond_to?(:failed?, true) && failed?(statuses)
-    return 'running' if respond_to?(:running?, true) && running?(statuses)
-    return 'queued' if respond_to?(:queued?, true) && queued?(statuses)
+  # Status check in priority order - first match wins
+  STATUS_PRIORITY = {
+    'not_started' => :not_started?,
+    'cancelled' => :cancelled?,
+    'completed' => :completed?,
+    'errored' => :errored?,
+    'failed' => :failed?,
+    'running' => :running?,
+    'queued' => :queued?
+  }.freeze
 
-    'running'
+  def status_from_statuses(statuses)
+    STATUS_PRIORITY.each do |status, method_name|
+      return status if can_check_status?(method_name) && send(method_name, statuses)
+    end
+
+    'running' # Default status if no conditions match
+  end
+
+  private
+
+  def can_check_status?(method_name)
+    respond_to?(method_name, true)
   end
 
   # No default implementations for status check methods
@@ -24,4 +37,4 @@ module Status
   # - errored?(statuses) and/or failed?(statuses)
   # - running?(statuses)
   # - queued?(statuses)
-end 
+end
