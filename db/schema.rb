@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_05_132252) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_06_000001) do
   create_table "automation_step_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_template_id", null: false
     t.bigint "pipeline_id", null: false
@@ -385,6 +385,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_05_132252) do
   add_foreign_key "extraction_definitions", "users", column: "last_edited_by_id"
   add_foreign_key "field_schema_field_values", "fields"
   add_foreign_key "field_schema_field_values", "schema_field_values"
+  add_foreign_key "pipeline_jobs", "automation_steps"
   add_foreign_key "pipelines", "users", column: "last_edited_by_id"
   add_foreign_key "schemas", "users", column: "last_edited_by_id"
   add_foreign_key "transformation_definitions", "users", column: "last_edited_by_id"
