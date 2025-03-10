@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Automation < ApplicationRecord
+  include Status
+
   belongs_to :destination
   belongs_to :automation_template
 
@@ -27,15 +29,7 @@ class Automation < ApplicationRecord
 
   def status
     statuses = collect_step_statuses
-
-    return 'not_started' if not_started?(statuses)
-    return 'running' if running?(statuses)
-    return 'cancelled' if cancelled?(statuses)
-    return 'completed' if completed?(statuses)
-    return 'failed' if failed?(statuses)
-    return 'queued' if queued?(statuses)
-
-    'running' # Default fallback
+    status_from_statuses(statuses)
   end
 
   def total_harvest_definitions

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class AutomationStep < ApplicationRecord
+  include Status
+
   belongs_to :automation
   belongs_to :pipeline
   belongs_to :launched_by, class_name: 'User', optional: true
@@ -24,7 +26,6 @@ class AutomationStep < ApplicationRecord
     return 'not_started' if no_reports?
 
     statuses = report_statuses
-
     status_from_statuses(statuses)
   end
 
