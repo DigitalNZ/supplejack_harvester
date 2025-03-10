@@ -17,11 +17,4 @@ class CheckPipelineJobCompletionWorker
       self.class.perform_in(30.seconds, pipeline_job_id)
     end
   end
-
-  private
-
-  def update_step_status(pipeline_job)
-    # With the new architecture, we don't need to update the step status directly
-    # as it's now derived from the harvest_report status
-  end
 end
