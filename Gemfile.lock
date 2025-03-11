@@ -285,8 +285,6 @@ GEM
       net-protocol
     netrc (0.11.0)
     nio4r (2.7.4)
-    nokogiri (1.18.3-aarch64-linux-musl)
-      racc (~> 1.4)
     nokogiri (1.18.3-arm64-darwin)
       racc (~> 1.4)
     nokogiri (1.18.3-x86_64-darwin)
@@ -504,7 +502,6 @@ GEM
     zlib (3.1.1)
 
 PLATFORMS
-  aarch64-linux-musl
   arm64-darwin-22
   arm64-darwin-23
   x86_64-darwin-22
