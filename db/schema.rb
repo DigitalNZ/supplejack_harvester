@@ -10,7 +10,56 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_02_20_012505) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_06_000001) do
+  create_table "automation_step_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "automation_template_id", null: false
+    t.bigint "pipeline_id", null: false
+    t.integer "position", default: 0, null: false
+    t.text "harvest_definition_ids"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["automation_template_id", "position"], name: "index_automation_step_templates_on_template_id_and_position"
+    t.index ["automation_template_id"], name: "index_automation_step_templates_on_automation_template_id"
+    t.index ["pipeline_id"], name: "index_automation_step_templates_on_pipeline_id"
+  end
+
+  create_table "automation_steps", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "automation_id", null: false
+    t.bigint "pipeline_id", null: false
+    t.bigint "launched_by_id"
+    t.integer "position", default: 0, null: false
+    t.text "harvest_definition_ids"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["automation_id", "position"], name: "index_automation_steps_on_automation_id_and_position", unique: true
+    t.index ["automation_id"], name: "index_automation_steps_on_automation_id"
+    t.index ["launched_by_id"], name: "index_automation_steps_on_launched_by_id"
+    t.index ["pipeline_id"], name: "index_automation_steps_on_pipeline_id"
+  end
+
+  create_table "automation_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.bigint "destination_id"
+    t.bigint "last_edited_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["destination_id"], name: "index_automation_templates_on_destination_id"
+    t.index ["last_edited_by_id"], name: "index_automation_templates_on_last_edited_by_id"
+    t.index ["name"], name: "index_automation_templates_on_name", unique: true
+  end
+
+  create_table "automations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.bigint "destination_id", null: false
+    t.bigint "automation_template_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["automation_template_id"], name: "index_automations_on_automation_template_id"
+    t.index ["destination_id"], name: "index_automations_on_destination_id"
+  end
+
   create_table "destinations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "url", null: false
@@ -191,6 +240,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_20_012505) do
     t.bigint "launched_by_id"
     t.boolean "delete_previous_records", default: false, null: false
     t.boolean "run_enrichment_concurrently", default: false, null: false
+    t.bigint "automation_step_id"
+    t.index ["automation_step_id"], name: "index_pipeline_jobs_on_automation_step_id"
     t.index ["destination_id"], name: "index_pipeline_jobs_on_destination_id"
     t.index ["extraction_job_id"], name: "index_pipeline_jobs_on_extraction_job_id"
     t.index ["key"], name: "index_pipeline_jobs_on_key", unique: true
@@ -322,9 +373,19 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_20_012505) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  add_foreign_key "automation_step_templates", "automation_templates"
+  add_foreign_key "automation_step_templates", "pipelines"
+  add_foreign_key "automation_steps", "automations"
+  add_foreign_key "automation_steps", "pipelines"
+  add_foreign_key "automation_steps", "users", column: "launched_by_id"
+  add_foreign_key "automation_templates", "destinations"
+  add_foreign_key "automation_templates", "users", column: "last_edited_by_id"
+  add_foreign_key "automations", "automation_templates"
+  add_foreign_key "automations", "destinations"
   add_foreign_key "extraction_definitions", "users", column: "last_edited_by_id"
   add_foreign_key "field_schema_field_values", "fields"
   add_foreign_key "field_schema_field_values", "schema_field_values"
+  add_foreign_key "pipeline_jobs", "automation_steps"
   add_foreign_key "pipelines", "users", column: "last_edited_by_id"
   add_foreign_key "schemas", "users", column: "last_edited_by_id"
   add_foreign_key "transformation_definitions", "users", column: "last_edited_by_id"

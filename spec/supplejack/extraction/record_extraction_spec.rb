@@ -87,4 +87,61 @@ RSpec.describe Extraction::RecordExtraction do
       end
     end
   end
+
+  describe '#fragment_filter' do
+    context 'when harvest_job has a target_job_id' do
+      let(:pipeline) { create(:pipeline, name: 'TestPipeline') }
+      let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }
+      let(:harvest_definition) { create(:harvest_definition, pipeline:, extraction_definition:) }
+      let(:harvest_job) { create(:harvest_job, harvest_definition:, pipeline_job:, target_job_id: 'test-job-123') }
+      let(:subject) { described_class.new(request, 1, harvest_job) }
+
+      it 'returns a hash with fragments.job_id mapped to the target_job_id' do
+        expect(subject.send(:fragment_filter)).to eq({ 'fragments.job_id' => 'test-job-123' })
+      end
+    end
+
+    context 'when harvest_job has a pipeline_job with an automation_step' do
+      let(:automation) { create(:automation) }
+      let(:automation_step) { create(:automation_step, automation:) }
+      let(:pipeline) { create(:pipeline, name: 'TestPipeline') }
+      let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:, automation_step:) }
+      let(:harvest_definition) { create(:harvest_definition, pipeline:, extraction_definition:) }
+      let(:harvest_job) { create(:harvest_job, harvest_definition:, pipeline_job:) }
+      let(:subject) { described_class.new(request, 1, harvest_job) }
+
+      before do
+        # Create an automation setup with harvest jobs
+        other_automation_step = create(:automation_step, automation:)
+        other_pipeline = create(:pipeline, name: 'OtherTestPipeline')
+        other_pipeline_job = create(:pipeline_job, pipeline: other_pipeline, automation_step: other_automation_step)
+        other_harvest_definition = create(:harvest_definition, pipeline: other_pipeline)
+        
+        create(:harvest_job, name: 'job1__harvest-abc', pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
+        create(:harvest_job, name: 'job2__harvest-xyz', pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
+        create(:harvest_job, name: 'job3__enrichment-abc', pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
+      end
+
+      it 'returns a hash with fragments.job_id mapped to job names with __harvest-' do
+        result = subject.send(:fragment_filter)
+        expect(result).to have_key('fragments.job_id')
+        
+        # Check that all job names include '__harvest-'
+        expect(result['fragments.job_id']).to all(include('__harvest-'))
+        
+        # Ensure non-harvest job names are not included
+        expect(result['fragments.job_id']).not_to include(match('job3__enrichment-abc'))
+      end
+    end
+
+    context 'when neither target_job_id nor automation_step are present' do
+      let(:extraction_definition) { create(:extraction_definition, :enrichment, destination:, source_id: 'source-123') }
+      let(:request) { create(:request, extraction_definition:) }
+      let(:subject) { described_class.new(request, 1) }
+
+      it 'returns a hash with fragments.source_id mapped to the extraction_definition source_id' do
+        expect(subject.send(:fragment_filter)).to eq({ 'fragments.source_id' => 'source-123' })
+      end
+    end
+  end
 end

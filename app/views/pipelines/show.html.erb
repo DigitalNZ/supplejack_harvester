@@ -58,6 +58,11 @@
     <li class='nav-item'>
       <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link' %>
     </li>
+
+    <li class='nav-item'>
+      <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})",
+                  pipeline_automation_templates_path(@pipeline), class: 'nav-link' %>
+    </li>
   </ul>
 <% end %>
 

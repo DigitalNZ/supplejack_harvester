@@ -1,0 +1,28 @@
+<div class="mb-3">
+  <label class="form-label">Harvest Definitions</label>
+
+  <div class="harvest-definitions-list">
+    <% if harvest_definitions.any? %>
+      <div class="list-group">
+        <%= hidden_field_tag 'automation_step_template[harvest_definition_ids][]', nil %>
+        <% harvest_definitions.each do |harvest_definition| %>
+          <div class="list-group-item">
+            <div class="form-check">
+              <%= check_box_tag 'automation_step_template[harvest_definition_ids][]',
+                                harvest_definition.id,
+                                @automation_step_template&.harvest_definition_ids&.include?(harvest_definition.id.to_s),
+                                class: 'form-check-input',
+                                id: "harvest_definition_#{harvest_definition.id}" %>
+              <%= label_tag "harvest_definition_#{harvest_definition.id}", harvest_definition.name,
+                            class: 'form-check-label' %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="alert alert-warning">
+        <p class="mb-0">No harvest definitions found for this pipeline.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

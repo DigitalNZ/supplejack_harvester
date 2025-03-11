@@ -166,3 +166,30 @@ en:
     destroy:
       success: Schema deleted successfully
       failure: There was an issue deleting your Schema
+
+  automation_step_templates:
+    create:
+      success: Step template was successfully added.
+    update:
+      success: Step template was successfully updated.
+    destroy:
+      success: Step template was successfully removed.
+
+  automation_templates:
+    create:
+      success: Automation template was successfully created.
+    update:
+      success: Automation template was successfully updated.
+    destroy:
+      success: "Automation template '%{name}' was successfully deleted along with %{count} automation."
+
+  automations:
+    destroy:
+      success: Automation was successfully destroyed.
+    start:
+      success: Automation has been started.
+      error: Cannot run automation without steps. Please add at least one step.
+
+  automation:
+    validations:
+      destination: must be selected

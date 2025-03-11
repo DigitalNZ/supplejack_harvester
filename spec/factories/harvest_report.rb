@@ -2,7 +2,8 @@
 
 FactoryBot.define do
   factory :harvest_report do
-    pipeline_job
-    harvest_job
+    # Both pipeline_job and harvest_job associations are required for most tests
+    association :pipeline_job
+    association :harvest_job
   end
 end

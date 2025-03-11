@@ -1,0 +1,39 @@
+<%= form_with(model: automation_template) do |form| %>
+  <% if automation_template.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(automation_template.errors.count, 'error') %> prohibited this template from being saved:</h4>
+      <ul>
+        <% automation_template.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :name, class: 'form-label' %>
+    <%= form.text_field :name, class: 'form-control', required: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :description, class: 'form-label' %>
+    <%= form.text_area :description, class: 'form-control', rows: 3 %>
+    <div class="form-text">Description of what this template is for.</div>
+  </div>
+
+  <div class="mb-4">
+    <%= form.label :destination_id, 'Destination', class: 'form-label' %>
+    <%= form.collection_select :destination_id,
+                               @destinations,
+                               :id,
+                               :name,
+                               { include_blank: 'Select a destination (optional)' },
+                               { class: 'form-select' } %>
+    <div class="form-text">If selected, all automations created from this template will use this destination.</div>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <%= form.submit class: 'btn btn-primary' %>
+    <%= link_to 'Cancel', automation_templates_path, class: 'btn btn-secondary' %>
+  </div>
+<% end %>

@@ -16,11 +16,41 @@ Rails.application.routes.draw do
   namespace :api do
     resources :pipeline_statuses, only: %i[show]
     resources :pipeline_jobs, only: %i[create]
+    resources :automation_templates, only: [] do
+      member do
+        post :run
+      end
+    end
   end
 
   resources :users, only: %i[index show edit update destroy] do
     collection do
       resource :two_factor_setups, only: %i[show create destroy]
+    end
+  end
+
+  resources :automations, only: [:show, :destroy] do
+    member do
+      post :run
+    end
+    
+    resources :automation_steps, only: [] do
+      collection do
+        get :harvest_definitions
+      end
+    end
+  end
+
+  resources :automation_templates do
+    member do
+      post :run_automation
+      get :automations
+    end
+    
+    resources :automation_step_templates do
+      collection do
+        get :harvest_definitions
+      end
     end
   end
 
@@ -32,6 +62,8 @@ Rails.application.routes.draw do
     end
 
     resources :schedules
+
+    resources :automation_templates, only: [:index]
 
     resources :harvest_definitions, only: %i[create update destroy] do
       resources :extraction_definitions, only: %i[show create update destroy] do

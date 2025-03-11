@@ -1,0 +1,155 @@
+<%= content_for :header do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <h1 class="header__title"><%= @automation.name %></h1>
+
+  <div class="header__actions">
+    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-automation-modal">
+      <i class="bi bi-trash"></i> Delete Automation
+    </button>
+  </div>
+
+  <div class="clearfix"></div>
+
+<% end %>
+<div class="py-4">
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Automation Overview</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6>Destination</h6>
+              <p><%= @automation.destination.name %></p>
+
+              <h6>Status</h6>
+              <p>
+                <span class="badge <%= status_badge_class(@automation.status) %>"><%= @automation.status.humanize %></span>
+              </p>
+
+              <h6>Total Steps</h6>
+              <p><%= @automation.automation_steps.count %></p>
+            </div>
+            <div class="col-md-6">
+              <h6>Total Duration</h6>
+              <p>
+                <%= if @automation_summary.total_duration.positive?
+                      distance_of_time_in_words(@automation_summary.total_duration)
+                    end %>
+              </p>
+
+              <h6>Started At</h6>
+              <p><%= @automation_summary.start_time&.strftime('%B %d, %Y %H:%M:%S') || 'N/A' %></p>
+
+              <h6>Latest Update</h6>
+              <p><%= @automation_summary.end_time&.strftime('%B %d, %Y %H:%M:%S') || 'N/A' %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">Step-by-Step Pipeline Metrics</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Step</th>
+                  <th>Pipeline</th>
+                  <th>Status</th>
+                  <th>Job</th>
+                  <th>Pages Extracted</th>
+                  <th>Transformations</th>
+                  <th>Records Processed</th>
+                  <th>Transformations Rejected</th>
+                  <th>Marked for Deletion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @automation_summary.step_metrics.each do |step_data| %>
+                  <tr>
+                    <td><%= step_data[:step].position + 1 %></td>
+                    <td><%= step_data[:step].pipeline.name %></td>
+                    <td>
+                      <span class="badge <%= status_badge_class(step_data[:step].status) %>">
+                        <%= step_data[:step].status.present? ? step_data[:step].status.humanize : 'Not Started' %>
+                      </span>
+                    </td>
+                    <td>
+                      <% if step_data[:step].pipeline_job %>
+                        <%= link_to pipeline_pipeline_job_path(
+                              step_data[:step].pipeline,
+                              step_data[:step].pipeline_job
+                            ),
+                                    class: 'badge bg-light text-dark',
+                                    title: 'View job details' do %>
+                          Job #<%= step_data[:step].pipeline_job.id %>
+                        <% end %>
+                      <% else %>
+                        —
+                      <% end %>
+                    </td>
+                    <% if step_data[:metrics].present? %>
+                      <td><%= number_with_delimiter(step_data[:metrics][:pages_extracted]) %></td>
+                      <td><%= number_with_delimiter(step_data[:metrics][:records_transformed]) %></td>
+                      <td><%= number_with_delimiter(step_data[:metrics][:records_loaded]) %></td>
+                      <td><%= number_with_delimiter(step_data[:metrics][:records_rejected]) %></td>
+                      <td><%= number_with_delimiter(step_data[:metrics][:records_deleted]) %></td>
+                    <% else %>
+                      <td colspan="5" class="text-center text-muted">No metrics available</td>
+                    <% end %>
+                  </tr>
+                <% end %>
+                <tr class="table-active fw-bold">
+                  <td colspan="4" class="text-start">Totals:</td>
+                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:pages_extracted]) %></td>
+                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_transformed]) %></td>
+                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_loaded]) %></td>
+                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_rejected]) %></td>
+                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_deleted]) %></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# Delete Automation Modal %>
+<div
+  class="modal fade"
+  id="delete-automation-modal"
+  tabindex="-1"
+  aria-labelledby="Delete automation"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Automation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this automation?</p>
+        <p>This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <%= button_to automation_path(@automation), method: :delete, class: 'btn btn-danger' do %>
+          <i class="bi bi-trash"></i> Delete Automation
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

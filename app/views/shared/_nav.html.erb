@@ -21,6 +21,10 @@
     <% pipelines_classes = class_names('nav-link', active: request.path.include?('pipelines')) %>
     <% destinations_classes = class_names('nav-link', active: request.path.include?('destinations')) %>
     <% schemas_classes = class_names('nav-link', active: request.path.include?('schemas')) %>
+    <% display_automations = request.path.include?('automations') && request.path.exclude?('automation_templates') %>
+    <% automations_classes = class_names('nav-link',
+                                         active: display_automations) %>
+    <% automation_templates_classes = class_names('nav-link', active: request.path.include?('automation_templates')) %>
 
     <div class="collapse navbar-collapse justify-content-between" id="navbar-nav">
       <ul class="navbar-nav">
@@ -33,6 +37,9 @@
           </li>
           <li class="nav-item">
             <%= link_to 'Schemas', schemas_path, class: schemas_classes %>
+          </li>
+          <li class="nav-item">
+            <%= link_to 'Automation Templates', automation_templates_path, class: automation_templates_classes %>
           </li>
         <% end %>
       </ul>
@@ -48,7 +55,11 @@
                 <li><%= link_to 'Manage users', users_path, class: 'dropdown-item' %></li>
               <% end %>
               <li><hr class="dropdown-divider"></li>
-              <li><%= button_to 'Logout', destroy_user_session_path, method: :delete, class: 'dropdown-item' %></li>
+              <li>
+                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#logout-modal">
+                  Logout
+                </button>
+              </li>
             </ul>
           </li>
         <% else %>
@@ -61,3 +72,29 @@
     </div>
   </div>
 </nav>
+
+<%# Logout Modal %>
+<% if user_signed_in? %>
+  <div
+    class="modal fade"
+    id="logout-modal"
+    tabindex="-1"
+    aria-labelledby="Logout"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Logout Confirmation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to log out?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <%= button_to 'Logout', destroy_user_session_path, method: :delete, class: 'btn btn-primary' %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

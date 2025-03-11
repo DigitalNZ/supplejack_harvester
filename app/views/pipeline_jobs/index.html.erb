@@ -22,6 +22,11 @@
     <li class='nav-item'>
       <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link active' %>
     </li>
+
+    <li class='nav-item'>
+      <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})",
+                  pipeline_automation_templates_path(@pipeline), class: 'nav-link' %>
+    </li>
   </ul>
 <% end %>
 
@@ -72,6 +77,8 @@
                 <td>
                   <% if pipeline_job.schedule.present? %>
                     Schedule
+                  <% elsif pipeline_job.automation_step.present? %>
+                    <%= link_to 'Automation', automation_path(pipeline_job.automation_step.automation) %>
                   <% else %>
                     <%= pipeline_job.launched_by&.username %>
                   <% end %>
