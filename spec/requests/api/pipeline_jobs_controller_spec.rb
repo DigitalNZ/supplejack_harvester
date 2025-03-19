@@ -6,6 +6,7 @@ RSpec.describe "Api::PipelineJobs", type: :request do
   let!(:destination)        { create(:destination) }
   let!(:pipeline) { create(:pipeline) }
   let!(:harvest_definition) { create(:harvest_definition, pipeline:) }
+  let!(:harvest_definition_2) { create(:harvest_definition, pipeline:) }
   let(:admin_user) { create(:user, api_key: 'key', role: :admin) }
   let(:user) { create(:user, api_key: 'key') }
 
@@ -54,6 +55,40 @@ RSpec.describe "Api::PipelineJobs", type: :request do
           parsed_response = JSON.parse(response.body)
 
           expect(parsed_response['status']).to eq('success')
+        end
+
+        context 'when no harvest_definitions_to_run are provided' do
+          it 'runs all harvest definitions that belong to the pipeline' do
+            post api_pipeline_jobs_path, params: {
+              pipeline_job: {
+                destination_id: destination.id,
+                harvest_definitions_to_run: [],
+                pipeline_id: pipeline.id
+              },
+            },
+            headers: { 
+              "Authorization" => "Token token=#{admin_user.api_key}"
+            }
+
+            expect(PipelineJob.last.harvest_definitions_to_run).to eq([harvest_definition.id, harvest_definition_2.id].map(&:to_s))
+          end
+        end
+
+        context 'when harvest_definitions_to_run are provided' do
+          it 'runs the specified harvest definitions' do
+            post api_pipeline_jobs_path, params: {
+              pipeline_job: {
+                destination_id: destination.id,
+                harvest_definitions_to_run: [harvest_definition.id],
+                pipeline_id: pipeline.id
+              },
+            },
+            headers: { 
+              "Authorization" => "Token token=#{admin_user.api_key}"
+            }
+
+            expect(PipelineJob.last.harvest_definitions_to_run).to eq([harvest_definition.id].map(&:to_s))
+          end
         end
       end
 
