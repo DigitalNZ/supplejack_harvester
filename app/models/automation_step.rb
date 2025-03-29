@@ -4,25 +4,54 @@ class AutomationStep < ApplicationRecord
   include Status
 
   belongs_to :automation
-  belongs_to :pipeline
+  belongs_to :pipeline, optional: true
   belongs_to :launched_by, class_name: 'User', optional: true
   has_one :pipeline_job, dependent: :destroy
+  has_one :api_response_report, class_name: 'ApiResponseReport', dependent: :destroy
 
   validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :pipeline_id, presence: true, if: -> { step_type == 'pipeline' }
+  validates :api_url, :api_method, presence: true, if: -> { step_type == 'api_call' }
+  validate :validate_step_type_requirements
 
   serialize :harvest_definition_ids, type: Array
+  
+  API_METHODS = %w[GET POST PUT PATCH DELETE].freeze
 
   def harvest_definitions
+    return [] unless pipeline
+    return Pipeline.find(pipeline_id).harvest_definitions if harvest_definition_ids.blank?
+    
     HarvestDefinition.where(id: harvest_definition_ids)
   end
 
   def display_name
-    "#{position + 1}. #{pipeline.name}"
+    case step_type
+    when 'api_call'
+      "#{position + 1}. API Call: #{api_method} #{api_url}"
+    else
+      "#{position + 1}. #{pipeline&.name || 'Unknown Pipeline'}"
+    end
   end
 
   # Returns the status of this step
   # Prioritizes statuses in a logical order
   def status
+    case step_type
+    when 'api_call'
+      api_call_status
+    else
+      pipeline_status
+    end
+  end
+
+  def api_call_status
+    return 'not_started' unless api_response_report
+    
+    api_response_report.status
+  end
+
+  def pipeline_status
     return 'not_started' if no_reports?
 
     statuses = report_statuses
@@ -41,10 +70,38 @@ class AutomationStep < ApplicationRecord
     destination&.id
   end
 
+  # Execute the API call by enqueuing the job
+  def execute_api_call
+    # Create an initial API response report to show queued status
+    create_api_response_report(
+      status: 'queued',
+      response_code: nil,
+      response_body: nil,
+      response_headers: nil,
+      executed_at: nil
+    ) unless api_response_report.present?
+
+    # Enqueue the API call job
+    ApiCallWorker.perform_in(5.seconds, id)
+  end
+
   private
 
+  def validate_step_type_requirements
+    case step_type
+    when 'pipeline'
+      errors.add(:pipeline_id, "can't be blank") if pipeline_id.blank?
+    when 'api_call'
+      errors.add(:api_url, "can't be blank") if api_url.blank?
+      errors.add(:api_method, "can't be blank") if api_method.blank?
+      errors.add(:pipeline_id, "must be blank for API calls") if pipeline_id.present?
+    end
+  end
+
   def no_reports?
-    pipeline_job&.harvest_reports.blank?
+    return true unless pipeline_job
+    
+    pipeline_job.harvest_reports.blank?
   end
 
   def report_statuses

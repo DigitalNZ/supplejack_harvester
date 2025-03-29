@@ -19,6 +19,9 @@ class AutomationStepTemplatesController < ApplicationController
 
   def create
     @automation_step_template = @automation_template.automation_step_templates.build(automation_step_template_params)
+    
+    # Process headers if it's an API call
+    process_api_headers if @automation_step_template.step_type == 'api_call'
 
     if @automation_step_template.save
       redirect_to automation_template_path(@automation_template),
@@ -31,6 +34,10 @@ class AutomationStepTemplatesController < ApplicationController
 
   def update
     if @automation_step_template.update(automation_step_template_params)
+      # Process headers if it's an API call
+      process_api_headers if @automation_step_template.step_type == 'api_call'
+      @automation_step_template.save
+      
       redirect_to automation_template_path(@automation_template),
                   notice: I18n.t('automation_step_templates.update.success')
     else
@@ -66,6 +73,20 @@ class AutomationStepTemplatesController < ApplicationController
   end
 
   private
+  
+  def process_api_headers
+    # If API headers are provided as JSON string, process them
+    if params[:automation_step_template][:api_headers].present?
+      begin
+        JSON.parse(params[:automation_step_template][:api_headers])
+        @automation_step_template.api_headers = params[:automation_step_template][:api_headers]
+      rescue JSON::ParserError
+        # If JSON parsing fails, set empty hash
+        @automation_step_template.api_headers = {}
+        flash[:alert] = "Invalid headers format. Headers were reset to empty."
+      end
+    end
+  end
 
   def set_automation_template
     @automation_template = AutomationTemplate.find(params[:automation_template_id])
@@ -76,6 +97,14 @@ class AutomationStepTemplatesController < ApplicationController
   end
 
   def automation_step_template_params
-    params.require(:automation_step_template).permit(:pipeline_id, :position, harvest_definition_ids: [])
+    params.require(:automation_step_template).permit(
+      :pipeline_id, 
+      :position, 
+      :step_type,
+      :api_url,
+      :api_method,
+      :api_body,
+      harvest_definition_ids: []
+    )
   end
 end

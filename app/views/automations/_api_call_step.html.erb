@@ -1,0 +1,56 @@
+<div class="card mb-3">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><%= step.display_name %></h5>
+    </div>
+  </div>
+  <div class="card-body">
+    <h6 class="card-subtitle mb-2 text-muted">API Endpoint</h6>
+    <p class="card-text"><strong><%= step.api_method %></strong> <%= step.api_url %></p>
+    
+    <% if step.api_headers.present? %>
+      <h6 class="card-subtitle mb-2 text-muted mt-3">Headers</h6>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% JSON.parse(step.api_headers).each do |key, value| %>
+              <tr>
+                <td><%= key %></td>
+                <td><%= value %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+    
+    <% if step.api_body.present? %>
+      <h6 class="card-subtitle mb-2 text-muted mt-3">Request Body</h6>
+      <pre class="bg-light p-2 rounded"><code><%= step.api_body %></code></pre>
+    <% end %>
+    
+    <% if step.api_response_report.present? %>
+      <h6 class="card-subtitle mb-2 text-muted mt-4">Response</h6>
+      <div class="d-flex align-items-center mb-2">
+        <span class="badge <%= step.api_response_report.successful? ? 'bg-success' : 'bg-danger' %> me-2">
+          <%= step.api_response_report.response_code || 'Error' %>
+        </span>
+        <small class="text-muted">
+          <%= l(step.api_response_report.executed_at, format: :long) if step.api_response_report.executed_at %>
+        </small>
+      </div>
+      
+      <% if step.api_response_report.response_body.present? %>
+        <div class="border rounded p-2 bg-light">
+          <pre class="mb-0"><code><%= step.api_response_report.response_body %></code></pre>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div> 

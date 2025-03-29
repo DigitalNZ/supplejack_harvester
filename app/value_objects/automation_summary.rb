@@ -36,10 +36,21 @@ class AutomationSummary
   end
 
   def end_time
-    last_step = @automation.automation_steps.order(position: :asc).last
-    return nil if last_step&.pipeline_job&.harvest_reports.blank?
-
-    last_step.pipeline_job.harvest_reports.map(&:updated_at).max
+    # Get all relevant timestamps from pipeline jobs and API calls
+    timestamps = []
+    
+    @automation.automation_steps.order(position: :asc).each do |step|
+      if step.step_type == 'api_call'
+        timestamps << step.api_response_report&.updated_at if step.api_response_report.present?
+      else
+        if step.pipeline_job&.harvest_reports.present?
+          timestamps.concat(step.pipeline_job.harvest_reports.map(&:updated_at))
+        end
+      end
+    end
+    
+    return nil if timestamps.empty?
+    timestamps.compact.max
   end
 
   def total_duration
@@ -64,6 +75,7 @@ class AutomationSummary
 
     # Collect metrics from all steps with pipeline jobs
     @automation.automation_steps.each do |step|
+      next if step.step_type == 'api_call' # Skip API call steps as they don't have harvest metrics
       next if step.pipeline_job.blank? || step.pipeline_job.harvest_reports.blank?
 
       # Add metrics from this step
@@ -87,6 +99,8 @@ class AutomationSummary
   private
 
   def collect_step_metrics(step)
+    # For API call steps, return nil as they don't have harvest metrics
+    return nil if step.step_type == 'api_call'
     return nil if step.pipeline_job.blank? || step.pipeline_job.harvest_reports.blank?
 
     # Initialize with empty metrics

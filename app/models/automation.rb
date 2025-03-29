@@ -80,10 +80,13 @@ class Automation < ApplicationRecord
 
   def collect_step_statuses
     automation_steps.map do |step|
-      next unless step.pipeline_job
-
-      reports = step.pipeline_job.harvest_reports
-      reports&.map(&:status)&.uniq
+      if step.step_type == 'api_call'
+        step.api_response_report&.status
+      else
+        next unless step.pipeline_job
+        reports = step.pipeline_job.harvest_reports
+        reports&.map(&:status)&.uniq
+      end
     end.flatten.compact
   end
 
@@ -95,9 +98,13 @@ class Automation < ApplicationRecord
 
   def running?(statuses)
     # An automation is running if any status is 'running'
-    # or if not all steps have reported their status yet (some steps might be pending)
+    # or if not all steps have reported their status yet
     statuses.any?('running') || !automation_steps.all? do |step|
-      step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
+      if step.step_type == 'api_call'
+        step.api_response_report.present?
+      else
+        step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
+      end
     end
   end
 
@@ -106,9 +113,13 @@ class Automation < ApplicationRecord
   end
 
   def completed?(statuses)
-    # First check if all steps have a pipeline job with reports
+    # First check if all steps have reports
     all_steps_have_reports = automation_steps.all? do |step|
-      step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
+      if step.step_type == 'api_call'
+        step.api_response_report.present?
+      else
+        step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
+      end
     end
 
     # Then verify all reported statuses are 'completed'

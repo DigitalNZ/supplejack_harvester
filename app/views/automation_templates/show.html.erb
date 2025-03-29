@@ -87,40 +87,110 @@
               </div>
               <div class='card-body'>
                 <div class='d-flex justify-content-between align-items-center'>
-                  <h6 class='mb-0'><%= link_to step.pipeline.name, pipeline_path(step.pipeline) %></h6>
-                  <% if @last_automation_run&.automation_steps&.find_by(position: index)&.pipeline_job %>
-                    <%= link_to pipeline_pipeline_job_path(
-                          @last_automation_run.automation_steps.find_by(position: index).pipeline_job.pipeline,
-                          @last_automation_run.automation_steps.find_by(position: index).pipeline_job
-                        ),
-                                class: 'badge bg-light text-dark',
-                                title: 'View job details' do %>
-                      Job #<%= @last_automation_run.automation_steps.find_by(position: index).pipeline_job.id %>
+                  <h6 class='mb-0'>
+                    <% if step.step_type == 'pipeline' %>
+                      <%= link_to step.pipeline.name, pipeline_path(step.pipeline) %>
+                    <% elsif step.step_type == 'api_call' %>
+                      <%= step.api_method %>
+                    <% end %>
+                  </h6>
+                  <% last_run_step = @last_automation_run&.automation_steps&.find_by(position: index) %>
+                  <% if last_run_step %>
+                    <% if last_run_step.step_type == 'pipeline' && last_run_step.pipeline_job %>
+                      <%= link_to pipeline_pipeline_job_path(
+                            last_run_step.pipeline_job.pipeline,
+                            last_run_step.pipeline_job
+                          ),
+                          class: 'btn btn-sm btn-outline-primary' do %>
+                        View Last Run
+                      <% end %>
+                    <% elsif last_run_step.step_type == 'api_call' && last_run_step.api_response_report %>
+                      <%= link_to '#',
+                          class: 'btn btn-sm btn-outline-primary',
+                          data: {
+                            bs_toggle: 'modal',
+                            bs_target: "#api-response-#{last_run_step.id}"
+                          } do %>
+                        View Last Response
+                      <% end %>
+
+                      <!-- API Response Modal -->
+                      <div class="modal fade" id="api-response-<%= last_run_step.id %>" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title">API Response Details</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                              <div class="mb-3">
+                                <strong>Status:</strong>
+                                <%= last_run_step.api_response_report.status %>
+                              </div>
+                              <% if last_run_step.api_response_report.response_code %>
+                                <div class="mb-3">
+                                  <strong>Response Code:</strong>
+                                  <%= last_run_step.api_response_report.response_code %>
+                                </div>
+                              <% end %>
+                              <% if last_run_step.api_response_report.response_headers %>
+                                <div class="mb-3">
+                                  <strong>Headers:</strong>
+                                  <pre class="bg-light p-2 mt-1"><code><%= JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_headers)) rescue last_run_step.api_response_report.response_headers %></code></pre>
+                                </div>
+                              <% end %>
+                              <% if last_run_step.api_response_report.response_body %>
+                                <div class="mb-3">
+                                  <strong>Body:</strong>
+                                  <pre class="bg-light p-2 mt-1"><code><%= JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_body)) rescue last_run_step.api_response_report.response_body %></code></pre>
+                                </div>
+                              <% end %>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     <% end %>
                   <% end %>
                 </div>
-                <small class='text-muted d-block mt-2'>Harvest Definitions:</small>
-                <% if step.pipeline&.harvest_definitions.present? %>
-                  <% harvest_defs_to_show = step.harvest_definitions.presence || step.pipeline.harvest_definitions %>
-                  <% harvest_defs_to_show.each do |hd| %>
-                    <div class='d-flex align-items-center justify-content-between mb-1'>
-                      <small>
-                        <%= hd.name %>
-                        <br>
-                        (Fragment priority: <%= hd.priority %>)
-                      </small>
-                      <% report = find_harvest_report(@last_automation_run, hd, index) %>
-                      <% status = harvest_report_status(report) %>
-                      <small>
-                        <span class="badge <%= status[:badge_class] %>">
-                          <%= status[:status_text] %>
-                        </span>
-                      </small>
+                <% if step.step_type == 'pipeline' %>
+                  <small class='text-muted d-block mt-2'>Harvest Definitions:</small>
+                  <% if step.pipeline&.harvest_definitions.present? %>
+                    <% harvest_defs_to_show = step.harvest_definitions.presence || step.pipeline.harvest_definitions %>
+                    <% harvest_defs_to_show.each do |hd| %>
+                      <div class='d-flex align-items-center justify-content-between mb-1'>
+                        <small>
+                          <%= hd.name %>
+                          <br>
+                          (Fragment priority: <%= hd.priority %>)
+                        </small>
+                        <% report = find_harvest_report(@last_automation_run, hd, index) %>
+                        <% status = harvest_report_status(report) %>
+                        <small>
+                          <span class="badge <%= status[:badge_class] %>">
+                            <%= status[:status_text] %>
+                          </span>
+                        </small>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="d-flex align-items-center mb-1">
+                      <small class="text-muted">No harvest definitions available</small>
                     </div>
                   <% end %>
-                <% else %>
-                  <div class="d-flex align-items-center mb-1">
-                    <small class="text-muted">No harvest definitions available</small>
+                <% elsif step.step_type == 'api_call' %>
+                  <small class='text-muted d-block mt-2'>URL:</small>
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <small class="text-break">
+                      <%= step.api_url.truncate(100) %>
+                    </small>
+                    <small>
+                      <span class="badge <%= last_run_step&.api_response_report&.status == 'completed' ? 'bg-success' : (last_run_step&.api_response_report&.status == 'errored' ? 'bg-danger' : 'bg-secondary') %> ms-2">
+                        <%= last_run_step&.api_response_report&.status&.humanize || "Not started" %>
+                      </span>
+                    </small>
                   </div>
                 <% end %>
               </div>
@@ -218,21 +288,23 @@
           <h6>Example Request (curl)</h6>
           <div class="bg-light p-3 rounded">
             <pre class="mb-0">
-              curl -X POST "<%= request.base_url %>/api/automation_templates/<%= @automation_template.id %>/run" \
-              -H "Authorization: Token token=[YOUR_API_KEY]" \
-              -H "Content-Type: application/json"
-            </code>
+curl -X POST "<%= request.base_url %>/api/automation_templates/<%= @automation_template.id %>/run" \
+-H "Authorization: Token token=[YOUR_API_KEY]" \
+-H "Content-Type: application/json"
+            </pre>
           </div>
         </div>
 
         <div class="mb-3">
           <h6>Response (Success)</h6>
           <div class="bg-light p-3 rounded">
-            <pre class="mb-0"><code>{
+            <pre class="mb-0">
+{
   "status": "success",
   "message": "Automation was successfully created and started",
   "automation_id": 123
-}</code></pre>
+}
+            </pre>
           </div>
         </div>
 
@@ -292,7 +364,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p>Are you sure you want to delete this step (<%= step.pipeline.name %>)?</p>
+          <p>Are you sure you want to delete this step (<%= step.position %>)?</p>
           <p>This action cannot be undone.</p>
         </div>
         <div class="modal-footer">

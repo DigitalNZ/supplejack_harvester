@@ -10,14 +10,44 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_06_000001) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_28_014700) do
+  create_table "api_call_jobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "automation_step_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.integer "response_code"
+    t.text "response_body"
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["automation_step_id"], name: "index_api_call_jobs_on_automation_step_id"
+  end
+
+  create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "automation_step_id", null: false
+    t.string "status", default: "not_started", null: false
+    t.integer "response_code"
+    t.text "response_body"
+    t.text "response_headers"
+    t.datetime "executed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["automation_step_id"], name: "index_api_response_reports_on_automation_step_id"
+  end
+
   create_table "automation_step_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_template_id", null: false
-    t.bigint "pipeline_id", null: false
+    t.bigint "pipeline_id"
     t.integer "position", default: 0, null: false
     t.text "harvest_definition_ids"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "step_type", default: "pipeline", null: false
+    t.string "api_url"
+    t.string "api_method"
+    t.text "api_headers"
+    t.text "api_body"
     t.index ["automation_template_id", "position"], name: "index_automation_step_templates_on_template_id_and_position"
     t.index ["automation_template_id"], name: "index_automation_step_templates_on_automation_template_id"
     t.index ["pipeline_id"], name: "index_automation_step_templates_on_pipeline_id"
@@ -25,12 +55,17 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_06_000001) do
 
   create_table "automation_steps", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_id", null: false
-    t.bigint "pipeline_id", null: false
+    t.bigint "pipeline_id"
     t.bigint "launched_by_id"
     t.integer "position", default: 0, null: false
     t.text "harvest_definition_ids"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "step_type", default: "pipeline", null: false
+    t.string "api_url"
+    t.string "api_method"
+    t.text "api_headers"
+    t.text "api_body"
     t.index ["automation_id", "position"], name: "index_automation_steps_on_automation_id_and_position", unique: true
     t.index ["automation_id"], name: "index_automation_steps_on_automation_id"
     t.index ["launched_by_id"], name: "index_automation_steps_on_launched_by_id"
@@ -373,6 +408,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_06_000001) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  add_foreign_key "api_call_jobs", "automation_steps"
+  add_foreign_key "api_response_reports", "automation_steps"
   add_foreign_key "automation_step_templates", "automation_templates"
   add_foreign_key "automation_step_templates", "pipelines"
   add_foreign_key "automation_steps", "automations"
