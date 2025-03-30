@@ -18,12 +18,24 @@ module Api
     private
 
     def create_pipeline_job(pipeline)
-      PipelineJob.new(pipeline_id: pipeline.id, harvest_definitions_to_run: pipeline.harvest_definitions.map(&:id),
+      PipelineJob.new(pipeline_id: pipeline.id, harvest_definitions_to_run: harvest_definitions_to_run(pipeline),
                       destination_id: pipeline_job_params['destination_id'], key: SecureRandom.hex)
     end
 
     def pipeline_job_params
-      params.require(:pipeline_job).permit(:pipeline_id, :destination_id)
+      params.require(:pipeline_job).permit(:pipeline_id, :destination_id, harvest_definitions_to_run: [])
+    end
+
+    def harvest_definitions_to_run(pipeline)
+      if harvest_definitions_to_run_params.present? && harvest_definitions_to_run_params.any?(&:present?)
+        return harvest_definitions_to_run_params.compact_blank
+      end
+
+      pipeline.harvest_definitions.map { |definition| definition.id.to_s }
+    end
+
+    def harvest_definitions_to_run_params
+      pipeline_job_params[:harvest_definitions_to_run]
     end
   end
 end

@@ -70,7 +70,7 @@ module Extraction
 
     def automation_step_job_names
       @harvest_job.pipeline_job.automation_step.automation.automation_steps
-                  .map(&:pipeline_job)
+                  .filter_map(&:pipeline_job)
                   .flat_map(&:harvest_jobs)
                   .map(&:name)
                   .select { |name| name.include?('__harvest-') }

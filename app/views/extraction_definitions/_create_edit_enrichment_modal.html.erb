@@ -53,7 +53,7 @@
 
             <div class='col-8'>
               <%= form.text_field :source_id,
-                                  value: @pipeline.harvest&.source_id,
+                                  value: model.source_id || @pipeline.harvest&.source_id,
                                   class: {
                                     'form-control': true
                                   }, required: true %>
