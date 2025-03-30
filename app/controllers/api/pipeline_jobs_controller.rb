@@ -27,9 +27,15 @@ module Api
     end
 
     def harvest_definitions_to_run(pipeline)
-      return pipeline_job_params[:harvest_definitions_to_run].reject(&:blank?) if pipeline_job_params[:harvest_definitions_to_run].present? && pipeline_job_params[:harvest_definitions_to_run].any?(&:present?)
+      if harvest_definitions_to_run_params.present? && harvest_definitions_to_run_params.any?(&:present?)
+        return harvest_definitions_to_run_params.compact_blank
+      end
 
-      pipeline.harvest_definitions.map(&:id).map(&:to_s)
+      pipeline.harvest_definitions.map { |definition| definition.id.to_s }
+    end
+
+    def harvest_definitions_to_run_params
+      pipeline_job_params[:harvest_definitions_to_run]
     end
   end
 end
