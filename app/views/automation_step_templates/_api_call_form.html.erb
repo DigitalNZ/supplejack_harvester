@@ -16,7 +16,8 @@
 
 <div class="mb-3">
   <%= form.label :api_headers, 'Headers', class: 'form-label' %>
-  <%= form.text_area :api_headers, class: 'form-control', rows: 5, placeholder: '{"Content-Type": "application/json", "Authorization": "Bearer token"}' %>
+  <%= form.text_area :api_headers, class: 'form-control', rows: 5,
+                                   placeholder: '{"Content-Type": "application/json", "Authorization": "Bearer token"}' %>
   <small class="form-text text-muted">
     Enter headers as a JSON object
   </small>

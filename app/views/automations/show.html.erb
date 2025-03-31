@@ -28,7 +28,7 @@
               <h6>Template</h6>
               <p>
                 <% if @automation.automation_template %>
-                  <%= link_to @automation.automation_template.name, 
+                  <%= link_to @automation.automation_template.name,
                               automation_template_path(@automation.automation_template) %>
                 <% else %>
                   N/A
@@ -152,7 +152,7 @@
       </div>
     </div>
   <% end %>
-  
+
   <% if @automation.automation_steps.where(step_type: 'api_call').exists? %>
     <div class="row mb-4">
       <div class="col-md-12">

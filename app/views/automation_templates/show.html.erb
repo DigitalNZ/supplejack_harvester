@@ -128,8 +128,12 @@
                       <%= step.api_url.truncate(100) %>
                     </small>
                     <small>
-                      <span class="badge <%= last_run_step&.api_response_report&.status == 'completed' ? 'bg-success' : (last_run_step&.api_response_report&.status == 'errored' ? 'bg-danger' : 'bg-secondary') %> ms-2">
-                        <%= last_run_step&.api_response_report&.status&.humanize || "Not started" %>
+                      <span class="badge <%= if last_run_step&.api_response_report&.status == 'completed'
+                                               'bg-success'
+                                             else
+                                               (last_run_step&.api_response_report&.status == 'errored' ? 'bg-danger' : 'bg-secondary')
+                                             end %> ms-2">
+                        <%= last_run_step&.api_response_report&.status&.humanize || 'Not started' %>
                       </span>
                     </small>
                   </div>
@@ -142,16 +146,16 @@
                           last_run_step.pipeline_job.pipeline,
                           last_run_step.pipeline_job
                         ),
-                        class: 'btn btn-sm btn-outline-primary' do %>
+                                class: 'btn btn-sm btn-outline-primary' do %>
                       View Last Run
                     <% end %>
                   <% elsif last_run_step.step_type == 'api_call' && last_run_step.api_response_report %>
                     <%= link_to '#',
-                        class: 'btn btn-sm btn-outline-primary',
-                        data: {
-                          bs_toggle: 'modal',
-                          bs_target: "#api-response-#{last_run_step.id}"
-                        } do %>
+                                class: 'btn btn-sm btn-outline-primary',
+                                data: {
+                                  bs_toggle: 'modal',
+                                  bs_target: "#api-response-#{last_run_step.id}"
+                                } do %>
                       View Last Response
                     <% end %>
 
@@ -177,13 +181,21 @@
                             <% if last_run_step.api_response_report.response_headers %>
                               <div class="mb-3">
                                 <strong>Headers:</strong>
-                                <pre class="bg-light p-2 mt-1"><code><%= JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_headers)) rescue last_run_step.api_response_report.response_headers %></code></pre>
+                                <pre class="bg-light p-2 mt-1"><code><%= begin
+                                                                           JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_headers))
+                                                                         rescue StandardError
+                                                                           last_run_step.api_response_report.response_headers
+                                                                         end %></code></pre>
                               </div>
                             <% end %>
                             <% if last_run_step.api_response_report.response_body %>
                               <div class="mb-3">
                                 <strong>Body:</strong>
-                                <pre class="bg-light p-2 mt-1"><code><%= JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_body)) rescue last_run_step.api_response_report.response_body %></code></pre>
+                                <pre class="bg-light p-2 mt-1"><code><%= begin
+                                                                           JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_body))
+                                                                         rescue StandardError
+                                                                           last_run_step.api_response_report.response_body
+                                                                         end %></code></pre>
                               </div>
                             <% end %>
                           </div>

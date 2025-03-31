@@ -26,7 +26,8 @@
       <%= form.select :pipeline_id,
                       @pipelines.map { |p| [p.name, p.id] },
                       { include_blank: 'Select a pipeline' },
-                      { class: 'form-select', required: automation_step_template.step_type.to_s != 'api_call', data: { controller: 'pipeline-select' } } %>
+                      { class: 'form-select', required: automation_step_template.step_type.to_s != 'api_call',
+                        data: { controller: 'pipeline-select' } } %>
       <small class="form-text text-muted">
         Select a pipeline to view and choose its associated harvest definitions.
       </small>
@@ -58,7 +59,7 @@
     </div>
   </div>
 
-  <div id="api-call-fields" class="<%= automation_step_template.step_type.to_s != 'api_call' ? 'd-none' : '' %>">
+  <div id="api-call-fields" class="<%= automation_step_template.step_type.to_s == 'api_call' ? '' : 'd-none' %>">
     <%= render 'api_call_form', form: form, automation_step_template: automation_step_template %>
   </div>
 
@@ -74,7 +75,7 @@
     const pipelineFields = document.getElementById('pipeline-fields');
     const apiCallFields = document.getElementById('api-call-fields');
     const pipelineSelect = document.querySelector('select[name="automation_step_template[pipeline_id]"]');
-    
+
     // Handle step type changes
     stepTypeSelect.addEventListener('change', function() {
       if (this.value === 'pipeline') {
