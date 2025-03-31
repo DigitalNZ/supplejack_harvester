@@ -9,7 +9,7 @@ module Extraction
 
       @page = @extraction_definition.page
       @first_api_document = get_api_document(@page)
-      @max_page = find_max_page(@first_api_document)
+      @max_page = find_max_page(@first_api_document) if @first_api_document.body.present?
     end
 
     def each

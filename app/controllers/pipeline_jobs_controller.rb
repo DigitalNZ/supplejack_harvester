@@ -43,15 +43,7 @@ class PipelineJobsController < ApplicationController
   # future plan is to introduce a watching process as part of the harvest and move logic
   # about completions and scheduling enrichments there
   def complete_finished_jobs
-    running_reports = @pipeline.pipeline_jobs.flat_map(&:harvest_reports).select do |report|
-      report.status == 'running'
-    end
-
-    running_reports.each do |report|
-      report.update(transformation_status: 'completed') if report.transformation_workers_completed?
-      report.update(load_status: 'completed') if report.load_workers_completed?
-      report.update(delete_status: 'completed') if report.delete_workers_completed?
-    end
+    @pipeline.complete_finished_jobs!
   end
 
   def find_pipeline

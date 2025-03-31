@@ -13,6 +13,7 @@ module Extraction
 
     def call
       SjApiEnrichmentIterator.new(@extraction_job).each do |api_document, page|
+        break if api_document.body.blank?
         @extraction_definition.page = page
         api_records = JSON.parse(api_document.body)['records']
         extract_and_save_enrichment_documents(api_records)
