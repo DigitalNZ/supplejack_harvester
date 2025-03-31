@@ -99,9 +99,11 @@ class AutomationStep < ApplicationRecord
   end
 
   def no_reports?
-    return true unless pipeline_job
-    
-    pipeline_job.harvest_reports.blank?
+    if step_type == 'api_call'
+      api_response_report.blank?
+    else
+      pipeline_job&.harvest_reports&.blank?
+    end
   end
 
   def report_statuses

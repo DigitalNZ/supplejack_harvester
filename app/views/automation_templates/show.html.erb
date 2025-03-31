@@ -95,65 +95,6 @@
                     <% end %>
                   </h6>
                   <% last_run_step = @last_automation_run&.automation_steps&.find_by(position: index) %>
-                  <% if last_run_step %>
-                    <% if last_run_step.step_type == 'pipeline' && last_run_step.pipeline_job %>
-                      <%= link_to pipeline_pipeline_job_path(
-                            last_run_step.pipeline_job.pipeline,
-                            last_run_step.pipeline_job
-                          ),
-                          class: 'btn btn-sm btn-outline-primary' do %>
-                        View Last Run
-                      <% end %>
-                    <% elsif last_run_step.step_type == 'api_call' && last_run_step.api_response_report %>
-                      <%= link_to '#',
-                          class: 'btn btn-sm btn-outline-primary',
-                          data: {
-                            bs_toggle: 'modal',
-                            bs_target: "#api-response-#{last_run_step.id}"
-                          } do %>
-                        View Last Response
-                      <% end %>
-
-                      <!-- API Response Modal -->
-                      <div class="modal fade" id="api-response-<%= last_run_step.id %>" tabindex="-1">
-                        <div class="modal-dialog modal-lg">
-                          <div class="modal-content">
-                            <div class="modal-header">
-                              <h5 class="modal-title">API Response Details</h5>
-                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                              <div class="mb-3">
-                                <strong>Status:</strong>
-                                <%= last_run_step.api_response_report.status %>
-                              </div>
-                              <% if last_run_step.api_response_report.response_code %>
-                                <div class="mb-3">
-                                  <strong>Response Code:</strong>
-                                  <%= last_run_step.api_response_report.response_code %>
-                                </div>
-                              <% end %>
-                              <% if last_run_step.api_response_report.response_headers %>
-                                <div class="mb-3">
-                                  <strong>Headers:</strong>
-                                  <pre class="bg-light p-2 mt-1"><code><%= JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_headers)) rescue last_run_step.api_response_report.response_headers %></code></pre>
-                                </div>
-                              <% end %>
-                              <% if last_run_step.api_response_report.response_body %>
-                                <div class="mb-3">
-                                  <strong>Body:</strong>
-                                  <pre class="bg-light p-2 mt-1"><code><%= JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_body)) rescue last_run_step.api_response_report.response_body %></code></pre>
-                                </div>
-                              <% end %>
-                            </div>
-                            <div class="modal-footer">
-                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    <% end %>
-                  <% end %>
                 </div>
                 <% if step.step_type == 'pipeline' %>
                   <small class='text-muted d-block mt-2'>Harvest Definitions:</small>
@@ -192,6 +133,67 @@
                       </span>
                     </small>
                   </div>
+                <% end %>
+              </div>
+              <% if last_run_step %>
+                <div class="d-flex justify-content-start p-3">
+                  <% if last_run_step.step_type == 'pipeline' && last_run_step.pipeline_job %>
+                    <%= link_to pipeline_pipeline_job_path(
+                          last_run_step.pipeline_job.pipeline,
+                          last_run_step.pipeline_job
+                        ),
+                        class: 'btn btn-sm btn-outline-primary' do %>
+                      View Last Run
+                    <% end %>
+                  <% elsif last_run_step.step_type == 'api_call' && last_run_step.api_response_report %>
+                    <%= link_to '#',
+                        class: 'btn btn-sm btn-outline-primary',
+                        data: {
+                          bs_toggle: 'modal',
+                          bs_target: "#api-response-#{last_run_step.id}"
+                        } do %>
+                      View Last Response
+                    <% end %>
+
+                    <!-- API Response Modal -->
+                    <div class="modal fade" id="api-response-<%= last_run_step.id %>" tabindex="-1">
+                      <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title">API Response Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div class="mb-3">
+                              <strong>Status:</strong>
+                              <%= last_run_step.api_response_report.status %>
+                            </div>
+                            <% if last_run_step.api_response_report.response_code %>
+                              <div class="mb-3">
+                                <strong>Response Code:</strong>
+                                <%= last_run_step.api_response_report.response_code %>
+                              </div>
+                            <% end %>
+                            <% if last_run_step.api_response_report.response_headers %>
+                              <div class="mb-3">
+                                <strong>Headers:</strong>
+                                <pre class="bg-light p-2 mt-1"><code><%= JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_headers)) rescue last_run_step.api_response_report.response_headers %></code></pre>
+                              </div>
+                            <% end %>
+                            <% if last_run_step.api_response_report.response_body %>
+                              <div class="mb-3">
+                                <strong>Body:</strong>
+                                <pre class="bg-light p-2 mt-1"><code><%= JSON.pretty_generate(JSON.parse(last_run_step.api_response_report.response_body)) rescue last_run_step.api_response_report.response_body %></code></pre>
+                              </div>
+                            <% end %>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
                 <% end %>
               </div>
             </div>

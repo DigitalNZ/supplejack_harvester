@@ -137,9 +137,9 @@ RSpec.describe Automation do
         expect(subject.status).to eq('failed')
       end
       
-      it 'returns running when API call has no response report yet' do
+      it 'returns not_started when API call has no response report yet' do
         api_step # Just create the step
-        expect(subject.status).to eq('running')
+        expect(subject.status).to eq('not_started')
       end
       
       context 'with mixed step types' do
