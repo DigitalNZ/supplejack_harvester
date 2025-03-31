@@ -38,18 +38,17 @@ class AutomationSummary
   def end_time
     # Get all relevant timestamps from pipeline jobs and API calls
     timestamps = []
-    
+
     @automation.automation_steps.order(position: :asc).each do |step|
       if step.step_type == 'api_call'
         timestamps << step.api_response_report&.updated_at if step.api_response_report.present?
-      else
-        if step.pipeline_job&.harvest_reports.present?
-          timestamps.concat(step.pipeline_job.harvest_reports.map(&:updated_at))
-        end
+      elsif step.pipeline_job&.harvest_reports.present?
+        timestamps.concat(step.pipeline_job.harvest_reports.map(&:updated_at))
       end
     end
-    
+
     return nil if timestamps.empty?
+
     timestamps.compact.max
   end
 

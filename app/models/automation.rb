@@ -84,6 +84,7 @@ class Automation < ApplicationRecord
         step.api_response_report&.status
       else
         next unless step.pipeline_job
+
         reports = step.pipeline_job.harvest_reports
         reports&.map(&:status)&.uniq
       end

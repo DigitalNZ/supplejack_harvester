@@ -15,13 +15,13 @@ class AutomationStep < ApplicationRecord
   validate :validate_step_type_requirements
 
   serialize :harvest_definition_ids, type: Array
-  
+
   API_METHODS = %w[GET POST PUT PATCH DELETE].freeze
 
   def harvest_definitions
     return [] unless pipeline
     return Pipeline.find(pipeline_id).harvest_definitions if harvest_definition_ids.blank?
-    
+
     HarvestDefinition.where(id: harvest_definition_ids)
   end
 
@@ -47,7 +47,7 @@ class AutomationStep < ApplicationRecord
 
   def api_call_status
     return 'not_started' unless api_response_report
-    
+
     api_response_report.status
   end
 
@@ -73,13 +73,15 @@ class AutomationStep < ApplicationRecord
   # Execute the API call by enqueuing the job
   def execute_api_call
     # Create an initial API response report to show queued status
-    create_api_response_report(
-      status: 'queued',
-      response_code: nil,
-      response_body: nil,
-      response_headers: nil,
-      executed_at: nil
-    ) unless api_response_report.present?
+    unless api_response_report.present?
+      create_api_response_report(
+        status: 'queued',
+        response_code: nil,
+        response_body: nil,
+        response_headers: nil,
+        executed_at: nil
+      )
+    end
 
     # Enqueue the API call job
     ApiCallWorker.perform_in(5.seconds, id)
@@ -94,7 +96,7 @@ class AutomationStep < ApplicationRecord
     when 'api_call'
       errors.add(:api_url, "can't be blank") if api_url.blank?
       errors.add(:api_method, "can't be blank") if api_method.blank?
-      errors.add(:pipeline_id, "must be blank for API calls") if pipeline_id.present?
+      errors.add(:pipeline_id, 'must be blank for API calls') if pipeline_id.present?
     end
   end
 

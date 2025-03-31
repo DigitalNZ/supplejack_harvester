@@ -30,7 +30,7 @@ class AutomationTemplate < ApplicationRecord
     end
 
     automation = create_automation(user)
-    
+
     return handle_automation_not_persisted unless automation.persisted?
     return handle_automation_cannot_run(automation) unless automation.can_run?
 
@@ -67,7 +67,7 @@ class AutomationTemplate < ApplicationRecord
         harvest_definition_ids: step_template.harvest_definition_ids,
         launched_by: user
       )
-      
+
       # Set API call specific attributes if this is an API call step
       if step_template.step_type == 'api_call'
         automation_step.api_url = step_template.api_url
@@ -75,7 +75,7 @@ class AutomationTemplate < ApplicationRecord
         automation_step.api_headers = step_template.api_headers
         automation_step.api_body = step_template.api_body
       end
-      
+
       automation_step.save
     end
   end

@@ -9,13 +9,13 @@ class AutomationStepTemplate < ApplicationRecord
   validates :api_url, :api_method, presence: true, if: -> { step_type == 'api_call' }
 
   serialize :harvest_definition_ids, type: Array
-  
+
   API_METHODS = %w[GET POST PUT PATCH DELETE].freeze
 
   def harvest_definitions
     return [] unless pipeline
     return Pipeline.find(pipeline_id).harvest_definitions if harvest_definition_ids.blank?
-    
+
     HarvestDefinition.where(id: harvest_definition_ids)
   end
 
