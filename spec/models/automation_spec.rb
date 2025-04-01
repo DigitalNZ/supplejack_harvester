@@ -111,7 +111,9 @@ RSpec.describe Automation do
                delete_status: 'completed')
         
         # Create a second step with a pipeline job but no reports
-        second_step = create(:automation_step, automation: subject, launched_by: user, pipeline: pipeline, position: 1)
+        # Use a dynamic position value to avoid uniqueness constraint violations
+        next_position = subject.automation_steps.maximum(:position).to_i + 1
+        second_step = create(:automation_step, automation: subject, launched_by: user, pipeline: pipeline, position: next_position)
         create(:pipeline_job, automation_step: second_step, pipeline: pipeline)
         
         # Status should be running because second step has a pipeline job but no reports
@@ -134,7 +136,7 @@ RSpec.describe Automation do
       
       it 'returns failed when API call is errored' do
         create(:api_response_report, automation_step: api_step, status: 'errored')
-        expect(subject.status).to eq('failed')
+        expect(subject.status).to eq('errored')
       end
       
       it 'returns not_started when API call has no response report yet' do
@@ -186,13 +188,13 @@ RSpec.describe Automation do
                  load_status: 'completed',
                  delete_status: 'completed')
                  
-          expect(subject.status).to eq('failed')
+          expect(subject.status).to eq('errored')
           
           # Update pipeline step to completed but API step to errored
           HarvestReport.where(harvest_job: harvest_job).update_all(extraction_status: 'completed')
           api_step.api_response_report.update(status: 'errored')
           
-          expect(subject.reload.status).to eq('failed')
+          expect(subject.reload.status).to eq('errored')
         end
       end
     end

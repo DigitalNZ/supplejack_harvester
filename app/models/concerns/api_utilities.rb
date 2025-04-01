@@ -80,9 +80,4 @@ module ApiUtilities
       text
     end
   end
-
-  # This method is expected to be implemented by the including class
-  # def collect_pipeline_job_ids
-  #   # Should return an array of job IDs
-  # end
 end
