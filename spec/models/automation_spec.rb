@@ -84,7 +84,7 @@ RSpec.describe Automation do
                transformation_status: 'completed', 
                load_status: 'completed',
                delete_status: 'completed')
-        expect(subject.status).to eq('failed')
+        expect(subject.status).to eq('errored')
       end
       
       it 'does not return completed if not all steps have reports, even if all existing reports are completed' do

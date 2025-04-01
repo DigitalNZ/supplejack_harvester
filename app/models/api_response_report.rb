@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ApiResponseReport < ApplicationRecord
-  include Status
+  include StatusManagement
 
   belongs_to :automation_step
 

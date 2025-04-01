@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class AutomationStep < ApplicationRecord
-  include Status
+  include StatusManagement
 
   belongs_to :automation
   belongs_to :pipeline, optional: true
@@ -73,7 +73,7 @@ class AutomationStep < ApplicationRecord
   # Execute the API call by enqueuing the job
   def execute_api_call
     # Create an initial API response report to show queued status
-    unless api_response_report.present?
+    if api_response_report.blank?
       create_api_response_report(
         status: 'queued',
         response_code: nil,
@@ -92,12 +92,20 @@ class AutomationStep < ApplicationRecord
   def validate_step_type_requirements
     case step_type
     when 'pipeline'
-      errors.add(:pipeline_id, "can't be blank") if pipeline_id.blank?
+      validate_pipeline_requirements
     when 'api_call'
-      errors.add(:api_url, "can't be blank") if api_url.blank?
-      errors.add(:api_method, "can't be blank") if api_method.blank?
-      errors.add(:pipeline_id, 'must be blank for API calls') if pipeline_id.present?
+      validate_api_call_requirements
     end
+  end
+
+  def validate_pipeline_requirements
+    errors.add(:pipeline_id, "can't be blank") if pipeline_id.blank?
+  end
+
+  def validate_api_call_requirements
+    errors.add(:api_url, "can't be blank") if api_url.blank?
+    errors.add(:api_method, "can't be blank") if api_method.blank?
+    errors.add(:pipeline_id, 'must be blank for API calls') if pipeline_id.present?
   end
 
   def no_reports?
@@ -113,40 +121,5 @@ class AutomationStep < ApplicationRecord
 
     reports = pipeline_job.harvest_reports
     reports&.map(&:status)&.uniq || []
-  end
-
-  def status_from_statuses(statuses)
-    return 'not_started' if not_started?(statuses)
-    return 'cancelled' if cancelled?(statuses)
-    return 'completed' if completed?(statuses)
-    return 'errored' if errored?(statuses)
-    return 'running' if running?(statuses)
-    return 'queued' if queued?(statuses)
-
-    'running' # Default fallback
-  end
-
-  def not_started?(statuses)
-    statuses.blank? || statuses.include?('not_started')
-  end
-
-  def cancelled?(statuses)
-    statuses.include?('cancelled')
-  end
-
-  def completed?(statuses)
-    statuses.all?('completed')
-  end
-
-  def errored?(statuses)
-    statuses.include?('errored')
-  end
-
-  def running?(statuses)
-    statuses.include?('running')
-  end
-
-  def queued?(statuses)
-    statuses.include?('queued')
   end
 end

@@ -60,29 +60,36 @@ class AutomationTemplate < ApplicationRecord
 
   def create_automation_steps(automation, user)
     automation_step_templates.each do |step_template|
-      automation_step = automation.automation_steps.build(
-        step_type: step_template.step_type,
-        pipeline_id: step_template.pipeline_id,
-        position: step_template.position,
-        harvest_definition_ids: step_template.harvest_definition_ids,
-        launched_by: user
-      )
-
-      # Set API call specific attributes if this is an API call step
-      if step_template.step_type == 'api_call'
-        automation_step.api_url = step_template.api_url
-        automation_step.api_method = step_template.api_method
-        automation_step.api_headers = step_template.api_headers
-        automation_step.api_body = step_template.api_body
-      end
-
+      automation_step = build_automation_step(automation, step_template, user)
       automation_step.save
     end
   end
 
+  def build_automation_step(automation, step_template, user)
+    automation_step = automation.automation_steps.build(
+      step_type: step_template.step_type,
+      pipeline_id: step_template.pipeline_id,
+      position: step_template.position,
+      harvest_definition_ids: step_template.harvest_definition_ids,
+      launched_by: user
+    )
+
+    # Set API call specific attributes if this is an API call step
+    set_api_call_attributes(automation_step, step_template) if step_template.step_type == 'api_call'
+
+    automation_step
+  end
+
+  def set_api_call_attributes(automation_step, step_template)
+    automation_step.api_url = step_template.api_url
+    automation_step.api_method = step_template.api_method
+    automation_step.api_headers = step_template.api_headers
+    automation_step.api_body = step_template.api_body
+  end
+
   def automation_running?
     automations.any? do |a|
-      a.status != 'completed' && a.status != 'failed' && a.status != 'cancelled'
+      a.status != 'completed' && a.status != 'errored' && a.status != 'cancelled'
     end
   end
 end

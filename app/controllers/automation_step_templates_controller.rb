@@ -34,18 +34,26 @@ class AutomationStepTemplatesController < ApplicationController
 
   def update
     if @automation_step_template.update(automation_step_template_params)
-      # Process headers if it's an API call
-      process_api_headers if @automation_step_template.step_type == 'api_call'
-      @automation_step_template.save
-
-      redirect_to automation_template_path(@automation_template),
-                  notice: I18n.t('automation_step_templates.update.success')
+      handle_successful_update
     else
-      @pipelines = Pipeline.all
-      @selected_pipeline = @automation_step_template.pipeline
-      @harvest_definitions = @selected_pipeline.harvest_definitions if @selected_pipeline
+      setup_form_variables
       render :edit
     end
+  end
+
+  def handle_successful_update
+    # Process headers if it's an API call
+    process_api_headers if @automation_step_template.step_type == 'api_call'
+    @automation_step_template.save
+
+    redirect_to automation_template_path(@automation_template),
+                notice: I18n.t('automation_step_templates.update.success')
+  end
+
+  def setup_form_variables
+    @pipelines = Pipeline.all
+    @selected_pipeline = @automation_step_template.pipeline
+    @harvest_definitions = @selected_pipeline.harvest_definitions if @selected_pipeline
   end
 
   def destroy
@@ -76,7 +84,7 @@ class AutomationStepTemplatesController < ApplicationController
 
   def process_api_headers
     # If API headers are provided as JSON string, process them
-    return unless params[:automation_step_template][:api_headers].present?
+    return if params[:automation_step_template][:api_headers].blank?
 
     begin
       JSON.parse(params[:automation_step_template][:api_headers])
@@ -84,7 +92,7 @@ class AutomationStepTemplatesController < ApplicationController
     rescue JSON::ParserError
       # If JSON parsing fails, set empty hash
       @automation_step_template.api_headers = {}
-      flash[:alert] = 'Invalid headers format. Headers were reset to empty.'
+      flash[:alert] = I18n.t('automation_step_templates.header_validation_error')
     end
   end
 

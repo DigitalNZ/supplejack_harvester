@@ -2,6 +2,7 @@
 
 class ApiCallWorker
   include Sidekiq::Job
+  include ApiUtilities
 
   sidekiq_options retry: 0
 
@@ -14,25 +15,31 @@ class ApiCallWorker
 
   def execute_api_call
     uri = URI.parse(@automation_step.api_url)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = (uri.scheme == 'https')
+    http = setup_http_client(uri)
 
     # Create the request based on the method
     request = create_request(uri)
 
-    # Set headers
-    if @automation_step.api_headers.present?
-      JSON.parse(@automation_step.api_headers).each do |key, value|
-        request[key] = value
-      end
-    end
-    # Set the request body for methods that support it
-    if %w[POST PUT PATCH].include?(@automation_step.api_method) && @automation_step.api_body.present?
-      # Interpolate variables in the API body
-      # TODO: improve this
-      request.body = interpolate_variables(@automation_step.api_body)
-    end
+    # Prepare the request with headers and body
+    prepare_request(request)
 
+    # Execute the request
+    execute_request_and_handle_response(http, request)
+  end
+
+  def prepare_request(request)
+    add_request_headers(request, @automation_step.api_headers)
+    add_request_body(request)
+  end
+
+  def add_request_body(request)
+    return unless %w[POST PUT PATCH].include?(@automation_step.api_method) && @automation_step.api_body.present?
+
+    # Interpolate variables in the API body
+    request.body = interpolate_variables(@automation_step.api_body)
+  end
+
+  def execute_request_and_handle_response(http, request)
     # Execute the request
     response = http.request(request)
 
@@ -47,58 +54,8 @@ class ApiCallWorker
   end
 
   def create_request(uri)
-    case @automation_step.api_method
-    when 'GET'
-      Net::HTTP::Get.new(uri.request_uri)
-    when 'POST'
-      Net::HTTP::Post.new(uri.request_uri)
-    when 'PUT'
-      Net::HTTP::Put.new(uri.request_uri)
-    when 'PATCH'
-      Net::HTTP::Patch.new(uri.request_uri)
-    when 'DELETE'
-      Net::HTTP::Delete.new(uri.request_uri)
-    else
-      raise "Unsupported HTTP method: #{@automation_step.api_method}"
-    end
-  end
-
-  def interpolate_variables(body)
-    return body unless body.is_a?(String)
-
-    # Try to parse as JSON first
-    begin
-      # Parse the body into a hash
-      body_hash = JSON.parse(body)
-
-      # Deep traverse the hash and replace any {{job_ids}} placeholders
-      traverse_and_replace(body_hash)
-
-      # Convert back to JSON
-      body_hash.to_json
-    rescue JSON::ParserError
-      # If not valid JSON, fall back to string replacement
-      job_ids = collect_pipeline_job_ids
-      body.gsub('{{job_ids}}', job_ids.to_json)
-    end
-  end
-
-  def traverse_and_replace(obj)
-    case obj
-    when Hash
-      obj.each { |k, v| obj[k] = traverse_and_replace(v) }
-    when Array
-      obj.map! { |v| traverse_and_replace(v) }
-    when String
-      if obj.include?('{{job_ids}}')
-        job_ids = collect_pipeline_job_ids
-        obj.gsub('{{job_ids}}', job_ids.to_json)
-      else
-        obj
-      end
-    else
-      obj
-    end
+    request_class = request_class_for_method(@automation_step.api_method)
+    request_class.new(uri.request_uri)
   end
 
   def collect_pipeline_job_ids
@@ -124,11 +81,7 @@ class ApiCallWorker
       executed_at: Time.current
     }
 
-    if @automation_step.api_response_report.present?
-      @automation_step.api_response_report.update(report_attributes)
-    else
-      @automation_step.create_api_response_report(report_attributes)
-    end
+    update_or_create_report(report_attributes)
   end
 
   def create_or_update_api_response_report_with_error(error)
@@ -140,10 +93,14 @@ class ApiCallWorker
       executed_at: Time.current
     }
 
+    update_or_create_report(report_attributes)
+  end
+
+  def update_or_create_report(attributes)
     if @automation_step.api_response_report.present?
-      @automation_step.api_response_report.update(report_attributes)
+      @automation_step.api_response_report.update(attributes)
     else
-      @automation_step.create_api_response_report(report_attributes)
+      @automation_step.create_api_response_report(attributes)
     end
   end
 end

@@ -36,13 +36,16 @@ class AutomationWorker
 
     return if @step.api_response_report.present? && @step.api_response_report.failed?
 
+    handle_queued_or_new_api_call(automation_id, step_id)
+  end
+
+  def handle_queued_or_new_api_call(automation_id, step_id)
     if @step.api_response_report.present? && @step.api_response_report.queued?
       schedule_job_check(automation_id, step_id)
       return
     end
 
     @step.execute_api_call
-
     schedule_job_check(automation_id, step_id)
   end
 
