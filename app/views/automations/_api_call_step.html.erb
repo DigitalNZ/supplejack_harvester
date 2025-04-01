@@ -39,7 +39,7 @@
       <h6 class="card-subtitle mb-2 text-muted mt-4">Response</h6>
       <div class="d-flex align-items-center mb-2">
         <span class="badge <%= step.api_response_report.successful? ? 'bg-success' : 'bg-danger' %> me-2">
-          <%= step.api_response_report.response_code || 'Error' %>
+          <%= step.api_response_report.response_code || 'N/A' %>
         </span>
         <small class="text-muted">
           <%= l(step.api_response_report.executed_at, format: :long) if step.api_response_report.executed_at %>

@@ -37,7 +37,7 @@ module ApplicationHelper
     'completed' => 'bg-success',
     'failed' => 'bg-danger',
     'running' => 'bg-primary',
-    'queued' => 'bg-info',
+    'queued' => 'bg-warning',
     'not_started' => 'bg-secondary'
   }.freeze
 

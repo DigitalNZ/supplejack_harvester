@@ -33,15 +33,7 @@ module AutomationTemplatesHelper
   end
 
   def api_response_badge_class(api_response_report)
-    if api_response_report&.status == 'completed'
-      'bg-success'
-    elsif ['errored', 'failed'].include?(api_response_report&.status)
-      'bg-danger'
-    elsif api_response_report&.status == 'queued'
-      'bg-warning'
-    else
-      'bg-secondary'
-    end
+    status_badge_class(api_response_report&.status)
   end
 
   def api_response_status_text(api_response_report)
