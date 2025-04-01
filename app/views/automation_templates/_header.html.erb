@@ -1,0 +1,50 @@
+<%= content_for(:title) { automation_template.name } %>
+
+<%= content_for :header do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <h1 class="header__title"><%= automation_template.name %></h1>
+
+  <div class="header__actions mb-4">
+    <%= link_to 'Edit Template', edit_automation_template_path(automation_template),
+                class: 'btn btn-outline-primary me-2' %>
+    <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#run-automation-modal">
+      Run Automation
+    </button>
+    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-template-modal">
+      <i class="bi bi-trash"></i> Delete Template
+    </button>
+  </div>
+
+  <div class="clearfix"></div>
+
+  <p><%= automation_template.description.presence || 'No description' %></p>
+  <div>
+    <% if last_automation_run.present? %>
+      <p>
+        Last run on <strong><%= last_automation_run.created_at.strftime('%B %d, %Y at %H:%M') %></strong>
+        to destination <strong><%= automation_template.destination.name %></strong>.
+      </p>
+    <% else %>
+      <p>
+        This template has never been run. Destination: <%= automation_template.destination.name %>.
+      </p>
+    <% end %>
+  </div>
+
+  <% automation_count = automation_template.automations.count %>
+  <div class="mt-4"></div>
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link active" id="details-tab" data-bs-toggle="tab" href="#details" role="tab">Details</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="history-tab" data-bs-toggle="tab" href="#history" role="tab">
+        History (<%= automation_count %>)
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="webhook-tab" data-bs-toggle="tab" href="#webhook" role="tab">Webhook</a>
+    </li>
+  </ul>
+<% end %>
