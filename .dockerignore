@@ -1,0 +1,77 @@
+# Git
+.git
+.gitattributes
+.github
+.gitignore
+
+# Docker
+.dockerignore
+docker-compose.yml
+
+# Logs
+log/*
+*.log
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+*.local
+config/application.yml
+config/master.key
+config/credentials.yml.enc
+
+# Cache and temp files
+tmp/*
+/public/assets
+/public/vite*
+/app/assets/builds/*
+
+# Node
+node_modules
+
+# Test and development
+spec
+coverage
+extractions/test/*
+extractions/development/*
+extractions/staging/*
+dev_data
+
+# Documentation and misc
+README.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+LICENCE
+
+# Code analysis
+.codeclimate.yml
+.codeclimate_diff.yml
+codeclimate_diff_baseline.json
+.reek.yml
+.rubocop.yml
+.erb_lint.yml
+
+# OS files
+.DS_Store
+
+# Editor configs
+.vscode
+.idea
+**/*.swp
+**/*.swo
+app/frontend/jsconfig.json
+
+# Bundle cache
+vendor/cache/*
+
+# Keep empty directories
+!log/.keep
+!tmp/.keep
+!tmp/pids/.keep
+!extractions/test/.keep
+!extractions/development/.keep
+!extractions/staging/.keep
+!extractions/production/.keep
+!app/assets/builds/.keep 
