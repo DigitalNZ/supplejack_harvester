@@ -12,7 +12,8 @@ WORKDIR /app
 # Install packages
 RUN apk add --update --no-cache $BUILD_PACKAGES $DEV_PACKAGES $RUBY_PACKAGES
 
-RUN apk add tesseract-ocr tesseract-ocr-data-eng ocrmypdf --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main icu-libs && \
+    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community tesseract-ocr tesseract-ocr-data-eng ocrmypdf
 
 COPY Gemfile Gemfile.lock ./
 
@@ -21,6 +22,7 @@ RUN gem install bundler -v $(tail -n1 Gemfile.lock) \
     && bundle config set --local without development:test \
     && bundle config set --local path vendor/cache \
     && bundle config set --local build.nokogiri --use-system-libraries \
+    && bundle config set --local build.nio4r --with-cflags="-Wno-error=implicit-function-declaration" \
     && bundle install --jobs=4 --retry=3 \
     # Remove unneeded files (cached *.gem, *.o, *.c)
     && rm -rf $GEM_HOME/cache/*.gem \
