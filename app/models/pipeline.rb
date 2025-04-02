@@ -49,4 +49,16 @@ class Pipeline < ApplicationRecord
       updated_at:
     }
   end
+
+  def complete_finished_jobs!
+    running_reports = pipeline_jobs.flat_map(&:harvest_reports).select do |report|
+      report.status == 'running'
+    end
+
+    running_reports.each do |report|
+      report.update(transformation_status: 'completed') if report.transformation_workers_completed?
+      report.update(load_status: 'completed') if report.load_workers_completed?
+      report.update(delete_status: 'completed') if report.delete_workers_completed?
+    end
+  end
 end

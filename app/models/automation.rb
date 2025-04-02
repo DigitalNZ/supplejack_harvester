@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Automation < ApplicationRecord
-  include Status
+  include StatusManagement
 
   belongs_to :destination
   belongs_to :automation_template
@@ -80,11 +80,27 @@ class Automation < ApplicationRecord
 
   def collect_step_statuses
     automation_steps.map do |step|
-      next unless step.pipeline_job
-
-      reports = step.pipeline_job.harvest_reports
-      reports&.map(&:status)&.uniq
+      collect_status_for_step(step)
     end.flatten.compact
+  end
+
+  def collect_status_for_step(step)
+    if step.step_type == 'api_call'
+      collect_api_call_status(step)
+    else
+      collect_pipeline_status(step)
+    end
+  end
+
+  def collect_api_call_status(step)
+    step.api_response_report&.status
+  end
+
+  def collect_pipeline_status(step)
+    return unless step.pipeline_job
+
+    reports = step.pipeline_job.harvest_reports
+    reports&.map(&:status)&.uniq
   end
 
   def not_started?(statuses)
@@ -95,9 +111,9 @@ class Automation < ApplicationRecord
 
   def running?(statuses)
     # An automation is running if any status is 'running'
-    # or if not all steps have reported their status yet (some steps might be pending)
+    # or if not all steps have reported their status yet
     statuses.any?('running') || !automation_steps.all? do |step|
-      step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
+      step_has_report?(step)
     end
   end
 
@@ -106,9 +122,9 @@ class Automation < ApplicationRecord
   end
 
   def completed?(statuses)
-    # First check if all steps have a pipeline job with reports
+    # First check if all steps have reports
     all_steps_have_reports = automation_steps.all? do |step|
-      step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
+      step_has_report?(step)
     end
 
     # Then verify all reported statuses are 'completed'

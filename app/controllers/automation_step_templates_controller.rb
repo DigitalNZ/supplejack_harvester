@@ -20,6 +20,9 @@ class AutomationStepTemplatesController < ApplicationController
   def create
     @automation_step_template = @automation_template.automation_step_templates.build(automation_step_template_params)
 
+    # Process headers if it's an API call
+    process_api_headers if @automation_step_template.step_type == 'api_call'
+
     if @automation_step_template.save
       redirect_to automation_template_path(@automation_template),
                   notice: I18n.t('automation_step_templates.create.success')
@@ -31,14 +34,26 @@ class AutomationStepTemplatesController < ApplicationController
 
   def update
     if @automation_step_template.update(automation_step_template_params)
-      redirect_to automation_template_path(@automation_template),
-                  notice: I18n.t('automation_step_templates.update.success')
+      handle_successful_update
     else
-      @pipelines = Pipeline.all
-      @selected_pipeline = @automation_step_template.pipeline
-      @harvest_definitions = @selected_pipeline.harvest_definitions if @selected_pipeline
+      setup_form_variables
       render :edit
     end
+  end
+
+  def handle_successful_update
+    # Process headers if it's an API call
+    process_api_headers if @automation_step_template.step_type == 'api_call'
+    @automation_step_template.save
+
+    redirect_to automation_template_path(@automation_template),
+                notice: I18n.t('automation_step_templates.update.success')
+  end
+
+  def setup_form_variables
+    @pipelines = Pipeline.all
+    @selected_pipeline = @automation_step_template.pipeline
+    @harvest_definitions = @selected_pipeline.harvest_definitions if @selected_pipeline
   end
 
   def destroy
@@ -67,6 +82,20 @@ class AutomationStepTemplatesController < ApplicationController
 
   private
 
+  def process_api_headers
+    # If API headers are provided as JSON string, process them
+    return if params[:automation_step_template][:api_headers].blank?
+
+    begin
+      JSON.parse(params[:automation_step_template][:api_headers])
+      @automation_step_template.api_headers = params[:automation_step_template][:api_headers]
+    rescue JSON::ParserError
+      # If JSON parsing fails, set empty hash
+      @automation_step_template.api_headers = {}
+      flash[:alert] = I18n.t('automation_step_templates.header_validation_error')
+    end
+  end
+
   def set_automation_template
     @automation_template = AutomationTemplate.find(params[:automation_template_id])
   end
@@ -76,6 +105,14 @@ class AutomationStepTemplatesController < ApplicationController
   end
 
   def automation_step_template_params
-    params.require(:automation_step_template).permit(:pipeline_id, :position, harvest_definition_ids: [])
+    params.require(:automation_step_template).permit(
+      :pipeline_id,
+      :position,
+      :step_type,
+      :api_url,
+      :api_method,
+      :api_body,
+      harvest_definition_ids: []
+    )
   end
 end

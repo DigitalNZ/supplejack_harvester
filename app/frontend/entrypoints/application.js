@@ -48,3 +48,4 @@ import "/js/pipeline";
 import "/js/schedules";
 import "/js/inlineEditable";
 import "/js/react";
+import "/js/step-type-select";

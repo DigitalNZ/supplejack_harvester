@@ -1,0 +1,39 @@
+<div class="mb-3">
+  <%= form.label :api_method, 'HTTP Method', class: 'form-label' %>
+  <%= form.select :api_method,
+                  AutomationStepTemplate::API_METHODS.map { |m| [m, m] },
+                  { include_blank: 'Select a method' },
+                  { class: 'form-select', required: false } %>
+</div>
+
+<div class="mb-3">
+  <%= form.label :api_url, 'API URL', class: 'form-label' %>
+  <%= form.url_field :api_url, class: 'form-control', required: false, placeholder: 'https://api.example.com/endpoint' %>
+  <small class="form-text text-muted">
+    The full URL to call, including the protocol (http:// or https://)
+  </small>
+</div>
+
+<div class="mb-3">
+  <%= form.label :api_headers, 'Headers', class: 'form-label' %>
+  <%= form.text_area :api_headers, class: 'form-control', rows: 5,
+                                   placeholder: '{"Content-Type": "application/json", "Authorization": "Bearer token"}' %>
+  <small class="form-text text-muted">
+    Enter headers as a JSON object
+  </small>
+</div>
+
+<div class="mb-3">
+  <%= form.label :api_body, 'Request Body', class: 'form-label' %>
+  <%= form.text_area :api_body, class: 'form-control', rows: 5, placeholder: 'Request body (JSON, XML, etc.)' %>
+  <small class="form-text text-muted">
+    Only used for POST, PUT, and PATCH requests
+  </small>
+  <div class="mt-2 p-2 bg-light rounded">
+    <strong>Available Variables:</strong>
+    <ul class="mb-0">
+      <li><code>{{job_ids}}</code> - Array of job IDs from all previous pipeline steps in this automation</li>
+    </ul>
+    <p class="mb-0 mt-2 small">Example usage: <code>{"job_ids": {{job_ids}}}</code></p>
+  </div>
+</div>

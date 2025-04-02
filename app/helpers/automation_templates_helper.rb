@@ -18,18 +18,30 @@ module AutomationTemplatesHelper
     end
   end
 
-  # Gets a formatted status for a harvest report
-  # @param report [HarvestReport, nil] The harvest report
-  # @return [Hash] A hash containing :badge_class and :status_text
   def harvest_report_status(report)
     report ? active_report_status(report) : default_report_status
   end
 
+  def format_json(json_string)
+    return '' if json_string.blank?
+
+    begin
+      JSON.pretty_generate(JSON.parse(json_string))
+    rescue StandardError
+      json_string
+    end
+  end
+
+  def api_response_badge_class(api_response_report)
+    status_badge_class(api_response_report&.status)
+  end
+
+  def api_response_status_text(api_response_report)
+    api_response_report&.status&.humanize || 'Not started'
+  end
+
   private
 
-  # Returns status for an active report
-  # @param report [HarvestReport] The harvest report
-  # @return [Hash] A hash containing :badge_class and :status_text
   def active_report_status(report)
     {
       badge_class: status_badge_class(report.status),
@@ -37,8 +49,6 @@ module AutomationTemplatesHelper
     }
   end
 
-  # Returns default status when no report exists
-  # @return [Hash] A hash containing :badge_class and :status_text
   def default_report_status
     {
       badge_class: 'bg-secondary',

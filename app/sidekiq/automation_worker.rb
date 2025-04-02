@@ -20,12 +20,46 @@ class AutomationWorker
   end
 
   def process_step(automation_id, step_id)
-    if step_completed?
+    case @step.step_type
+    when 'api_call'
+      process_api_call_step(automation_id, step_id)
+    else
+      process_pipeline_step(automation_id, step_id)
+    end
+  end
+
+  def process_api_call_step(automation_id, step_id)
+    if step_api_call_completed?
       handle_next_step
       return
     end
 
-    if step_has_job?
+    return if @step.api_response_report.present? && @step.api_response_report.failed?
+
+    handle_queued_or_new_api_call(automation_id, step_id)
+  end
+
+  def handle_queued_or_new_api_call(automation_id, step_id)
+    if @step.api_response_report.present? && @step.api_response_report.queued?
+      schedule_job_check(automation_id, step_id)
+      return
+    end
+
+    @step.execute_api_call
+    schedule_job_check(automation_id, step_id)
+  end
+
+  def step_api_call_completed?
+    @step.api_response_report.present? && @step.api_response_report.successful?
+  end
+
+  def process_pipeline_step(automation_id, step_id)
+    if step_pipeline_completed?
+      handle_next_step
+      return
+    end
+
+    if step_has_pipeline_job?
       schedule_job_check(automation_id, step_id)
       return
     end
@@ -35,7 +69,7 @@ class AutomationWorker
     schedule_job_check(automation_id, step_id)
   end
 
-  def step_completed?
+  def step_pipeline_completed?
     @step.pipeline_job.present? && all_reports_completed?
   end
 
@@ -43,11 +77,12 @@ class AutomationWorker
     @step.pipeline_job.harvest_reports.map(&:status).uniq.all?('completed')
   end
 
-  def step_has_job?
+  def step_has_pipeline_job?
     @step.pipeline_job.present?
   end
 
   def schedule_job_check(automation_id, step_id)
+    @step.pipeline_job&.pipeline&.complete_finished_jobs!
     # Check back in 30 seconds to see if the job has completed
     self.class.perform_in(30.seconds, automation_id, step_id)
   end

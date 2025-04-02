@@ -5,6 +5,7 @@
 <% destination_id = @destination&.id %>
 <% automation_template_id = @automation_template&.id %>
 <% automation_id = @automation&.id %>
+<% automation_template_id_from_automation = @automation&.automation_template_id %>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
@@ -133,9 +134,14 @@
         ) %>
 
     <%= breadcrumb_item(
-          text: 'Automations',
-          active: request.path.match?(%r{^/automations}) && request.path.exclude?('/automation_templates'),
-          display: request.path.match?(%r{^/automations}) && request.path.exclude?('/automation_templates')
+          text: @automation&.automation_template&.name,
+          path: begin
+            automation_template_path(automation_template_id_from_automation)
+          rescue StandardError
+            nil
+          end,
+          active: false,
+          display: request.path.match?(%r{^/automations/\d+}) && @automation&.automation_template.present?
         ) %>
 
     <%= breadcrumb_item(

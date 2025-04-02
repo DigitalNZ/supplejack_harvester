@@ -1,0 +1,38 @@
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Automations from this Template</h5>
+  </div>
+  <div class="card-body">
+    <% automations = automation_template.automations.order(created_at: :desc) %>
+    <% if automations.any? %>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Destination</th>
+              <th>Status</th>
+              <th>Run at</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% automations.each do |automation| %>
+              <tr>
+                <td><%= link_to automation.name, automation_path(automation) %></td>
+                <td><%= automation.destination.name %></td>
+                <td>
+                  <span class="badge <%= status_badge_class(automation.status) %>">
+                    <%= automation.status.humanize %>
+                  </span>
+                </td>
+                <td><%= automation.created_at.strftime('%Y-%m-%d %H:%M') %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="mb-0">No automations have been created from this template yet.</p>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,58 @@
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Webhook</h5>
+  </div>
+  <div class="card-body">
+    <h6>Run Automation Template</h6>
+    <p>Trigger this automation template to run via webhook.</p>
+
+    <div class="mb-3">
+      <h6>Endpoint</h6>
+      <div class="bg-light p-3 rounded">
+        <code>POST <%= request.base_url %>/api/automation_templates/<%= automation_template.id %>/run</code>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <h6>Headers</h6>
+      <div class="bg-light p-3 rounded">
+        <p class="mb-1"><strong>Authorization:</strong> <code>Token token=[YOUR_API_KEY]</code></p>
+        <p class="mb-0"><strong>Content-Type:</strong> <code>application/json</code></p>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <h6>Example Request (curl)</h6>
+      <div class="bg-light p-3 rounded">
+        <pre class="mb-0">
+curl -X POST "<%= request.base_url %>/api/automation_templates/<%= automation_template.id %>/run" \
+-H "Authorization: Token token=[YOUR_API_KEY]" \
+-H "Content-Type: application/json"
+        </pre>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <h6>Response (Success)</h6>
+      <div class="bg-light p-3 rounded">
+        <pre class="mb-0">
+{
+  "status": "success",
+  "message": "Automation was successfully created and started",
+  "automation_id": 123
+}
+        </pre>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <h6>Response (Error)</h6>
+      <div class="bg-light p-3 rounded">
+        <pre class="mb-0"><code>{
+  "status": "failed",
+  "message": "Cannot run automation - an automation from this template is already running"
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</div>

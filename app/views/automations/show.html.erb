@@ -25,6 +25,16 @@
               <h6>Destination</h6>
               <p><%= @automation.destination.name %></p>
 
+              <h6>Template</h6>
+              <p>
+                <% if @automation.automation_template %>
+                  <%= link_to @automation.automation_template.name,
+                              automation_template_path(@automation.automation_template) %>
+                <% else %>
+                  N/A
+                <% end %>
+              </p>
+
               <h6>Status</h6>
               <p>
                 <span class="badge <%= status_badge_class(@automation.status) %>"><%= @automation.status.humanize %></span>
@@ -53,78 +63,114 @@
     </div>
   </div>
 
-  <div class="row mb-4">
-    <div class="col-md-12">
-      <div class="card">
-        <div class="card-header bg-info text-white">
-          <h5 class="mb-0">Step-by-Step Pipeline Metrics</h5>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Step</th>
-                  <th>Pipeline</th>
-                  <th>Status</th>
-                  <th>Job</th>
-                  <th>Pages Extracted</th>
-                  <th>Transformations</th>
-                  <th>Records Processed</th>
-                  <th>Transformations Rejected</th>
-                  <th>Marked for Deletion</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @automation_summary.step_metrics.each do |step_data| %>
+  <% if @automation.automation_steps.exists? %>
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Automation Steps</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
                   <tr>
-                    <td><%= step_data[:step].position + 1 %></td>
-                    <td><%= step_data[:step].pipeline.name %></td>
-                    <td>
-                      <span class="badge <%= status_badge_class(step_data[:step].status) %>">
-                        <%= step_data[:step].status.present? ? step_data[:step].status.humanize : 'Not Started' %>
-                      </span>
-                    </td>
-                    <td>
-                      <% if step_data[:step].pipeline_job %>
-                        <%= link_to pipeline_pipeline_job_path(
-                              step_data[:step].pipeline,
-                              step_data[:step].pipeline_job
-                            ),
-                                    class: 'badge bg-light text-dark',
-                                    title: 'View job details' do %>
-                          Job #<%= step_data[:step].pipeline_job.id %>
-                        <% end %>
-                      <% else %>
-                        —
-                      <% end %>
-                    </td>
-                    <% if step_data[:metrics].present? %>
-                      <td><%= number_with_delimiter(step_data[:metrics][:pages_extracted]) %></td>
-                      <td><%= number_with_delimiter(step_data[:metrics][:records_transformed]) %></td>
-                      <td><%= number_with_delimiter(step_data[:metrics][:records_loaded]) %></td>
-                      <td><%= number_with_delimiter(step_data[:metrics][:records_rejected]) %></td>
-                      <td><%= number_with_delimiter(step_data[:metrics][:records_deleted]) %></td>
-                    <% else %>
-                      <td colspan="5" class="text-center text-muted">No metrics available</td>
-                    <% end %>
+                    <th>Step #</th>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                    <th>Pages Extracted</th>
+                    <th>Transformations</th>
+                    <th>Records Processed</th>
+                    <th>Transformations Rejected</th>
+                    <th>Marked for Deletion</th>
                   </tr>
-                <% end %>
-                <tr class="table-active fw-bold">
-                  <td colspan="4" class="text-start">Totals:</td>
-                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:pages_extracted]) %></td>
-                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_transformed]) %></td>
-                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_loaded]) %></td>
-                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_rejected]) %></td>
-                  <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_deleted]) %></td>
-                </tr>
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  <% @automation.automation_steps.order(position: :asc).each do |step| %>
+                    <% step_data = @automation_summary.step_metrics.find { |sd| sd[:step].id == step.id } %>
+                    <tr>
+                      <td><%= step.position + 1 %></td>
+                      <td><%= step.step_type.humanize %></td>
+                      <td>
+                        <% if step.step_type == 'pipeline' %>
+                          <%= step.pipeline.name %>
+                        <% elsif step.step_type == 'api_call' %>
+                          <%= step.api_method %> <%= step.api_url.truncate(30) %>
+                        <% end %>
+                      </td>
+                      <td>
+                        <span class="badge <%= status_badge_class(step.status) %>">
+                          <%= step.status.present? ? step.status&.humanize : 'Not Started' %>
+                        </span>
+                      </td>
+                      <td>
+                        <% if step.step_type == 'pipeline' && step.pipeline_job %>
+                          <%= link_to pipeline_pipeline_job_path(
+                                step.pipeline,
+                                step.pipeline_job
+                              ),
+                                      class: 'badge bg-light text-dark',
+                                      title: 'View job details' do %>
+                            Job #<%= step.pipeline_job.id %>
+                          <% end %>
+                        <% elsif step.step_type == 'api_call' %>
+                          <a href="#api-call-step-<%= step.id %>" class="badge bg-light text-dark">View Details</a>
+                        <% else %>
+                          —
+                        <% end %>
+                      </td>
+                      <% if step.step_type == 'pipeline' && step_data && step_data[:metrics].present? %>
+                        <td><%= number_with_delimiter(step_data[:metrics][:pages_extracted]) %></td>
+                        <td><%= number_with_delimiter(step_data[:metrics][:records_transformed]) %></td>
+                        <td><%= number_with_delimiter(step_data[:metrics][:records_loaded]) %></td>
+                        <td><%= number_with_delimiter(step_data[:metrics][:records_rejected]) %></td>
+                        <td><%= number_with_delimiter(step_data[:metrics][:records_deleted]) %></td>
+                      <% else %>
+                        <td colspan="5" class="text-center text-muted">
+                          <%= step.step_type == 'api_call' ? 'N/A' : 'No metrics available' %>
+                        </td>
+                      <% end %>
+                    </tr>
+                  <% end %>
+                  <% if @automation.automation_steps.where(step_type: 'pipeline').exists? %>
+                    <tr class="table-active fw-bold">
+                      <td colspan="5" class="text-start">Totals:</td>
+                      <td><%= number_with_delimiter(@automation_summary.total_metrics[:pages_extracted]) %></td>
+                      <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_transformed]) %></td>
+                      <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_loaded]) %></td>
+                      <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_rejected]) %></td>
+                      <td><%= number_with_delimiter(@automation_summary.total_metrics[:records_deleted]) %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  <% end %>
+
+  <% if @automation.automation_steps.where(step_type: 'api_call').exists? %>
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">API Call Details</h5>
+          </div>
+          <div class="card-body">
+            <% @automation.automation_steps.where(step_type: 'api_call').order(position: :asc).each do |step| %>
+              <div id="api-call-step-<%= step.id %>">
+                <%= render 'api_call_step', step: step %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>
 
 <%# Delete Automation Modal %>

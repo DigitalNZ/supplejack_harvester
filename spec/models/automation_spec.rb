@@ -84,7 +84,7 @@ RSpec.describe Automation do
                transformation_status: 'completed', 
                load_status: 'completed',
                delete_status: 'completed')
-        expect(subject.status).to eq('failed')
+        expect(subject.status).to eq('errored')
       end
       
       it 'does not return completed if not all steps have reports, even if all existing reports are completed' do
@@ -111,11 +111,91 @@ RSpec.describe Automation do
                delete_status: 'completed')
         
         # Create a second step with a pipeline job but no reports
-        second_step = create(:automation_step, automation: subject, launched_by: user, pipeline: pipeline, position: 1)
+        # Use a dynamic position value to avoid uniqueness constraint violations
+        next_position = subject.automation_steps.maximum(:position).to_i + 1
+        second_step = create(:automation_step, automation: subject, launched_by: user, pipeline: pipeline, position: next_position)
         create(:pipeline_job, automation_step: second_step, pipeline: pipeline)
         
         # Status should be running because second step has a pipeline job but no reports
         expect(subject.status).to eq('running')
+      end
+    end
+    
+    context 'with API call steps' do
+      let(:api_step) { create(:automation_step, automation: subject, pipeline: nil, step_type: 'api_call', api_url: 'https://api.example.com', api_method: 'GET') }
+      
+      it 'returns completed when API call is completed' do
+        create(:api_response_report, automation_step: api_step, status: 'completed')
+        expect(subject.status).to eq('completed')
+      end
+      
+      it 'returns running when API call is running' do
+        create(:api_response_report, automation_step: api_step, status: 'running')
+        expect(subject.status).to eq('running')
+      end
+      
+      it 'returns failed when API call is errored' do
+        create(:api_response_report, automation_step: api_step, status: 'errored')
+        expect(subject.status).to eq('errored')
+      end
+      
+      it 'returns not_started when API call has no response report yet' do
+        api_step # Just create the step
+        expect(subject.status).to eq('not_started')
+      end
+      
+      context 'with mixed step types' do
+        let(:pipeline_step) { create(:automation_step, automation: subject, position: 1, launched_by: user, pipeline: pipeline) }
+        let(:pipeline_job) { create(:pipeline_job, automation_step: pipeline_step, pipeline: pipeline) }
+        let(:harvest_definition) { create(:harvest_definition, pipeline: pipeline) }
+        let(:extraction_job) { create(:extraction_job) }
+        let(:harvest_job) { create(:harvest_job, pipeline_job: pipeline_job, harvest_definition: harvest_definition, extraction_job: extraction_job) }
+        
+        it 'returns completed only when both API and pipeline steps are completed' do
+          # Set API step as completed
+          create(:api_response_report, automation_step: api_step, status: 'completed')
+          
+          # Set pipeline step as completed
+          create(:harvest_report, pipeline_job: pipeline_job, harvest_job: harvest_job, 
+                 extraction_status: 'completed', 
+                 transformation_status: 'completed', 
+                 load_status: 'completed',
+                 delete_status: 'completed')
+                 
+          expect(subject.status).to eq('completed')
+        end
+        
+        it 'returns running if API step is completed but pipeline step is still running' do
+          # Set API step as completed
+          create(:api_response_report, automation_step: api_step, status: 'completed')
+          
+          # Set pipeline step as running
+          create(:harvest_report, pipeline_job: pipeline_job, harvest_job: harvest_job, 
+                 extraction_status: 'running', 
+                 transformation_status: 'completed', 
+                 load_status: 'completed',
+                 delete_status: 'completed')
+                 
+          expect(subject.status).to eq('running')
+        end
+        
+        it 'returns failed if either step fails' do
+          # Set API step as completed but pipeline step as errored
+          create(:api_response_report, automation_step: api_step, status: 'completed')
+          create(:harvest_report, pipeline_job: pipeline_job, harvest_job: harvest_job, 
+                 extraction_status: 'errored', 
+                 transformation_status: 'completed', 
+                 load_status: 'completed',
+                 delete_status: 'completed')
+                 
+          expect(subject.status).to eq('errored')
+          
+          # Update pipeline step to completed but API step to errored
+          HarvestReport.where(harvest_job: harvest_job).update_all(extraction_status: 'completed')
+          api_step.api_response_report.update(status: 'errored')
+          
+          expect(subject.reload.status).to eq('errored')
+        end
       end
     end
   end

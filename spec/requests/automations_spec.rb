@@ -58,8 +58,8 @@ RSpec.describe 'Automations' do
         
         expect(response).to have_http_status :ok
         
-        # Check for the totals row
-        expect(response.body).to include('<td colspan="4" class="text-start">Totals:</td>')
+        # Check for the totals row (update to match current HTML)
+        expect(response.body).to include('<td colspan="5" class="text-start">Totals:</td>')
         
         # Check that totals appear
         expect(response.body).to include('10') # total pages extracted
@@ -67,6 +67,51 @@ RSpec.describe 'Automations' do
         expect(response.body).to include('5') # total records loaded
         expect(response.body).to include('3') # total records rejected
         expect(response.body).to include('1') # total records deleted
+      end
+    end
+    
+    context 'with api call step' do
+      let!(:api_automation) { create(:automation, destination: destination, automation_template: automation_template) }
+      let!(:api_step) { create(:automation_step, :api_call, automation: api_automation, launched_by: user) }
+      
+      context 'when api call is completed' do
+        before do
+          create(:api_response_report, 
+                 automation_step: api_step, 
+                 status: 'completed',
+                 response_code: '200',
+                 response_body: '{"success": true}',
+                 executed_at: 30.minutes.ago)
+        end
+        
+        it 'shows api call information' do
+          get automation_path(api_automation)
+          
+          expect(response).to have_http_status :ok
+          expect(response.body).to include('API Call:')
+          expect(response.body).to include('https://example.com/api')
+          expect(response.body).to include('Completed')
+        end
+      end
+      
+      context 'when api call is errored' do
+        before do
+          create(:api_response_report, 
+                 automation_step: api_step, 
+                 status: 'errored',
+                 response_code: '500',
+                 response_body: 'Internal Server Error',
+                 executed_at: 30.minutes.ago)
+        end
+        
+        it 'shows api call error information' do
+          get automation_path(api_automation)
+          
+          expect(response).to have_http_status :ok
+          expect(response.body).to include('API Call:')
+          expect(response.body).to include('Errored')
+          expect(response.body).to include('Internal Server Error')
+        end
       end
     end
   end
@@ -92,6 +137,20 @@ RSpec.describe 'Automations' do
       post run_automation_path(automation)
       
       expect(response).to redirect_to(automation_path(automation))
+    end
+    
+    context 'with mixed step types' do
+      let!(:mixed_automation) { create(:automation, destination: destination, automation_template: automation_template) }
+      let!(:pipeline_step) { create(:automation_step, :pipeline, automation: mixed_automation, position: 0) }
+      let!(:api_step) { create(:automation_step, :api_call, automation: mixed_automation, position: 1) }
+      
+      it 'starts the automation with different step types' do
+        expect(AutomationWorker).to receive(:perform_async)
+        
+        post run_automation_path(mixed_automation)
+        
+        expect(response).to redirect_to(automation_path(mixed_automation))
+      end
     end
 
     context 'when automation cannot run' do
