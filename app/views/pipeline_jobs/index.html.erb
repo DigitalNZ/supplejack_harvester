@@ -73,7 +73,7 @@
                ) %>
 
               <tr>
-                <td><%= report.harvest_job.name %></td>
+                <td><%= report.harvest_job&.name %></td>
                 <td>
                   <% if pipeline_job.schedule.present? %>
                     Schedule
