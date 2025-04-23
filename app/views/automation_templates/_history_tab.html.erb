@@ -3,7 +3,7 @@
     <h5 class="mb-0">Automations from this Template</h5>
   </div>
   <div class="card-body">
-    <% automations = automation_template.automations.order(created_at: :desc) %>
+    <% automations = automation_template.automations.order(created_at: :desc).page(params[:page]).per(20) %>
     <% if automations.any? %>
       <div class="table-responsive">
         <table class="table table-hover">
@@ -31,6 +31,7 @@
           </tbody>
         </table>
       </div>
+      <%= render 'shared/pagination_below_table', items: automations %>
     <% else %>
       <p class="mb-0">No automations have been created from this template yet.</p>
     <% end %>
