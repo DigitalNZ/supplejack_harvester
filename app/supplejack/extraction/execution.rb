@@ -107,7 +107,7 @@ module Extraction
       return unless @harvest_job.present? && @de.document.successful?
       return if requires_additional_processing?
 
-      TransformationWorker.perform_async(@harvest_job.id, @extraction_definition.page)
+      TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id, @extraction_definition.page)
       @harvest_report.increment_transformation_workers_queued!
     end
 

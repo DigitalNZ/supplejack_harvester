@@ -22,7 +22,7 @@ class HarvestWorker < ApplicationWorker
       harvest_job: @harvest_job
     )
 
-    ExtractionWorker.perform_async(extraction_job.id, @harvest_report.id)
+    ExtractionWorker.perform_async_with_priority(@pipeline_job.job_priority, extraction_job.id, @harvest_report.id)
   end
 
   # rubocop:disable Metrics/AbcSize
@@ -33,7 +33,7 @@ class HarvestWorker < ApplicationWorker
 
     (extraction_job.extraction_definition.page..extraction_job.documents.total_pages).each do |page|
       @harvest_report.increment_pages_extracted!
-      TransformationWorker.perform_in((page * 5).seconds, @harvest_job.id, page)
+      TransformationWorker.perform_in_with_priority(@pipeline_job.job_priority, (page * 5).seconds, @harvest_job.id, page)
       @harvest_report.increment_transformation_workers_queued!
 
       @pipeline_job.reload

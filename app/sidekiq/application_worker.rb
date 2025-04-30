@@ -1,17 +1,10 @@
 # frozen_string_literal: true
 
 class ApplicationWorker
+  include PerformWithPriority
   include Sidekiq::Job
 
   sidekiq_options retry: 0
-
-  def self.perform_async_with_priority(priority, *args)
-    if priority.present?
-      set(queue: priority).perform_async(*args)
-    else
-      perform_async(*args)
-    end
-  end
 
   def perform(*args)
     @job = find_job(args[0])

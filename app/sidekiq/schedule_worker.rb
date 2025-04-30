@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class ScheduleWorker
+  include PerformWithPriority
   include Sidekiq::Job
 
   def perform(id)

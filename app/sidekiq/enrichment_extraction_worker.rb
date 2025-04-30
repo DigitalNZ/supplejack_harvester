@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class EnrichmentExtractionWorker
+  include PerformWithPriority
   include Sidekiq::Job
   include Extraction::Concerns::EnrichmentExtractionProcess
 

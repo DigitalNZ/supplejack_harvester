@@ -14,12 +14,18 @@ class ExtractionWorker < ApplicationWorker
     else
       Extraction::Execution.new(extraction_job, extraction_job.extraction_definition).call
 
-      SplitWorker.perform_async(extraction_job.id) if extraction_job.extraction_definition.split
+      SplitWorker.perform_async_with_priority(job_priority, extraction_job.id) if extraction_job.extraction_definition.split
     end
 
     return unless extraction_job.extraction_definition.extract_text_from_file?
 
-    TextExtractionWorker.perform_async(extraction_job.id)
+    TextExtractionWorker.perform_async_with_priority(job_priority, extraction_job.id)
+  end
+
+  def job_priority
+    return if @harvest_report.blank?
+
+    @harvest_report.pipeline_job.job_priority
   end
 
   def job_start
