@@ -5,6 +5,14 @@ class ApplicationWorker
 
   sidekiq_options retry: 0
 
+  def self.perform_async_with_priority(priority, *args)
+    if priority.present?
+      set(queue: priority).perform_async(*args)
+    else
+      perform_async(*args)
+    end
+  end
+
   def perform(*args)
     @job = find_job(args[0])
     @harvest_report = HarvestReport.find_by(id: args[1])

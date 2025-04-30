@@ -10,20 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_28_014700) do
-  create_table "api_call_jobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "automation_step_id", null: false
-    t.integer "status", default: 0, null: false
-    t.datetime "started_at"
-    t.datetime "completed_at"
-    t.integer "response_code"
-    t.text "response_body"
-    t.text "error_message"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["automation_step_id"], name: "index_api_call_jobs_on_automation_step_id"
-  end
-
+ActiveRecord::Schema[7.1].define(version: 2025_04_30_033547) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -276,6 +263,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_014700) do
     t.boolean "delete_previous_records", default: false, null: false
     t.boolean "run_enrichment_concurrently", default: false, null: false
     t.bigint "automation_step_id"
+    t.string "job_priority"
     t.index ["automation_step_id"], name: "index_pipeline_jobs_on_automation_step_id"
     t.index ["destination_id"], name: "index_pipeline_jobs_on_destination_id"
     t.index ["extraction_job_id"], name: "index_pipeline_jobs_on_extraction_job_id"
@@ -408,7 +396,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_28_014700) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
-  add_foreign_key "api_call_jobs", "automation_steps"
   add_foreign_key "api_response_reports", "automation_steps"
   add_foreign_key "automation_step_templates", "automation_templates"
   add_foreign_key "automation_step_templates", "pipelines"

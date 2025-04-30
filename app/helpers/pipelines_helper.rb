@@ -15,6 +15,10 @@ module PipelinesHelper
     end
   end
 
+  def job_priority_options(job_priorities)
+    [['No priority', nil]] + job_priorities.map { |priority| [priority.humanize, priority] }
+  end
+
   private
 
   def autocomplete_harvest_extraction_definitions
