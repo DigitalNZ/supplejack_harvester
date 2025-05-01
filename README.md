@@ -66,6 +66,8 @@ EG `JOB_PRIORITIES='high_priority,medium_priority,low_priority'`
 
 If you do not pass this value Sidekiq will use the default priority. 
 
+The expectation is that you are running the default configuration + any additional queues that you would like to use.
+
 ## COPYRIGHT AND LICENSING
 
 SUPPLEJACK CODE - GNU GENERAL PUBLIC LICENCE, VERSION 3
