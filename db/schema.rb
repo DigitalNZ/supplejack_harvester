@@ -79,7 +79,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_30_234440) do
     t.bigint "automation_template_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "job_priority"
     t.index ["automation_template_id"], name: "index_automations_on_automation_template_id"
     t.index ["destination_id"], name: "index_automations_on_destination_id"
   end

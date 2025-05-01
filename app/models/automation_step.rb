@@ -84,7 +84,7 @@ class AutomationStep < ApplicationRecord
     end
 
     # Enqueue the API call job
-    ApiCallWorker.perform_in(5.seconds, id)
+    ApiCallWorker.perform_in_with_priority(automation.automation_template.job_priority, 5.seconds, id)
   end
 
   private

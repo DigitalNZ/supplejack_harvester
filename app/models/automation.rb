@@ -19,7 +19,7 @@ class Automation < ApplicationRecord
     return if first_step.nil?
 
     # Queue the automation worker to handle the first step and subsequent steps
-    AutomationWorker.perform_async(id, first_step.id)
+    AutomationWorker.perform_async_with_priority(automation_template.job_priority, id, first_step.id)
   end
 
   def can_run?
@@ -70,12 +70,13 @@ class Automation < ApplicationRecord
       destination_id: destination.id,
       harvest_definitions_to_run: harvest_definitions.pluck(:id).map(&:to_s),
       launched_by_id: step.launched_by_id,
-      automation_step: step
+      automation_step: step,
+      job_priority: automation_template.job_priority
     )
   end
 
   def queue_pipeline_job(pipeline_job)
-    PipelineWorker.perform_async(pipeline_job.id)
+    PipelineWorker.perform_async_with_priority(pipeline_job.job_priority, pipeline_job.id)
   end
 
   def collect_step_statuses

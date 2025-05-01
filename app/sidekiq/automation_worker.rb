@@ -85,7 +85,7 @@ class AutomationWorker
   def schedule_job_check(automation_id, step_id)
     @step.pipeline_job&.pipeline&.complete_finished_jobs!
     # Check back in 30 seconds to see if the job has completed
-    self.class.perform_in(30.seconds, automation_id, step_id)
+    self.class.perform_in_with_priority(@automation.automation_template.job_priority, 30.seconds, automation_id, step_id)
   end
 
   def create_and_run_pipeline_job
@@ -99,7 +99,7 @@ class AutomationWorker
     # If there's another step, queue a worker to handle it
     return if next_step.blank?
 
-    self.class.perform_async(@automation.id, next_step.id)
+    self.class.perform_async_with_priority(@automation.automation_template.job_priority, @automation.id, next_step.id)
 
     # Otherwise, the automation is complete
   end

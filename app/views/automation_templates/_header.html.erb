@@ -19,18 +19,24 @@
   <div class="clearfix"></div>
 
   <p><%= automation_template.description.presence || 'No description' %></p>
-  <div>
-    <% if last_automation_run.present? %>
-      <p>
-        Last run on <strong><%= last_automation_run.created_at.strftime('%B %d, %Y at %H:%M') %></strong>
-        to destination <strong><%= automation_template.destination.name %></strong>.
-      </p>
-    <% else %>
-      <p>
-        This template has never been run. Destination: <%= automation_template.destination.name %>.
-      </p>
-    <% end %>
-  </div>
+  
+
+  <% if last_automation_run.present? %>
+    <p>
+      Last run on <strong><%= last_automation_run.created_at.strftime('%B %d, %Y at %H:%M') %></strong>
+      to destination <strong><%= automation_template.destination.name %></strong>.
+    </p>
+  <% else %>
+    <p>
+      This template has never been run. Destination: <%= automation_template.destination.name %>.
+    </p>
+  <% end %>
+
+  <% if ENV['JOB_PRIORITIES'].present? %>
+    <p>
+      <strong><%= automation_template.job_priority.presence&.humanize || 'No priority set' %></strong>
+    </p>
+  <% end %>
 
   <% automation_count = automation_template.automations.count %>
   <div class="mt-4"></div>
