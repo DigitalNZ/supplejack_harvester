@@ -13,6 +13,68 @@ RSpec.describe "Api::PipelineJobs", type: :request do
   describe "POST /create" do
     context 'when the user is using an admin api key' do
       context 'When the job is successful' do
+        context 'when the job priority is provided' do
+          it "creates a pipeline job" do
+            expect do
+              post api_pipeline_jobs_path, params: {
+                pipeline_job: {
+                  destination_id: destination.id,
+                  pipeline_id: pipeline.id,
+                  job_priority: 'high_priority'
+                },
+              },
+              headers: { 
+                "Authorization" => "Token token=#{admin_user.api_key}"
+              }
+            end.to change(PipelineJob, :count).by(1)
+          end
+
+          it 'enqueues it into the provided priority queue' do
+            expect(PipelineWorker).to receive(:perform_async_with_priority).with('high_priority', anything)
+
+            post api_pipeline_jobs_path, params: {
+              pipeline_job: {
+                destination_id: destination.id,
+                pipeline_id: pipeline.id,
+                job_priority: 'high_priority'
+              },
+            },
+            headers: { 
+              "Authorization" => "Token token=#{admin_user.api_key}"
+            }
+          end
+        end
+
+        context 'when the job priority is not provided' do
+          it "creates a pipeline job" do
+            expect do
+              post api_pipeline_jobs_path, params: {
+                pipeline_job: {
+                  destination_id: destination.id,
+                  pipeline_id: pipeline.id
+                },
+              },
+              headers: { 
+                "Authorization" => "Token token=#{admin_user.api_key}"
+              }
+            end.to change(PipelineJob, :count).by(1)
+          end
+
+          it 'enqueues it into the default priority queue' do
+            expect(PipelineWorker).to receive(:perform_async_with_priority).with(nil, anything)
+
+            post api_pipeline_jobs_path, params: {
+              pipeline_job: {
+                destination_id: destination.id,
+                pipeline_id: pipeline.id,
+              },
+            },
+            headers: { 
+              "Authorization" => "Token token=#{admin_user.api_key}"
+            }
+          end 
+        end
+
         it "creates a pipeline job" do
           expect do
             post api_pipeline_jobs_path, params: {

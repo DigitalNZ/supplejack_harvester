@@ -8,7 +8,7 @@ module Api
       @pipeline_job = create_pipeline_job(pipeline)
 
       if @pipeline_job.save
-        PipelineWorker.perform_async(@pipeline_job.id)
+        PipelineWorker.perform_async_with_priority(@pipeline_job.job_priority, @pipeline_job.id)
         render json: { status: 'success' }
       else
         render json: { status: 'failed' }
@@ -18,12 +18,15 @@ module Api
     private
 
     def create_pipeline_job(pipeline)
-      PipelineJob.new(pipeline_id: pipeline.id, harvest_definitions_to_run: harvest_definitions_to_run(pipeline),
-                      destination_id: pipeline_job_params['destination_id'], key: SecureRandom.hex)
+      PipelineJob.new(pipeline_id: pipeline.id, 
+                      harvest_definitions_to_run: harvest_definitions_to_run(pipeline),
+                      destination_id: pipeline_job_params['destination_id'],
+                      key: SecureRandom.hex,
+                      job_priority: pipeline_job_params['job_priority'])
     end
 
     def pipeline_job_params
-      params.require(:pipeline_job).permit(:pipeline_id, :destination_id, harvest_definitions_to_run: [])
+      params.require(:pipeline_job).permit(:pipeline_id, :destination_id, :job_priority, harvest_definitions_to_run: [])
     end
 
     def harvest_definitions_to_run(pipeline)
