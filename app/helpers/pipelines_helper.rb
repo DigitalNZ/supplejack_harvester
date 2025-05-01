@@ -15,8 +15,8 @@ module PipelinesHelper
     end
   end
 
-  def job_priority_options(job_priorities)
-    [['No priority', nil]] + job_priorities.map { |priority| [priority.humanize, priority] }
+  def job_priority_options
+    ENV['JOB_PRIORITIES'].split(',').map { |priority| [priority.humanize, priority] }
   end
 
   private

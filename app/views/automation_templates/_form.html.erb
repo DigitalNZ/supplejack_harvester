@@ -32,6 +32,15 @@
     <div class="form-text">If selected, all automations created from this template will use this destination.</div>
   </div>
 
+  <% if ENV['JOB_PRIORITIES'].present? %>
+    <div class="mb-4">
+      <%= form.label :job_priority, 'Job Priority', class: 'form-label' %>
+      <%= form.select :job_priority, options_for_select(job_priority_options, automation_template.job_priority), { include_blank: 'None' }, class: 'form-select' %>
+
+      <div class="form-text">If selected, all automations and pipelines created from this template will use this job priority.</div>
+    </div>
+  <% end %>
+
   <div class="d-flex justify-content-between">
     <%= form.submit class: 'btn btn-primary' %>
     <%= link_to 'Cancel', automation_templates_path, class: 'btn btn-secondary' %>
