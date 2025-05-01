@@ -57,6 +57,7 @@ module Extraction
         update_harvest_report(extraction_context)
       end
 
+      # rubocop:disable Metrics/AbcSize
       def enqueue_record_transformation(extraction_context)
         harvest_job = extraction_context.harvest_job
         enrichment_extraction = extraction_context.enrichment_extraction
@@ -65,14 +66,14 @@ module Extraction
         return unless harvest_job.present? && enrichment_extraction.document.successful?
         return if extraction_definition.extract_text_from_file?
 
-        TransformationWorker.perform_async_with_priority(harvest_job.pipeline_job.job_priority,
-                                                        harvest_job.id,
-                                                        extraction_context.page,
-                                                        extraction_context.api_record['id'])
+        TransformationWorker.perform_async_with_priority(harvest_job.pipeline_job.job_priority, harvest_job.id,
+                                                         extraction_context.page,
+                                                         extraction_context.api_record['id'])
 
         harvest_report = harvest_job.harvest_report
         harvest_report.increment_transformation_workers_queued! if harvest_report.present?
       end
+      # rubocop:enable Metrics/AbcSize
 
       def update_harvest_report(extraction_context)
         harvest_report = extraction_context.harvest_job.harvest_report

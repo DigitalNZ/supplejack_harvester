@@ -18,7 +18,7 @@ module Api
     private
 
     def create_pipeline_job(pipeline)
-      PipelineJob.new(pipeline_id: pipeline.id, 
+      PipelineJob.new(pipeline_id: pipeline.id,
                       harvest_definitions_to_run: harvest_definitions_to_run(pipeline),
                       destination_id: pipeline_job_params['destination_id'],
                       key: SecureRandom.hex,

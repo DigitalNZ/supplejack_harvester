@@ -1,4 +1,3 @@
-
 # frozen_string_literal: true
 
 module PerformWithPriority
@@ -12,7 +11,7 @@ module PerformWithPriority
         perform_async(*args)
       end
     end
-  
+
     def perform_in_with_priority(priority, interval, *args)
       if priority.present?
         set(queue: priority).perform_in(interval, *args)

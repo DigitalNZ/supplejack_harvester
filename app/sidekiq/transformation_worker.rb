@@ -74,7 +74,8 @@ class TransformationWorker
   def queue_delete_worker(records)
     return if records.empty?
 
-    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id, @harvest_report.id)
+    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
+                                             @harvest_report.id)
     @harvest_report.increment_delete_workers_queued!
   end
 
