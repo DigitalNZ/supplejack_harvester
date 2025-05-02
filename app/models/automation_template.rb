@@ -54,7 +54,8 @@ class AutomationTemplate < ApplicationRecord
       name:,
       description:,
       destination_id:,
-      automation_template_id: id
+      automation_template_id: id,
+      job_priority: job_priority
     )
   end
 

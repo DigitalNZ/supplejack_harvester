@@ -54,6 +54,7 @@
         <th scope="col">Records Loaded</th>
         <th scope="col">Records Rejected</th>
         <th scope="col">Records Deleted</th>
+        <th scope="col">Job Priority</th>
         <th scope="col"></th>
       </tr>
     </thead>
@@ -73,7 +74,7 @@
                ) %>
 
               <tr>
-                <td><%= report.harvest_job&.name %></td>
+                <td><%= report.harvest_job&.name %>></td>
                 <td>
                   <% if pipeline_job.schedule.present? %>
                     Schedule
@@ -95,6 +96,7 @@
                 <td><%= report.records_loaded %></td>
                 <td><%= report.records_rejected %></td>
                 <td><%= report.records_deleted %></td>
+                <td><%= report.harvest_job.pipeline_job.job_priority.presence&.humanize || 'No priority' %></td>
                 <td>
                   <% if report.harvest_definition %>
                     <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
@@ -146,7 +148,7 @@
 
         <% if index != total_pipeline_jobs %>
           <tr class='table__divider'>
-            <td colspan='10'>
+            <td colspan='12'>
               <hr>
             </td>
           </tr>
