@@ -13,7 +13,7 @@ class PipelineWorker < ApplicationWorker
 
       job = HarvestJob.create(pipeline_job: @pipeline_job, harvest_definition: definition, key:)
 
-      HarvestWorker.perform_async(job.id)
+      HarvestWorker.perform_async_with_priority(@pipeline_job.job_priority, job.id)
 
       # If the user has scheduled a harvest we do not need to enqueue the enrichments now
       # as they will be enqueued once the harvest job has finished.

@@ -52,6 +52,22 @@ bundle exec sidekiq
 bin/vite dev
 ```
 
+## Job Priorities and Running Multiple Sidekiqs
+
+The harvester supports running multiple sidekiqs through the Job Priorities environment variable. This is intended for separating workloads into different processes so low priority processes don't block high priority processes. To make use of this feature you need to run multiple sidekiqs in your environment and tell the harvester which priorities are available through the JOB_PRIORITIES environment variable. 
+
+Inside of the config folder there are example configurations for different sidekiq instances using different queues, to start one you can run it like so:
+
+`bundle exec sidekiq -C config/sidekiq_high_priority.yml`
+
+Once the processes are running, you can tell the harvester about them by using the JOB_PRIORITIES environment variable, the priority name is expected to match the name of a sidekiq queue.
+
+EG `JOB_PRIORITIES='high_priority,medium_priority,low_priority'`
+
+If you do not pass this value Sidekiq will use the default priority. 
+
+The expectation is that you are running the default configuration + any additional queues that you would like to use.
+
 ## COPYRIGHT AND LICENSING
 
 SUPPLEJACK CODE - GNU GENERAL PUBLIC LICENCE, VERSION 3

@@ -8,18 +8,28 @@ class ExtractionWorker < ApplicationWorker
     Rails.logger.warn "Failed #{job['class']} with #{job['args']}: #{job['error_message']}"
   end
 
+  # rubocop:disable Metrics/AbcSize
   def child_perform(extraction_job)
     if extraction_job.extraction_definition.enrichment?
       Extraction::EnrichmentExecution.new(extraction_job).call
     else
       Extraction::Execution.new(extraction_job, extraction_job.extraction_definition).call
 
-      SplitWorker.perform_async(extraction_job.id) if extraction_job.extraction_definition.split
+      if extraction_job.extraction_definition.split
+        SplitWorker.perform_async_with_priority(job_priority, extraction_job.id)
+      end
     end
 
     return unless extraction_job.extraction_definition.extract_text_from_file?
 
-    TextExtractionWorker.perform_async(extraction_job.id)
+    TextExtractionWorker.perform_async_with_priority(job_priority, extraction_job.id)
+  end
+  # rubocop:enable Metrics/AbcSize
+
+  def job_priority
+    return if @harvest_report.blank?
+
+    @harvest_report.pipeline_job.job_priority
   end
 
   def job_start

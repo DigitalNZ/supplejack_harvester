@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class TransformationWorker
+  include PerformWithPriority
   include Sidekiq::Job
 
   sidekiq_options retry: 0
@@ -12,6 +13,7 @@ class TransformationWorker
     @harvest_report = @harvest_job.harvest_report
     @page = page
     @api_record_id = api_record_id
+    @pipeline_job = @harvest_job.pipeline_job
 
     job_start
     child_perform
@@ -64,7 +66,7 @@ class TransformationWorker
   def queue_load_worker(records)
     return if records.empty?
 
-    LoadWorker.perform_async(@harvest_job.id, records.to_json, @api_record_id)
+    LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records.to_json, @api_record_id)
     Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
     @harvest_report.increment_load_workers_queued!
   end
@@ -72,16 +74,17 @@ class TransformationWorker
   def queue_delete_worker(records)
     return if records.empty?
 
-    DeleteWorker.perform_async(records.to_json, destination.id, @harvest_report.id)
+    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
+                                             @harvest_report.id)
     @harvest_report.increment_delete_workers_queued!
   end
 
   def source_id
-    @harvest_job.pipeline_job.pipeline.harvest_definitions.first.source_id
+    @pipeline_job.pipeline.harvest_definitions.first.source_id
   end
 
   def destination
-    @harvest_job.pipeline_job.destination
+    @pipeline_job.destination
   end
 
   def records

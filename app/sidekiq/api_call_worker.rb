@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class ApiCallWorker
+  include PerformWithPriority
   include Sidekiq::Job
   include ApiUtilities
 

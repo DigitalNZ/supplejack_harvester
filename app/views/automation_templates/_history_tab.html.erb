@@ -13,6 +13,7 @@
               <th>Destination</th>
               <th>Status</th>
               <th>Run at</th>
+              <th>Job Priority</th>
             </tr>
           </thead>
           <tbody>
@@ -26,6 +27,7 @@
                   </span>
                 </td>
                 <td><%= automation.created_at.strftime('%Y-%m-%d %H:%M') %></td>
+                <td><%= automation.job_priority.presence&.humanize || 'No priority' %></td>
               </tr>
             <% end %>
           </tbody>

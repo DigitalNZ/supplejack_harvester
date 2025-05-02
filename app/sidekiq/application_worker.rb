@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class ApplicationWorker
+  include PerformWithPriority
   include Sidekiq::Job
 
   sidekiq_options retry: 0

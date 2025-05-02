@@ -39,7 +39,7 @@ class PipelineJob < ApplicationRecord
     # If there's a next step, continue the automation
     return if next_step.blank?
 
-    AutomationWorker.perform_async(current_step.automation_id, next_step.id)
+    AutomationWorker.perform_async_with_priority(job_priority, current_step.automation_id, next_step.id)
   end
 
   def enqueue_enrichment_jobs(job_id)
@@ -53,7 +53,7 @@ class PipelineJob < ApplicationRecord
         key: "#{harvest_key}__enrichment-#{enrichment.id}", target_job_id: job_id
       )
 
-      HarvestWorker.perform_async(enrichment_job.id)
+      HarvestWorker.perform_async_with_priority(job_priority, enrichment_job.id)
     end
   end
 

@@ -145,6 +145,19 @@
           </div>
         </div>
 
+        <% if ENV['JOB_PRIORITIES'].present? %>
+          <div class='col-5'>
+            <%= form.label :job_priority, class: 'form-label' do %>
+              Job Priority
+        <% end %>
+        </div>
+
+        <div class='col-7'>
+            <%= form.select :job_priority, options_for_select(job_priority_options), { include_blank: 'None' },
+                            class: 'form-select' %>
+          </div>
+        <% end %>
+
       </div>
 
       <div class='d-grid mt-4'>

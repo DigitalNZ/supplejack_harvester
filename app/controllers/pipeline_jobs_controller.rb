@@ -11,11 +11,12 @@ class PipelineJobsController < ApplicationController
 
   def show; end
 
+  # rubocop:disable Metrics/AbcSize
   def create
     @pipeline_job = PipelineJob.new(pipeline_job_params.merge(launched_by_id: current_user.id))
 
     if @pipeline_job.save
-      PipelineWorker.perform_async(@pipeline_job.id)
+      PipelineWorker.perform_async_with_priority(@pipeline_job.job_priority, @pipeline_job.id)
       flash.notice = t('.success')
     else
       flash.alert = t('.failure')
@@ -23,6 +24,7 @@ class PipelineJobsController < ApplicationController
 
     redirect_to pipeline_pipeline_jobs_path(@pipeline)
   end
+  # rubocop:enable Metrics/AbcSize
 
   def cancel
     if @pipeline_job.cancelled!
@@ -57,6 +59,6 @@ class PipelineJobsController < ApplicationController
   def pipeline_job_params
     params.require(:pipeline_job).permit(:pipeline_id, :key, :extraction_job_id, :destination_id,
                                          :page_type, :pages, :delete_previous_records, :run_enrichment_concurrently,
-                                         harvest_definitions_to_run: [])
+                                         :job_priority, harvest_definitions_to_run: [])
   end
 end
