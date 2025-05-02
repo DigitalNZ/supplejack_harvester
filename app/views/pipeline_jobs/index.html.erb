@@ -96,7 +96,13 @@
                 <td><%= report.records_loaded %></td>
                 <td><%= report.records_rejected %></td>
                 <td><%= report.records_deleted %></td>
-                <td><%= report.harvest_job&.pipeline_job&.job_priority&.presence&.humanize || 'No priority' %></td>
+                <td>
+                  <% if report.harvest_job.present? %>
+                    <%= report.harvest_job.pipeline_job.job_priority&.presence&.humanize || 'No priority' %>
+                  <% else %>
+                    <%= 'No priority' %>
+                  <% end %>
+                </td>
                 <td>
                   <% if report.harvest_definition %>
                     <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
