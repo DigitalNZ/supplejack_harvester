@@ -1,21 +1,9 @@
-<%= vertical_form_with model: [@pipeline, @schedule], id: 'js-schedule-form' do |form| %>
-
-  <%= form.hidden_field :pipeline_id, readonly: true, value: @pipeline.id %>
+<%= vertical_form_with model: [@schedule], id: 'js-schedule-form' do |form| %>
 
   <div class='card'>
     <div class='card-body'>
 
-      <h4>Schedule Settings</h4>
-
-      <div class='row gy-3 align-items-center my-2'>
-        <div class="col-3">
-          <%= form.label :name, 'Name', class: 'form-label' %>
-        </div>
-
-        <div class='col-7'>
-          <%= form.text_field :name, class: 'form-control', disable_errors_display: true %>
-        </div>
-      </div>
+      <h4>Frequency Settings</h4>
 
       <% if @schedule.errors.include?('name') %>
         <div class='row'>
@@ -119,24 +107,6 @@
       <div class='row gy-3 align-items-center my-2'>
         <div class="col-3">
           <%= form.label :harvest_definitions_to_run, 'Blocks to run', class: 'form-label' %>
-        </div>
-
-        <div class='col-2'>
-          <%- @pipeline.harvest_definitions.each do |harvest_definition| %>
-            <div class='form-check'>
-              <%= label_tag do %>
-
-                <%= check_box('schedule', 'harvest_definitions_to_run', {
-                                multiple: true,
-                                checked: @schedule.harvest_definitions_to_run.include?(harvest_definition.id.to_s),
-                                class: "form-check-input js-pipeline-#{harvest_definition.kind}-checkbox",
-                                disabled: !harvest_definition.ready_to_run?
-                              }, harvest_definition.id, nil) %>
-
-                <%= harvest_definition.source_id %>
-              <% end %>
-            </div>
-          <% end %>
         </div>
       </div>
 

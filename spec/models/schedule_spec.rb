@@ -7,7 +7,8 @@ RSpec.describe Schedule, type: :model do
   let(:harvest_definitions_to_run) { [harvest_definition.id] }
 
   describe 'associations' do
-    it { is_expected.to belong_to(:pipeline) }
+    it { is_expected.to belong_to(:pipeline).optional }
+    it { is_expected.to belong_to(:automation_template).optional }
     it { is_expected.to belong_to(:destination) }
     it { is_expected.to have_many(:pipeline_jobs) }
   end
@@ -81,7 +82,6 @@ RSpec.describe Schedule, type: :model do
   
   describe 'validations' do
     let!(:schedule) { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
-    it { is_expected.to validate_presence_of(:pipeline).with_message('must exist') }
     it { is_expected.to validate_presence_of(:destination).with_message('must exist') }
     it { is_expected.to validate_presence_of(:frequency).with_message("can't be blank") }
     it { is_expected.to validate_presence_of(:name).with_message("can't be blank") }
@@ -111,6 +111,12 @@ RSpec.describe Schedule, type: :model do
       subject { build(:schedule, frequency: :monthly, pipeline:, destination:, harvest_definitions_to_run:) }
 
       it { is_expected.to validate_presence_of(:day_of_the_month).with_message("can't be blank") }
+    end
+
+    it 'requires either a pipeline or an automation template' do
+      schedule = build(:schedule, frequency: 0, time: '12:30', destination:, harvest_definitions_to_run:)
+
+      expect(schedule.valid?).to be false
     end
   end
 

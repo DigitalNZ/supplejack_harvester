@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class Schedule < ApplicationRecord
-  belongs_to :pipeline
+  belongs_to :pipeline, optional: true
+  belongs_to :automation_template, optional: true
   belongs_to :destination
   has_many   :pipeline_jobs, dependent: :nullify
 
@@ -23,6 +24,14 @@ class Schedule < ApplicationRecord
   end
 
   validates :day_of_the_month, presence: true, if: -> { monthly? }
+
+  validate :scheduled_resource_present
+
+  def scheduled_resource_present
+    if pipeline.blank? && automation_template.blank?
+      errors.add(:base, 'Either a pipeline or an automation template must be associated with this schedule')
+    end
+  end
 
   def create_sidekiq_cron_job
     Sidekiq::Cron::Job.create(

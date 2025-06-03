@@ -54,14 +54,14 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :schedules
+
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
 
     resources :pipeline_jobs, only: %i[create show index] do
       post :cancel, on: :member
     end
-
-    resources :schedules
 
     resources :automation_templates, only: [:index]
 

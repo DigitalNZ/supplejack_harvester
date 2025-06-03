@@ -1,72 +1,26 @@
-<%= content_for(:title) { @pipeline.name_in_database } %>
-<%= content_for(:header) do %>
+<%= content_for(:title) { 'Schedules' } %>
+
+<%= content_for :header do %>
   <%= render 'shared/breadcrumb_nav' %>
 
-  <div class='float-start'>
-    <h1><%= @pipeline.name %></h1>
-    <p><%= @pipeline.description %></p>
-  </div>
+  <h1 class="header__title">Schedules</h1>
 
-  <div class='clearfix'></div>
-
-  <div class='mt-4'></div>
-  <ul class="nav nav-tabs">
-    <li class='nav-item'>
-      <%= link_to 'Pipeline', pipeline_path(@pipeline), class: 'nav-link' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to "Schedules (#{@pipeline.schedules.count})", pipeline_schedules_path(@pipeline),
-                  class: 'nav-link active' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})",
-                  pipeline_automation_templates_path(@pipeline), class: 'nav-link' %>
-    </li>
-  </ul>
-<% end %>
-
-<div class='mb-4'></div>
-
-<div class='row'>
-
-  <div class='col-3'>
-    <%= link_to new_pipeline_schedule_path(@pipeline), class: 'card card--clickable card--create-cta mb-3 d-flex' do %>
-      <div class='card-body align-items-center d-flex justify-content-center'>
-        <h5 class="card-title">+ Create new schedule</h5>
-      </div>
+  <div class="header__actions">
+    <%= link_to new_schedule_path, class: 'btn btn-primary' do %>
+      <i class="bi bi-plus" aria-hidden="true"></i> Add new schedule
     <% end %>
   </div>
 
-  <%- @schedules.each do |schedule| %>
-    <div class='col-3'>
-      <%= link_to pipeline_schedule_path(@pipeline, schedule), class: 'card card--clickable mb-3 d-flex' do %>
-        <div class="card-body">
-          <h5 class="card-title"><%= schedule.name %></h5>
+  <div class="clearfix"></div>
+<% end %>
 
-          <p>Next run: <%= schedule.next_run_time.strftime('%d/%m/%Y at %l:%M %p') %></p>
-
-          <% if schedule.pipeline_jobs.present? %>
-            <p>Last run: <%= schedule.last_run_time.strftime('%d/%m/%Y at %l:%M %p') %></p>
-          <% end %>
-
-          <span class="badge bg-primary">
-            <%= schedule.frequency.capitalize %>
-          </span>
-
-          <span class="badge bg-light text-dark">
-            <%= schedule.destination.name %>
-          </span>
-        </div>
-      <% end %>
+<% (Time.zone.now.to_date...30.days.from_now.to_date).each do |date| %>
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="card-title"><%= date.strftime('%A %B %-d %Y') %></h2>
+      <h3 class="card-subtitle">
+        0 scheduled processes
+      </h3>
     </div>
-  <%- end %>
-
-</div>
-
-<%= render 'shared/pagination_below_table', items: @schedules %>
+  </div>
+<% end %>

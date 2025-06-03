@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 class SchedulesController < ApplicationController
-  before_action :find_pipeline
+  # before_action :find_pipeline
   before_action :find_destinations, only: %i[new create edit update]
-  before_action :find_schedule, except: %i[index new create]
+  # before_action :find_schedule, except: %i[index new create]
 
   def index
-    @schedules = @pipeline.schedules.order(updated_at: :desc).page(params[:page])
+    # @schedules = @pipeline.schedules.order(updated_at: :desc).page(params[:page])
   end
 
   def show; end
