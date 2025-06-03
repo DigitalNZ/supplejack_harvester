@@ -13,6 +13,10 @@ class SchedulesController < ApplicationController
 
   def new
     @schedule = Schedule.new
+    @schedulable_items = [
+      ['Automations', AutomationTemplate.all.map { |at| [at.name, at.id, { data: { automation_template_id: at.id } }] }],
+      ['Pipelines', Pipeline.all.map { |p| [p.name, p.id, { data: { pipeline_id: p.id } }] }]
+    ]
   end
 
   def edit; end

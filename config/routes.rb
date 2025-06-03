@@ -58,6 +58,7 @@ Rails.application.routes.draw do
 
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
+    get :harvest_definitions, on: :member
 
     resources :pipeline_jobs, only: %i[create show index] do
       post :cancel, on: :member

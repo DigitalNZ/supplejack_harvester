@@ -3,90 +3,72 @@
   <div class='card'>
     <div class='card-body'>
 
-      <h4>Frequency Settings</h4>
+      <h4 class='mb-4'>Frequency Settings</h4>
 
-      <% if @schedule.errors.include?('name') %>
-        <div class='row'>
-          <div class='col-3'></div>
+      <%= form.hidden_field :pipeline_id, id: 'js-pipeline-id' %>
+      <%= form.hidden_field :automation_template_id, id: 'js-automation-template-id' %>
 
-          <div class='col-9'>
-            <div class="alert alert-danger" role="alert">
+      <%= form.label :schedulable_item_id, 'Pipeline or Automation', class: 'form-label' %>
 
-              <%= @schedule.errors['name'].first.capitalize %>
-            </div>
-          </div>
-        </div>
-      <% end %>
+      <%= form.select :schedulable_id, grouped_options_for_select(@schedulable_items), { prompt: 'Please select a process to schedule...' }, { class: 'form-select mb-3', id: 'js-schedulable-select' } %>
 
-      <div class='row gy-3 align-items-center my-2'>
-        <div class="col-3">
-          <%= form.label :frequency, 'Schedule frequency', class: 'form-label' %>
-        </div>
+      <%= form.label :frequency, 'Schedule frequency', class: 'form-label' %>
 
-        <div class='col-2'>
-          <%= form.select :frequency, options_for_select(
-                Schedule.frequencies.map do |key, _value|
-                  [key.humanize, key]
-                end, @schedule.frequency
-              ), {}, class: 'form-select', id: 'js-schedule-frequency-select' %>
-        </div>
-      </div>
+      <%= form.select :frequency, options_for_select(
+            Schedule.frequencies.map do |key, _value|
+              [key.humanize, key]
+            end, @schedule.frequency
+          ), {}, class: 'form-select mb-3', id: 'js-schedule-frequency-select' %>
 
-      <div class='row gy-3 align-items-center my-2'>
-        <div class="col-3">
-          <%= form.label '', 'Run daily at', class: 'form-label', id: 'js-schedule-run-label' %>
-        </div>
+      <%= form.label '', 'Run daily at', class: 'form-label', id: 'js-schedule-run-label' %>
 
-        <div class='col-8'>
-          <ul class='p-0'>
-            <li class='d-inline-block me-2'><%= form.text_field :time, class: 'form-control',
-                                                                       disable_errors_display: true %></li>
+      <ul class='p-0'>
+        <li class='d-inline-block me-2'><%= form.text_field :time, class: 'form-control',
+                                                                    disable_errors_display: true %></li>
 
-            <span id='js-schedule-weekly' class="d-none">
-              <li class='d-inline-block me-2'>on</li>
+        <span id='js-schedule-weekly' class="d-none">
+          <li class='d-inline-block me-2'>on</li>
 
-              <li class='d-inline-block'>
-                <%= form.select :day, options_for_select(
-                      Schedule.days.map do |key, _value|
-                        [key.humanize, key]
-                      end,
-                      @schedule.day
-                    ), {}, class: 'form-select' %>
-              </li>
-            </span>
+          <li class='d-inline-block'>
+            <%= form.select :day, options_for_select(
+                  Schedule.days.map do |key, _value|
+                    [key.humanize, key]
+                  end,
+                  @schedule.day
+                ), {}, class: 'form-select' %>
+          </li>
+        </span>
 
-            <span id='js-schedule-monthly' class="d-none">
-              <li class='d-inline-block ms-2'>on the</li>
+        <span id='js-schedule-monthly' class="d-none">
+          <li class='d-inline-block ms-2'>on the</li>
 
-              <li class='d-inline-block mx-2'><%= form.select :day_of_the_month, options_for_select(
-                                                    (1..31).map do |day|
-                                                      [day.ordinalize, day]
-                                                    end,
-                                                    @schedule.day_of_the_month
-                                                  ), {}, class: 'form-select' %></li>
-            </span>
+          <li class='d-inline-block mx-2'><%= form.select :day_of_the_month, options_for_select(
+                                                (1..31).map do |day|
+                                                  [day.ordinalize, day]
+                                                end,
+                                                @schedule.day_of_the_month
+                                              ), {}, class: 'form-select' %></li>
+        </span>
 
-            <span id='js-schedule-bi-monthly' class="d-none">
-              <li class='d-inline-block ms-2'>on the</li>
-              <li class='d-inline-block mx-2'><%= form.select :bi_monthly_day_one, options_for_select(
-                                                    (1..31).map do |day|
-                                                      [day.ordinalize, day]
-                                                    end,
-                                                    @schedule.bi_monthly_day_one
-                                                  ), {}, class: 'form-select' %></li>
+        <span id='js-schedule-bi-monthly' class="d-none">
+          <li class='d-inline-block ms-2'>on the</li>
+          <li class='d-inline-block mx-2'><%= form.select :bi_monthly_day_one, options_for_select(
+                                                (1..31).map do |day|
+                                                  [day.ordinalize, day]
+                                                end,
+                                                @schedule.bi_monthly_day_one
+                                              ), {}, class: 'form-select' %></li>
 
-              <li class='d-inline-block ms-2'>and</li>
+          <li class='d-inline-block ms-2'>and</li>
 
-              <li class='d-inline-block mx-2'><%= form.select :bi_monthly_day_two, options_for_select(
-                                                    (1..31).map do |day|
-                                                      [day.ordinalize, day]
-                                                    end,
-                                                    @schedule.bi_monthly_day_two
-                                                  ), {}, class: 'form-select' %></li>
-            </span>
-          </ul>
-        </div>
-      </div>
+          <li class='d-inline-block mx-2'><%= form.select :bi_monthly_day_two, options_for_select(
+                                                (1..31).map do |day|
+                                                  [day.ordinalize, day]
+                                                end,
+                                                @schedule.bi_monthly_day_two
+                                              ), {}, class: 'form-select' %></li>
+        </span>
+      </ul>
 
       <% if @schedule.errors.include?('time') %>
         <div class='row'>
@@ -102,42 +84,21 @@
 
       <br>
 
-      <h4>Run Settings</h4>
+      <h4>Process Settings</h4>
 
-      <div class='row gy-3 align-items-center my-2'>
-        <div class="col-3">
-          <%= form.label :harvest_definitions_to_run, 'Blocks to run', class: 'form-label' %>
-        </div>
+      <div id='js-blocks-to-run mb-3'>
+        <%= form.label :harvest_definitions_to_run, 'Blocks to run', class: 'form-label' %>
       </div>
 
-      <% if @schedule.errors.include?('harvest_definitions_to_run') %>
-        <div class='row'>
-          <div class='col-3'></div>
 
-          <div class='col-9'>
-            <div class="alert alert-danger" role="alert">
-              Please select a block to run
-            </div>
-          </div>
-        </div>
-      <% end %>
+      <%= form.label :destination_id, 'Destination', class: 'form-label' %>
 
-      <div class='row gy-3 align-items-center my-2'>
-        <div class="col-3">
-          <%= form.label :destination_id, 'Destination', class: 'form-label' %>
-        </div>
+      <%= form.select :destination_id,
+                      options_from_collection_for_select(
+                        @destinations, 'id', 'name', @schedule.destination&.id
+                      ), {},
+                      class: 'form-select mb-3' %>
 
-        <div class='col-2'>
-          <%= form.select :destination_id,
-                          options_from_collection_for_select(
-                            @destinations, 'id', 'name', @schedule.destination&.id
-                          ), {},
-                          class: 'form-select' %>
-        </div>
-      </div>
-
-      <div class='row gy-3 align-items-center my-2'>
-        <div class="col-3">
           <%= form.label :delete_previous_records, class: 'form-label' do %>
             Delete Previous Records
 
@@ -146,15 +107,10 @@
               data-bs-title="Selecting this option will delete all previous records associated with this Source ID"><i class="bi bi-question-circle" aria-label="helper text"></i>
             </span>
           <% end %>
-        </div>
 
-        <div class='col-2'>
-          <div class='form-check'>
-            <%= label_tag do %>
-              <%= check_box('schedule', 'delete_previous_records', { class: 'form-check-input' }) %>
-            <% end %>
-          </div>
-        </div>
+        <%= label_tag do %>
+          <%= check_box('schedule', 'delete_previous_records', { class: 'form-check-input' }) %>
+        <% end %>
       </div>
 
     </div>
