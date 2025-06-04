@@ -24,7 +24,7 @@
 
       <ul class='p-0'>
         <li class='d-inline-block me-2'><%= form.text_field :time, class: 'form-control',
-                                                                    disable_errors_display: true %></li>
+                                                                    disable_errors_display: true, placeholder: '1:30 PM' %></li>
 
         <span id='js-schedule-weekly' class="d-none">
           <li class='d-inline-block me-2'>on</li>
@@ -89,7 +89,6 @@
       <div id='js-blocks-to-run' class='mb-3'>
       </div>
 
-
       <%= form.label :destination_id, 'Destination', class: 'form-label' %>
 
       <%= form.select :destination_id,
@@ -107,9 +106,10 @@
             </span>
           <% end %>
 
-        <%= label_tag do %>
-          <%= check_box('schedule', 'delete_previous_records', { class: 'form-check-input' }) %>
-        <% end %>
+        <%= form.select :delete_previous_records,
+                options_for_select([['Yes', true], ['No', false]], @schedule.delete_previous_records),
+                {},
+                class: 'form-select mb-3' %>
       </div>
 
     </div>

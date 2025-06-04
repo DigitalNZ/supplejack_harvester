@@ -8,7 +8,6 @@ class Schedule < ApplicationRecord
 
   serialize :harvest_definitions_to_run, type: Array
 
-  validates :name,                       presence: true, uniqueness: true
   validates :frequency,                  presence: true
   validates :time,                       presence: true
   validates :harvest_definitions_to_run, presence: true
@@ -26,6 +25,30 @@ class Schedule < ApplicationRecord
   validates :day_of_the_month, presence: true, if: -> { monthly? }
 
   validate :scheduled_resource_present
+
+  def self.schedules_within_range(start_date, end_date)
+    schedule_map = {}
+  
+    Schedule.all.each do |schedule|
+      times = Fugit.parse(schedule.cron_syntax).within((Date.parse(start_date)...Date.parse(end_date)))
+      
+      times.each do |time|
+        date = time.strftime('%d%m%Y').to_i
+        time_str = time.strftime('%H%M').to_i
+        
+        schedule_map[date] ||= {}
+        schedule_map[date][time_str] ||= []
+        schedule_map[date][time_str] << schedule
+      end
+    end
+
+    schedule_map = schedule_map.sort.to_h
+    schedule_map.transform_values! do |times|
+      times.sort.to_h
+    end
+
+    schedule_map
+  end
 
   def scheduled_resource_present
     if pipeline.blank? && automation_template.blank?

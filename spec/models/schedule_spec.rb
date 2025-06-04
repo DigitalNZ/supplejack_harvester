@@ -79,6 +79,140 @@ RSpec.describe Schedule, type: :model do
       expect(schedule.on_sunday?).to be true
     end
   end
+
+  describe '#schedules_within_range' do
+    let!(:schedule) { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:) }
+    let!(:schedule_2) { create(:schedule, frequency: 0, time: '10:30', pipeline:, destination:, harvest_definitions_to_run:) }
+
+    it 'returns a hash of dates, with the schedules that are assigned on that date orderered by time for a given range' do
+
+      schedule_map = Schedule.schedules_within_range('01 06 2025', '30 06 2025')
+
+      result = {
+        1062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        2062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        3062025 => { 
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        4062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        5062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        6062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        7062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        8062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        9062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        10062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        11062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        12062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        13062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        14062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        15062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        16062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        17062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        18062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        19062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        20062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        21062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        22062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        23062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        24062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        25062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        26062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        27062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        28062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        29062025 => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        30062025 => {
+          1030 => [schedule_2]
+        }
+      }
+
+      expect(schedule_map).to eq result
+    end
+  end
   
   describe 'validations' do
     let!(:schedule) { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
@@ -138,6 +272,12 @@ RSpec.describe Schedule, type: :model do
         schedule = create(:schedule, frequency: 0, time: '7:45PM', pipeline:, destination:, harvest_definitions_to_run:)
 
         expect(schedule.cron_syntax).to eq '45 19 * * *'
+      end
+
+      it 'returns a valid cron syntax when the time has AM or PM' do
+        schedule = create(:schedule, frequency: 0, time: '7:45 AM', pipeline:, destination:, harvest_definitions_to_run:)
+
+        expect(schedule.cron_syntax).to eq '45 07 * * *'
       end
 
       it 'returns a valid cron syntax when the time is a late 24 hour time' do

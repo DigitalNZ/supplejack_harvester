@@ -6,7 +6,7 @@ class SchedulesController < ApplicationController
   # before_action :find_schedule, except: %i[index new create]
 
   def index
-    # @schedules = @pipeline.schedules.order(updated_at: :desc).page(params[:page])
+    @schedules = Schedule.all
   end
 
   def show; end
@@ -14,8 +14,8 @@ class SchedulesController < ApplicationController
   def new
     @schedule = Schedule.new
     @schedulable_items = [
-      ['Automations', AutomationTemplate.all.map { |at| [at.name, at.id, { data: { automation_template_id: at.id } }] }],
-      ['Pipelines', Pipeline.all.map { |p| [p.name, p.id, { data: { pipeline_id: p.id } }] }]
+      ['Automations', AutomationTemplate.all.sort_by(&:name).map { |at| [at.name, at.id, { data: { automation_template_id: at.id } }] }],
+      ['Pipelines', Pipeline.all.sort_by(&:name).map { |p| [p.name, p.id, { data: { pipeline_id: p.id } }] }]
     ]
   end
 
@@ -26,7 +26,7 @@ class SchedulesController < ApplicationController
 
     if @schedule.save
       @schedule.create_sidekiq_cron_job
-      redirect_to pipeline_schedule_path(@pipeline, @schedule), notice: t('.success')
+      redirect_to schedules_path, notice: t('.success')
     else
       flash.alert = t('.failure')
       render :new

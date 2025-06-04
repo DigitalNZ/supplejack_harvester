@@ -15,6 +15,7 @@
 <% end %>
 
 <% (Time.zone.now.to_date...30.days.from_now.to_date).each do |date| %>
+
   <div class="card mb-3">
     <div class="card-body">
       <h2 class="card-title"><%= date.strftime('%A %B %-d %Y') %></h2>
@@ -23,4 +24,5 @@
       </h3>
     </div>
   </div>
+
 <% end %>
