@@ -1,22 +1,18 @@
 # frozen_string_literal: true
 
 class SchedulesController < ApplicationController
-  # before_action :find_pipeline
   before_action :find_destinations, only: %i[new create edit update]
-  # before_action :find_schedule, except: %i[index new create]
+  before_action :find_schedule, except: %i[index new create]
+  before_action :assign_scheduleable_items, only: %i[new create edit update]
 
   def index
-    @schedules = Schedule.all
+    @schedules = Schedule.schedules_within_range(Time.zone.now.to_date, 30.days.from_now.to_date)
   end
 
   def show; end
 
   def new
     @schedule = Schedule.new
-    @schedulable_items = [
-      ['Automations', AutomationTemplate.all.sort_by(&:name).map { |at| [at.name, at.id, { data: { automation_template_id: at.id } }] }],
-      ['Pipelines', Pipeline.all.sort_by(&:name).map { |p| [p.name, p.id, { data: { pipeline_id: p.id } }] }]
-    ]
   end
 
   def edit; end
@@ -36,7 +32,7 @@ class SchedulesController < ApplicationController
   def update
     if @schedule.update(schedule_params)
       @schedule.refresh_sidekiq_cron_job
-      redirect_to pipeline_schedule_path(@pipeline, @schedule), notice: t('.success')
+      redirect_to schedules_path, notice: t('.success')
     else
       flash.alert = t('.failure')
       render :edit
@@ -46,21 +42,24 @@ class SchedulesController < ApplicationController
   def destroy
     if @schedule.destroy
       @schedule.delete_sidekiq_cron_job
-      redirect_to pipeline_schedules_path(@pipeline), notice: t('.success')
+      redirect_to schedules_path, notice: t('.success')
     else
       flash.alert = t('.failure')
-      redirect_to pipeline_schedule_path(@pipeline, @schedule)
+      redirect_to schedules_path
     end
   end
 
   private
 
-  def find_pipeline
-    @pipeline = Pipeline.find(params[:pipeline_id])
+  def assign_scheduleable_items
+    @schedulable_items = [
+      ['Automations', AutomationTemplate.all.sort_by(&:name).map { |at| [at.name, at.id, { data: { automation_template_id: at.id } }] }],
+      ['Pipelines', Pipeline.all.sort_by(&:name).map { |p| [p.name, p.id, { data: { pipeline_id: p.id } }] }]
+    ]
   end
 
   def find_schedule
-    @schedule = @pipeline.schedules.find(params[:id])
+    @schedule = Schedule.find(params[:id])
   end
 
   def find_destinations

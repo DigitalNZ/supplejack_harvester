@@ -13,6 +13,13 @@ RSpec.describe Schedule, type: :model do
     it { is_expected.to have_many(:pipeline_jobs) }
   end
 
+  describe '#name' do
+    it 'assigns a name based on the pipeline and destination' do
+      schedule = create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)
+      expect(schedule.name).to eq "#{pipeline.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{schedule.time.parameterize(separator: '_')}"
+    end
+  end
+
   describe 'frequency' do
     it 'can be daily' do
       daily = build(:schedule, frequency: 0, pipeline:, destination:, harvest_definitions_to_run:)
@@ -83,19 +90,22 @@ RSpec.describe Schedule, type: :model do
   describe '#schedules_within_range' do
     let!(:schedule) { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:) }
     let!(:schedule_2) { create(:schedule, frequency: 0, time: '10:30', pipeline:, destination:, harvest_definitions_to_run:) }
+    let!(:schedule_3) { create(:schedule, frequency: 1, day: 1, time: '9:00', pipeline:, destination:, harvest_definitions_to_run:) }
+    let!(:schedule_4) { create(:schedule, frequency: 2, bi_monthly_day_one: 2, bi_monthly_day_two: 14, time: '9:00 PM', pipeline:, destination:, harvest_definitions_to_run:) }
 
     it 'returns a hash of dates, with the schedules that are assigned on that date orderered by time for a given range' do
-
       schedule_map = Schedule.schedules_within_range('01 06 2025', '30 06 2025')
 
       result = {
         1062025 => {
           1030 => [schedule_2],
-          1230 => [schedule]
+          1230 => [schedule],
         },
         2062025 => {
+          900 => [schedule_3],
           1030 => [schedule_2],
-          1230 => [schedule]
+          1230 => [schedule],
+          2100 => [schedule_4]
         },
         3062025 => { 
           1030 => [schedule_2],
@@ -122,6 +132,7 @@ RSpec.describe Schedule, type: :model do
           1230 => [schedule]
         },
         9062025 => {
+          900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
@@ -143,13 +154,15 @@ RSpec.describe Schedule, type: :model do
         },
         14062025 => {
           1030 => [schedule_2],
-          1230 => [schedule]
+          1230 => [schedule],
+          2100 => [schedule_4]
         },
         15062025 => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
         16062025 => {
+          900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
@@ -178,6 +191,7 @@ RSpec.describe Schedule, type: :model do
           1230 => [schedule]
         },
         23062025 => {
+          900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
@@ -206,6 +220,7 @@ RSpec.describe Schedule, type: :model do
           1230 => [schedule]
         },
         30062025 => {
+          900 => [schedule_3],
           1030 => [schedule_2]
         }
       }

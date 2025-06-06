@@ -22,6 +22,11 @@ class Schedule < ApplicationRecord
     validates :bi_monthly_day_two
   end
 
+  after_create do
+    self.name = "#{pipeline.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{time.parameterize(separator: '_')}"
+    save!
+  end
+
   validates :day_of_the_month, presence: true, if: -> { monthly? }
 
   validate :scheduled_resource_present
@@ -30,10 +35,10 @@ class Schedule < ApplicationRecord
     schedule_map = {}
   
     Schedule.all.each do |schedule|
-      times = Fugit.parse(schedule.cron_syntax).within((Date.parse(start_date)...Date.parse(end_date)))
+      times = Fugit.parse(schedule.cron_syntax).within((start_date...end_date))
       
       times.each do |time|
-        date = time.strftime('%d%m%Y').to_i
+        date = time.to_t.to_date
         time_str = time.strftime('%H%M').to_i
         
         schedule_map[date] ||= {}
@@ -106,7 +111,7 @@ class Schedule < ApplicationRecord
 
   def month_day
     return '*' unless monthly? || bi_monthly?
-    return "#{bi_monthly_day_one}/#{bi_monthly_day_two}" if bi_monthly?
+    return "#{bi_monthly_day_one},#{bi_monthly_day_two}" if bi_monthly?
 
     day_of_the_month
   end

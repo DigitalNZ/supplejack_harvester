@@ -14,15 +14,49 @@
   <div class="clearfix"></div>
 <% end %>
 
-<% (Time.zone.now.to_date...30.days.from_now.to_date).each do |date| %>
+<% @schedules.each do |date, times| %>
 
   <div class="card mb-3">
     <div class="card-body">
       <h2 class="card-title"><%= date.strftime('%A %B %-d %Y') %></h2>
       <h3 class="card-subtitle">
-        0 scheduled processes
+        <%= times.values.flatten.count %> scheduled processes
+
+        <% if times.values.flatten.map(&:pipeline_jobs).flatten.any? %>
+          <div class='float-end'>
+            <% total_duration = times.values.flatten.map { |process| process.pipeline_jobs.last }.flat_map(&:harvest_reports).map(&:duration_seconds).sum %>
+            <%= ActiveSupport::Duration.build(total_duration).inspect %>
+          </div>
+        <% end %>
       </h3>
+
+      <% times.values.flatten.each do |process| %>
+        <div class='card my-3'>
+          <div class='card-body'>
+
+            <div class='float-start'>
+              <strong><%= process.pipeline.name %></strong>
+              <p class='m-0'>Runs at <%= process.time %></p>
+
+              <% if process.pipeline_jobs.any? %>
+                <p class='m-0'>Last duration: 
+                  <%= ActiveSupport::Duration.build(process.pipeline_jobs.last.harvest_reports.map(&:duration_seconds).sum).inspect %>
+                </p>
+              <% end %>
+            </div>
+
+            <div class='float-end'>
+              <%= link_to edit_schedule_path(process) do %>
+                Edit <i class="bi bi-pencil-square" aria-hidden="true"></i>
+              <% end %>
+
+              <%= button_to schedule_path(process), method: :delete, class: "btn btn-link p-0" do %>
+                Delete <i class="bi bi-trash" aria-hidden="true"></i>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
   </div>
-
 <% end %>
