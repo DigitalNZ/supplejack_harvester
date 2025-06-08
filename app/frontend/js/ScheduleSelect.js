@@ -1,10 +1,18 @@
 const schedulableSelect = document.getElementById("js-schedulable-select");
 
 if (schedulableSelect) {
-
   const pipelineInput = document.getElementById("js-pipeline-id");
   const automationInput = document.getElementById("js-automation-template-id");
   const harvestDefinitionsContainer = document.getElementById("js-blocks-to-run");
+
+  if(pipelineInput.value) {
+    schedulableSelect.value = pipelineInput.value;
+    fetchHarvestDefinitions(pipelineInput.value);
+  }
+
+  if(automationInput.value) {
+    schedulableSelect.value = automationInput.value;
+  }
 
   schedulableSelect.addEventListener("change", (event) => {
     const selectedOption = event.target.querySelector(`option[value="${event.target.value}"]`);
@@ -40,17 +48,22 @@ if (schedulableSelect) {
   }
   
   function updateHarvestDefinitionsCheckboxes(definitions) {
+    const existingBlocksToRun = document.getElementById("js-existing-blocks-to-run").value.split(' ');
+
     harvestDefinitionsContainer.innerHTML = '<label class="form-label" for="schedule_harvest_definitions_to_run">Blocks to run</label>';
     
     definitions.forEach(definition => {
       const div = document.createElement('div');
       div.className = 'form-check';
       
+      const checkedAttribute = existingBlocksToRun.includes(String(definition.id)) ? ' checked="checked"' : '';
+
       div.innerHTML = `
         <input class="form-check-input" 
                type="checkbox" 
                name="schedule[harvest_definitions_to_run][]" 
-               value="${definition.id}" 
+               value="${definition.id}"
+               ${checkedAttribute}
                id="harvest_definition_${definition.id}">
         <label class="form-check-label" for="harvest_definition_${definition.id}">
           ${definition.name}

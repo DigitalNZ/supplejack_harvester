@@ -23,7 +23,7 @@ class Schedule < ApplicationRecord
   end
 
   after_create do
-    self.name = "#{pipeline.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{time.parameterize(separator: '_')}"
+    self.name = "#{pipeline.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{time.parameterize(separator: '_')}__#{SecureRandom.hex}"
     save!
   end
 
