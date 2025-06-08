@@ -24,10 +24,16 @@
 
         <% if times.values.flatten.map(&:pipeline_jobs).flatten.any? %>
           <div class='float-end'>
-            <% total_duration = times.values.flatten.map { |process| process.pipeline_jobs.last }.flat_map(&:harvest_reports).map(&:duration_seconds).sum %>
-            <%= ActiveSupport::Duration.build(total_duration).inspect %>
+
+            <% pipeline_jobs = times.values.flatten.filter_map { |process| process.pipeline_jobs.last } %>
+
+            <% if pipeline_jobs.present? && pipeline_jobs.all?(&:harvest_reports) %>
+              <% total_duration = pipeline_jobs.flat_map(&:harvest_reports).sum(&:duration_seconds) %>
+              <%= ActiveSupport::Duration.build(total_duration).inspect %>
+            <% end %>
           </div>
         <% end %>
+
       </h3>
 
       <% times.values.flatten.each do |process| %>
@@ -35,24 +41,30 @@
           <div class='card-body'>
 
             <div class='float-start'>
-              <strong><%= process.pipeline.name %></strong>
-              <p class='m-0'>Runs at <%= process.time %></p>
+              <strong><%= link_to process.pipeline.name, pipeline_path(process.pipeline) %></strong>
+              <p class='m-0'>Runs <%= process.frequency %> at <%= process.time %> to <%= process.destination.name %></p>
 
               <% if process.pipeline_jobs.any? %>
-                <p class='m-0'>Last duration: 
+                <p class='m-0'>Last duration:
                   <%= ActiveSupport::Duration.build(process.pipeline_jobs.last.harvest_reports.map(&:duration_seconds).sum).inspect %>
                 </p>
               <% end %>
             </div>
 
             <div class='float-end'>
-              <%= link_to edit_schedule_path(process) do %>
-                Edit <i class="bi bi-pencil-square" aria-hidden="true"></i>
-              <% end %>
+              <ul class='list-inline'>
+                <li class='list-inline-item'>
+                  <%= link_to edit_schedule_path(process), class: 'btn btn-link p-0' do %>
+                    Edit <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                  <% end %>
+                </li>
 
-              <%= button_to schedule_path(process), method: :delete, class: "btn btn-link p-0" do %>
-                Delete <i class="bi bi-trash" aria-hidden="true"></i>
-              <% end %>
+                <li class='list-inline-item'>
+                  <%= button_to schedule_path(process), method: :delete, class: "btn btn-link text-danger p-0" do %>
+                    Delete <i class="bi bi-trash" aria-hidden="true"></i>
+                  <% end %>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
