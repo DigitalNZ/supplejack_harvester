@@ -10,12 +10,12 @@ class Schedule < ApplicationRecord
 
   validates :frequency,                  presence: true
   validates :time,                       presence: true
-  validates :harvest_definitions_to_run, presence: true
 
   enum :frequency, { daily: 0, weekly: 1, bi_monthly: 2, monthly: 3 }
   enum :day,       { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 }, prefix: :on
 
   validates :day, presence: true, if: -> { weekly? }
+  validates :harvest_definitions_to_run, presence: true, if: -> { pipeline.present? }
 
   with_options presence: true, if: :bi_monthly? do
     validates :bi_monthly_day_one

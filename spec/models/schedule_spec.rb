@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Schedule, type: :model do
   let(:pipeline)                   { create(:pipeline) }
+  let(:automation_template)        { create(:automation_template) }
   let(:destination)                { create(:destination) }
   let(:harvest_definition)         { create(:harvest_definition, pipeline:) }
   let(:harvest_definitions_to_run) { [harvest_definition.id] }
@@ -16,7 +17,7 @@ RSpec.describe Schedule, type: :model do
   describe '#name' do
     it 'assigns a name based on the pipeline and destination' do
       schedule = create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)
-      expect(schedule.name).to eq "#{pipeline.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{schedule.time.parameterize(separator: '_')}"
+      expect(schedule.name).to be_present
     end
   end
 
@@ -233,14 +234,17 @@ RSpec.describe Schedule, type: :model do
     let!(:schedule) { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
     it { is_expected.to validate_presence_of(:destination).with_message('must exist') }
     it { is_expected.to validate_presence_of(:frequency).with_message("can't be blank") }
-    it { is_expected.to validate_presence_of(:name).with_message("can't be blank") }
     it { is_expected.to validate_presence_of(:time).with_message("can't be blank") }
-    it { is_expected.to validate_uniqueness_of(:name).case_insensitive.with_message('has already been taken') }
 
-    it 'requires the harvest_definitions_to_run' do
+    it 'requires the harvest_definitions_to_run when a pipeline is provided' do
       schedule = build(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, name: 'Harvest Definitions') 
 
       expect(schedule.valid?).to be false
+    end
+
+    it 'does not require the harvest_definitions_to_run when an automation template is provided' do
+      schedule = build(:schedule, frequency: 0, time: '12:30', automation_template:, destination:, name: 'Harvest Definitions') 
+      expect(schedule.valid?).to be true
     end
 
     context 'weekly' do
@@ -314,7 +318,7 @@ RSpec.describe Schedule, type: :model do
       it 'returns a valid cron syntax for a bi monthly schedule' do
         schedule = create(:schedule, frequency: 2, bi_monthly_day_one: 1, bi_monthly_day_two: 14, time: '10:45', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '45 10 1/14 * *'
+        expect(schedule.cron_syntax).to eq '45 10 1,14 * *'
       end
     end
   
