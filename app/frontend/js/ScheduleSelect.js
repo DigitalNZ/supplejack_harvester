@@ -6,12 +6,12 @@ if (schedulableSelect) {
   const harvestDefinitionsContainer = document.getElementById("js-blocks-to-run");
 
   if(pipelineInput.value) {
-    schedulableSelect.value = pipelineInput.value;
+    schedulableSelect.value = `pipeline_${pipelineInput.value}`;
     fetchHarvestDefinitions(pipelineInput.value);
   }
 
   if(automationInput.value) {
-    schedulableSelect.value = automationInput.value;
+    schedulableSelect.value = `automation-template_${automationInput.value}`;
   }
 
   schedulableSelect.addEventListener("change", (event) => {
