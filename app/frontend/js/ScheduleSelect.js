@@ -7,10 +7,12 @@ if (schedulableSelect) {
 
   if(pipelineInput.value) {
     schedulableSelect.value = `pipeline_${pipelineInput.value}`;
+    document.getElementById("js-pipeline-settings").classList.remove("d-none");
     fetchHarvestDefinitions(pipelineInput.value);
   }
 
   if(automationInput.value) {
+    document.getElementById("js-pipeline-settings").classList.add("d-none");
     schedulableSelect.value = `automation-template_${automationInput.value}`;
   }
 
@@ -23,10 +25,12 @@ if (schedulableSelect) {
       pipelineInput.value = pipelineId;
       automationInput.value = '';
       fetchHarvestDefinitions(pipelineId);
+      document.getElementById("js-pipeline-settings").classList.remove("d-none");
     } else if (automationTemplateId) {
       automationInput.value = automationTemplateId;
       pipelineInput.value = '';
       harvestDefinitionsContainer.innerHTML = '';
+      document.getElementById("js-pipeline-settings").classList.add("d-none");
     } else {
       pipelineInput.value = '';
       automationInput.value = '';

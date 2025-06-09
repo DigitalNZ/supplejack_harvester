@@ -15,7 +15,6 @@
 <% end %>
 
 <% @schedules.each do |date, times| %>
-
   <div class="card mb-3">
     <div class="card-body">
       <h2 class="card-title"><%= date.strftime('%A %B %-d %Y') %></h2>
@@ -33,7 +32,6 @@
             <% end %>
           </div>
         <% end %>
-
       </h3>
 
       <% times.values.flatten.each do |process| %>
@@ -41,8 +39,12 @@
           <div class='card-body'>
 
             <div class='float-start'>
-              <strong><%= link_to process.pipeline.name, pipeline_path(process.pipeline) %></strong>
-              <p class='m-0'>Runs <%= process.frequency %> at <%= process.time %> to <%= process.destination.name %></p>
+              <% if process.pipeline.present? %>
+                <strong><%= link_to process.pipeline.name, pipeline_path(process.pipeline) %></strong>
+              <% else %>
+                <strong><%= link_to process.automation_template.name, automation_template_path(process.automation_template) %></strong>
+              <% end %>
+              <p class='m-0'>Runs <%= process.frequency %> at <%= process.time %></p>
 
               <% if process.pipeline_jobs.any? %>
                 <p class='m-0'>Last duration:

@@ -85,32 +85,34 @@
 
       <br>
 
-      <h4>Process Settings</h4>
+      <div id="js-pipeline-settings" class="d-none">
+        <h4>Process Settings</h4>
 
-      <div id='js-blocks-to-run' class='mb-3'>
-      </div>
+        <div id='js-blocks-to-run' class='mb-3'>
+        </div>
 
-      <%= form.label :destination_id, 'Destination', class: 'form-label' %>
+        <%= form.label :destination_id, 'Destination', class: 'form-label' %>
 
-      <%= form.select :destination_id,
-                      options_from_collection_for_select(
-                        @destinations, 'id', 'name', @schedule.destination&.id
-                      ), {},
-                      class: 'form-select mb-3' %>
+        <%= form.select :destination_id,
+                        options_from_collection_for_select(
+                          @destinations, 'id', 'name', @schedule.destination&.id
+                        ), {},
+                        class: 'form-select mb-3' %>
 
-          <%= form.label :delete_previous_records, class: 'form-label' do %>
-            Delete Previous Records
+            <%= form.label :delete_previous_records, class: 'form-label' do %>
+              Delete Previous Records
 
-            <span
-              data-bs-toggle="tooltip"
-              data-bs-title="Selecting this option will delete all previous records associated with this Source ID"><i class="bi bi-question-circle" aria-label="helper text"></i>
-            </span>
-          <% end %>
+              <span
+                data-bs-toggle="tooltip"
+                data-bs-title="Selecting this option will delete all previous records associated with this Source ID"><i class="bi bi-question-circle" aria-label="helper text"></i>
+              </span>
+            <% end %>
 
-        <%= form.select :delete_previous_records,
-                options_for_select([['Yes', true], ['No', false]], @schedule.delete_previous_records),
-                {},
-                class: 'form-select mb-3' %>
+          <%= form.select :delete_previous_records,
+                  options_for_select([['Yes', true], ['No', false]], @schedule.delete_previous_records),
+                  {},
+                  class: 'form-select mb-3' %>
+        </div>
       </div>
 
     </div>

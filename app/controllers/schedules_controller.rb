@@ -20,8 +20,6 @@ class SchedulesController < ApplicationController
   def create
     @schedule = Schedule.new(schedule_params)
 
-    binding.pry
-
     if @schedule.save
       @schedule.create_sidekiq_cron_job
       redirect_to schedules_path, notice: t('.success')
