@@ -13,6 +13,7 @@ class SchedulesController < ApplicationController
 
   def new
     @schedule = Schedule.new
+    @pipeline = Pipeline.find(params[:pipeline_id]) if params[:pipeline_id].present?
   end
 
   def edit; end

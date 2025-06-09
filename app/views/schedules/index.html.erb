@@ -34,14 +34,26 @@
       </h3>
 
       <h3 class="card-subtitle">
-        <% if times.values.flatten.map(&:pipeline_jobs).flatten.any? %>
-          <% pipeline_jobs = times.values.flatten.filter_map { |process| process.pipeline_jobs.last } %>
+        <% total_duration = 0 %>
+
+        <% processes = times.values.flatten %>
+
+        <% if processes.flat_map(&:pipeline_jobs).any? %>
+          <% pipeline_jobs = processes.filter_map { |process| process.pipeline_jobs.last } %>
 
           <% if pipeline_jobs.present? && pipeline_jobs.all?(&:harvest_reports) %>
-            <% total_duration = pipeline_jobs.flat_map(&:harvest_reports).sum(&:duration_seconds) %>
-            <%= ActiveSupport::Duration.build(total_duration).inspect %>
+            <% total_duration += pipeline_jobs.flat_map(&:harvest_reports).sum(&:duration_seconds) %>
           <% end %>
         <% end %>
+
+        <% if processes.flat_map(&:automation_template).any? %>
+          <% automation_templates = processes.filter_map(&:automation_template) %>
+          <% automation_templates.each do |automation_template| %>
+            <% total_duration += AutomationSummary.new(automation_template.automations.last).total_duration.ceil %>
+          <% end %>
+        <% end %>
+
+        <%= ActiveSupport::Duration.build(total_duration).inspect %>
       </h3>
 
       <div class='expander__content'>
@@ -60,6 +72,12 @@
                 <% if process.pipeline_jobs.any? %>
                   <p class='m-0'>Last duration:
                     <%= ActiveSupport::Duration.build(process.pipeline_jobs.last.harvest_reports.map(&:duration_seconds).sum).inspect %>
+                  </p>
+                <% end %>
+
+                <% if process.automation_template.present? && process.automation_template.automations.any? %>
+                  <p class='m-0'>Last duration:
+                    <%= ActiveSupport::Duration.build(AutomationSummary.new(process.automation_template.automations.last).total_duration.ceil).inspect %>
                   </p>
                 <% end %>
               </div>

@@ -5,7 +5,7 @@
 
       <h4 class='mb-4'>Frequency Settings</h4>
 
-      <%= form.hidden_field :pipeline_id, id: 'js-pipeline-id' %>
+      <%= form.hidden_field :pipeline_id, id: 'js-pipeline-id', value: @pipeline&.id %>
       <%= form.hidden_field :automation_template_id, id: 'js-automation-template-id' %>
       <%= form.hidden_field :existing_blocks_to_run, id: 'js-existing-blocks-to-run', multiple: true, value: @schedule.harvest_definitions_to_run %>
 

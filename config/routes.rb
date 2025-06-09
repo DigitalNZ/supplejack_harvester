@@ -63,8 +63,12 @@ Rails.application.routes.draw do
     resources :pipeline_jobs, only: %i[create show index] do
       post :cancel, on: :member
     end
-
+  
     resources :automation_templates, only: [:index]
+
+    scope module: :pipelines do
+      resources :schedules
+    end
 
     resources :harvest_definitions, only: %i[create update destroy] do
       resources :extraction_definitions, only: %i[show create update destroy] do
