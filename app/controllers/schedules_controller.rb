@@ -54,8 +54,12 @@ class SchedulesController < ApplicationController
 
   def assign_scheduleable_items
     @schedulable_items = [
-      ['Automations', AutomationTemplate.all.sort_by(&:name).map { |at| [at.name, "automation-template_#{at.id}", { data: { automation_template_id: at.id } }] }],
-      ['Pipelines', Pipeline.all.sort_by(&:name).map { |p| [p.name, "pipeline_#{p.id}", { data: { pipeline_id: p.id } }] }]
+      ['Automations', AutomationTemplate.all.sort_by(&:name).map do |at|
+        [at.name, "automation-template_#{at.id}", { data: { automation_template_id: at.id } }]
+      end],
+      ['Pipelines', Pipeline.all.sort_by(&:name).map do |p|
+        [p.name, "pipeline_#{p.id}", { data: { pipeline_id: p.id } }]
+      end]
     ]
   end
 

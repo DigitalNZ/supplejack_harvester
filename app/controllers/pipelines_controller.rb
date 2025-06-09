@@ -73,7 +73,7 @@ class PipelinesController < ApplicationController
   def harvest_definitions
     @harvest_definitions = @pipeline.harvest_definitions
     render json: @harvest_definitions.map(&:to_h)
-  end 
+  end
 
   private
 

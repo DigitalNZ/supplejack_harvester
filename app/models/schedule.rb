@@ -23,7 +23,7 @@ class Schedule < ApplicationRecord
   end
 
   after_create do
-    subject = pipeline.present? ? pipeline : automation_template
+    subject = pipeline.presence || automation_template
     self.name = "#{subject.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{time.parameterize(separator: '_')}__#{SecureRandom.hex}"
     save!
   end
@@ -34,14 +34,14 @@ class Schedule < ApplicationRecord
 
   def self.schedules_within_range(start_date, end_date)
     schedule_map = {}
-  
+
     Schedule.all.each do |schedule|
       times = Fugit.parse(schedule.cron_syntax).within((start_date...end_date))
-      
+
       times.each do |time|
         date = time.to_t.to_date
         time_str = time.strftime('%H%M').to_i
-        
+
         schedule_map[date] ||= {}
         schedule_map[date][time_str] ||= []
         schedule_map[date][time_str] << schedule
@@ -57,9 +57,9 @@ class Schedule < ApplicationRecord
   end
 
   def scheduled_resource_present
-    if pipeline.blank? && automation_template.blank?
-      errors.add(:base, 'Either a pipeline or an automation template must be associated with this schedule')
-    end
+    return unless pipeline.blank? && automation_template.blank?
+
+    errors.add(:base, 'Either a pipeline or an automation template must be associated with this schedule')
   end
 
   def create_sidekiq_cron_job
