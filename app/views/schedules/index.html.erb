@@ -15,62 +15,75 @@
 <% end %>
 
 <% @schedules.each do |date, times| %>
-  <div class="card mb-3">
+
+  <div class="card mb-3 expander">
     <div class="card-body">
+      <div class='float-end'>
+        <span class="expander__button">
+          Expand <i class="bi bi-chevron-down"></i>
+        </span>
+
+        <span class="expander__button expander__button--collapse">
+          Collapse <i class="bi bi-chevron-up"></i>
+        </span>
+      </div>
+
       <h2 class="card-title"><%= date.strftime('%A %B %-d %Y') %></h2>
-      <h3 class="card-subtitle">
+      <h3 class="card-subtitle mb-2">
         <%= times.values.flatten.count %> scheduled processes
+      </h3>
 
+      <h3 class="card-subtitle">
         <% if times.values.flatten.map(&:pipeline_jobs).flatten.any? %>
-          <div class='float-end'>
+          <% pipeline_jobs = times.values.flatten.filter_map { |process| process.pipeline_jobs.last } %>
 
-            <% pipeline_jobs = times.values.flatten.filter_map { |process| process.pipeline_jobs.last } %>
-
-            <% if pipeline_jobs.present? && pipeline_jobs.all?(&:harvest_reports) %>
-              <% total_duration = pipeline_jobs.flat_map(&:harvest_reports).sum(&:duration_seconds) %>
-              <%= ActiveSupport::Duration.build(total_duration).inspect %>
-            <% end %>
-          </div>
+          <% if pipeline_jobs.present? && pipeline_jobs.all?(&:harvest_reports) %>
+            <% total_duration = pipeline_jobs.flat_map(&:harvest_reports).sum(&:duration_seconds) %>
+            <%= ActiveSupport::Duration.build(total_duration).inspect %>
+          <% end %>
         <% end %>
       </h3>
 
-      <% times.values.flatten.each do |process| %>
-        <div class='card my-3'>
-          <div class='card-body'>
+      <div class='expander__content'>
+        <% times.values.flatten.each do |process| %>
+          <div class='card my-3'>
+            <div class='card-body'>
 
-            <div class='float-start'>
-              <% if process.pipeline.present? %>
-                <strong><%= link_to process.pipeline.name, pipeline_path(process.pipeline) %></strong>
-              <% else %>
-                <strong><%= link_to process.automation_template.name, automation_template_path(process.automation_template) %></strong>
-              <% end %>
-              <p class='m-0'>Runs <%= process.frequency %> at <%= process.time %></p>
+              <div class='float-start'>
+                <% if process.pipeline.present? %>
+                  <strong><%= link_to process.pipeline.name, pipeline_path(process.pipeline) %></strong>
+                <% else %>
+                  <strong><%= link_to process.automation_template.name, automation_template_path(process.automation_template) %></strong>
+                <% end %>
+                <p class='m-0'>Runs <%= process.frequency %> at <%= process.time %></p>
 
-              <% if process.pipeline_jobs.any? %>
-                <p class='m-0'>Last duration:
-                  <%= ActiveSupport::Duration.build(process.pipeline_jobs.last.harvest_reports.map(&:duration_seconds).sum).inspect %>
-                </p>
-              <% end %>
-            </div>
+                <% if process.pipeline_jobs.any? %>
+                  <p class='m-0'>Last duration:
+                    <%= ActiveSupport::Duration.build(process.pipeline_jobs.last.harvest_reports.map(&:duration_seconds).sum).inspect %>
+                  </p>
+                <% end %>
+              </div>
 
-            <div class='float-end'>
-              <ul class='list-inline'>
-                <li class='list-inline-item'>
-                  <%= link_to edit_schedule_path(process), class: 'btn btn-link p-0' do %>
-                    Edit <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                  <% end %>
-                </li>
+              <div class='float-end'>
+                <ul class='list-inline'>
+                  <li class='list-inline-item'>
+                    <%= link_to edit_schedule_path(process), class: 'btn btn-link p-0' do %>
+                      Edit <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                    <% end %>
+                  </li>
 
-                <li class='list-inline-item'>
-                  <%= button_to schedule_path(process), method: :delete, class: "btn btn-link text-danger p-0" do %>
-                    Delete <i class="bi bi-trash" aria-hidden="true"></i>
-                  <% end %>
-                </li>
-              </ul>
+                  <li class='list-inline-item'>
+                    <%= button_to schedule_path(process), method: :delete, class: "btn btn-link text-danger p-0" do %>
+                      Delete <i class="bi bi-trash" aria-hidden="true"></i>
+                    <% end %>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
     </div>
   </div>
+
 <% end %>

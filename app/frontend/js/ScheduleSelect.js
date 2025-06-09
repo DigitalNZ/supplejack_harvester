@@ -1,6 +1,14 @@
 const schedulableSelect = document.getElementById("js-schedulable-select");
 
 if (schedulableSelect) {
+
+  document.querySelectorAll('.accordion-button').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  });
+  
+
   const pipelineInput = document.getElementById("js-pipeline-id");
   const automationInput = document.getElementById("js-automation-template-id");
   const harvestDefinitionsContainer = document.getElementById("js-blocks-to-run");
