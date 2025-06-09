@@ -65,13 +65,14 @@
                 <% if process.pipeline.present? %>
                   <strong><%= link_to process.pipeline.name, pipeline_path(process.pipeline) %></strong>
                 <% else %>
-                  <strong><%= link_to process.automation_template.name, automation_template_path(process.automation_template) %></strong>
+                  <strong><%= link_to process.automation_template.name,
+                                      automation_template_path(process.automation_template) %></strong>
                 <% end %>
                 <p class='m-0'>Runs <%= process.frequency %> at <%= process.time %></p>
 
                 <% if process.pipeline_jobs.any? %>
                   <p class='m-0'>Last duration:
-                    <%= ActiveSupport::Duration.build(process.pipeline_jobs.last.harvest_reports.map(&:duration_seconds).sum).inspect %>
+                    <%= ActiveSupport::Duration.build(process.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds)).inspect %>
                   </p>
                 <% end %>
 
@@ -91,7 +92,7 @@
                   </li>
 
                   <li class='list-inline-item'>
-                    <%= button_to schedule_path(process), method: :delete, class: "btn btn-link text-danger p-0" do %>
+                    <%= button_to schedule_path(process), method: :delete, class: 'btn btn-link text-danger p-0' do %>
                       Delete <i class="bi bi-trash" aria-hidden="true"></i>
                     <% end %>
                   </li>

@@ -20,7 +20,8 @@
     </li>
 
     <li class='nav-item'>
-      <%= link_to "Schedules (#{@pipeline.schedules.count})", pipeline_schedules_path(@pipeline), class: 'nav-link active' %>
+      <%= link_to "Schedules (#{@pipeline.schedules.count})", pipeline_schedules_path(@pipeline),
+                  class: 'nav-link active' %>
     </li>
 
     <li class='nav-item'>
@@ -42,7 +43,7 @@
 
         <% if schedule.pipeline_jobs.any? %>
           <p class='m-0'>Last duration:
-            <%= ActiveSupport::Duration.build(schedule.pipeline_jobs.last.harvest_reports.map(&:duration_seconds).sum).inspect %>
+            <%= ActiveSupport::Duration.build(schedule.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds)).inspect %>
           </p>
         <% end %>
       </div>
@@ -56,7 +57,7 @@
           </li>
 
           <li class='list-inline-item'>
-            <%= button_to schedule_path(schedule), method: :delete, class: "btn btn-link text-danger p-0" do %>
+            <%= button_to schedule_path(schedule), method: :delete, class: 'btn btn-link text-danger p-0' do %>
               Delete <i class="bi bi-trash" aria-hidden="true"></i>
             <% end %>
           </li>
