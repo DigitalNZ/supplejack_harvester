@@ -9,8 +9,6 @@ class SchedulesController < ApplicationController
     @schedules = Schedule.schedules_within_range(Time.zone.now.to_date, 30.days.from_now.to_date)
   end
 
-  def show; end
-
   def new
     @schedule = Schedule.new
     @pipeline = Pipeline.find(params[:pipeline_id]) if params[:pipeline_id].present?

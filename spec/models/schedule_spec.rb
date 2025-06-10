@@ -89,7 +89,7 @@ RSpec.describe Schedule, type: :model do
   end
 
   describe '#schedules_within_range' do
-    let!(:schedule) { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:) }
+    let!(:schedule)   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:) }
     let!(:schedule_2) { create(:schedule, frequency: 0, time: '10:30', pipeline:, destination:, harvest_definitions_to_run:) }
     let!(:schedule_3) { create(:schedule, frequency: 1, day: 1, time: '9:00', pipeline:, destination:, harvest_definitions_to_run:) }
     let!(:schedule_4) { create(:schedule, frequency: 2, bi_monthly_day_one: 2, bi_monthly_day_two: 14, time: '9:00 PM', pipeline:, destination:, harvest_definitions_to_run:) }
@@ -98,131 +98,132 @@ RSpec.describe Schedule, type: :model do
       schedule_map = Schedule.schedules_within_range('01 06 2025', '30 06 2025')
 
       result = {
-        1062025 => {
+        Date.strptime('01062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule],
         },
-        2062025 => {
-          900 => [schedule_3],
-          1030 => [schedule_2],
-          1230 => [schedule],
-          2100 => [schedule_4]
-        },
-        3062025 => { 
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        4062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        5062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        6062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        7062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        8062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        9062025 => {
-          900 => [schedule_3],
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        10062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        11062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        12062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        13062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        14062025 => {
+        Date.strptime('02062025', '%d%m%Y') => {
+          900 =>  [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule],
           2100 => [schedule_4]
         },
-        15062025 => {
+        Date.strptime('03062025', '%d%m%Y') => { 
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        16062025 => {
+        Date.strptime('04062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('05062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('06062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('07062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('08062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('09062025', '%d%m%Y') => {
           900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        17062025 => {
+        Date.strptime('10062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        18062025 => {
+        Date.strptime('11062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        19062025 => {
+        Date.strptime('12062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        20062025 => {
+        Date.strptime('13062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        21062025 => {
+        Date.strptime('14062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule],
+          2100 => [schedule_4]
+        },
+        Date.strptime('15062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        22062025 => {
-          1030 => [schedule_2],
-          1230 => [schedule]
-        },
-        23062025 => {
+        Date.strptime('16062025', '%d%m%Y') => {
           900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        24062025 => {
+        Date.strptime('17062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        25062025 => {
+        Date.strptime('18062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        26062025 => {
+        Date.strptime('19062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        27062025 => {
+        Date.strptime('20062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        28062025 => {
+        Date.strptime('21062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        29062025 => {
+        Date.strptime('22062025', '%d%m%Y') => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        30062025 => {
-          900 => [schedule_3],
-          1030 => [schedule_2]
+        Date.strptime('23062025', '%d%m%Y') => {
+          900 =>  [schedule_3],
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('24062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('25062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('26062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('27062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('28062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('29062025', '%d%m%Y') => {
+          1030 => [schedule_2],
+          1230 => [schedule]
+        },
+        Date.strptime('30062025', '%d%m%Y') => {
+          900 =>  [schedule_3],
+          1030 => [schedule_2],
+          1230 => [schedule]
         }
       }
 

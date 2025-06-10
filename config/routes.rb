@@ -54,7 +54,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :schedules
+  resources :schedules, except: %i[show]
 
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
