@@ -26,7 +26,11 @@ class Schedule < ApplicationRecord
   def time_format
     return if time.blank?
 
-    Time.parse(time) rescue errors.add(:time, 'must be a valid time')
+    begin
+      Time.zone.parse(time)
+    rescue StandardError
+      errors.add(:time, 'must be a valid time')
+    end
   end
 
   after_create do
@@ -42,7 +46,7 @@ class Schedule < ApplicationRecord
   def self.schedules_within_range(start_date, end_date)
     schedule_map = {}
 
-    Schedule.all.each do |schedule|
+    Schedule.find_each do |schedule|
       times = Fugit.parse(schedule.cron_syntax).within((start_date...end_date))
 
       times.each do |time|

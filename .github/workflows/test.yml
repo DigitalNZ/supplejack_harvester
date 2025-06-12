@@ -85,6 +85,8 @@ jobs:
 
   rspec:
     runs-on: ubuntu-latest
+    env:
+      TZ: 'Pacific/Auckland'
 
     services:
       mysql:

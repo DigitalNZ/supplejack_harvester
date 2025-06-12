@@ -21,7 +21,7 @@ class ScheduleWorker
       PipelineWorker.perform_async(job.id)
     end
 
-    return unless schedule.automation_template.present?
+    return if schedule.automation_template.blank?
 
     AutomationTemplate.find(schedule.automation_template_id).run_automation
   end
