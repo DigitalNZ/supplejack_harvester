@@ -98,129 +98,129 @@ RSpec.describe Schedule, type: :model do
       schedule_map = Schedule.schedules_within_range('01 06 2025', '30 06 2025')
 
       result = {
-        Date.strptime('01062025', '%d%m%Y') => {
+        Time.zone.strptime('01062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule],
         },
-        Date.strptime('02062025', '%d%m%Y') => {
+        Time.zone.strptime('02062025', '%d%m%Y').to_date => {
           900 =>  [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule],
           2100 => [schedule_4]
         },
-        Date.strptime('03062025', '%d%m%Y') => { 
+        Time.zone.strptime('03062025', '%d%m%Y').to_date => { 
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('04062025', '%d%m%Y') => {
+        Time.zone.strptime('04062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('05062025', '%d%m%Y') => {
+        Time.zone.strptime('05062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('06062025', '%d%m%Y') => {
+        Time.zone.strptime('06062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('07062025', '%d%m%Y') => {
+        Time.zone.strptime('07062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('08062025', '%d%m%Y') => {
+        Time.zone.strptime('08062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('09062025', '%d%m%Y') => {
+        Time.zone.strptime('09062025', '%d%m%Y').to_date => {
           900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('10062025', '%d%m%Y') => {
+        Time.zone.strptime('10062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('11062025', '%d%m%Y') => {
+        Time.zone.strptime('11062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('12062025', '%d%m%Y') => {
+        Time.zone.strptime('12062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('13062025', '%d%m%Y') => {
+        Time.zone.strptime('13062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('14062025', '%d%m%Y') => {
+        Time.zone.strptime('14062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule],
           2100 => [schedule_4]
         },
-        Date.strptime('15062025', '%d%m%Y') => {
+        Time.zone.strptime('15062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('16062025', '%d%m%Y') => {
+        Time.zone.strptime('16062025', '%d%m%Y').to_date => {
           900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('17062025', '%d%m%Y') => {
+        Time.zone.strptime('17062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('18062025', '%d%m%Y') => {
+        Time.zone.strptime('18062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('19062025', '%d%m%Y') => {
+        Time.zone.strptime('19062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('20062025', '%d%m%Y') => {
+        Time.zone.strptime('20062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('21062025', '%d%m%Y') => {
+        Time.zone.strptime('21062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('22062025', '%d%m%Y') => {
+        Time.zone.strptime('22062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('23062025', '%d%m%Y') => {
+        Time.zone.strptime('23062025', '%d%m%Y').to_date => {
           900 =>  [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('24062025', '%d%m%Y') => {
+        Time.zone.strptime('24062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('25062025', '%d%m%Y') => {
+        Time.zone.strptime('25062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('26062025', '%d%m%Y') => {
+        Time.zone.strptime('26062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('27062025', '%d%m%Y') => {
+        Time.zone.strptime('27062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('28062025', '%d%m%Y') => {
+        Time.zone.strptime('28062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('29062025', '%d%m%Y') => {
+        Time.zone.strptime('29062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Date.strptime('30062025', '%d%m%Y') => {
+        Time.zone.strptime('30062025', '%d%m%Y').to_date => {
           900 =>  [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
@@ -271,6 +271,32 @@ RSpec.describe Schedule, type: :model do
       schedule = build(:schedule, frequency: 0, time: '12:30', destination:, harvest_definitions_to_run:)
 
       expect(schedule.valid?).to be false
+    end
+
+    context 'it validates time' do
+      it 'rejects non-time strings' do
+        schedule = build(:schedule, frequency: 0, time: 'hello', destination:, harvest_definitions_to_run:)
+        expect(schedule.valid?).to be false
+        expect(schedule.errors[:time]).to include('must be a valid time')
+      end
+
+      it 'rejects invalid hours' do
+        schedule = build(:schedule, frequency: 0, time: '25:00', destination:, harvest_definitions_to_run:)
+        expect(schedule.valid?).to be false
+        expect(schedule.errors[:time]).to include('must be a valid time')
+      end
+
+      it 'rejects invalid minutes' do
+        schedule = build(:schedule, frequency: 0, time: '14:61', destination:, harvest_definitions_to_run:)
+        expect(schedule.valid?).to be false
+        expect(schedule.errors[:time]).to include('must be a valid time')
+      end
+
+      it 'rejects malformed time strings' do
+        schedule = build(:schedule, frequency: 0, time: '2:00:00:00 PM', destination:, harvest_definitions_to_run:)
+        expect(schedule.valid?).to be false
+        expect(schedule.errors[:time]).to include('must be a valid time')
+      end
     end
   end
 
