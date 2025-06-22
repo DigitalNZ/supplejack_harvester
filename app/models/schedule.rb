@@ -23,12 +23,16 @@ class Schedule < ApplicationRecord
     validates :bi_monthly_day_two
   end
 
+  validates :day_of_the_month, presence: true, if: -> { monthly? }
+
+  validate :scheduled_resource_present
+
   def time_format
     return if time.blank?
 
     begin
       parsed_time = Time.zone.parse(time)
-      errors.add(:time, 'must be a valid time') unless parsed_time.present?
+      errors.add(:time, 'must be a valid time') if parsed_time.blank?
     rescue StandardError
       errors.add(:time, 'must be a valid time')
     end
@@ -36,13 +40,9 @@ class Schedule < ApplicationRecord
 
   after_create do
     subject = pipeline.presence || automation_template
-    self.name = "#{subject.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{time.parameterize(separator: '_')}__#{SecureRandom.hex}"
+    self.name = schedule_name(subject)
     save!
   end
-
-  validates :day_of_the_month, presence: true, if: -> { monthly? }
-
-  validate :scheduled_resource_present
 
   def self.schedules_within_range(start_date, end_date)
     schedule_map = {}
@@ -75,12 +75,7 @@ class Schedule < ApplicationRecord
   end
 
   def create_sidekiq_cron_job
-    Sidekiq::Cron::Job.create(
-      name:,
-      cron: cron_syntax,
-      class: 'ScheduleWorker',
-      args: id
-    )
+    Sidekiq::Cron::Job.create(name:, cron: cron_syntax, class: 'ScheduleWorker', args: id)
   end
 
   def delete_sidekiq_cron_job(sidekiq_cron_name = name)
@@ -105,6 +100,10 @@ class Schedule < ApplicationRecord
   end
 
   private
+
+  def schedule_name(subject)
+    "#{subject.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{time.parameterize(separator: '_')}__#{SecureRandom.hex}"
+  end
 
   def hour
     hour_and_minutes.first
