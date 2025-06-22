@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Schedule < ApplicationRecord
+  include CronUtilities
+
   belongs_to :pipeline, optional: true
   belongs_to :automation_template, optional: true
   belongs_to :destination
@@ -45,27 +47,26 @@ class Schedule < ApplicationRecord
   end
 
   def self.schedules_within_range(start_date, end_date)
-    schedule_map = {}
-
-    Schedule.find_each do |schedule|
-      times = Fugit.parse(schedule.cron_syntax).within((start_date...end_date))
-
-      times.each do |time|
-        date = time.to_t.to_date
-        time_str = time.strftime('%H%M').to_i
-
-        schedule_map[date] ||= {}
-        schedule_map[date][time_str] ||= []
-        schedule_map[date][time_str] << schedule
-      end
+    schedule_map = Schedule.all.each_with_object({}) do |schedule, hash|
+      add_schedule_times_to_schedule_map(schedule, hash, start_date, end_date)
     end
 
-    schedule_map = schedule_map.sort.to_h
-    schedule_map.transform_values! do |times|
+    schedule_map.sort.to_h.transform_values! do |times|
       times.sort.to_h
     end
+  end
 
-    schedule_map
+  def self.add_schedule_times_to_schedule_map(schedule, schedule_map, start_date, end_date)
+    times = Fugit.parse(schedule.cron_syntax).within((start_date...end_date))
+
+    times.each do |time|
+      date = time.to_t.to_date
+      time_str = time.strftime('%H%M').to_i
+
+      schedule_map[date] ||= {}
+      schedule_map[date][time_str] ||= []
+      schedule_map[date][time_str] << schedule
+    end
   end
 
   def scheduled_resource_present
@@ -74,66 +75,14 @@ class Schedule < ApplicationRecord
     errors.add(:base, 'Either a pipeline or an automation template must be associated with this schedule')
   end
 
-  def create_sidekiq_cron_job
-    Sidekiq::Cron::Job.create(name:, cron: cron_syntax, class: 'ScheduleWorker', args: id)
-  end
-
-  def delete_sidekiq_cron_job(sidekiq_cron_name = name)
-    Sidekiq::Cron::Job.find(sidekiq_cron_name)&.destroy
-  end
-
-  def refresh_sidekiq_cron_job
-    delete_sidekiq_cron_job(name_previously_was)
-    create_sidekiq_cron_job
-  end
-
-  def cron_syntax
-    "#{minute} #{hour} #{month_day} #{month} #{day_of_the_week}"
-  end
-
-  def next_run_time
-    Fugit::Cron.parse(cron_syntax).next_time
-  end
-
-  def last_run_time
-    pipeline_jobs.last.created_at
-  end
-
   private
 
   def schedule_name(subject)
-    "#{subject.name.parameterize(separator: '_')}__#{destination.name.parameterize(separator: '_')}__#{time.parameterize(separator: '_')}__#{SecureRandom.hex}"
-  end
+    name = subject.name.parameterize(separator: '_')
+    destination_name = destination.name.parameterize(separator: '_')
+    time_name = time.parameterize(separator: '_')
 
-  def hour
-    hour_and_minutes.first
-  end
-
-  def minute
-    return 0 if hour_and_minutes.count == 1
-
-    hour_and_minutes.last
-  end
-
-  def day_of_the_week
-    return '*' unless weekly?
-
-    Schedule.days[day]
-  end
-
-  def month_day
-    return '*' unless monthly? || bi_monthly?
-    return "#{bi_monthly_day_one},#{bi_monthly_day_two}" if bi_monthly?
-
-    day_of_the_month
-  end
-
-  def month
-    '*'
-  end
-
-  def hour_and_minutes
-    sanitized_time.split(':')
+    "#{name}__#{destination_name}__#{time_name}__#{SecureRandom.hex}"
   end
 
   # This is for converting 12 hour times into 24 hour times
