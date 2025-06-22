@@ -72,13 +72,16 @@
 
                 <% if process.pipeline_jobs.any? %>
                   <p class='m-0'>Last duration:
-                    <%= ActiveSupport::Duration.build(process.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds)).inspect %>
+                    <% duration = process.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds) %>
+                    <%= ActiveSupport::Duration.build(duration).inspect %>
                   </p>
                 <% end %>
 
                 <% if process.automation_template.present? && process.automation_template.automations.any? %>
                   <p class='m-0'>Last duration:
-                    <%= ActiveSupport::Duration.build(AutomationSummary.new(process.automation_template.automations.last).total_duration.ceil).inspect %>
+                    <% automation_summary = AutomationSummary.new(process.automation_template.automations.last) %>
+                    <% duration = automation_summary.total_duration.ceil %>
+                    <%= ActiveSupport::Duration.build(duration).inspect %>
                   </p>
                 <% end %>
               </div>

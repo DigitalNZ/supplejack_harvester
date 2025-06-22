@@ -43,7 +43,8 @@
 
         <% if schedule.pipeline_jobs.any? %>
           <p class='m-0'>Last duration:
-            <%= ActiveSupport::Duration.build(schedule.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds)).inspect %>
+            <% duration = schedule.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds) %>
+            <%= ActiveSupport::Duration.build(duration).inspect %>
           </p>
         <% end %>
       </div>
