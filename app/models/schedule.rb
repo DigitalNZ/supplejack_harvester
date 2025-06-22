@@ -27,7 +27,8 @@ class Schedule < ApplicationRecord
     return if time.blank?
 
     begin
-      Time.zone.parse(time)
+      parsed_time = Time.zone.parse(time)
+      errors.add(:time, 'must be a valid time') unless parsed_time.present?
     rescue StandardError
       errors.add(:time, 'must be a valid time')
     end

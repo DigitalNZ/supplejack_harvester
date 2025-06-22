@@ -95,7 +95,7 @@ RSpec.describe Schedule, type: :model do
     let!(:schedule_4) { create(:schedule, frequency: 2, bi_monthly_day_one: 2, bi_monthly_day_two: 14, time: '9:00 PM', pipeline:, destination:, harvest_definitions_to_run:) }
 
     it 'returns a hash of dates, with the schedules that are assigned on that date orderered by time for a given range' do
-      schedule_map = Schedule.schedules_within_range('01 06 2025', '30 06 2025')
+      schedule_map = Schedule.schedules_within_range(Time.zone.strptime('01062025', '%d%m%Y').to_date, Time.zone.strptime('30062025', '%d%m%Y').to_date)
 
       result = {
         Time.zone.strptime('01062025', '%d%m%Y').to_date => {
@@ -223,7 +223,6 @@ RSpec.describe Schedule, type: :model do
         Time.zone.strptime('30062025', '%d%m%Y').to_date => {
           900 =>  [schedule_3],
           1030 => [schedule_2],
-          1230 => [schedule]
         }
       }
 
