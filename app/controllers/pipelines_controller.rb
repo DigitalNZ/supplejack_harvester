@@ -3,7 +3,7 @@
 class PipelinesController < ApplicationController
   include LastEditedBy
 
-  before_action :find_pipeline, only: %w[destroy clone]
+  before_action :find_pipeline, only: %w[destroy clone harvest_definitions]
   before_action :assign_show_pipeline, only: %w[show update]
   before_action :assign_show_variables, only: %w[show update]
   before_action :assign_destinations, only: %w[show update]
@@ -68,6 +68,11 @@ class PipelinesController < ApplicationController
       flash.alert = t('.failure')
       redirect_to pipeline_path(@pipeline)
     end
+  end
+
+  def harvest_definitions
+    @harvest_definitions = @pipeline.harvest_definitions
+    render json: @harvest_definitions.map(&:to_h)
   end
 
   private

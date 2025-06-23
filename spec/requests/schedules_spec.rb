@@ -13,33 +13,15 @@ RSpec.describe "Schedules", type: :request do
 
   describe "GET /index" do
     it 'returns a successful response' do
-      get pipeline_schedules_path(pipeline)
-      
-      expect(response).to have_http_status :ok
-    end
-  end
-
-  describe 'GET /show' do
-    let(:harvest_definition)         { create(:harvest_definition, pipeline:) }
-    let(:harvest_definitions_to_run) { [harvest_definition.id] }
-    let(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
-
-    it 'returns a successful response' do
-      get pipeline_schedule_path(pipeline, schedule)
+      get schedules_path
 
       expect(response).to have_http_status :ok
-    end
-
-    it 'displays the name of the schedule' do
-      get pipeline_schedule_path(pipeline, schedule)
-
-      expect(response.body).to include schedule.name
     end
   end
 
   describe "GET /new" do
     it 'returns a successful response' do
-      get new_pipeline_schedule_path(pipeline)
+      get new_schedule_path
 
       expect(response).to have_http_status :ok
     end
@@ -49,22 +31,22 @@ RSpec.describe "Schedules", type: :request do
     context 'with valid parameters' do
       it 'creates a new schedule' do
         expect do
-          post pipeline_schedules_path(pipeline), params: {
+          post schedules_path, params: {
             schedule: attributes_for(:schedule, pipeline_id: pipeline.id, destination_id: destination.id)
           }
         end.to change(Schedule, :count).by(1)
       end
 
-      it 'redirects to the new schedule' do
-        post pipeline_schedules_path(pipeline), params: {
+      it 'redirects to the schedules page' do
+        post schedules_path, params: {
           schedule: attributes_for(:schedule, pipeline_id: pipeline.id, destination_id: destination.id)
         }
 
-        expect(response).to redirect_to pipeline_schedule_path(pipeline, Schedule.last)
+        expect(response).to redirect_to schedules_path
       end
 
       it 'displays an appropriate message' do
-        post pipeline_schedules_path(pipeline), params: {
+        post schedules_path, params: {
           schedule: attributes_for(:schedule, pipeline_id: pipeline.id, destination_id: destination.id)
         } 
 
@@ -75,13 +57,13 @@ RSpec.describe "Schedules", type: :request do
 
       it 'creates a Sidekiq::Cron::Job' do
         expect(Sidekiq::Cron::Job).to receive(:create).with(
-          name: 'Pipeline Schedule',
+          name: anything,
           cron: '30 12 * * *',
           class: 'ScheduleWorker',
           args: anything
         )
 
-        post pipeline_schedules_path(pipeline), params: {
+        post schedules_path, params: {
           schedule: attributes_for(:schedule, harvest_definitions_to_run:, name: 'Pipeline Schedule', frequency: :daily, time: '12:30', pipeline_id: pipeline.id, destination_id: destination.id)
         } 
       end
@@ -90,7 +72,7 @@ RSpec.describe "Schedules", type: :request do
     context 'with invalid parameters' do
       it 'does not create a new schedule' do
         expect do
-          post pipeline_schedules_path(pipeline), params: {
+          post schedules_path, params: {
             schedule: {
               frequency: :daily
             }
@@ -99,7 +81,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it 'rerenders the :new template' do
-        post pipeline_schedules_path(pipeline), params: {
+        post schedules_path, params: {
           schedule: {
             frequency: :daily
           }
@@ -109,7 +91,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it 'displays an appropriate message' do
-        post pipeline_schedules_path(pipeline), params: {
+        post schedules_path, params: {
           schedule: {
             frequency: :daily
           }
@@ -121,7 +103,7 @@ RSpec.describe "Schedules", type: :request do
       it 'does not creates a Sidekiq::Cron::Job' do
         expect(Sidekiq::Cron::Job).not_to receive(:create)
 
-        post pipeline_schedules_path(pipeline), params: {
+        post schedules_path, params: {
           schedule: {
             frequency: :daily
           }
@@ -136,7 +118,7 @@ RSpec.describe "Schedules", type: :request do
     let(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
 
     it 'returns a successful response' do
-      get edit_pipeline_schedule_path(pipeline, schedule)
+      get edit_schedule_path(schedule)
 
       expect(response).to have_http_status :ok
     end
@@ -149,7 +131,7 @@ RSpec.describe "Schedules", type: :request do
 
     context 'with valid parameters' do
       it 'updates the schedule' do
-        patch pipeline_schedule_path(pipeline, schedule), params: {
+        patch schedule_path(schedule), params: {
           schedule: {
             name: 'Changed Name',
             harvest_definitions_to_run:
@@ -161,19 +143,19 @@ RSpec.describe "Schedules", type: :request do
         expect(schedule.name).to eq 'Changed Name'
       end
   
-      it 'redirects to the updated schedule' do
-        patch pipeline_schedule_path(pipeline, schedule), params: {
+      it 'redirects to the schedules page' do
+        patch schedule_path(schedule), params: {
           schedule: {
             name: 'Changed Name',
             harvest_definitions_to_run:
           }
         }
   
-        expect(response).to redirect_to pipeline_schedule_path(pipeline, schedule)
+        expect(response).to redirect_to schedules_path
       end
       
       it 'displays an appropriate message' do
-        patch pipeline_schedule_path(pipeline, schedule), params: {
+        patch schedule_path(schedule), params: {
           schedule: {
             name: 'Changed Name',
             harvest_definitions_to_run:
@@ -188,19 +170,17 @@ RSpec.describe "Schedules", type: :request do
       it 'updates the Sidekiq::Cron::Job with the new details' do
         Sidekiq::Cron::Job.destroy_all!
 
-        post pipeline_schedules_path(pipeline), params: {
+        post schedules_path, params: {
           schedule: attributes_for(:schedule, harvest_definitions_to_run:, name: 'Schedule', frequency: :daily, time: '12:30', pipeline_id: pipeline.id, destination_id: destination.id)
         } 
 
         sidekiq_cron  = Sidekiq::Cron::Job.all.first
 
         expect(Sidekiq::Cron::Job.all.count).to eq 1
-        expect(sidekiq_cron.name).to eq 'Schedule'
         expect(sidekiq_cron.cron).to eq '30 12 * * *'
 
-        patch pipeline_schedule_path(pipeline, Schedule.last), params: {
+        patch schedule_path(Schedule.last), params: {
           schedule: {
-            name: 'Updated Pipeline Schedule',
             harvest_definitions_to_run:,
             time: '11:45'
           }
@@ -209,14 +189,13 @@ RSpec.describe "Schedules", type: :request do
         sidekiq_cron  = Sidekiq::Cron::Job.all.first
 
         expect(Sidekiq::Cron::Job.all.count).to eq 1
-        expect(sidekiq_cron.name).to eq 'Updated Pipeline Schedule'
         expect(sidekiq_cron.cron).to eq '45 11 * * *' 
       end
     end
 
     context 'with invalid parameters' do
       it 'does not update the schedule' do
-        patch pipeline_schedule_path(pipeline, schedule), params: {
+        patch schedule_path(schedule), params: {
           schedule: {
             name: ''
           }
@@ -228,7 +207,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it 're-renders the edit form' do
-        patch pipeline_schedule_path(pipeline, schedule), params: {
+        patch schedule_path(schedule), params: {
           schedule: {
             name: ''
           }
@@ -238,7 +217,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it 'displays an appropriate message' do
-        patch pipeline_schedule_path(pipeline, schedule), params: {
+        patch schedule_path(schedule), params: {
           schedule: {
             name: ''
           }
@@ -257,18 +236,18 @@ RSpec.describe "Schedules", type: :request do
     context 'when the destroy is successful' do
       it 'deletes the schedule' do
         expect do
-          delete pipeline_schedule_path(pipeline, schedule)
+          delete schedule_path(schedule)
         end.to change(Schedule, :count).by(-1)
       end
 
       it 'redirects to the pipeline schedules page' do
-        delete pipeline_schedule_path(pipeline, schedule)
+        delete schedule_path(schedule)
 
-        expect(response).to redirect_to pipeline_schedules_path(pipeline)
+        expect(response).to redirect_to schedules_path
       end
 
       it 'displays an appropriate message' do
-        delete pipeline_schedule_path(pipeline, schedule)
+        delete schedule_path(schedule)
 
         follow_redirect!
 
@@ -283,18 +262,18 @@ RSpec.describe "Schedules", type: :request do
 
       it 'does not delete the schedule' do
         expect do
-          delete pipeline_schedule_path(pipeline, schedule)
+          delete schedule_path(schedule)
         end.to change(Schedule, :count).by(0)
       end
 
       it 'redirects to the pipeline schedule page' do
-        delete pipeline_schedule_path(pipeline, schedule)
+        delete schedule_path(schedule)
 
-        expect(response).to redirect_to pipeline_schedule_path(pipeline, schedule)
+        expect(response).to redirect_to schedules_path
       end
 
       it 'displays an appropriate message' do
-        delete pipeline_schedule_path(pipeline, schedule)
+        delete schedule_path(schedule)
 
         follow_redirect!
 

@@ -85,6 +85,21 @@
           display: request.path.match?(%r{^/destinations/\d+})
         ) %>
 
+      <%= breadcrumb_item(
+            text: 'Schedules',
+            path: begin
+              schedules_path
+            rescue StandardError
+              nil
+            end,
+            active: begin
+              current_page?(schedules_path)
+            rescue StandardError
+              false
+            end,
+            display: request.path.match?(%r{^/schedules})
+          ) %>
+
     <%= breadcrumb_item(
           text: @schedule&.name_in_database,
           path: '',
