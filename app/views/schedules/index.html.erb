@@ -35,6 +35,7 @@
 
       <h3 class="card-subtitle">
         <% total_duration = 0 %>
+        <% total_records_loaded = 0 %>
 
         <% processes = times.values.flatten %>
 
@@ -43,17 +44,22 @@
 
           <% if pipeline_jobs.present? && pipeline_jobs.all?(&:harvest_reports) %>
             <% total_duration += pipeline_jobs.flat_map(&:harvest_reports).sum(&:duration_seconds) %>
+            <% total_records_loaded += pipeline_jobs.flat_map(&:harvest_reports).sum(&:records_loaded) %>
           <% end %>
         <% end %>
 
         <% if processes.flat_map(&:automation_template).any? %>
           <% automation_templates = processes.filter_map(&:automation_template) %>
           <% automation_templates.each do |automation_template| %>
-            <% total_duration += AutomationSummary.new(automation_template.automations.last).total_duration.ceil %>
+            <% automation_summary = AutomationSummary.new(automation_template.automations.last) %>
+            <% total_duration += automation_summary.total_duration.ceil %>
+            <% total_records_loaded += automation_summary.stats[:total_metrics][:records_loaded] %>
           <% end %>
         <% end %>
 
         <%= ActiveSupport::Duration.build(total_duration).inspect %>
+        <br>
+        <%= total_records_loaded %> records
       </h3>
 
       <div class='expander__content'>
@@ -75,13 +81,23 @@
                     <% duration = process.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds) %>
                     <%= ActiveSupport::Duration.build(duration).inspect %>
                   </p>
+
+                  <p class='m-0'>Records:
+                    <% records_loaded = process.pipeline_jobs.last.harvest_reports.sum(&:records_loaded) %>
+                    <%= records_loaded %>
+                  </p>
                 <% end %>
 
                 <% if process.automation_template.present? && process.automation_template.automations.any? %>
+                  <% automation_summary = AutomationSummary.new(process.automation_template.automations.last) %>
+
                   <p class='m-0'>Last duration:
-                    <% automation_summary = AutomationSummary.new(process.automation_template.automations.last) %>
                     <% duration = automation_summary.total_duration.ceil %>
                     <%= ActiveSupport::Duration.build(duration).inspect %>
+                  </p>
+
+                  <p class='m-0'>Records:
+                    <%= automation_summary.stats[:total_metrics][:records_loaded] %>
                   </p>
                 <% end %>
               </div>

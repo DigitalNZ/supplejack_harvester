@@ -11,7 +11,6 @@ class SchedulesController < ApplicationController
 
   def new
     @schedule = Schedule.new
-    @pipeline = Pipeline.find(params[:pipeline_id]) if params[:pipeline_id].present?
   end
 
   def edit; end
@@ -73,7 +72,7 @@ class SchedulesController < ApplicationController
     params[:schedule][:harvest_definitions_to_run] = [] unless params[:schedule].key?(:harvest_definitions_to_run)
 
     params.require(:schedule).permit(:frequency, :time, :day, :day_of_the_month, :bi_monthly_day_one,
-                                     :bi_monthly_day_two, :name, :delete_previous_records,
-                                     :pipeline_id, :destination_id, :automation_template_id, harvest_definitions_to_run: [])
+                                     :bi_monthly_day_two, :name, :delete_previous_records, :pipeline_id,
+                                     :destination_id, :automation_template_id, harvest_definitions_to_run: [])
   end
 end
