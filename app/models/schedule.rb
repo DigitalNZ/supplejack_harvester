@@ -1,21 +1,24 @@
 # frozen_string_literal: true
 
 class Schedule < ApplicationRecord
-  belongs_to :pipeline
+  include CronUtilities
+
+  belongs_to :pipeline, optional: true
+  belongs_to :automation_template, optional: true
   belongs_to :destination
   has_many   :pipeline_jobs, dependent: :nullify
 
   serialize :harvest_definitions_to_run, type: Array
 
-  validates :name,                       presence: true, uniqueness: true
   validates :frequency,                  presence: true
   validates :time,                       presence: true
-  validates :harvest_definitions_to_run, presence: true
+  validate :time_format
 
   enum :frequency, { daily: 0, weekly: 1, bi_monthly: 2, monthly: 3 }
   enum :day,       { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 }, prefix: :on
 
   validates :day, presence: true, if: -> { weekly? }
+  validates :harvest_definitions_to_run, presence: true, if: -> { pipeline.present? }
 
   with_options presence: true, if: :bi_monthly? do
     validates :bi_monthly_day_one
@@ -24,67 +27,62 @@ class Schedule < ApplicationRecord
 
   validates :day_of_the_month, presence: true, if: -> { monthly? }
 
-  def create_sidekiq_cron_job
-    Sidekiq::Cron::Job.create(
-      name:,
-      cron: cron_syntax,
-      class: 'ScheduleWorker',
-      args: id
-    )
+  validate :scheduled_resource_present
+
+  def time_format
+    return if time.blank?
+
+    begin
+      parsed_time = Time.zone.parse(time)
+      errors.add(:time, 'must be a valid time') if parsed_time.blank?
+    rescue StandardError
+      errors.add(:time, 'must be a valid time')
+    end
   end
 
-  def delete_sidekiq_cron_job(sidekiq_cron_name = name)
-    Sidekiq::Cron::Job.find(sidekiq_cron_name)&.destroy
+  after_create do
+    subject = pipeline.presence || automation_template
+    self.name = schedule_name(subject)
+    save!
   end
 
-  def refresh_sidekiq_cron_job
-    delete_sidekiq_cron_job(name_previously_was)
-    create_sidekiq_cron_job
+  def self.schedules_within_range(start_date, end_date)
+    schedule_map = Schedule.all.each_with_object({}) do |schedule, hash|
+      add_schedule_times_to_schedule_map(schedule, hash, start_date, end_date)
+    end
+
+    schedule_map.sort.to_h.transform_values! do |times|
+      times.sort.to_h
+    end
   end
 
-  def cron_syntax
-    "#{minute} #{hour} #{month_day} #{month} #{day_of_the_week}"
+  def self.add_schedule_times_to_schedule_map(schedule, schedule_map, start_date, end_date)
+    times = Fugit.parse(schedule.cron_syntax).within((start_date...end_date))
+
+    times.each do |time|
+      date = time.to_t.to_date
+      time_str = time.strftime('%H%M').to_i
+
+      schedule_map[date] ||= {}
+      schedule_map[date][time_str] ||= []
+      schedule_map[date][time_str] << schedule
+    end
   end
 
-  def next_run_time
-    Fugit::Cron.parse(cron_syntax).next_time
-  end
+  def scheduled_resource_present
+    return unless pipeline.blank? && automation_template.blank?
 
-  def last_run_time
-    pipeline_jobs.last.created_at
+    errors.add(:base, 'Either a pipeline or an automation template must be associated with this schedule')
   end
 
   private
 
-  def hour
-    hour_and_minutes.first
-  end
+  def schedule_name(subject)
+    name = subject.name.parameterize(separator: '_')
+    destination_name = destination.name.parameterize(separator: '_')
+    time_name = time.parameterize(separator: '_')
 
-  def minute
-    return 0 if hour_and_minutes.count == 1
-
-    hour_and_minutes.last
-  end
-
-  def day_of_the_week
-    return '*' unless weekly?
-
-    Schedule.days[day]
-  end
-
-  def month_day
-    return '*' unless monthly? || bi_monthly?
-    return "#{bi_monthly_day_one}/#{bi_monthly_day_two}" if bi_monthly?
-
-    day_of_the_month
-  end
-
-  def month
-    '*'
-  end
-
-  def hour_and_minutes
-    sanitized_time.split(':')
+    "#{name}__#{destination_name}__#{time_name}__#{SecureRandom.hex}"
   end
 
   # This is for converting 12 hour times into 24 hour times

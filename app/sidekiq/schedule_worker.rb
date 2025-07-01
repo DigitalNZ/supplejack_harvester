@@ -7,7 +7,20 @@ class ScheduleWorker
   def perform(id)
     schedule = Schedule.find(id)
 
-    job = PipelineJob.create(
+    if schedule.pipeline.present?
+      job = create_pipeline_job(schedule)
+      PipelineWorker.perform_async(job.id)
+    end
+
+    return if schedule.automation_template.blank?
+
+    AutomationTemplate.find(schedule.automation_template_id).run_automation
+  end
+
+  private
+
+  def create_pipeline_job(schedule)
+    PipelineJob.create(
       pipeline_id: schedule.pipeline.id,
       harvest_definitions_to_run: schedule.harvest_definitions_to_run,
       destination_id: schedule.destination.id,
@@ -15,7 +28,5 @@ class ScheduleWorker
       page_type: :all_available_pages,
       schedule_id: id, delete_previous_records: schedule.delete_previous_records
     )
-
-    PipelineWorker.perform_async(job.id)
   end
 end

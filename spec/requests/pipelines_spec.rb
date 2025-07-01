@@ -5,6 +5,7 @@ require 'rails_helper'
 RSpec.describe 'Pipelines' do
   let(:user) { create(:user) }
   let!(:pipeline) { create(:pipeline, name: 'DigitalNZ Production') }
+  let!(:harvest_definition) { create(:harvest_definition, pipeline:) }
 
   before do
     sign_in(user)
@@ -170,6 +171,19 @@ RSpec.describe 'Pipelines' do
         follow_redirect!
         expect(response.body).to include 'There was an issue deleting your Pipeline'
       end
+    end
+  end
+
+  describe 'GET /harvest_definitions' do
+    it 'returns status 200' do
+      get harvest_definitions_pipeline_path(pipeline)
+      expect(response).to have_http_status :ok
+    end
+
+    it 'renders the harvest definitions for a pipeline as JSON' do
+      get harvest_definitions_pipeline_path(pipeline)
+
+      expect(response.body).to eq pipeline.harvest_definitions.map(&:to_h).to_json
     end
   end
 

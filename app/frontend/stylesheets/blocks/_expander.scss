@@ -1,0 +1,31 @@
+.expander {
+  &:hover {
+    cursor: pointer;
+  }
+
+  @include element('content') {
+    display: none;
+  }
+
+  @include element('button') {
+    color: $primary;
+
+    @include modifier('collapse') {
+      display: none;
+    }
+  }
+
+  &--active {
+    .expander__content {
+      display: block;
+    }
+
+    .expander__button {
+      display: none;
+    }
+
+    .expander__button--collapse {
+      display: block;
+    }
+  }
+}

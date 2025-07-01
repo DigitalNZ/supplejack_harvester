@@ -54,16 +54,21 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :schedules, except: %i[show]
+
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
+    get :harvest_definitions, on: :member
 
     resources :pipeline_jobs, only: %i[create show index] do
       post :cancel, on: :member
     end
-
-    resources :schedules
-
+  
     resources :automation_templates, only: [:index]
+
+    scope module: :pipelines do
+      resources :schedules
+    end
 
     resources :harvest_definitions, only: %i[create update destroy] do
       resources :extraction_definitions, only: %i[show create update destroy] do
