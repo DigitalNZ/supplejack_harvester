@@ -55,6 +55,7 @@
         <th scope="col">Records Rejected</th>
         <th scope="col">Records Deleted</th>
         <th scope="col">Job Priority</th>
+        <th scope="col">Last Updated</th>
         <th scope="col"></th>
       </tr>
     </thead>
@@ -103,6 +104,7 @@
                     <%= 'No priority' %>
                   <% end %>
                 </td>
+                <td><strong><%= [report.load_updated_time, report.extraction_updated_time, report.transformation_updated_time].compact.max %></strong></td>
                 <td>
                   <% if report.harvest_definition %>
                     <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
