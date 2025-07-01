@@ -42,6 +42,10 @@ class HarvestReport < ApplicationRecord
     load_end_time delete_start_time delete_updated_time delete_end_time
   ].freeze
 
+  def last_updated
+      [load_updated_time, extraction_updated_time, transformation_updated_time].compact.max
+  end
+
   def completed?
     extraction_completed? && transformation_completed? && load_completed? && delete_completed?
   end
