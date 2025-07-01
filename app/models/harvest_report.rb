@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class HarvestReport < ApplicationRecord
   scope :completed, lambda {
                       where(extraction_status: 'completed', transformation_status: 'completed',
@@ -43,7 +44,7 @@ class HarvestReport < ApplicationRecord
   ].freeze
 
   def last_updated
-      [load_updated_time, extraction_updated_time, transformation_updated_time].compact.max
+    [load_updated_time, extraction_updated_time, transformation_updated_time].compact.max
   end
 
   def completed?
@@ -134,3 +135,4 @@ class HarvestReport < ApplicationRecord
     @idle_offset
   end
 end
+# rubocop:enable Metrics/ClassLength
