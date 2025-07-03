@@ -244,6 +244,58 @@ RSpec.describe HarvestReport do
     end
   end
 
+  describe '#last_updated' do
+    let(:nil_report) { create(:harvest_report, pipeline_job:, harvest_job:) }
+    let(:in_progress_load_report) do
+      create(:harvest_report, pipeline_job:, harvest_job:,
+                              extraction_start_time: 20.minutes.ago,
+                              extraction_updated_time: 15.minutes.ago,
+                              transformation_start_time: 18.minutes.ago,
+                              transformation_updated_time: 16.minutes.ago,
+                              load_start_time: 14.minutes.ago,
+                              load_updated_time: 12.minutes.ago)
+    end
+
+    let(:in_progress_extract_report) do
+      create(:harvest_report, pipeline_job:, harvest_job:,
+                              extraction_start_time: 20.minutes.ago,
+                              extraction_updated_time: 8.minutes.ago,
+                              transformation_start_time: 18.minutes.ago,
+                              transformation_updated_time: 16.minutes.ago,
+                              load_start_time: 14.minutes.ago,
+                              load_updated_time: 12.minutes.ago)
+    end
+
+    let(:in_progress_trans_report) do
+      create(:harvest_report, pipeline_job:, harvest_job:,
+                              extraction_start_time: 20.minutes.ago,
+                              extraction_updated_time: 15.minutes.ago,
+                              transformation_start_time: 18.minutes.ago,
+                              transformation_updated_time: 4.minutes.ago,
+                              load_start_time: 14.minutes.ago,
+                              load_updated_time: 12.minutes.ago)
+    end    
+
+    it 'returns nil if there are no times' do
+      expect(nil_report.last_updated).to be_nil
+    end
+
+    it 'returns last updated time - load_updated_time' do
+      expect(in_progress_load_report.last_updated.hour).to eq 12.minutes.ago.hour
+      expect(in_progress_load_report.last_updated.min).to eq 12.minutes.ago.min
+    end
+
+    it 'returns last updated time - extraction_updated_time' do
+      expect(in_progress_extract_report.last_updated.hour).to eq 8.minutes.ago.hour
+      expect(in_progress_extract_report.last_updated.min).to eq 8.minutes.ago.min
+    end
+    
+    it 'returns last updated time - transformation_updated_time' do
+      expect(in_progress_trans_report.last_updated.hour).to eq 4.minutes.ago.hour
+      expect(in_progress_trans_report.last_updated.min).to eq 4.minutes.ago.min
+    end    
+  end  
+
   describe '#status' do
     let(:queued) do
       create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'queued', transformation_status: 'queued',
