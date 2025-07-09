@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_03_022737) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_09_233735) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -308,6 +308,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_022737) do
     t.bigint "destination_id"
     t.boolean "delete_previous_records", default: false, null: false
     t.bigint "automation_template_id"
+    t.string "job_priority"
     t.index ["automation_template_id"], name: "index_schedules_on_automation_template_id"
     t.index ["destination_id"], name: "index_schedules_on_destination_id"
     t.index ["name"], name: "index_schedules_on_name", unique: true

@@ -14,8 +14,16 @@ RSpec.describe ScheduleWorker, type: :job do
       let(:schedule) { create(:schedule, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id]) }
 
       it "create a Pipeline Job" do
-
         expect { described_class.new.perform(schedule.id) }.to change(PipelineJob, :count).by(1)
+      end
+    end
+
+    context "when scheduling a Pipeline with a job priority" do
+      let(:schedule) { create(:schedule, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id], job_priority: 'high_priority') }
+
+      it "create a Pipeline Job with a job priority" do
+        described_class.new.perform(schedule.id)
+        expect(PipelineJob.last.job_priority).to eq('high_priority')
       end
     end
 
