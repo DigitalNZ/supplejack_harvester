@@ -26,7 +26,7 @@ class ScheduleWorker
       destination_id: schedule.destination.id,
       key: SecureRandom.hex,
       page_type: :all_available_pages,
-      schedule_id: id, delete_previous_records: schedule.delete_previous_records
+      schedule_id: schedule.id, delete_previous_records: schedule.delete_previous_records
     )
   end
 end
