@@ -91,7 +91,7 @@
                   </span>
                 </td>
 
-                <% if report.harvest_job&.extraction_job.present? %>
+                <% if report.harvest_job&.extraction_job.present? && report&.extraction_start_time.present? %>
                     <td><%= report.extraction_start_time.strftime('%H:%M %d/%m/%y') %></td>
                 <% else %>
                     <td><%= pipeline_job.start_time.strftime('%H:%M %d/%m/%y') %></td>
