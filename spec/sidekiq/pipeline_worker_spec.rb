@@ -52,11 +52,5 @@ RSpec.describe PipelineWorker, type: :job do
         described_class.new.perform(harvest_and_enrichment_pipeline_job.id)
       end
     end
-
-    context 'when the pipeline job does not have a job_priority' do
-      it 'enqueues the job into the default queue' do
-
-      end
-    end
   end
 end

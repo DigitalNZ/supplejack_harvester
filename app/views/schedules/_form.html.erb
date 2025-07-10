@@ -116,6 +116,17 @@
                           options_for_select([['Yes', true], ['No', false]], @schedule.delete_previous_records),
                           {},
                           class: 'form-select mb-3' %>
+
+          <% if ENV['JOB_PRIORITIES'].present? %>
+            <%= form.label :job_priority, class: 'form-label' do %>
+              Job Priority
+          <% end %>
+
+            <%= form.select :job_priority, options_for_select(job_priority_options, @schedule.job_priority),
+                            { include_blank: 'None' },
+                            class: 'form-select mb-3' %>
+          <% end %>
+
         </div>
       </div>
 

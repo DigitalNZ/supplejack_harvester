@@ -73,6 +73,7 @@ class SchedulesController < ApplicationController
 
     params.require(:schedule).permit(:frequency, :time, :day, :day_of_the_month, :bi_monthly_day_one,
                                      :bi_monthly_day_two, :name, :delete_previous_records, :pipeline_id,
-                                     :destination_id, :automation_template_id, harvest_definitions_to_run: [])
+                                     :destination_id, :automation_template_id, :job_priority,
+                                     harvest_definitions_to_run: [])
   end
 end
