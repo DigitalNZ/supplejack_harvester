@@ -122,7 +122,8 @@
               Job Priority
           <% end %>
 
-            <%= form.select :job_priority, options_for_select(job_priority_options, @schedule.job_priority), {include_blank: "None"},
+            <%= form.select :job_priority, options_for_select(job_priority_options, @schedule.job_priority),
+                            { include_blank: 'None' },
                             class: 'form-select mb-3' %>
           <% end %>
 
