@@ -16,8 +16,12 @@ class TransformationWorker
     @pipeline_job = @harvest_job.pipeline_job
 
     job_start
-    child_perform
-    job_end
+
+    begin
+      child_perform
+    ensure
+      job_end
+    end
   end
 
   def job_start
@@ -54,6 +58,9 @@ class TransformationWorker
     return unless @harvest_report.delete_workers_queued.zero?
 
     @harvest_report.delete_completed!
+  rescue => e
+    Rails.logger.info "TransformationWorker job_end error: #{e.message}" if defined?(Sidekiq)
+    @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
   end
 
   def transform_records

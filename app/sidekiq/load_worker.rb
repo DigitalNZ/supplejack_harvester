@@ -11,14 +11,16 @@ class LoadWorker
     @harvest_report = @harvest_job.harvest_report
 
     job_start
+    
+    begin
+      transformed_records = JSON.parse(records)
 
-    transformed_records = JSON.parse(records)
-
-    transformed_records.each_slice(100) do |batch|
-      process_batch(batch, api_record_id)
+      transformed_records.each_slice(100) do |batch|
+        process_batch(batch, api_record_id)
+      end
+    ensure
+      job_end
     end
-
-    job_end
   end
 
   def log_retry_attempt
@@ -60,6 +62,10 @@ class LoadWorker
 
     @harvest_job.pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
     @harvest_job.execute_delete_previous_records
+  rescue => e
+    Rails.logger.info "LoadWorker job_end error: #{e.message}" if defined?(Sidekiq)
+    # Still try to complete the job even if there's an error
+    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
   end
 
   def source_id

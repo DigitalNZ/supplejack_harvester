@@ -17,6 +17,7 @@ module Extraction
       extract(@extraction_definition.requests.first)
       return if @extraction_job.is_sample? || set_number_reached?
       return unless @extraction_definition.paginated?
+      throttle
 
       loop do
         next_page
