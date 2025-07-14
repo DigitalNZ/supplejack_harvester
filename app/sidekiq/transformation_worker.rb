@@ -76,10 +76,13 @@ class TransformationWorker
     LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records.to_json, @api_record_id)
 
     begin
-      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
+      ::Retriable.retriable(on_retry: log_retry_attempt) do
+        Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
+      end
     rescue => e
       Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
     end
+
     @harvest_report.increment_load_workers_queued!
   end
 
@@ -106,6 +109,17 @@ class TransformationWorker
   def select_valid_records(records)
     records.select do |record|
       record['rejection_reasons'].blank? && record['deletion_reasons'].blank? && record['errors'].blank?
+    end
+  end
+
+  def log_retry_attempt
+    proc do |exception, try, elapsed_time, next_interval|
+      if defined?(Sidekiq)
+        Rails.logger.info("
+          #{exception.class}: '#{exception.message}':
+          #{try} tries in #{elapsed_time} seconds and
+          #{next_interval} seconds until the next try.")
+      end
     end
   end
 end

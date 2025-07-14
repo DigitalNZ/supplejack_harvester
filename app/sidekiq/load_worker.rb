@@ -12,15 +12,12 @@ class LoadWorker
 
     job_start
     
-    begin
       transformed_records = JSON.parse(records)
 
-      transformed_records.each_slice(100) do |batch|
-        process_batch(batch, api_record_id)
-      end
-    ensure
-      job_end
+    transformed_records.each_slice(100) do |batch|
+      process_batch(batch, api_record_id)
     end
+    job_end
   end
 
   def log_retry_attempt
@@ -57,7 +54,14 @@ class LoadWorker
 
     if @harvest_report.load_workers_completed?
       @harvest_report.load_completed!
-      Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
+
+      begin
+        ::Retriable.retriable(on_retry: log_retry_attempt) do
+          Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
+        end
+      rescue => e
+        Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}" if defined?(Sidekiq)
+      end
     end
 
     @harvest_job.pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
