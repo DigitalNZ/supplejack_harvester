@@ -84,6 +84,33 @@ RSpec.describe LoadWorker, type: :job do
       end
     end
 
+    context 'when the harvest job is cancelled' do
+      let(:cancelled_harvest_job) { create(:harvest_job, :cancelled, harvest_definition:, pipeline_job:) }
+      let!(:cancelled_harvest_report) do
+        create(:harvest_report, harvest_job: cancelled_harvest_job, pipeline_job:)
+      end
+      
+      it 'does not process any batches when harvest job is cancelled' do
+        expect(Load::Execution).not_to receive(:new)
+        
+        described_class.new.perform(cancelled_harvest_job.id, '[{"id": "1"}]')
+      end
+    end
+    
+    context 'when the pipeline job is cancelled' do
+      let(:cancelled_pipeline_job) { create(:pipeline_job, :cancelled, pipeline:, destination:) }
+      let(:harvest_job_with_cancelled_pipeline) { create(:harvest_job, harvest_definition:, pipeline_job: cancelled_pipeline_job) }
+      let!(:cancelled_pipeline_harvest_report) do
+        create(:harvest_report, harvest_job: harvest_job_with_cancelled_pipeline, pipeline_job: cancelled_pipeline_job)
+      end
+      
+      it 'does not process any batches when pipeline job is cancelled' do
+        expect(Load::Execution).not_to receive(:new)
+        
+        described_class.new.perform(harvest_job_with_cancelled_pipeline.id, '[{"id": "1"}]')
+      end
+    end
+
     context 'when the Load Execution raises an exception' do
       before do
         allow_any_instance_of(Load::Execution).to receive(:call).and_raise(StandardError)

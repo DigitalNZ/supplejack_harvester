@@ -27,14 +27,30 @@ class TransformationWorker
   def child_perform
     transformed_records = transform_records.map(&:to_hash)
 
-    valid_records       = select_valid_records(transformed_records)
-    rejected_records    = transformed_records.select { |record| record['rejection_reasons'].present? }
-    deleted_records     = transformed_records.select { |record| record['deletion_reasons'].present? }
+    @harvest_job.reload
+
+    return if @harvest_job.cancelled? || @pipeline_job.cancelled?
+
+    process_transformed_records(transformed_records)
+  end
+
+  private
+
+  def process_transformed_records(transformed_records)
+    valid_records, rejected_records, deleted_records = categorize_records(transformed_records)
 
     update_harvest_report(transformed_records.count, rejected_records.count)
 
     queue_load_worker(valid_records)
     queue_delete_worker(deleted_records)
+  end
+
+  def categorize_records(transformed_records)
+    valid_records = select_valid_records(transformed_records)
+    rejected_records = transformed_records.select { |record| record['rejection_reasons'].present? }
+    deleted_records = transformed_records.select { |record| record['deletion_reasons'].present? }
+
+    [valid_records, rejected_records, deleted_records]
   end
 
   def update_harvest_report(transformed_records_count, rejected_records_count)
@@ -65,6 +81,10 @@ class TransformationWorker
 
   def queue_load_worker(records)
     return if records.empty?
+
+    @harvest_job.reload
+
+    return if @harvest_job.cancelled? || @pipeline_job.cancelled?
 
     LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records.to_json, @api_record_id)
     Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
