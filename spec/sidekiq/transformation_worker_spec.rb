@@ -181,6 +181,13 @@ RSpec.describe TransformationWorker do
   
           expect(harvest_report.records_rejected).to eq(1)
         end
+
+        it "still increments the number of transformation workers completed" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.transformation_workers_completed).to eq(1)
+        end
   
         it "does not queue the load worker" do
           expect(LoadWorker).not_to receive(:perform_async_with_priority)
@@ -210,6 +217,19 @@ RSpec.describe TransformationWorker do
   
           expect(harvest_report.delete_workers_queued).to eq(1)
         end 
+      end
+
+      context "when there is an error extracting the raw records from the extraction job" do
+        before do
+          allow(Transformation::RawRecordsExtractor).to receive(:new).and_raise("Error")
+        end
+
+        it "still increments the number of transformation workers completed" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.transformation_workers_completed).to eq(1)
+        end
       end
 
       context "when there is an error with notifying the API about a harvesting job" do
