@@ -1,7 +1,7 @@
 .table {
   @include modifier('jobs') {
     th, td {
-      padding: 1rem;
+      padding: .75rem;
     }
   }
 
