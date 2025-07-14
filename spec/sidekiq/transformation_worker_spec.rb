@@ -248,12 +248,65 @@ RSpec.describe TransformationWorker do
           allow(Transformation::Execution).to receive(:new).and_raise("Error")
         end
 
+        it "still increments the number of transformation workers completed" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.transformation_workers_completed).to eq(1)
+        end
+
         it "still marks the transformation as completed" do
           TransformationWorker.new.perform(harvest_job.id)
           harvest_report.reload
 
           expect(harvest_report.transformation_end_time).to be_present
         end
+      end
+
+      context "when there is an error with a field inside of the transformation definition" do
+        let!(:error_field) do
+          create(:field, name: 'error', block: "JsonPath.new('title').on(no_record).first", transformation_definition: transformation_definition)
+        end
+
+        it "still increments the number of transformation workers completed" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.transformation_workers_completed).to eq(1)
+        end
+        it "marks the transformation as completed if all of the workers have completed" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.transformation_end_time).to be_present
+        end
+      end
+
+      context "when there is an error notifying the API about a harvesting job" do
+        before do
+          allow(Api::Utils::NotifyHarvesting).to receive(:new).and_raise("Error")
+        end
+
+        it "still increments the number of transformation workers completed" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.transformation_workers_completed).to eq(1)
+        end
+
+        it "still increments the number of load workers queued" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.load_workers_queued).to eq(1)
+        end
+    
+        it "marks the transformation as completed if all of the workers have completed" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.transformation_end_time).to be_present
+        end 
       end
     end
   end
