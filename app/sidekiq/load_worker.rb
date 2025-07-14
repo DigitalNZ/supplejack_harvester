@@ -11,8 +11,7 @@ class LoadWorker
     @harvest_report = @harvest_job.harvest_report
 
     job_start
-    
-      transformed_records = JSON.parse(records)
+    transformed_records = JSON.parse(records)
 
     transformed_records.each_slice(100) do |batch|
       process_batch(batch, api_record_id)
