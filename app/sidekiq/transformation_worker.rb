@@ -17,11 +17,8 @@ class TransformationWorker
 
     job_start
 
-    begin
-      child_perform
-    ensure
-      job_end
-    end
+    child_perform
+    job_end
   end
 
   def job_start
@@ -58,23 +55,31 @@ class TransformationWorker
     return unless @harvest_report.delete_workers_queued.zero?
 
     @harvest_report.delete_completed!
-  rescue => e
-    Rails.logger.info "TransformationWorker job_end error: #{e.message}" if defined?(Sidekiq)
     @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
   end
 
   def transform_records
-    Transformation::Execution.new(
-      records,
-      @transformation_definition.fields
-    ).call
+    begin
+      Transformation::Execution.new(
+        records,
+        @transformation_definition.fields
+      ).call
+    rescue => e
+      Rails.logger.info "TransformationWorker: Transformation Excecution error: #{e}" if defined?(Sidekiq)
+      []
+    end
   end
 
   def queue_load_worker(records)
     return if records.empty?
 
     LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records.to_json, @api_record_id)
-    Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
+
+    begin
+      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
+    rescue => e
+      Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
+    end
     @harvest_report.increment_load_workers_queued!
   end
 
@@ -100,7 +105,7 @@ class TransformationWorker
 
   def select_valid_records(records)
     records.select do |record|
-      record['rejection_reasons'].blank? && record['deletion_reasons'].blank?
+      record['rejection_reasons'].blank? && record['deletion_reasons'].blank? && record['errors'].blank?
     end
   end
 end
