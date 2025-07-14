@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-
+ 
 RSpec.describe TransformationWorker do
   let!(:pipeline) { create(:pipeline, :figshare) }
   let!(:pipeline_job) { create(:pipeline_job, pipeline:) }
@@ -31,7 +31,6 @@ RSpec.describe TransformationWorker do
   let!(:harvest_report) { create(:harvest_report, extraction_status: 'completed', harvest_job:) }
 
   before do
-
     stub_request(:get, 'http://www.localhost:3000/harvester/sources?source%5Bsource_id%5D=test')
     .with(
       headers: {
@@ -60,7 +59,7 @@ RSpec.describe TransformationWorker do
 
   describe '#perform' do
     context "when the job starts" do
-      it "updates the harvest report to say that the transformation is running" do
+      it "updates the harvest report to have the transformation start time" do
         TransformationWorker.new.perform(harvest_job.id)
         harvest_report.reload
 
@@ -112,6 +111,13 @@ RSpec.describe TransformationWorker do
   
           expect(harvest_report.delete_workers_queued).to eq(1)
         end
+
+        it "marks the transformation as completed" do
+          expect(harvest_report.transformation_status).to eq('queued')
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload 
+          expect(harvest_report.transformation_status).to eq('completed')
+        end
       end
 
       context "when the transformation has errors" do
@@ -141,6 +147,13 @@ RSpec.describe TransformationWorker do
         it "does not notify the API that harvesting has begun on a particular source" do
           expect(Api::Utils::NotifyHarvesting).not_to receive(:new)
           TransformationWorker.new.perform(harvest_job.id)
+        end
+
+        it "still marks the transformation as completed" do
+          expect(harvest_report.transformation_status).to eq('queued')
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload 
+          expect(harvest_report.transformation_status).to eq('completed')
         end
   
         it "does not increment the load workers queued" do
@@ -188,6 +201,13 @@ RSpec.describe TransformationWorker do
 
           expect(harvest_report.transformation_workers_completed).to eq(1)
         end
+
+        it "still marks the transformation as completed" do
+          expect(harvest_report.transformation_status).to eq('queued')
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload 
+          expect(harvest_report.transformation_status).to eq('completed')
+        end
   
         it "does not queue the load worker" do
           expect(LoadWorker).not_to receive(:perform_async_with_priority)
@@ -229,6 +249,13 @@ RSpec.describe TransformationWorker do
           harvest_report.reload
 
           expect(harvest_report.transformation_workers_completed).to eq(1)
+        end
+
+        it "still marks the transformation as completed" do
+          expect(harvest_report.transformation_status).to eq('queued')
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload 
+          expect(harvest_report.transformation_status).to eq('completed')
         end
       end
 
