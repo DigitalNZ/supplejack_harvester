@@ -209,21 +209,21 @@ RSpec.describe TransformationWorker do
           expect(harvest_report.transformation_status).to eq('completed')
         end
   
-        it "does not queue the load worker" do
-          expect(LoadWorker).not_to receive(:perform_async_with_priority)
+        it "still queues the load worker" do
+          expect(LoadWorker).to receive(:perform_async_with_priority)
           TransformationWorker.new.perform(harvest_job.id)
         end
   
-        it "does not notify the API that harvesting has begun on a particular source" do
-          expect(Api::Utils::NotifyHarvesting).not_to receive(:new)
+        it "still notifies the API that harvesting has begun on a particular source" do
+          expect(Api::Utils::NotifyHarvesting).to receive(:new).and_call_original
           TransformationWorker.new.perform(harvest_job.id)
         end
   
-        it "does not increment the load workers queued" do
+        it "still increments the load workers queued" do
           TransformationWorker.new.perform(harvest_job.id)
           harvest_report.reload   
   
-          expect(harvest_report.load_workers_queued).to eq(0)
+          expect(harvest_report.load_workers_queued).to eq(1)
         end
   
         it "does still queue the delete worker" do
@@ -287,6 +287,19 @@ RSpec.describe TransformationWorker do
           harvest_report.reload
 
           expect(harvest_report.transformation_end_time).to be_present
+        end
+      end
+
+      context "when the transformation worker finishes after the load worker and delete worker" do
+        let!(:harvest_report) { create(:harvest_report, extraction_status: 'completed', harvest_job:, transformation_status: 'running', load_status: 'running', delete_status: 'running', load_workers_queued: 0, load_workers_completed: 1, delete_workers_queued: 0, delete_workers_completed: 1) }
+
+        it "marks the load and delete completed if the load worker and the delete worker have completed after the transformation worker" do
+          TransformationWorker.new.perform(harvest_job.id)
+          harvest_report.reload
+
+          expect(harvest_report.transformation_status).to eq('completed')
+          expect(harvest_report.load_status).to eq('completed')
+          expect(harvest_report.delete_status).to eq('completed')
         end
       end
 
