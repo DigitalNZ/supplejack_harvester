@@ -15,9 +15,7 @@ class DeleteWorker
     job_start
 
     records_to_delete.each do |record|
-      Delete::Execution.new(record, destination).call
-      @harvest_report.increment_records_deleted!
-      @harvest_report.update(delete_updated_time: Time.zone.now)
+      delete(record, destination)
     end
 
     job_end
@@ -34,5 +32,15 @@ class DeleteWorker
     return unless @harvest_report.delete_workers_completed?
 
     @harvest_report.delete_completed!
+  end
+
+  private
+
+  def delete(record, destination)
+    Delete::Execution.new(record, destination).call
+    @harvest_report.increment_records_deleted!
+    @harvest_report.update(delete_updated_time: Time.zone.now)
+  rescue StandardError => e
+    Rails.logger.info "DeleteWorker: Delete Excecution error: #{e}" if defined?(Sidekiq)
   end
 end
