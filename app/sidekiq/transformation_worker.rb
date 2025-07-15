@@ -59,15 +59,13 @@ class TransformationWorker
   end
 
   def transform_records
-    begin
-      Transformation::Execution.new(
-        records,
-        @transformation_definition.fields
-      ).call
-    rescue => e
-      Rails.logger.info "TransformationWorker: Transformation Excecution error: #{e}" if defined?(Sidekiq)
-      []
-    end
+    Transformation::Execution.new(
+      records,
+      @transformation_definition.fields
+    ).call
+  rescue StandardError => e
+    Rails.logger.info "TransformationWorker: Transformation Excecution error: #{e}" if defined?(Sidekiq)
+    []
   end
 
   def queue_load_worker(records)
@@ -79,7 +77,7 @@ class TransformationWorker
       ::Retriable.retriable(on_retry: log_retry_attempt) do
         Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
       end
-    rescue => e
+    rescue StandardError => e
       Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
     end
 

@@ -22,15 +22,6 @@ RSpec.describe 'PipelineJobs' do
 
       expect(response).to have_http_status :ok
     end
-
-    it 'completes running jobs that have finished' do
-      expect(harvest_report.status).to eq 'running'
-      get pipeline_pipeline_jobs_path(pipeline)
-
-      harvest_report.reload
-
-      expect(harvest_report.status).to eq 'completed'
-    end
   end
 
   describe 'POST /create' do

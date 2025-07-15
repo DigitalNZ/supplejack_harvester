@@ -51,24 +51,10 @@ class LoadWorker
     @harvest_report.increment_load_workers_completed!
     @harvest_report.reload
 
-    if @harvest_report.load_workers_completed?
-      @harvest_report.load_completed!
-
-      begin
-        ::Retriable.retriable(on_retry: log_retry_attempt) do
-          Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
-        end
-      rescue => e
-        Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}" if defined?(Sidekiq)
-      end
-    end
+    finish_load if @harvest_report.load_workers_completed?
 
     @harvest_job.pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
     @harvest_job.execute_delete_previous_records
-  rescue => e
-    Rails.logger.info "LoadWorker job_end error: #{e.message}" if defined?(Sidekiq)
-    # Still try to complete the job even if there's an error
-    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
   end
 
   def source_id
@@ -77,5 +63,17 @@ class LoadWorker
 
   def destination
     @harvest_job.pipeline_job.destination
+  end
+
+  private
+
+  def finish_load
+    @harvest_report.load_completed!
+
+    ::Retriable.retriable(on_retry: log_retry_attempt) do
+      Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
+    end
+  rescue StandardError => e
+    Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}" if defined?(Sidekiq)
   end
 end
