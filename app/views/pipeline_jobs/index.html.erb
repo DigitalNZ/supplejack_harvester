@@ -68,12 +68,12 @@
 
             <% if report.present? %>
               <% badge_classes = class_names(
-                  'badge',
-                  {
-                    'bg-primary': report.status == 'completed',
-                    'bg-secondary': %w[running queued cancelled].include?(report.status)
-                  }
-                ) %>
+                   'badge',
+                   {
+                     'bg-primary': report.status == 'completed',
+                     'bg-secondary': %w[running queued cancelled].include?(report.status)
+                   }
+                 ) %>
 
                 <tr>
                   <td><%= report.harvest_job&.name %></td>
