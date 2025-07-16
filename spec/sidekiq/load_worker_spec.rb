@@ -133,5 +133,24 @@ RSpec.describe LoadWorker, type: :job do
         expect(harvest_report.load_workers_completed).to eq 1
       end
     end
+
+    context "when the Api::Utils::NotifyHarvesting raises an exception" do
+      before do
+        allow_any_instance_of(Api::Utils::NotifyHarvesting).to receive(:call).and_raise(StandardError)
+      end
+
+      it "retries the Api::Utils::NotifyHarvesting" do
+        expect(Api::Utils::NotifyHarvesting).to receive(:new).exactly(2).times
+        described_class.new.perform(harvest_job.id, "[]")
+      end
+
+      it "still enqueues enrichment jobs" do
+        expect do
+          described_class.new.perform(harvest_job.id, '[]')
+        end.to change(HarvestJob, :count).by(1)
+
+        expect(HarvestJob.last.target_job_id).to eq harvest_job.name
+      end
+    end
   end
 end

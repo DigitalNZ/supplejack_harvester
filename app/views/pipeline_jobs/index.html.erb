@@ -41,41 +41,109 @@
 <div class='clearfix'></div>
 
 <div class='card'>
-  <table class="table table-borderless table--jobs">
-    <thead>
-      <tr class='table-primary'>
-        <th scope="col">Pipeline jobs</th>
-        <th scope="col">Run by</th>
-        <th scope="col">Status</th>
-        <th scope="col">Job started</th>
-        <th scope="col">Duration</th>
-        <th scope="col">Pages Extracted</th>
-        <th scope="col">Records Transformed</th>
-        <th scope="col">Records Loaded</th>
-        <th scope="col">Records Rejected</th>
-        <th scope="col">Records Deleted</th>
-        <th scope="col">Job Priority</th>
-        <th scope="col">Last Updated</th>
-        <th scope="col"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% total_pipeline_jobs = @pipeline_jobs.count %>
+  <div class="table-responsive">
+    <table class="table table-borderless table--jobs">
+      <thead>
+        <tr class='table-primary'>
+          <th scope="col">Pipeline jobs</th>
+          <th scope="col">Run by</th>
+          <th scope="col">Status</th>
+          <th scope="col">Job started</th>
+          <th scope="col">Duration</th>
+          <th scope="col">Pages Extracted</th>
+          <th scope="col">Records Transformed</th>
+          <th scope="col">Records Loaded</th>
+          <th scope="col">Records Rejected</th>
+          <th scope="col">Records Deleted</th>
+          <th scope="col">Job Priority</th>
+          <th scope="col">Last Updated</th>
+          <th scope="col">More</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% total_pipeline_jobs = @pipeline_jobs.count %>
 
-      <% @pipeline_jobs.each.with_index(1) do |pipeline_job, index| %>
-        <% pipeline_job.harvest_definitions_to_run.zip(pipeline_job.harvest_reports) do |definition_id, report| %>
+        <% @pipeline_jobs.each.with_index(1) do |pipeline_job, index| %>
+          <% pipeline_job.harvest_definitions_to_run.zip(pipeline_job.harvest_reports) do |definition_id, report| %>
 
-          <% if report.present? %>
-            <% badge_classes = class_names(
-                 'badge',
-                 {
-                   'bg-primary': report.status == 'completed',
-                   'bg-secondary': %w[running queued cancelled].include?(report.status)
-                 }
-               ) %>
+            <% if report.present? %>
+              <% badge_classes = class_names(
+                   'badge',
+                   {
+                     'bg-primary': report.status == 'completed',
+                     'bg-secondary': %w[running queued cancelled].include?(report.status)
+                   }
+                 ) %>
 
+                <tr>
+                  <td><%= report.harvest_job&.name %></td>
+                  <td>
+                    <% if pipeline_job.schedule.present? %>
+                      Schedule
+                    <% elsif pipeline_job.automation_step.present? %>
+                      <%= link_to 'Automation', automation_path(pipeline_job.automation_step.automation) %>
+                    <% else %>
+                      <%= pipeline_job.launched_by&.username %>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="<%= badge_classes %>">
+                      <%= report.status.capitalize %>
+                    </span>
+                  </td>
+
+                  <% if report.harvest_job&.extraction_job.present? && report&.extraction_start_time.present? %>
+                      <td><%= report.extraction_start_time.strftime('%H:%M %d/%m/%y') %></td>
+                  <% else %>
+                      <td><%= pipeline_job.start_time.strftime('%H:%M %d/%m/%y') %></td>
+                  <% end %>
+
+                  <td><%= job_duration_seconds(report.duration_seconds) %></td>
+                  <td><%= report.pages_extracted %></td>
+                  <td><%= report.records_transformed %></td>
+                  <td><%= report.records_loaded %></td>
+                  <td><%= report.records_rejected %></td>
+                  <td><%= report.records_deleted %></td>
+                  <td>
+                    <% if report.harvest_job.present? %>
+                      <%= report.harvest_job.pipeline_job.job_priority&.presence&.humanize || 'No priority' %>
+                    <% else %>
+                      <%= 'No priority' %>
+                    <% end %>
+                  </td>
+                  <td><%= report.last_updated&.strftime('%H:%M:%S %d/%m/%y') %></td>
+                  <td>
+                    <% if report.harvest_definition %>
+                      <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <% if report.harvest_job && report.harvest_job.extraction_job_id.present? %>
+                          <li>
+                            <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                                  @pipeline.id,
+                                  report.harvest_definition.id,
+                                  report.extraction_definition.id,
+                                  report.harvest_job.extraction_job_id
+                                ), class: 'dropdown-item' do %>
+                              <i class="bi bi-link-45deg me-2"></i> View Extracted Data
+                            <% end %>
+                          </li>
+                        <% end %>
+
+                        <% if report.status == 'running' || report.status == 'queued' %>
+                          <li>
+                            <%= button_to cancel_pipeline_pipeline_job_path(@pipeline.id, report.pipeline_job_id),
+                                          class: 'dropdown-item' do %>
+                              <i class="bi bi-x-circle me-2"></i> Cancel job
+                            <% end %>
+                          </li>
+                        <% end %>
+                      </ul>
+                    <% end %>
+                  </td>
+                </tr>
+            <% else %>
               <tr>
-                <td><%= report.harvest_job&.name %>></td>
+                <td><%= HarvestDefinition.find(definition_id).name %></td>
                 <td>
                   <% if pipeline_job.schedule.present? %>
                     Schedule
@@ -86,90 +154,47 @@
                   <% end %>
                 </td>
                 <td>
-                  <span class="<%= badge_classes %>">
-                    <%= report.status.capitalize %>
+                  <span class='badge bg-secondary'>
+                    <% if pipeline_job.cancelled? %>
+                      Cancelled
+                    <% else %>
+                      Waiting
+                    <% end %>
                   </span>
                 </td>
-
-                <% if report.harvest_job&.extraction_job.present? && report&.extraction_start_time.present? %>
-                    <td><%= report.extraction_start_time.strftime('%H:%M %d/%m/%y') %></td>
-                <% else %>
-                    <td><%= pipeline_job.start_time.strftime('%H:%M %d/%m/%y') %></td>
-                <% end %>
-
-                <td><%= job_duration_seconds(report.duration_seconds) %></td>
-                <td><%= report.pages_extracted %></td>
-                <td><%= report.records_transformed %></td>
-                <td><%= report.records_loaded %></td>
-                <td><%= report.records_rejected %></td>
-                <td><%= report.records_deleted %></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
                 <td>
-                  <% if report.harvest_job.present? %>
-                    <%= report.harvest_job.pipeline_job.job_priority&.presence&.humanize || 'No priority' %>
+                  <% if pipeline_job.schedule.present? %>
+                    Schedule
+                  <% elsif pipeline_job.automation_step.present? %>
+                    Automation
                   <% else %>
-                    <%= 'No priority' %>
+                    <%= pipeline_job.launched_by&.username %>
                   <% end %>
                 </td>
-                <td><%= report.last_updated&.strftime('%H:%M:%S %d/%m/%y') %></td>
-                <td>
-                  <% if report.harvest_definition %>
-                    <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <% if report.harvest_job && report.harvest_job.extraction_job_id.present? %>
-                        <li>
-                          <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
-                                @pipeline.id,
-                                report.harvest_definition.id,
-                                report.extraction_definition.id,
-                                report.harvest_job.extraction_job_id
-                              ), class: 'dropdown-item' do %>
-                            <i class="bi bi-link-45deg me-2"></i> View Extracted Data
-                          <% end %>
-                        </li>
-                      <% end %>
-
-                      <% if report.status == 'running' || report.status == 'queued' %>
-                        <li>
-                          <%= button_to cancel_pipeline_pipeline_job_path(@pipeline.id, report.pipeline_job_id),
-                                        class: 'dropdown-item' do %>
-                            <i class="bi bi-x-circle me-2"></i> Cancel job
-                          <% end %>
-                        </li>
-                      <% end %>
-                    </ul>
-                  <% end %>
-                </td>
+                <td></td>
+                <td></td>
               </tr>
-          <% else %>
-            <tr>
-              <td><%= HarvestDefinition.find(definition_id).name %></td>
-              <td>
-                <span class='badge bg-secondary'>
-                  <% if pipeline_job.cancelled? %>
-                    Cancelled
-                  <% else %>
-                    Waiting
-                  <% end %>
-                </span>
+            <% end %>
+          <% end %>
+
+          <% if index != total_pipeline_jobs %>
+            <tr class='table__divider'>
+              <td colspan='13'>
+                <hr>
               </td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
             </tr>
           <% end %>
+
         <% end %>
 
-        <% if index != total_pipeline_jobs %>
-          <tr class='table__divider'>
-            <td colspan='12'>
-              <hr>
-            </td>
-          </tr>
-        <% end %>
-
-      <% end %>
-
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
 </div>
