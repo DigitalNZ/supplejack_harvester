@@ -93,31 +93,27 @@ class TransformationWorker
 
     LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records.to_json, @api_record_id)
 
-    begin
-      ::Retriable.retriable(on_retry: log_retry_attempt) do
-        Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
-      end
-    rescue StandardError => e
-      Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
-    end
-
+    notify_harvesting_api
     @harvest_report.increment_load_workers_queued!
+  end
+
+  def notify_harvesting_api
+    ::Retriable.retriable(on_retry: log_retry_attempt) do
+      if @harvest_report.load_workers_queued.zero?
+        Api::Utils::NotifyHarvesting.new(@pipeline_job.destination,
+                                         @pipeline_job.pipeline.harvest_definitions.first.source_id, true).call
+      end
+    end
+  rescue StandardError => e
+    Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
   end
 
   def queue_delete_worker(records)
     return if records.empty?
 
-    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
+    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, @pipeline_job.destination.id,
                                              @harvest_report.id)
     @harvest_report.increment_delete_workers_queued!
-  end
-
-  def source_id
-    @pipeline_job.pipeline.harvest_definitions.first.source_id
-  end
-
-  def destination
-    @pipeline_job.destination
   end
 
   def records
