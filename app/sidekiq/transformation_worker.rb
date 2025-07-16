@@ -47,7 +47,9 @@ class TransformationWorker
   end
 
   def categorize_records(transformed_records)
-    valid_records = select_valid_records(transformed_records)
+    valid_records = transformed_records.select do |record|
+      record['rejection_reasons'].blank? && record['deletion_reasons'].blank? && record['errors'].blank?
+    end
     rejected_records = transformed_records.select { |record| record['rejection_reasons'].present? }
     deleted_records = transformed_records.select { |record| record['deletion_reasons'].present? }
 
@@ -99,10 +101,7 @@ class TransformationWorker
 
   def notify_harvesting_api
     ::Retriable.retriable(on_retry: log_retry_attempt) do
-      if @harvest_report.load_workers_queued.zero?
-        Api::Utils::NotifyHarvesting.new(@pipeline_job.destination,
-                                         @pipeline_job.pipeline.harvest_definitions.first.source_id, true).call
-      end
+      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
     end
   rescue StandardError => e
     Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
@@ -111,19 +110,21 @@ class TransformationWorker
   def queue_delete_worker(records)
     return if records.empty?
 
-    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, @pipeline_job.destination.id,
+    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
                                              @harvest_report.id)
     @harvest_report.increment_delete_workers_queued!
   end
 
-  def records
-    Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
+  def source_id
+    @pipeline_job.pipeline.harvest_definitions.first.source_id
   end
 
-  def select_valid_records(records)
-    records.select do |record|
-      record['rejection_reasons'].blank? && record['deletion_reasons'].blank? && record['errors'].blank?
-    end
+  def destination
+    @pipeline_job.destination
+  end
+
+  def records
+    Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
   end
 
   def log_retry_attempt
