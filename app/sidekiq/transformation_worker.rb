@@ -52,6 +52,9 @@ class TransformationWorker
 
     @harvest_report.transformation_completed!
 
+    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
+    @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
+
     return unless @harvest_report.delete_workers_queued.zero?
 
     @harvest_report.delete_completed!
@@ -106,7 +109,7 @@ class TransformationWorker
 
   def select_valid_records(records)
     records.select do |record|
-      record['rejection_reasons'].blank? && record['deletion_reasons'].blank? && record['errors'].blank?
+      record['rejection_reasons'].blank? && record['deletion_reasons'].blank?
     end
   end
 
