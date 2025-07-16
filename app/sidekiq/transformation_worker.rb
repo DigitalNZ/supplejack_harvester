@@ -48,11 +48,10 @@ class TransformationWorker
 
   def categorize_records(transformed_records)
     valid_records = transformed_records.select do |record|
-      record['rejection_reasons'].blank? && record['deletion_reasons'].blank? && record['errors'].blank?
+      record['rejection_reasons'].blank? && record['deletion_reasons'].blank?
     end
     rejected_records = transformed_records.select { |record| record['rejection_reasons'].present? }
     deleted_records = transformed_records.select { |record| record['deletion_reasons'].present? }
-
     [valid_records, rejected_records, deleted_records]
   end
 
@@ -69,6 +68,8 @@ class TransformationWorker
     return unless @harvest_report.transformation_workers_completed?
 
     @harvest_report.transformation_completed!
+    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
+    @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
 
     return unless @harvest_report.delete_workers_queued.zero?
 
@@ -115,13 +116,8 @@ class TransformationWorker
     @harvest_report.increment_delete_workers_queued!
   end
 
-  def source_id
-    @pipeline_job.pipeline.harvest_definitions.first.source_id
-  end
-
-  def destination
-    @pipeline_job.destination
-  end
+  def source_id = @pipeline_job.pipeline.harvest_definitions.first.source_id
+  def destination = @pipeline_job.destination
 
   def records
     Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
@@ -129,12 +125,10 @@ class TransformationWorker
 
   def log_retry_attempt
     proc do |exception, try, elapsed_time, next_interval|
-      if defined?(Sidekiq)
-        Rails.logger.info("
-          #{exception.class}: '#{exception.message}':
-          #{try} tries in #{elapsed_time} seconds and
-          #{next_interval} seconds until the next try.")
-      end
+      return unless defined?(Sidekiq)
+
+      Rails.logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
+                        "and #{next_interval} seconds until the next try.")
     end
   end
 end
