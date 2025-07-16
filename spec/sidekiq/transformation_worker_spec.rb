@@ -58,6 +58,31 @@ RSpec.describe TransformationWorker do
   end
 
   describe '#perform' do
+    context 'when the harvest job is cancelled' do
+      before do
+        allow(HarvestJob).to receive(:find).with(harvest_job.id).and_return(harvest_job)
+        allow(harvest_job).to receive(:reload).and_return(harvest_job)
+      end
+      
+      it 'does not queue LoadWorker when harvest job is cancelled' do
+        allow(harvest_job).to receive(:cancelled?).and_return(true)
+        allow(pipeline_job).to receive(:cancelled?).and_return(false)
+        
+        expect(LoadWorker).not_to receive(:perform_async_with_priority)
+        
+        described_class.new.perform(harvest_job.id)
+      end
+      
+      it 'does not queue LoadWorker when pipeline job is cancelled' do
+        allow(harvest_job).to receive(:cancelled?).and_return(false)  
+        allow(pipeline_job).to receive(:cancelled?).and_return(true)
+        
+        expect(LoadWorker).not_to receive(:perform_async_with_priority)
+        
+        described_class.new.perform(harvest_job.id)
+      end
+    end
+
     context "when the job starts" do
       it "updates the harvest report to have the transformation start time" do
         TransformationWorker.new.perform(harvest_job.id)
@@ -334,6 +359,7 @@ RSpec.describe TransformationWorker do
 
           expect(harvest_report.transformation_workers_completed).to eq(1)
         end
+
         it "marks the transformation as completed if all of the workers have completed" do
           TransformationWorker.new.perform(harvest_job.id)
           harvest_report.reload

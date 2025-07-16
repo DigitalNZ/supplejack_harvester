@@ -14,6 +14,10 @@ class LoadWorker
     transformed_records = JSON.parse(records)
 
     transformed_records.each_slice(100) do |batch|
+      @harvest_job.reload
+
+      break if @harvest_job.cancelled? || @harvest_job.pipeline_job.cancelled?
+
       process_batch(batch, api_record_id)
     end
     job_end

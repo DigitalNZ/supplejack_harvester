@@ -19,6 +19,7 @@ AllCops:
     # for referential integrity and follow the best practices from rubocop-rails:
     # - https://guides.rubyonrails.org/active_record_migrations.html#active-record-and-referential-integrity
     - "db/**/*"
+    - "tmp/**/*"
 
 Style/Documentation:
   Enabled: false
