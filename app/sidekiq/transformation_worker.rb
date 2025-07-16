@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class TransformationWorker
   include PerformWithPriority
   include Sidekiq::Job
@@ -119,6 +120,7 @@ class TransformationWorker
   def source_id
     @pipeline_job.pipeline.harvest_definitions.first.source_id
   end
+
   def destination
     @pipeline_job.destination
   end
@@ -136,3 +138,4 @@ class TransformationWorker
     end
   end
 end
+# rubocop:enable Metrics/ClassLength
