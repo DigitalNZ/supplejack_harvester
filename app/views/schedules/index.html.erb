@@ -44,7 +44,7 @@
 
           <% if pipeline_jobs.present? && pipeline_jobs.all?(&:harvest_reports) %>
             <% total_duration += pipeline_jobs.flat_map(&:harvest_reports).sum(&:duration_seconds) %>
-            <% total_records_loaded += pipeline_jobs.flat_map(&:harvest_reports).sum(&:records_loaded) %>
+            <% total_records_loaded += pipeline_jobs.filter_map(&:harvest_report).sum(&:records_loaded) || 0 %>
           <% end %>
         <% end %>
 
@@ -77,13 +77,13 @@
                 <p class='m-0'>Runs <%= process.frequency %> at <%= process.time %></p>
 
                 <% if process.pipeline_jobs.any? %>
-                  <p class='m-0'>Last duration:
+                  <p class='m-0'>Duration:
                     <% duration = process.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds) %>
                     <%= ActiveSupport::Duration.build(duration).inspect %>
                   </p>
 
-                  <p class='m-0'>Records:
-                    <% records_loaded = process.pipeline_jobs.last.harvest_reports.sum(&:records_loaded) %>
+                  <p class='m-0'>Records Harvested:
+                    <% records_loaded = process.pipeline_jobs.last.harvest_report&.records_loaded || 0 %>
                     <%= records_loaded %>
                   </p>
                 <% end %>
