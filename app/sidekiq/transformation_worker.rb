@@ -116,8 +116,12 @@ class TransformationWorker
     @harvest_report.increment_delete_workers_queued!
   end
 
-  def source_id = @pipeline_job.pipeline.harvest_definitions.first.source_id
-  def destination = @pipeline_job.destination
+  def source_id
+    @pipeline_job.pipeline.harvest_definitions.first.source_id
+  end
+  def destination
+    @pipeline_job.destination
+  end
 
   def records
     Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
