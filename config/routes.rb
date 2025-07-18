@@ -77,6 +77,8 @@ Rails.application.routes.draw do
         end
 
         resources :extraction_jobs, only: %i[index show create destroy] do
+          resources :details, only: %i[show]
+
           post :cancel, on: :member
         end
 
