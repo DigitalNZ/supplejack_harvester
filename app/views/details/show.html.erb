@@ -99,6 +99,9 @@
             <th>Load Updated Time</th>
             <th>Transformation Updated Time</th>
             <th>Extraction Updated Time</th>
+            <th>Load End Time</th>
+            <th>Transformation End Time</th>
+            <th>Extraction End Time</th>
         </tr>
         </thead>
         <tbody>
@@ -107,7 +110,10 @@
           <td><%= @harvest_report.extraction_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
           <td><%= @harvest_report.load_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
           <td><%= @harvest_report.transformation_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
-          <td><%= @harvest_report.extraction_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td> 
+          <td><%= @harvest_report.extraction_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+          <td><%= @harvest_report.load_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+          <td><%= @harvest_report.transformation_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+          <td><%= @harvest_report.extraction_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
         </tbody>
     </table>
     </div>
