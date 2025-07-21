@@ -9,6 +9,8 @@ class DetailsController < ApplicationController
   def show
     @documents = @extraction_job.documents
     @document = @documents[params[:page]]
+    @pipeline_job = @pipeline.pipeline_jobs.first
+    @harvest_report = @pipeline.pipeline_jobs.first.harvest_reports.first
   end
 
   private
