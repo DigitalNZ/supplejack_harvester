@@ -31,51 +31,59 @@
 
 <div class="card">
   <div class="card-header">
-    <h5 class="mb-0">Job Run Settings</h5>
+    <h3 class="mb-0">Run Settings</h3>
+
+    <span>
+      <% if @harvest_report.pipeline_job.schedule.present? %>
+        Schedule
+      <% elsif @harvest_report.automation_step.present? %>
+        <%= link_to 'Automation', automation_path(@pipeline_job.automation_step.automation) %>
+      <% else %>
+        Run by <%= @harvest_report.pipeline_job.launched_by&.username %>
+      <% end %>
+    </span>
   </div>
+
   <div class="card-body">
     <div class="table-responsive">
     <table class="table table-hover">
         <thead>
         <tr>
-            <th>Name</th>
+            <th>Transformation input</th>
+            <th>Pages to transform</th>
             <th>Destination</th>
-            <th>Status</th>
-            <th>Run at</th>
-            <th>Run by</th>
+            <th>Delete Previous Records</th>
+            <th>Run Enrichments Concurrently</th>
             <th>Job Priority</th>
-            <th>Last Updated</th>
         </tr>
         </thead>
         <tbody>
-          <td><%= @extraction_job.extraction_definition.name %></td>
-          <td><%= @pipeline_job.destination.name %></td>
-          <td><%= @harvest_report.status %></td>
-          <% if @harvest_report.harvest_job&.extraction_job.present? && @harvest_report&.extraction_start_time.present? %>
-              <td><%= @harvest_report.extraction_start_time.strftime('%H:%M %d/%m/%y') %></td>
-          <% else %>
-              <td><%= @pipeline_job.start_time.strftime('%H:%M %d/%m/%y') %></td>
-          <% end %>
+          <tr>
+            <td>
+              <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                    @pipeline.id,
+                    @harvest_report.harvest_definition.id,
+                    @harvest_report.extraction_definition.id,
+                    @pipeline_job.extraction_job_id
+                  ), class: 'dropdown-item' do %>
+                <i class="bi bi-link-45deg me-2"></i> Existing Extraction
+              <% end %>
+            </td>
 
-          <td>
-            <% if @pipeline_job.schedule.present? %>
-              Schedule
-            <% elsif @pipeline_job.automation_step.present? %>
-              <%= link_to 'Automation', automation_path(@pipeline_job.automation_step.automation) %>
-            <% else %>
-              <%= @pipeline_job.launched_by&.username %>
-            <% end %>
-          </td>
+            <td><%= @pipeline_job.page_type %></td>
+            <td><%= @pipeline_job.destination.name %></td>
 
-          <td>
-            <% if @harvest_report.harvest_job.present? %>
-              <%= @harvest_report.harvest_job.pipeline_job.job_priority&.presence&.humanize || 'No priority' %>
-            <% else %>
-              <%= 'No priority' %>
-            <% end %>
-          </td>
+            <td><%= @pipeline_job.delete_previous_records %></td>
+            <td><%= @pipeline_job.run_enrichment_concurrently %></td>
 
-          <td><%= @harvest_report.last_updated&.strftime('%H:%M:%S %d/%m/%y') %></td>
+            <td>
+              <% if @harvest_report.harvest_job.present? %>
+                <%= @harvest_report.harvest_job.pipeline_job.job_priority&.presence&.humanize || 'No priority' %>
+              <% else %>
+                <%= 'No priority' %>
+              <% end %>
+            </td>
+          </tr>
         </tbody>
     </table>
     </div>
@@ -88,77 +96,49 @@
   <div class="card-header">
     <h5 class="mb-0">Job Timing Settings</h5>
   </div>
-  <div class="card-body">
-    <div class="table-responsive">
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th></th> 
-            <th>Extraction</th>
-            <th>Transformation</th>
-            <th>Load</th>
-        </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Started</strong></td>
-            <td><%= @harvest_report.extraction_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>    
-            <td><%= @harvest_report.transformation_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
-            <td><%= @harvest_report.load_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
-          </tr>
 
+  <% @harvest_reports.each do |report| %>
+    <div class="card-body">
+      <div class="table-responsive">
+      <h4><%= report.harvest_job.name %></h4>
+      <span class="badge bg-primary">
+        <%= report.harvest_job.status %>
+      </span>
+      <table class="table table-hover">
+          <thead>
           <tr>
-            <td><strong>Last Updated</strong></td>
-            <td><%= @harvest_report.extraction_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
-            <td><%= @harvest_report.transformation_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
-            <td><%= @harvest_report.load_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <th></th> 
+              <th>Started</th>
+              <th>Last Updated</th>
+              <th>Ended</th>
           </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Extraction</strong></td>
+              <td><%= report.extraction_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td> 
+              <td><%= report.extraction_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.extraction_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+            </tr>
 
-          <tr>
-            <td><strong>Ended</strong></td>
-            <td><%= @harvest_report.extraction_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
-            <td><%= @harvest_report.transformation_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
-            <td><%= @harvest_report.load_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
-          </tr>
-        </tbody>
-    </table>
+            <tr>
+              <td><strong>Transformation</strong></td>
+              <td><%= report.transformation_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
+              <td><%= report.transformation_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.transformation_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Load</strong></td>
+              <td><%= report.load_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
+              <td><%= report.load_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
+              <td><%= report.load_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+            </tr>
+          </tbody>
+      </table>
+      </div>
     </div>
-  </div>
-</div>
-
-<br/><br/>
-
-<div class="card">
-  <div class="card-header">
-    <h5 class="mb-0">Extraction Settings</h5>
-  </div>
-  <div class="card-body">
-    <div class="table-responsive">
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th>Extraction Details</th>
-            <th>Delete Previous Records</th>
-            <th>Run Enrichment Concurrently</th>
-        </tr>
-        </thead>
-        <tbody>
-          <td>
-            <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
-                  @pipeline.id,
-                  @harvest_report.harvest_definition.id,
-                  @harvest_report.extraction_definition.id,
-                  @harvest_report.harvest_job.extraction_job_id
-                ), class: 'dropdown-item' do %>
-              <i class="bi bi-link-45deg me-2"></i> View Extracted Data
-            <% end %>          
-          </td>        
-          <td><%= @pipeline_job.delete_previous_records %></td>
-          <td><%= @pipeline_job.run_enrichment_concurrently %></td>
-        </tbody>
-    </table>
-    </div>
-  </div>
+  <% end %>
 </div>
 
 <%= render 'shared/pagination_below_table', items: @documents %>

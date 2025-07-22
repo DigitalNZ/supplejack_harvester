@@ -11,6 +11,7 @@ class DetailsController < ApplicationController
     @document = @documents[params[:page]]
     @pipeline_job = @pipeline.pipeline_jobs.first
     @harvest_report = @pipeline.pipeline_jobs.first.harvest_reports.first
+    @harvest_reports = @pipeline.pipeline_jobs.first.harvest_reports
   end
 
   private
