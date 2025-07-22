@@ -67,7 +67,7 @@
                   <i class="bi bi-link-45deg me-2"></i> Existing Extraction
                 <% end %>
               <% else %>
-                New Extraction              
+                New Extraction
               <% end %>
             </td>
 
@@ -119,7 +119,7 @@
             <tr>
               <td><strong>Extraction</strong></td>
               <td><%= report.pages_extracted %> pages</td>
-              <td><%= report.extraction_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td> 
+              <td><%= report.extraction_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
               <td><%= report.extraction_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
               <td><%= report.extraction_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
             </tr>
@@ -127,7 +127,7 @@
             <tr>
               <td><strong>Transformation</strong></td>
               <td><%= report.records_transformed %> records</td>
-              <td><%= report.transformation_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
+              <td><%= report.transformation_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
               <td><%= report.transformation_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
               <td><%= report.transformation_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
             </tr>
@@ -139,8 +139,8 @@
                 <p><%= report.records_rejected %> records rejected</p>
                 <p><%= report.records_deleted %> records deleted</p>
               </td>
-              <td><%= report.load_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
-              <td><%= report.load_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
+              <td><%= report.load_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.load_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
               <td><%= report.load_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
             </tr>
           </tbody>

@@ -25,11 +25,7 @@
           rescue StandardError
             nil
           end,
-          active: begin
-            false
-          rescue StandardError
-            false
-          end,
+          active: false,
           display: request.path.end_with?('details')
         ) %>
 
