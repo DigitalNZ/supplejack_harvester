@@ -57,12 +57,12 @@
         <tbody>
           <tr>
             <td>
-              <% if @pipeline_job.extraction_job_id %>
+              <% if @extraction_job.id %>
                 <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
                       @pipeline.id,
                       @harvest_report.harvest_definition.id,
                       @harvest_report.extraction_definition.id,
-                      @pipeline_job.extraction_job_id
+                      @extraction_job.id
                     ), class: 'dropdown-item' do %>
                   <i class="bi bi-link-45deg me-2"></i> Existing Extraction
                 <% end %>
