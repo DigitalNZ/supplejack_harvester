@@ -57,13 +57,17 @@
         <tbody>
           <tr>
             <td>
-              <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
-                    @pipeline.id,
-                    @harvest_report.harvest_definition.id,
-                    @harvest_report.extraction_definition.id,
-                    @pipeline_job.extraction_job_id
-                  ), class: 'dropdown-item' do %>
-                <i class="bi bi-link-45deg me-2"></i> Existing Extraction
+              <% if @pipeline_job.extraction_job_id %>
+                <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                      @pipeline.id,
+                      @harvest_report.harvest_definition.id,
+                      @harvest_report.extraction_definition.id,
+                      @pipeline_job.extraction_job_id
+                    ), class: 'dropdown-item' do %>
+                  <i class="bi bi-link-45deg me-2"></i> Existing Extraction
+              <% else %>
+                New Extraction              
+              <% end %>
               <% end %>
             </td>
 
