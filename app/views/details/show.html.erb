@@ -21,9 +21,6 @@
                     form_class: 'd-inline' %>
     <% end %>
 
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
-      <i class="bi bi-trash" aria-hidden="true"></i> Delete results
-    </button>
   </div>
 
   <div class="clearfix"></div>
@@ -31,17 +28,17 @@
 
 <div class="card">
   <div class="card-header">
-    <h3 class="mb-0">Run Settings</h3>
-
-    <span>
-      <% if @harvest_report.pipeline_job.schedule.present? %>
-        Schedule
-      <% elsif @harvest_report.automation_step.present? %>
-        <%= link_to 'Automation', automation_path(@pipeline_job.automation_step.automation) %>
-      <% else %>
-        Run by <%= @harvest_report.pipeline_job.launched_by&.username %>
-      <% end %>
-    </span>
+    <h3 class="mb-0">
+      <span>
+        <% if @harvest_report.pipeline_job.schedule.present? %>
+          Schedule
+        <% elsif @harvest_report.automation_step.present? %>
+          <%= link_to 'Automation', automation_path(@pipeline_job.automation_step.automation) %>
+        <% else %>
+          Run by <%= @harvest_report.pipeline_job.launched_by&.username %>
+        <% end %>
+      </span>
+    </h3>
   </div>
 
   <div class="card-body">
@@ -94,7 +91,7 @@
 
 <div class="card">
   <div class="card-header">
-    <h5 class="mb-0">Job Timing Settings</h5>
+    <h3 class="mb-0">Job Details</h3>
   </div>
 
   <% @harvest_reports.each do |report| %>
@@ -107,7 +104,8 @@
       <table class="table table-hover">
           <thead>
           <tr>
-              <th></th> 
+              <th></th>
+              <th>Results</th>
               <th>Started</th>
               <th>Last Updated</th>
               <th>Ended</th>
@@ -116,6 +114,7 @@
           <tbody>
             <tr>
               <td><strong>Extraction</strong></td>
+              <td><%= report.pages_extracted %> pages</td>
               <td><%= report.extraction_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td> 
               <td><%= report.extraction_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
               <td><%= report.extraction_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
@@ -123,6 +122,7 @@
 
             <tr>
               <td><strong>Transformation</strong></td>
+              <td><%= report.records_transformed %> records</td>
               <td><%= report.transformation_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
               <td><%= report.transformation_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
               <td><%= report.transformation_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
@@ -130,6 +130,11 @@
 
             <tr>
               <td><strong>Load</strong></td>
+              <td>
+                <p><%= report.records_loaded %> records loaded</p>
+                <p><%= report.records_rejected %> records rejected</p>
+                <p><%= report.records_deleted %> records deleted</p>
+              </td>
               <td><%= report.load_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
               <td><%= report.load_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>              
               <td><%= report.load_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>

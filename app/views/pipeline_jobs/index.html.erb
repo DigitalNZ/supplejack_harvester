@@ -64,8 +64,8 @@
         <% total_pipeline_jobs = @pipeline_jobs.count %>
 
         <% @pipeline_jobs.each.with_index(1) do |pipeline_job, index| %>
+          <% index = 0 %>
           <% pipeline_job.harvest_definitions_to_run.zip(pipeline_job.harvest_reports) do |definition_id, report| %>
-
             <% if report.present? %>
               <% badge_classes = class_names(
                    'badge',
@@ -127,16 +127,18 @@
                               <i class="bi bi-link-45deg me-2"></i> View Extracted Data
                             <% end %>
                           </li>
-                          <li>
-                            <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_details_path(
-                                  @pipeline.id,
-                                  report.harvest_definition.id,
-                                  report.extraction_definition.id,
-                                  report.harvest_job.extraction_job_id
-                                ), class: 'dropdown-item' do %>
-                              <i class="bi bi-link-45deg me-2"></i> Job Details
-                            <% end %>
-                          </li>
+                          <% if index == 0 %>
+                            <li>
+                              <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_details_path(
+                                    @pipeline.id,
+                                    report.harvest_definition.id,
+                                    report.extraction_definition.id,
+                                    report.harvest_job.extraction_job_id
+                                  ), class: 'dropdown-item' do %>
+                                <i class="bi bi-link-45deg me-2"></i> Job Details
+                              <% end %>
+                            </li>
+                          <% end %>
                         <% end %>
 
                         <% if report.status == 'running' || report.status == 'queued' %>
@@ -192,6 +194,7 @@
                 <td></td>
               </tr>
             <% end %>
+            <% index = index + 1 %>            
           <% end %>
 
           <% if index != total_pipeline_jobs %>

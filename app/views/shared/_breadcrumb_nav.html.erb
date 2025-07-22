@@ -18,6 +18,21 @@
           display: request.path.include?(pipelines_path)
         ) %>
 
+   <%= breadcrumb_item(
+          text: 'Pipeline Jobs',
+          path: begin
+            pipeline_pipeline_jobs_path(pipeline_id)
+          rescue StandardError
+            nil
+          end,
+          active: begin
+            false
+          rescue StandardError
+            false
+          end,
+          display: request.path.end_with?('details')
+        ) %>
+
     <%= breadcrumb_item(
           text: @pipeline&.name_in_database,
           path: begin
