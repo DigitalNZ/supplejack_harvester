@@ -9,7 +9,7 @@ class DetailsController < ApplicationController
   def show
     @pipeline_job = PipelineJob.find(params[:id])
     @harvest_report = @pipeline_job.harvest_report
-    @harvest_reports = @pipeline.pipeline_jobs.first.harvest_reports
+    @harvest_reports = @pipeline_job.harvest_reports
   end
 
   private

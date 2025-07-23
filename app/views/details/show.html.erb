@@ -64,7 +64,7 @@
                       @harvest_report.extraction_definition.id,
                       @extraction_job.id
                     ), class: 'dropdown-item' do %>
-                  <i class="bi bi-link-45deg me-2"></i> Existing Extraction
+                  <i class="bi bi-link-45deg me-2"></i> <%= @extraction_job.name %>
                 <% end %>
               <% else %>
                 New Extraction
@@ -91,7 +91,7 @@
   </div>
 </div>
 
-<div class="clearfix"></div>
+<br/><br/>
 
 <div class="card">
   <div class="card-header">
