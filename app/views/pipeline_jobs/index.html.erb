@@ -129,11 +129,12 @@
                           </li>
                           <% if index == 0 %>
                             <li>
-                              <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_details_path(
+                              <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
                                     @pipeline.id,
                                     report.harvest_definition.id,
                                     report.extraction_definition.id,
-                                    report.harvest_job.extraction_job_id
+                                    report.harvest_job.extraction_job_id,
+                                    pipeline_job.id
                                   ), class: 'dropdown-item' do %>
                                 <i class="bi bi-link-45deg me-2"></i> Job Details
                               <% end %>

@@ -7,8 +7,8 @@ class DetailsController < ApplicationController
   before_action :find_extraction_job, only: %i[show]
 
   def show
-    @pipeline_job = @pipeline.pipeline_jobs.first
-    @harvest_report = @pipeline.pipeline_jobs.first.harvest_reports.first
+    @pipeline_job = PipelineJob.find(params[:id])
+    @harvest_report = @pipeline_job.harvest_report
     @harvest_reports = @pipeline.pipeline_jobs.first.harvest_reports
   end
 

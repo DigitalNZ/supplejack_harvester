@@ -30,12 +30,12 @@
   <div class="card-header">
     <h3 class="mb-0">
       <span>
-        <% if @harvest_report.pipeline_job.schedule.present? %>
+        <% if @pipeline_job.schedule.present? %>
           Schedule
-        <% elsif @harvest_report.automation_step.present? %>
+        <% elsif @pipeline_job.automation_step.present? %>
           <%= link_to 'Automation', automation_path(@pipeline_job.automation_step.automation) %>
         <% else %>
-          Run by <%= @harvest_report.pipeline_job.launched_by&.username %>
+          Run by <%= @pipeline_job.launched_by&.username %>
         <% end %>
       </span>
     </h3>
