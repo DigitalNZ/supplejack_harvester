@@ -1,0 +1,151 @@
+<%= content_for(:title) { "#{@extraction_definition.name} job" } %>
+
+<%= content_for(:header) do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <div class="float-start">
+    <h1><%= @extraction_job.extraction_definition.name %></h1>
+    <strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong>
+  </div>
+
+  <div class="float-end">
+    <% if @extraction_job.queued? || @extraction_job.running? %>
+      <%= button_to 'Cancel job',
+                    cancel_pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                      @pipeline,
+                      @harvest_definition,
+                      @extraction_definition,
+                      @extraction_job
+                    ),
+                    class: 'btn btn-outline-danger me-1',
+                    form_class: 'd-inline' %>
+    <% end %>
+
+  </div>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="mb-0">
+      <span>
+        <% if @pipeline_job.schedule.present? %>
+          Schedule
+        <% elsif @pipeline_job.automation_step.present? %>
+          <%= link_to 'Automation', automation_path(@pipeline_job.automation_step.automation) %>
+        <% else %>
+          Run by <%= @pipeline_job.launched_by&.username %>
+        <% end %>
+      </span>
+    </h3>
+  </div>
+
+  <div class="card-body">
+    <div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Transformation input</th>
+            <th>Pages to transform</th>
+            <th>Destination</th>
+            <th>Delete Previous Records</th>
+            <th>Run Enrichments Concurrently</th>
+            <th>Job Priority</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <% if @extraction_job.id %>
+                <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                      @pipeline.id,
+                      @harvest_report.harvest_definition.id,
+                      @harvest_report.extraction_definition.id,
+                      @extraction_job.id
+                    ), class: 'dropdown-item' do %>
+                  <i class="bi bi-link-45deg me-2"></i> <%= @extraction_job.name %>
+                <% end %>
+              <% else %>
+                New Extraction
+              <% end %>
+            </td>
+
+            <td><%= @pipeline_job.page_type %></td>
+            <td><%= @pipeline_job.destination.name %></td>
+
+            <td><%= @pipeline_job.delete_previous_records %></td>
+            <td><%= @pipeline_job.run_enrichment_concurrently %></td>
+
+            <td>
+              <% if @harvest_report.harvest_job.present? %>
+                <%= @harvest_report.harvest_job.pipeline_job.job_priority&.presence&.humanize || 'No priority' %>
+              <% else %>
+                <%= 'No priority' %>
+              <% end %>
+            </td>
+          </tr>
+        </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<br><br>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="mb-0">Job Details</h3>
+  </div>
+
+  <% @harvest_reports.each do |report| %>
+    <div class="card-body">
+      <div class="table-responsive">
+      <h4><%= report.harvest_job.name %></h4>
+      <span class="badge bg-primary">
+        <%= report.harvest_job.status %>
+      </span>
+      <table class="table table-hover">
+          <thead>
+          <tr>
+              <th></th>
+              <th>Results</th>
+              <th>Started</th>
+              <th>Last Updated</th>
+              <th>Ended</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Extraction</strong></td>
+              <td><%= report.pages_extracted %> pages</td>
+              <td><%= report.extraction_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.extraction_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.extraction_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Transformation</strong></td>
+              <td><%= report.records_transformed %> records</td>
+              <td><%= report.transformation_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.transformation_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.transformation_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Load</strong></td>
+              <td>
+                <p><%= report.records_loaded %> records loaded</p>
+                <p><%= report.records_rejected %> records rejected</p>
+                <p><%= report.records_deleted %> records deleted</p>
+              </td>
+              <td><%= report.load_start_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.load_updated_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+              <td><%= report.load_end_time&.strftime('%H:%M:%S %d/%m/%y') %></td>
+            </tr>
+          </tbody>
+      </table>
+      </div>
+    </div>
+  <% end %>
+</div>
