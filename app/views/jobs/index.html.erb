@@ -1,41 +1,202 @@
-<%= content_for(:title) { @pipeline.name_in_database } %>
+<%= content_for(:title) { 'Jobs' } %>
 
 <%= content_for(:header) do %>
   <%= render 'shared/breadcrumb_nav' %>
 
   <div class='float-start'>
-    <h1><%= @pipeline.name %></h1>
-    <p><%= @pipeline.description %></p>
-  </div>
-
-  <div class="float-end">
-    <%= link_to 'Edit', edit_pipeline_path(@pipeline), class: 'me-1 btn btn-outline-primary' %>
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">Delete</button>
+    <h1>Jobs</h1>
+    <p>Global view of pipeline jobs</p>
   </div>
 
   <div class='clearfix'></div>
-
-  <div class='mt-4'></div>
-  <ul class="nav nav-tabs">
-    <li class='nav-item'>
-      <%= link_to 'Pipeline', pipeline_path(@pipeline), class: 'nav-link' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to 'Jobs', pipeline_jobs_path(@pipeline), class: 'nav-link active' %>
-    </li>
-  </ul>
 <% end %>
 
-<% unless @harvest_jobs.nil? %>
+<div class='float-start'>
+  <h3><%= page_entries_info @pipeline_jobs %></h3>
+</div>
 
-  <h4 class='my-4'>Harvest Jobs</h4>
+<div class='float-end'>
+  <%= paginate @pipeline_jobs %>
+</div>
 
-  <%= render partial: 'jobs/jobs', locals: { jobs: @harvest_jobs, type: 'harvest', pipeline: @pipeline } %>
-<% end %>
+<div class='clearfix'></div>
 
-<% unless @enrichment_jobs.nil? %>
-  <h4 class='my-4'>Enrichment Jobs</h4>
+<div class='card'>
+  <div class="table-responsive">
+    <table class="table table-borderless table--jobs">
+      <thead>
+        <tr class='table-primary'>
+          <th scope="col">Pipeline</th>
+          <th scope="col">Destination</th>
+          <th scope="col">Pipeline jobs</th>
+          <th scope="col">Run by</th>
+          <th scope="col">Status</th>
+          <th scope="col">Job started</th>
+          <th scope="col">Duration</th>
+          <th scope="col">Pages Extracted</th>
+          <th scope="col">Records Transformed</th>
+          <th scope="col">Records Loaded</th>
+          <th scope="col">Records Rejected</th>
+          <th scope="col">Records Deleted</th>
+          <th scope="col">Job Priority</th>
+          <th scope="col">Last Updated</th>
+          <th scope="col">More</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% total_pipeline_jobs = @pipeline_jobs.count %>
 
-  <%= render partial: 'jobs/jobs', locals: { jobs: @enrichment_jobs, type: 'harvest', pipeline: @pipeline } %>
-<% end %>
+        <% @pipeline_jobs.each.with_index(1) do |pipeline_job, index| %>
+          <% index = 0 %>
+          <% pipeline_job.harvest_definitions_to_run.zip(pipeline_job.harvest_reports) do |definition_id, report| %>
+            <% if report.present? %>
+              <% badge_classes = class_names(
+                   'badge',
+                   {
+                     'bg-primary': report.status == 'completed',
+                     'bg-secondary': %w[running queued cancelled].include?(report.status)
+                   }
+                 ) %>
+
+                <tr>
+                  <td><%= link_to pipeline_job.pipeline.name, pipeline_job.pipeline %></td>
+                  <td><%= link_to pipeline_job.destination.name, pipeline_job.destination %></td>
+                  <td><%= report.harvest_job&.name %></td>
+                  <td>
+                    <% if pipeline_job.schedule.present? %>
+                      Schedule
+                    <% elsif pipeline_job.automation_step.present? %>
+                      <%= link_to 'Automation', automation_path(pipeline_job.automation_step.automation) %>
+                    <% else %>
+                      <%= pipeline_job.launched_by&.username %>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="<%= badge_classes %>">
+                      <%= report.status.capitalize %>
+                    </span>
+                  </td>
+
+                  <% if report.harvest_job&.extraction_job.present? && report&.extraction_start_time.present? %>
+                      <td><%= report.extraction_start_time.strftime('%H:%M %d/%m/%y') %></td>
+                  <% else %>
+                      <td><%= pipeline_job.start_time.strftime('%H:%M %d/%m/%y') %></td>
+                  <% end %>
+
+                  <td><%= job_duration_seconds(report.duration_seconds) %></td>
+                  <td><%= report.pages_extracted %></td>
+                  <td><%= report.records_transformed %></td>
+                  <td><%= report.records_loaded %></td>
+                  <td><%= report.records_rejected %></td>
+                  <td><%= report.records_deleted %></td>
+                  <td>
+                    <% if report.harvest_job.present? %>
+                      <%= report.harvest_job.pipeline_job.job_priority&.presence&.humanize || 'No priority' %>
+                    <% else %>
+                      <%= 'No priority' %>
+                    <% end %>
+                  </td>
+                  <td><%= report.last_updated&.strftime('%H:%M:%S %d/%m/%y') %></td>
+                  <td>
+                    <% if report.harvest_definition %>
+                      <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <% if report.harvest_job && report.harvest_job.extraction_job_id.present? %>
+                          <li>
+                            <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                                  pipeline_job.pipeline.id,
+                                  report.harvest_definition.id,
+                                  report.extraction_definition.id,
+                                  report.harvest_job.extraction_job_id
+                                ), class: 'dropdown-item' do %>
+                              <i class="bi bi-link-45deg me-2"></i> View Extracted Data
+                            <% end %>
+                          </li>
+                          <% if index == 0 %>
+                            <li>
+                              <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
+                                    pipeline_job.pipeline.id,
+                                    report.harvest_definition.id,
+                                    report.extraction_definition.id,
+                                    report.harvest_job.extraction_job_id,
+                                    pipeline_job.id
+                                  ), class: 'dropdown-item' do %>
+                                <i class="bi bi-link-45deg me-2"></i> Job Details
+                              <% end %>
+                            </li>
+                          <% end %>
+                        <% end %>
+
+                        <% if report.status == 'running' || report.status == 'queued' %>
+                          <li>
+                            <%= button_to cancel_pipeline_pipeline_job_path(
+                                  pipeline_job.pipeline.id, report.pipeline_job_id
+                                ), class: 'dropdown-item' do %>
+                              <i class="bi bi-x-circle me-2"></i> Cancel job
+                            <% end %>
+                          </li>
+                        <% end %>
+                      </ul>
+                    <% end %>
+                  </td>
+                </tr>
+            <% else %>
+              <tr>
+                <td><%= link_to pipeline_job.pipeline.name, pipeline_job.pipeline %></td>
+                <td><%= link_to pipeline_job.destination.name, pipeline_job.destination %></td>
+                <td><%= HarvestDefinition.find(definition_id).name %></td>
+                <td>
+                  <% if pipeline_job.schedule.present? %>
+                    Schedule
+                  <% elsif pipeline_job.automation_step.present? %>
+                    <%= link_to 'Automation', automation_path(pipeline_job.automation_step.automation) %>
+                  <% else %>
+                    <%= pipeline_job.launched_by&.username %>
+                  <% end %>
+                </td>
+                <td>
+                  <span class='badge bg-secondary'>
+                    <% if pipeline_job.cancelled? %>
+                      Cancelled
+                    <% else %>
+                      Waiting
+                    <% end %>
+                  </span>
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>
+                  <% if pipeline_job.schedule.present? %>
+                    Schedule
+                  <% elsif pipeline_job.automation_step.present? %>
+                    Automation
+                  <% else %>
+                    <%= pipeline_job.launched_by&.username %>
+                  <% end %>
+                </td>
+                <td></td>
+                <td></td>
+              </tr>
+            <% end %>
+            <% index += 1 %>
+          <% end %>
+
+          <% if index != total_pipeline_jobs %>
+            <tr class='table__divider'>
+              <td colspan='13'>
+                <hr>
+              </td>
+            </tr>
+          <% end %>
+
+        <% end %>
+
+      </tbody>
+    </table>
+  </div>
+</div>
