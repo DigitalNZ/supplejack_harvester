@@ -12,6 +12,13 @@
     <%= breadcrumb_item(text: 'Home', path: root_path) %>
 
     <%= breadcrumb_item(
+          text: 'Jobs',
+          path: jobs_path,
+          active: current_page?(jobs_path),
+          display: current_page?(jobs_path)
+        ) %>
+
+    <%= breadcrumb_item(
           text: 'Pipelines',
           path: pipelines_path,
           active: current_page?(pipelines_path),
