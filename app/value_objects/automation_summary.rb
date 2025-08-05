@@ -34,7 +34,7 @@ class AutomationSummary
   end
 
   def start_time
-    @automation.created_at
+    @automation&.created_at
   end
 
   def end_time
