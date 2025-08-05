@@ -47,9 +47,11 @@ class AutomationSummary
 
   def collect_all_timestamps
     timestamps = []
+    # rubocop:disable Style/SafeNavigationChainLength
     @automation&.automation_steps&.order(position: :asc)&.each do |step|
       timestamps.concat(collect_timestamps_for_step(step))
     end
+    # rubocop:enable Style/SafeNavigationChainLength
     timestamps
   end
 
