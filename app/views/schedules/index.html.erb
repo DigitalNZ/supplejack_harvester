@@ -70,7 +70,7 @@
               <div class='float-start'>
                 <% if process.pipeline.present? %>
                   <strong><%= link_to process.pipeline.name, pipeline_path(process.pipeline) %></strong>
-                <% else %>
+                <% elsif process.automation_template.present? %>
                   <strong><%= link_to process&.automation_template&.name,
                                       automation_template_path(process.automation_template) %></strong>
                 <% end %>
