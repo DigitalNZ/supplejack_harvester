@@ -26,6 +26,7 @@
                                          active: display_automations) %>
     <% automation_templates_classes = class_names('nav-link', active: request.path.include?('automation_templates')) %>
     <% schedules_classes = class_names('nav-link', active: request.path == '/schedules') %>
+    <% jobs_classes = class_names('nav-link', active: request.path == '/jobs') %>
 
     <div class="collapse navbar-collapse justify-content-between" id="navbar-nav">
       <ul class="navbar-nav">
@@ -44,6 +45,9 @@
           </li>
           <li class="nav-item">
             <%= link_to 'Schedules', schedules_path, class: schedules_classes %>
+          </li>
+          <li class="nav-item">
+            <%= link_to 'Jobs', jobs_path, class: jobs_classes %>
           </li>
         <% end %>
       </ul>

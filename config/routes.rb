@@ -33,7 +33,7 @@ Rails.application.routes.draw do
     member do
       post :run
     end
-    
+
     resources :automation_steps, only: [] do
       collection do
         get :harvest_definitions
@@ -46,7 +46,7 @@ Rails.application.routes.draw do
       post :run_automation
       get :automations
     end
-    
+
     resources :automation_step_templates do
       collection do
         get :harvest_definitions
@@ -56,6 +56,8 @@ Rails.application.routes.draw do
 
   resources :schedules, except: %i[show]
 
+  resources :jobs, only: %i[index]
+
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
     get :harvest_definitions, on: :member
@@ -63,7 +65,7 @@ Rails.application.routes.draw do
     resources :pipeline_jobs, only: %i[create show index] do
       post :cancel, on: :member
     end
-  
+
     resources :automation_templates, only: [:index]
 
     scope module: :pipelines do
