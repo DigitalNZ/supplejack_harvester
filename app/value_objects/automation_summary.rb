@@ -34,7 +34,7 @@ class AutomationSummary
   end
 
   def start_time
-    @automation.created_at
+    @automation&.created_at
   end
 
   def end_time
@@ -47,9 +47,11 @@ class AutomationSummary
 
   def collect_all_timestamps
     timestamps = []
-    @automation.automation_steps.order(position: :asc).each do |step|
+    # rubocop:disable Style/SafeNavigationChainLength
+    @automation&.automation_steps&.order(position: :asc)&.each do |step|
       timestamps.concat(collect_timestamps_for_step(step))
     end
+    # rubocop:enable Style/SafeNavigationChainLength
     timestamps
   end
 
@@ -94,7 +96,7 @@ class AutomationSummary
     totals = EMPTY_METRICS.dup
 
     # Collect metrics from all steps with pipeline jobs
-    @automation.automation_steps.each do |step|
+    @automation&.automation_steps&.each do |step|
       next if step.step_type == 'api_call' # Skip API call steps as they don't have harvest metrics
       next if step.pipeline_job.blank? || step.pipeline_job.harvest_reports.blank?
 
@@ -106,7 +108,7 @@ class AutomationSummary
   end
 
   def step_metrics
-    @automation.automation_steps.map do |step|
+    @automation&.automation_steps&.map do |step|
       metrics = collect_step_metrics(step)
 
       {
