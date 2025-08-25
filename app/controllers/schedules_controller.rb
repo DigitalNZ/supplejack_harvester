@@ -6,7 +6,7 @@ class SchedulesController < ApplicationController
   before_action :assign_scheduleable_items, only: %i[new create edit update]
 
   def index
-    @schedules = Schedule.schedules_within_range(Time.zone.now.to_date, 30.days.from_now.to_date)
+    @schedules = Schedule.schedules_within_range(Time.current.to_date, 30.days.from_now.to_date)
   end
 
   def new

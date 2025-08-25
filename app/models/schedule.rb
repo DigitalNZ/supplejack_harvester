@@ -57,16 +57,20 @@ class Schedule < ApplicationRecord
   end
 
   def self.add_schedule_times_to_schedule_map(schedule, schedule_map, start_date, end_date)
-    times = Fugit.parse(schedule.cron_syntax).within((start_date...end_date))
-
-    times.each do |time|
-      date = time.to_t.to_date
+    enumerate_occurences(schedule, start_date, end_date).each do |time|
+      date = time.to_date
       time_str = time.strftime('%H%M').to_i
 
       schedule_map[date] ||= {}
       schedule_map[date][time_str] ||= []
       schedule_map[date][time_str] << schedule
     end
+  end
+
+  def self.enumerate_occurences(schedule, start_date, end_date)
+    Fugit.parse(schedule.cron_syntax)
+         .within(start_date...end_date)
+         .map { |eo| eo.to_t.in_time_zone(Time.zone) }
   end
 
   def scheduled_resource_present
@@ -88,7 +92,7 @@ class Schedule < ApplicationRecord
   # This is for converting 12 hour times into 24 hour times
   # so if the user has a time of 7:45pm, it becomes 19:45
   def sanitized_time
-    return DateTime.parse(time).strftime('%H:%M') if time.downcase.include?('am') || time.downcase.include?('pm')
+    return Time.zone.parse(time).strftime('%H:%M') if time.downcase.include?('am') || time.downcase.include?('pm')
 
     time
   end
