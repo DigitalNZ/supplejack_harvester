@@ -95,7 +95,10 @@ RSpec.describe Schedule, type: :model do
     let!(:schedule_4) { create(:schedule, frequency: 2, bi_monthly_day_one: 2, bi_monthly_day_two: 14, time: '9:00 PM', pipeline:, destination:, harvest_definitions_to_run:) }
 
     it 'returns a hash of dates, with the schedules that are assigned on that date orderered by time for a given range' do
-      schedule_map = Schedule.schedules_within_range(Time.zone.strptime('01062025', '%d%m%Y').to_date, Time.zone.strptime('30062025', '%d%m%Y').to_date)
+      schedule_map = Schedule.schedules_within_range(
+        Time.zone.strptime('01062025', '%d%m%Y').to_date,
+        Time.zone.strptime('30062025', '%d%m%Y').to_date
+      )
 
       result = {
         Time.zone.strptime('01062025', '%d%m%Y').to_date => {
@@ -108,7 +111,7 @@ RSpec.describe Schedule, type: :model do
           1230 => [schedule],
           2100 => [schedule_4]
         },
-        Time.zone.strptime('03062025', '%d%m%Y').to_date => { 
+        Time.zone.strptime('03062025', '%d%m%Y').to_date => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
@@ -229,7 +232,7 @@ RSpec.describe Schedule, type: :model do
       expect(schedule_map).to eq result
     end
   end
-  
+
   describe 'validations' do
     let!(:schedule) { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
     it { is_expected.to validate_presence_of(:destination).with_message('must exist') }
@@ -237,13 +240,13 @@ RSpec.describe Schedule, type: :model do
     it { is_expected.to validate_presence_of(:time).with_message("can't be blank") }
 
     it 'requires the harvest_definitions_to_run when a pipeline is provided' do
-      schedule = build(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, name: 'Harvest Definitions') 
+      schedule = build(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, name: 'Harvest Definitions')
 
       expect(schedule.valid?).to be false
     end
 
     it 'does not require the harvest_definitions_to_run when an automation template is provided' do
-      schedule = build(:schedule, frequency: 0, time: '12:30', automation_template:, destination:, name: 'Harvest Definitions') 
+      schedule = build(:schedule, frequency: 0, time: '12:30', automation_template:, destination:, name: 'Harvest Definitions')
       expect(schedule.valid?).to be true
     end
 
@@ -304,31 +307,31 @@ RSpec.describe Schedule, type: :model do
       it 'returns a valid cron syntax for a minute and hour' do
         schedule = create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '30 12 * * *'
+        expect(schedule.cron_syntax).to eq '30 12 * * * Pacific/Auckland'
       end
 
       it 'returns a valid cron syntax when there is just an hour' do
         schedule = create(:schedule, frequency: 0, time: '12', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '0 12 * * *'
+        expect(schedule.cron_syntax).to eq '0 12 * * * Pacific/Auckland'
       end
 
       it 'returns a valid cron syntax when the time has AM or PM' do
         schedule = create(:schedule, frequency: 0, time: '7:45PM', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '45 19 * * *'
+        expect(schedule.cron_syntax).to eq '45 19 * * * Pacific/Auckland'
       end
 
       it 'returns a valid cron syntax when the time has AM or PM' do
         schedule = create(:schedule, frequency: 0, time: '7:45 AM', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '45 07 * * *'
+        expect(schedule.cron_syntax).to eq '45 07 * * * Pacific/Auckland'
       end
 
       it 'returns a valid cron syntax when the time is a late 24 hour time' do
         schedule = create(:schedule, frequency: 0, time: '22:00', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '00 22 * * *'
+        expect(schedule.cron_syntax).to eq '00 22 * * * Pacific/Auckland'
       end
     end
 
@@ -336,23 +339,23 @@ RSpec.describe Schedule, type: :model do
       it 'returns a valid cron syntax for a particular day of the week' do
         schedule = create(:schedule, frequency: 1, day: 3, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '30 12 * * 3' 
+        expect(schedule.cron_syntax).to eq '30 12 * * 3 Pacific/Auckland'
       end
-    end 
+    end
 
     context 'fortnightly' do
       it 'returns a valid cron syntax for a bi monthly schedule' do
         schedule = create(:schedule, frequency: 2, bi_monthly_day_one: 1, bi_monthly_day_two: 14, time: '10:45', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '45 10 1,14 * *'
+        expect(schedule.cron_syntax).to eq '45 10 1,14 * * Pacific/Auckland'
       end
     end
-  
+
     context 'monthly' do
       it 'returns a valid cron syntax for a day of the month' do
         schedule = create(:schedule, frequency: 3, day_of_the_month: 21, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '30 12 21 * *'
+        expect(schedule.cron_syntax).to eq '30 12 21 * * Pacific/Auckland'
       end
     end
   end
