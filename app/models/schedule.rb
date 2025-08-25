@@ -60,7 +60,7 @@ class Schedule < ApplicationRecord
     times = Fugit.parse(schedule.cron_syntax).within((start_date...end_date))
 
     times.each do |time|
-      date = time.to_t.to_date
+      date = time.to_t.in_time_zone(Time.zone)
       time_str = time.strftime('%H%M').to_i
 
       schedule_map[date] ||= {}
@@ -88,7 +88,7 @@ class Schedule < ApplicationRecord
   # This is for converting 12 hour times into 24 hour times
   # so if the user has a time of 7:45pm, it becomes 19:45
   def sanitized_time
-    return DateTime.parse(time).strftime('%H:%M') if time.downcase.include?('am') || time.downcase.include?('pm')
+    return Time.zone.parse(time).strftime('%H:%M') if time.downcase.include?('am') || time.downcase.include?('pm')
 
     time
   end

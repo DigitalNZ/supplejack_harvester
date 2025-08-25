@@ -31,3 +31,14 @@ Rails/UnknownEnv:
     - uat
     - development
     - test
+
+Rails/TimeZone:
+  Enabled: true
+  EnforcedStyle: strict   # or 'flexible'
+
+Rails/Date:
+  Enabled: true
+  EnforcedStyle: strict   # flags Date.current too; use Time.zone.today
+
+Style/DateTime:
+  Enabled: true
