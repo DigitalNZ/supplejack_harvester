@@ -17,7 +17,7 @@ module CronUtilities
   end
 
   def cron_syntax
-    "#{minute} #{hour} #{month_day} #{month} #{day_of_the_week}"
+    "#{minute} #{hour} #{month_day} #{month} #{day_of_the_week} #{Time.zone.tzinfo.name}"
   end
 
   def next_run_time

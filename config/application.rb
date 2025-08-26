@@ -36,7 +36,7 @@ module Harvester
     config.eager_load_paths << Rails.root.join('slices')
     config.eager_load_paths << Rails.root.join('queries')
 
-    config.time_zone = ENV.fetch('TIME_ZONE', 'Auckland')
+    config.time_zone = ENV.fetch('TZ', 'Pacific/Auckland')
 
     # Don't generate system test files.
     config.generators.system_tests = nil

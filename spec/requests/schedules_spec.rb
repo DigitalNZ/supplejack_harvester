@@ -48,7 +48,7 @@ RSpec.describe "Schedules", type: :request do
       it 'displays an appropriate message' do
         post schedules_path, params: {
           schedule: attributes_for(:schedule, pipeline_id: pipeline.id, destination_id: destination.id)
-        } 
+        }
 
         follow_redirect!
 
@@ -58,14 +58,14 @@ RSpec.describe "Schedules", type: :request do
       it 'creates a Sidekiq::Cron::Job' do
         expect(Sidekiq::Cron::Job).to receive(:create).with(
           name: anything,
-          cron: '30 12 * * *',
+          cron: '30 12 * * * Pacific/Auckland',
           class: 'ScheduleWorker',
           args: anything
         )
 
         post schedules_path, params: {
           schedule: attributes_for(:schedule, harvest_definitions_to_run:, name: 'Pipeline Schedule', frequency: :daily, time: '12:30', pipeline_id: pipeline.id, destination_id: destination.id)
-        } 
+        }
       end
     end
 
@@ -137,12 +137,12 @@ RSpec.describe "Schedules", type: :request do
             harvest_definitions_to_run:
           }
         }
-  
+
         schedule.reload
-  
+
         expect(schedule.name).to eq 'Changed Name'
       end
-  
+
       it 'redirects to the schedules page' do
         patch schedule_path(schedule), params: {
           schedule: {
@@ -150,10 +150,10 @@ RSpec.describe "Schedules", type: :request do
             harvest_definitions_to_run:
           }
         }
-  
+
         expect(response).to redirect_to schedules_path
       end
-      
+
       it 'displays an appropriate message' do
         patch schedule_path(schedule), params: {
           schedule: {
@@ -172,12 +172,12 @@ RSpec.describe "Schedules", type: :request do
 
         post schedules_path, params: {
           schedule: attributes_for(:schedule, harvest_definitions_to_run:, name: 'Schedule', frequency: :daily, time: '12:30', pipeline_id: pipeline.id, destination_id: destination.id)
-        } 
+        }
 
         sidekiq_cron  = Sidekiq::Cron::Job.all.first
 
         expect(Sidekiq::Cron::Job.all.count).to eq 1
-        expect(sidekiq_cron.cron).to eq '30 12 * * *'
+        expect(sidekiq_cron.cron).to eq '30 12 * * * Pacific/Auckland'
 
         patch schedule_path(Schedule.last), params: {
           schedule: {
@@ -185,11 +185,11 @@ RSpec.describe "Schedules", type: :request do
             time: '11:45'
           }
         }
-        
+
         sidekiq_cron  = Sidekiq::Cron::Job.all.first
 
         expect(Sidekiq::Cron::Job.all.count).to eq 1
-        expect(sidekiq_cron.cron).to eq '45 11 * * *' 
+        expect(sidekiq_cron.cron).to eq '45 11 * * * Pacific/Auckland'
       end
     end
 
@@ -200,9 +200,9 @@ RSpec.describe "Schedules", type: :request do
             name: ''
           }
         }
-  
+
         schedule.reload
-  
+
         expect(schedule.name).not_to eq ''
       end
 
@@ -221,7 +221,7 @@ RSpec.describe "Schedules", type: :request do
           schedule: {
             name: ''
           }
-        } 
+        }
 
         expect(response.body).to include 'There was an issue updating your Schedule'
       end
