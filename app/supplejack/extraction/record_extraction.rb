@@ -46,7 +46,7 @@ module Extraction
     end
 
     def exclude_source_id
-      return {} unless @harvest_job.present?
+      return {} if @harvest_job.blank?
       return {} unless @harvest_job.pipeline_job.skip_previously_enriched?
 
       { exclude_source_id: @harvest_job.harvest_definition.source_id }
