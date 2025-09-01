@@ -118,7 +118,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_29_030411) do
     t.boolean "evaluate_javascript", default: false, null: false
     t.text "fields"
     t.boolean "include_sub_documents", default: true, null: false
-    t.boolean "incremental", default: false
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_extraction_definitions_on_name", unique: true
@@ -267,6 +266,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_29_030411) do
     t.boolean "run_enrichment_concurrently", default: false, null: false
     t.bigint "automation_step_id"
     t.string "job_priority"
+    t.boolean "incremental_enrichment", default: false
     t.index ["automation_step_id"], name: "index_pipeline_jobs_on_automation_step_id"
     t.index ["destination_id"], name: "index_pipeline_jobs_on_destination_id"
     t.index ["extraction_job_id"], name: "index_pipeline_jobs_on_extraction_job_id"
