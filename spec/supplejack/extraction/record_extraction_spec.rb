@@ -56,11 +56,11 @@ RSpec.describe Extraction::RecordExtraction do
       end
     end
 
-    context "when the pipeline job runs in incremental enrichment mode" do
+    context "when the pipeline job is set to skip previously enriched records" do
       let(:harvest_job) { create(:harvest_job, harvest_definition:, pipeline_job:) }
       let(:harvest_definition) { create(:harvest_definition, source_id: "enrichment_source_id", kind: 1) }
       let(:extraction_definition) { create(:extraction_definition, :enrichment, destination:) }
-      let(:pipeline_job) { create(:pipeline_job, incremental_enrichment: true) }
+      let(:pipeline_job) { create(:pipeline_job, skip_previously_enriched: true) }
 
       before do
         stub_request(:get, "http://www.localhost:3000/harvester/records?api_key=testkey&search%5Bfragments.source_id%5D=test&search%5Bstatus%5D=active&search_options%5Bpage%5D=1&exclude_source_id=enrichment_source_id").
