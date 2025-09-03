@@ -27,7 +27,8 @@ class ScheduleWorker
       key: SecureRandom.hex,
       page_type: :all_available_pages,
       schedule_id: schedule.id, delete_previous_records: schedule.delete_previous_records,
-      job_priority: schedule.job_priority
+      job_priority: schedule.job_priority,
+      skip_previously_enriched: schedule.skip_previously_enriched
     )
   end
 end

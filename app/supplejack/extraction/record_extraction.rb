@@ -23,7 +23,8 @@ module Extraction
         api_key: api_source.api_key
       }.merge(
         extraction_definition_fields,
-        record_includes
+        record_includes,
+        exclude_source_id
       )
     end
 
@@ -42,6 +43,13 @@ module Extraction
 
     def active_filter
       { status: :active }
+    end
+
+    def exclude_source_id
+      return {} if @harvest_job.blank?
+      return {} unless @harvest_job.pipeline_job.skip_previously_enriched?
+
+      { exclude_source_id: @harvest_job.harvest_definition.source_id }
     end
 
     def fragment_filter

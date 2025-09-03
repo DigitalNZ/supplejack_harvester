@@ -117,6 +117,20 @@
                           {},
                           class: 'form-select mb-3' %>
 
+          <%= form.label :skip_previously_enriched, class: 'form-label' do %>
+              Skip Previously Enriched
+
+              <span
+                data-bs-toggle="tooltip"
+                data-bs-title="Applies enrichments only to records that have not previously received them. Records already enriched will be skipped, even if the enrichment source has changed."><i class="bi bi-question-circle" aria-label="helper text"></i>
+              </span>
+            <% end %>
+
+          <%= form.select :skip_previously_enriched,
+                          options_for_select([['Yes', true], ['No', false]], @schedule.skip_previously_enriched),
+                          {},
+                          class: 'form-select mb-3' %>
+
           <% if ENV['JOB_PRIORITIES'].present? %>
             <%= form.label :job_priority, class: 'form-label' do %>
               Job Priority

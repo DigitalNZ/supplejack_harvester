@@ -145,6 +145,25 @@
           </div>
         </div>
 
+        <div class='col-5'>
+          <%= form.label :skip_previously_enriched, class: 'form-label' do %>
+            Skip Previously Enriched
+
+            <span
+              data-bs-toggle="tooltip"
+              data-bs-title="Applies enrichments only to records that have not previously received them. Records already enriched will be skipped, even if the enrichment source has changed."><i class="bi bi-question-circle" aria-label="helper text"></i>
+            </span>
+          <% end %>
+        </div>
+
+        <div class='col-7'>
+          <div class='form-check'>
+            <%= label_tag do %>
+              <%= check_box('pipeline_job', 'skip_previously_enriched', { class: 'form-check-input' }) %>
+            <% end %>
+          </div>
+        </div>
+
         <% if ENV['JOB_PRIORITIES'].present? %>
           <div class='col-5'>
             <%= form.label :job_priority, class: 'form-label' do %>
