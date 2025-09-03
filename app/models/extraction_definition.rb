@@ -78,6 +78,11 @@ class ExtractionDefinition < ApplicationRecord
       cloned_extraction_definition.requests << cloned_request
     end
 
+    stop_conditions.each do |stop_condition|
+      cloned_stop_condition = stop_condition.dup
+      cloned_extraction_definition.stop_conditions << cloned_stop_condition
+    end
+
     cloned_extraction_definition
   end
 end
