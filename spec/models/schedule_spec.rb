@@ -95,141 +95,149 @@ RSpec.describe Schedule, type: :model do
     let!(:schedule_4) { create(:schedule, frequency: 2, bi_monthly_day_one: 2, bi_monthly_day_two: 14, time: '9:00 PM', pipeline:, destination:, harvest_definitions_to_run:) }
 
     it 'returns a hash of dates, with the schedules that are assigned on that date orderered by time for a given range' do
-      schedule_map = Schedule.schedules_within_range(Time.zone.strptime('01062025', '%d%m%Y').to_date, Time.zone.strptime('30062025', '%d%m%Y').to_date)
+      schedule_map = Schedule.schedules_within_range(
+        Date.new(2025, 6, 1),
+        Date.new(2025, 6, 30)
+      )
 
       result = {
-        Time.zone.strptime('01062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 1) => {
           1030 => [schedule_2],
           1230 => [schedule],
         },
-        Time.zone.strptime('02062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 2) => {
           900 =>  [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule],
           2100 => [schedule_4]
         },
-        Time.zone.strptime('03062025', '%d%m%Y').to_date => { 
+        Date.new(2025, 6, 3) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('04062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 4) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('05062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 5) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('06062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 6) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('07062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 7) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('08062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 8) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('09062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 9) => {
           900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('10062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 10) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('11062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 11) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('12062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 12) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('13062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 13) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('14062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 14) => {
           1030 => [schedule_2],
           1230 => [schedule],
           2100 => [schedule_4]
         },
-        Time.zone.strptime('15062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 15) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('16062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 16) => {
           900 => [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('17062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 17) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('18062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 18) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('19062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 19) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('20062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 20) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('21062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 21) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('22062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 22) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('23062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 23) => {
           900 =>  [schedule_3],
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('24062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 24) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('25062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 25) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('26062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 26) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('27062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 27) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('28062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 28) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('29062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 29) => {
           1030 => [schedule_2],
           1230 => [schedule]
         },
-        Time.zone.strptime('30062025', '%d%m%Y').to_date => {
+        Date.new(2025, 6, 30) => {
           900 =>  [schedule_3],
           1030 => [schedule_2],
         }
       }
 
-      expect(schedule_map).to eq result
+      expect(schedule_map.length).to eq result.length
+
+      result.each do |date, schedules_by_time|
+        expect(schedule_map).to have_key(date)
+        expect(schedule_map[date]).to eq schedules_by_time
+      end
     end
   end
-  
+
   describe 'validations' do
     let!(:schedule) { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
     it { is_expected.to validate_presence_of(:destination).with_message('must exist') }
@@ -237,13 +245,13 @@ RSpec.describe Schedule, type: :model do
     it { is_expected.to validate_presence_of(:time).with_message("can't be blank") }
 
     it 'requires the harvest_definitions_to_run when a pipeline is provided' do
-      schedule = build(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, name: 'Harvest Definitions') 
+      schedule = build(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, name: 'Harvest Definitions')
 
       expect(schedule.valid?).to be false
     end
 
     it 'does not require the harvest_definitions_to_run when an automation template is provided' do
-      schedule = build(:schedule, frequency: 0, time: '12:30', automation_template:, destination:, name: 'Harvest Definitions') 
+      schedule = build(:schedule, frequency: 0, time: '12:30', automation_template:, destination:, name: 'Harvest Definitions')
       expect(schedule.valid?).to be true
     end
 
@@ -304,31 +312,31 @@ RSpec.describe Schedule, type: :model do
       it 'returns a valid cron syntax for a minute and hour' do
         schedule = create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '30 12 * * *'
+        expect(schedule.cron_syntax).to eq '30 12 * * * Pacific/Auckland'
       end
 
       it 'returns a valid cron syntax when there is just an hour' do
         schedule = create(:schedule, frequency: 0, time: '12', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '0 12 * * *'
+        expect(schedule.cron_syntax).to eq '0 12 * * * Pacific/Auckland'
       end
 
       it 'returns a valid cron syntax when the time has AM or PM' do
         schedule = create(:schedule, frequency: 0, time: '7:45PM', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '45 19 * * *'
+        expect(schedule.cron_syntax).to eq '45 19 * * * Pacific/Auckland'
       end
 
       it 'returns a valid cron syntax when the time has AM or PM' do
         schedule = create(:schedule, frequency: 0, time: '7:45 AM', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '45 07 * * *'
+        expect(schedule.cron_syntax).to eq '45 07 * * * Pacific/Auckland'
       end
 
       it 'returns a valid cron syntax when the time is a late 24 hour time' do
         schedule = create(:schedule, frequency: 0, time: '22:00', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '00 22 * * *'
+        expect(schedule.cron_syntax).to eq '00 22 * * * Pacific/Auckland'
       end
     end
 
@@ -336,23 +344,23 @@ RSpec.describe Schedule, type: :model do
       it 'returns a valid cron syntax for a particular day of the week' do
         schedule = create(:schedule, frequency: 1, day: 3, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '30 12 * * 3' 
+        expect(schedule.cron_syntax).to eq '30 12 * * 3 Pacific/Auckland'
       end
-    end 
+    end
 
     context 'fortnightly' do
       it 'returns a valid cron syntax for a bi monthly schedule' do
         schedule = create(:schedule, frequency: 2, bi_monthly_day_one: 1, bi_monthly_day_two: 14, time: '10:45', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '45 10 1,14 * *'
+        expect(schedule.cron_syntax).to eq '45 10 1,14 * * Pacific/Auckland'
       end
     end
-  
+
     context 'monthly' do
       it 'returns a valid cron syntax for a day of the month' do
         schedule = create(:schedule, frequency: 3, day_of_the_month: 21, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)
 
-        expect(schedule.cron_syntax).to eq '30 12 21 * *'
+        expect(schedule.cron_syntax).to eq '30 12 21 * * Pacific/Auckland'
       end
     end
   end

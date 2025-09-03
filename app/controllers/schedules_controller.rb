@@ -6,7 +6,7 @@ class SchedulesController < ApplicationController
   before_action :assign_scheduleable_items, only: %i[new create edit update]
 
   def index
-    @schedules = Schedule.schedules_within_range(Time.zone.now.to_date, 30.days.from_now.to_date)
+    @schedules = Schedule.schedules_within_range(Time.current.to_date, 30.days.from_now.to_date)
   end
 
   def new
@@ -73,7 +73,7 @@ class SchedulesController < ApplicationController
 
     params.require(:schedule).permit(:frequency, :time, :day, :day_of_the_month, :bi_monthly_day_one,
                                      :bi_monthly_day_two, :name, :delete_previous_records, :pipeline_id,
-                                     :destination_id, :automation_template_id, :job_priority,
+                                     :destination_id, :automation_template_id, :job_priority, :skip_previously_enriched,
                                      harvest_definitions_to_run: [])
   end
 end

@@ -70,8 +70,8 @@
               <div class='float-start'>
                 <% if process.pipeline.present? %>
                   <strong><%= link_to process.pipeline.name, pipeline_path(process.pipeline) %></strong>
-                <% else %>
-                  <strong><%= link_to process.automation_template.name,
+                <% elsif process.automation_template.present? %>
+                  <strong><%= link_to process&.automation_template&.name,
                                       automation_template_path(process.automation_template) %></strong>
                 <% end %>
                 <p class='m-0'>Runs <%= process.frequency %> at <%= process.time %></p>

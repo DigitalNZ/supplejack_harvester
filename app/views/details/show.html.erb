@@ -52,6 +52,7 @@
             <th>Delete Previous Records</th>
             <th>Run Enrichments Concurrently</th>
             <th>Job Priority</th>
+            <th>Skip Previously Enriched</th>
         </tr>
         </thead>
         <tbody>
@@ -84,6 +85,7 @@
                 <%= 'No priority' %>
               <% end %>
             </td>
+            <td><%= @pipeline_job.skip_previously_enriched %></td>
           </tr>
         </tbody>
     </table>

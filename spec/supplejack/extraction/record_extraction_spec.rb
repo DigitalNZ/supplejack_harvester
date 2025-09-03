@@ -56,6 +56,29 @@ RSpec.describe Extraction::RecordExtraction do
       end
     end
 
+    context "when the pipeline job is set to skip previously enriched records" do
+      let(:harvest_job) { create(:harvest_job, harvest_definition:, pipeline_job:) }
+      let(:harvest_definition) { create(:harvest_definition, source_id: "enrichment_source_id", kind: 1) }
+      let(:extraction_definition) { create(:extraction_definition, :enrichment, destination:) }
+      let(:pipeline_job) { create(:pipeline_job, skip_previously_enriched: true) }
+
+      before do
+        stub_request(:get, "http://www.localhost:3000/harvester/records?api_key=testkey&search%5Bfragments.source_id%5D=test&search%5Bstatus%5D=active&search_options%5Bpage%5D=1&exclude_source_id=enrichment_source_id").
+        with(
+          headers: {
+         'Accept'=>'*/*',
+         'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+         'Content-Type'=>'application/json',
+         'User-Agent'=>'Supplejack Harvester v2.0'
+          }).to_return(fake_response('test_api_records_1'))
+      end
+      let(:subject) { described_class.new(request, 1, harvest_job) }
+
+      it 'specifies the source_id to exclude in the API request' do
+        expect(subject.extract).to be_a(Extraction::Document)
+      end
+    end
+
     context 'when the enrichment is scheduled after a harvest' do
       let(:pipeline)           { create(:pipeline, name: 'NLNZCat') }
       let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
