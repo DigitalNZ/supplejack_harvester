@@ -146,8 +146,11 @@ RSpec.describe ExtractionDefinition do
     let!(:request_one)              { create(:request, :figshare_initial_request, extraction_definition:) }
     let!(:request_two)              { create(:request, :figshare_main_request, extraction_definition:) }
 
+    let(:stop_condition_one)        { create(:stop_condition, extraction_definition:) }
+    let(:stop_condition_two)        { create(:stop_condition, extraction_definition:) }    
+
     let(:pipeline_two)               { create(:pipeline) }
-    let!(:harvest_definition)    { create(:harvest_definition, extraction_definition:, pipeline:) }
+    let!(:harvest_definition)        { create(:harvest_definition, extraction_definition:, pipeline:) }
     let!(:harvest_definition_two)    { create(:harvest_definition, extraction_definition:, pipeline:) }
 
     it 'creates a new Extraction Definition with the same details' do
@@ -168,6 +171,8 @@ RSpec.describe ExtractionDefinition do
           expect(cloned_parameter.content_type).to eq original_parameter.content_type
         end
       end
+
+      expect(cloned_extraction_definition.stop_conditions).to eq extraction_definition.stop_conditions
     end
 
     it 'assigns the new ExtractionDefinition to the provided Pipeline' do
