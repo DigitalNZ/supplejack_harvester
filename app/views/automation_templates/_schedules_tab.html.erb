@@ -1,0 +1,34 @@
+<%= content_for(:title) { 'Schedules' } %>
+
+<% @automation_template&.pipeline&.schedules&.each do |schedule| %>
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class='float-start'>
+        <p class='m-0'>Runs <%= schedule.frequency %> at <%= schedule.time %></p>
+
+        <% if schedule.pipeline_jobs.any? %>
+          <p class='m-0'>Last duration:
+            <% duration = schedule.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds) %>
+            <%= ActiveSupport::Duration.build(duration).inspect %>
+          </p>
+        <% end %>
+      </div>
+
+      <div class='float-end'>
+        <ul class='list-inline'>
+          <li class='list-inline-item'>
+            <%= link_to edit_schedule_path(schedule), class: 'btn btn-link p-0' do %>
+              Edit <i class="bi bi-pencil-square" aria-hidden="true"></i>
+            <% end %>
+          </li>
+
+          <li class='list-inline-item'>
+            <%= button_to schedule_path(schedule), method: :delete, class: 'btn btn-link text-danger p-0' do %>
+              Delete <i class="bi bi-trash" aria-hidden="true"></i>
+            <% end %>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+<% end %>

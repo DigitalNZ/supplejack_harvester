@@ -108,6 +108,12 @@
             <%= template.destination.name %>
           </span>
         <% end %>
+
+        <% if template&.pipeline&.schedules&.any? %>
+          <span class="badge bg-primary">
+            Scheduled
+          </span>
+        <% end %>
       </div>
     </div>
   <% end %>
