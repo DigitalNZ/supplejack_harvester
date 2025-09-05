@@ -7,7 +7,6 @@ class AutomationTemplate < ApplicationRecord
            inverse_of: :automation_template
   has_many :automations, dependent: :destroy
   belongs_to :destination
-  belongs_to :pipeline
   belongs_to :last_edited_by, class_name: 'User', optional: true
 
   validates :name, presence: true, uniqueness: true

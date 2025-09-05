@@ -109,7 +109,7 @@
           </span>
         <% end %>
 
-        <% if template&.pipeline&.schedules&.any? %>
+        <% if template&.automation_step_templates.map {|a| a&.pipeline&.schedules&.any? }&.any? %>
           <span class="badge bg-primary">
             Scheduled
           </span>
