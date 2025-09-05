@@ -1,14 +1,15 @@
 <%= content_for(:title) { 'Schedules' } %>
 
 <% @schedules&.each do |schedule| %>
+  <% next if schedule == [] %>
   <div class="card mb-3">
     <div class="card-body">
       <div class='float-start'>
-        <p class='m-0'>Runs <%= schedule.frequency %> at <%= schedule.time %></p>
+        <p class='m-0'>Runs <%= schedule&.frequency %> at <%= schedule&.time %></p>
 
-        <% if schedule.pipeline_jobs.any? %>
+        <% if schedule&.pipeline_jobs.any? %>
           <p class='m-0'>Last duration:
-            <% duration = schedule.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds) %>
+            <% duration = schedule&.pipeline_jobs&.last&.harvest_reports&.sum(&:duration_seconds) %>
             <%= ActiveSupport::Duration.build(duration).inspect %>
           </p>
         <% end %>
