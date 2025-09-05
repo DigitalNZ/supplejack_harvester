@@ -2,6 +2,7 @@
 
 <% @schedules&.each do |schedule| %>
   <% next if schedule == [] %>
+  <% schedule = schedule.build %>
   <div class="card mb-3">
     <div class="card-body">
       <div class='float-start'>
