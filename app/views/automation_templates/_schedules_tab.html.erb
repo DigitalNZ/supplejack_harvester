@@ -1,6 +1,6 @@
 <%= content_for(:title) { 'Schedules' } %>
 
-<% @automation_template&.pipeline&.schedules&.each do |schedule| %>
+<% @automation_template&.automation_step_templates.map {|a| a&.pipeline&.schedules }&.each do |schedule| %>
   <div class="card mb-3">
     <div class="card-body">
       <div class='float-start'>
