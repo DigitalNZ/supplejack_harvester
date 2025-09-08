@@ -17,7 +17,11 @@ gem 'mysql2', '~> 0.5'
 # Use the Puma web server [https://github.com/puma/puma]
 gem 'puma', '~> 6.0'
 
+# Error reporting and performance monitoring
+gem 'airbrake'
 gem 'elastic-apm'
+
+# Use Vite for asset management
 gem 'vite_rails'
 
 gem 'rack-mini-profiler'
