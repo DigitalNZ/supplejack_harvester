@@ -14,7 +14,7 @@ class AutomationTemplatesController < ApplicationController
                               automation_templates
                             end
     @destinations = Destination.all
-    @schedules = @automation_template&.automation_step_templates&.map { |a| a&.pipeline&.schedules }
+    @schedules = @automation_template&.automation_step_templates&.map { |a| a&.pipeline&.schedules&.all }
   end
 
   def show
@@ -82,7 +82,7 @@ class AutomationTemplatesController < ApplicationController
 
   def set_automation_template_and_schedules
     @automation_template = AutomationTemplate.find(params[:id])
-    @schedules = @automation_template&.automation_step_templates&.map { |a| a&.pipeline&.schedules }
+    @schedules = @automation_template&.automation_step_templates&.map { |a| a&.pipeline&.schedules&.all }
   end
 
   def set_pipeline
