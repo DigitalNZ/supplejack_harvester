@@ -104,12 +104,12 @@ describe '#schedules' do
 
     context 'with no pipeline returns no schedules' do
       before do
-        create(:automation_step_template, automation_template: subject, position: 0, pipeline: pipeline)
+        create(:automation_step_template, automation_template: subject, position: 0)
       end
 
       it 'returns no schedules' do
         expect(subject.schedules.count).to eq(0)
-      end      
-    end    
+      end
+    end
   end  
 end 
