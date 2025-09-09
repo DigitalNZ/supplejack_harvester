@@ -109,7 +109,7 @@
           </span>
         <% end %>
 
-        <% if @automation_template&.schedules&.any? %>
+        <% if Schedule.where(automation_template_id: template&.id)&.any? %>
           <span class="badge bg-primary">
             Scheduled
           </span>

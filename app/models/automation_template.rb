@@ -39,12 +39,6 @@ class AutomationTemplate < ApplicationRecord
     [automation, 'Automation was successfully created and started', true]
   end
 
-  def schedules
-    # rubocop:disable Style/SafeNavigationChainLength
-    automation_step_templates&.map { |a| a&.pipeline&.schedules&.all }&.flatten
-    # rubocop:enable Style/SafeNavigationChainLength
-  end
-
   private
 
   def handle_automation_not_persisted

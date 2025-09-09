@@ -8,9 +8,14 @@
   <div class="header__actions mb-4">
     <%= link_to 'Edit Template', edit_automation_template_path(automation_template),
                 class: 'btn btn-outline-primary me-2' %>
+
+    <%= link_to 'Add new schedule', new_schedule_path,
+                class: 'btn btn-primary me-2' %>
+
     <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#run-automation-modal">
       Run Automation
     </button>
+
     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-template-modal">
       <i class="bi bi-trash"></i> Delete Template
     </button>
@@ -52,7 +57,7 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" id="schedules-tab" data-bs-toggle="tab" href="#schedules" role="tab">
-        Schedules (<%= automation_template.schedules.count %>)
+        Schedules (<%= Schedule.where(automation_template_id: automation_template&.id)&.count %>)
       </a>
     </li>
   </ul>

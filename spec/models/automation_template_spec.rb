@@ -73,43 +73,4 @@ RSpec.describe AutomationTemplate do
       end
     end
   end
-
-describe '#schedules' do
-    let(:user) { create(:user) }
-    let(:pipeline) { create(:pipeline) }
-    let(:destination) { create(:destination) }
-    let(:harvest_definition)         { create(:harvest_definition, pipeline:) }
-    let(:harvest_definitions_to_run) { [harvest_definition.id] }    
-
-    context 'with pipeline with schedules' do
-      before do
-        create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:)        
-        create(:automation_step_template, automation_template: subject, position: 0, pipeline: pipeline)
-      end
-
-      it 'returns schedules' do
-        expect(subject.schedules.count).to eq(1)
-      end
-    end
-
-    context 'with pipeline with no schedules returns no schedules' do
-      before do
-        create(:automation_step_template, automation_template: subject, position: 0, pipeline: pipeline)
-      end
-
-      it 'returns no schedules' do
-        expect(subject.schedules.count).to eq(0)
-      end
-    end
-
-    context 'with no pipeline returns no schedules' do
-      before do
-        create(:automation_step_template, automation_template: subject, position: 0)
-      end
-
-      it 'returns no schedules' do
-        expect(subject.schedules.count).to eq(0)
-      end
-    end
-  end  
 end 
