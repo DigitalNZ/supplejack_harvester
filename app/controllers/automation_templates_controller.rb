@@ -14,7 +14,7 @@ class AutomationTemplatesController < ApplicationController
                               automation_templates
                             end
     @destinations = Destination.all
-    @schedules = get_schedules(@automation_template)
+    @schedules = @automation_template.schedules
   end
 
   def show
@@ -82,13 +82,7 @@ class AutomationTemplatesController < ApplicationController
 
   def set_automation_template_and_schedules
     @automation_template = AutomationTemplate.find(params[:id])
-    @schedules = get_schedules(@automation_template)
-  end
-
-  def get_schedules(automation_template)
-    # rubocop:disable Style/SafeNavigationChainLength
-    automation_template&.automation_step_templates&.map { |a| a&.pipeline&.schedules&.all }&.flatten
-    # rubocop:enable Style/SafeNavigationChainLength
+    @schedules = @automation_template.schedules
   end
 
   def set_pipeline
