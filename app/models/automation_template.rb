@@ -45,10 +45,6 @@ class AutomationTemplate < ApplicationRecord
     # rubocop:enable Style/SafeNavigationChainLength
   end
 
-  def schedule_count
-    schedules&.count
-  end
-
   private
 
   def handle_automation_not_persisted

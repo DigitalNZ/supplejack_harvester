@@ -37,8 +37,6 @@
     </p>
   <% end %>
 
-  <% automation_count = automation_template.automations.count %>
-  <% schedule_count = automation_template.schedule_count %>
   <div class="mt-4"></div>
   <ul class="nav nav-tabs">
     <li class="nav-item">
@@ -46,7 +44,7 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" id="history-tab" data-bs-toggle="tab" href="#history" role="tab">
-        History (<%= automation_count %>)
+        History (<%= automation_template.automations.count %>)
       </a>
     </li>
     <li class="nav-item">
@@ -54,7 +52,7 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" id="schedules-tab" data-bs-toggle="tab" href="#schedules" role="tab">
-        Schedules (<%= schedule_count %>)
+        Schedules (<%= automation_template.schedules.count %>)
       </a>
     </li>
   </ul>

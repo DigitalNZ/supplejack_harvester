@@ -3,7 +3,7 @@
 class AutomationTemplatesController < ApplicationController
   include LastEditedBy
 
-  before_action :set_automation_template_and_schedules, only: %i[show edit update destroy run_automation automations]
+  before_action :set_automation_template, only: %i[show edit update destroy run_automation automations]
   before_action :set_pipeline, only: [:index], if: -> { params[:pipeline_id].present? }
 
   def index
@@ -14,7 +14,6 @@ class AutomationTemplatesController < ApplicationController
                               automation_templates
                             end
     @destinations = Destination.all
-    @schedules = @automation_template.schedules
   end
 
   def show
@@ -80,9 +79,8 @@ class AutomationTemplatesController < ApplicationController
 
   private
 
-  def set_automation_template_and_schedules
+  def set_automation_template
     @automation_template = AutomationTemplate.find(params[:id])
-    @schedules = @automation_template.schedules
   end
 
   def set_pipeline

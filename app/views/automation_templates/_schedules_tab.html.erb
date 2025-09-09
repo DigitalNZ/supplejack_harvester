@@ -1,6 +1,6 @@
 <%= content_for(:title) { 'Schedules' } %>
 
-<% @schedules&.each do |schedule| %>
+<% @automation_template&.schedules&.each do |schedule| %>
   <% next if schedule == [] %>
   <div class="card mb-3">
     <div class="card-body">
