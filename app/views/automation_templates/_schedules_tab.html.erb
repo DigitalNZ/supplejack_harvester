@@ -9,7 +9,8 @@
 
         <% if schedule&.pipeline_jobs.any? %>
           <p class='m-0'>Last duration:
-            <% duration = schedule&.pipeline_jobs&.last&.harvest_reports&.sum(&:duration_seconds) %>
+            <% last_job = schedule&.pipeline_jobs&.last %>
+            <% duration = last_job&.harvest_reports&.sum(&:duration_seconds) %>
             <%= ActiveSupport::Duration.build(duration).inspect %>
           </p>
         <% end %>
