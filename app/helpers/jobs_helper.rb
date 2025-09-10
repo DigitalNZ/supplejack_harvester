@@ -62,9 +62,9 @@ module JobsHelper
 
   def job_started_at_label(report, job)
     if report&.harvest_job&.extraction_job.present? && report&.extraction_start_time.present?
-      report.extraction_start_time.strftime('%H:%M %d/%m/%y')
+      report&.extraction_start_time&.strftime('%H:%M %d/%m/%y')
     else
-      job.start_time.strftime('%H:%M %d/%m/%y')
+      job.start_time&.strftime('%H:%M %d/%m/%y')
     end
   end
 
