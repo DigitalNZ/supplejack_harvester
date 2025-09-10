@@ -39,6 +39,10 @@ class AutomationTemplate < ApplicationRecord
     [automation, 'Automation was successfully created and started', true]
   end
 
+  def schedules
+    Schedule.where(automation_template_id: id)
+  end
+
   private
 
   def handle_automation_not_persisted

@@ -1,6 +1,6 @@
 <%= content_for(:title) { 'Schedules' } %>
 
-<% Schedule.where(automation_template_id: @automation_template&.id)&.each do |schedule| %>
+<% schedules&.each do |schedule| %>
   <div class="card mb-3">
     <div class="card-body">
       <div class='float-start'>
@@ -10,7 +10,7 @@
           <p class='m-0'>Last duration:
             <% last_job = schedule&.pipeline_jobs&.last %>
             <% duration = last_job&.harvest_reports&.sum(&:duration_seconds) %>
-            <%= ActiveSupport::Duration.build(duration).inspect %>
+            <%= job_duration_seconds(duration) %>
           </p>
         <% end %>
       </div>

@@ -57,7 +57,7 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" id="schedules-tab" data-bs-toggle="tab" href="#schedules" role="tab">
-        Schedules (<%= Schedule.where(automation_template_id: automation_template&.id)&.count %>)
+        Schedules (<%= schedules&.count %>)
       </a>
     </li>
   </ul>

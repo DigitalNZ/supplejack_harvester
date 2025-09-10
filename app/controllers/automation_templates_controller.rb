@@ -19,6 +19,7 @@ class AutomationTemplatesController < ApplicationController
   def show
     @step_templates = @automation_template.automation_step_templates.includes(:pipeline)
     @last_automation_run = @automation_template.automations.order(created_at: :desc).first
+    @schedules = Schedule.where(automation_template_id: @automation_template&.id)
   end
 
   def new
