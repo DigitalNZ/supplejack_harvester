@@ -73,4 +73,4 @@ RSpec.describe AutomationTemplate do
       end
     end
   end
-end
+end 
