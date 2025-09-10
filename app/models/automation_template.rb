@@ -6,6 +6,7 @@ class AutomationTemplate < ApplicationRecord
            dependent: :destroy,
            inverse_of: :automation_template
   has_many :automations, dependent: :destroy
+  has_many :schedules, dependent: :destroy
   belongs_to :destination
   belongs_to :last_edited_by, class_name: 'User', optional: true
 
@@ -37,10 +38,6 @@ class AutomationTemplate < ApplicationRecord
     # Run the automation
     automation.run
     [automation, 'Automation was successfully created and started', true]
-  end
-
-  def schedules
-    Schedule.where(automation_template_id: id)
   end
 
   private
