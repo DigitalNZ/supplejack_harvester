@@ -5,6 +5,8 @@ module PerformWithPriority
 
   class_methods do
     def perform_async_with_priority(priority, *args)
+      Rails.logger.info("priority #{priority}")
+
       if priority.present?
         set(queue: priority).perform_async(*args)
       else

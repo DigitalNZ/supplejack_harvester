@@ -2,48 +2,63 @@
 
 module Transformation
   class TypeChecker
+    attr_reader :faulty_value
+
     def initialize(value)
       @value = value
-      @faulty_variable = nil
+      @faulty_value = nil
     end
 
     def valid?
-      return true if allowed_raw_type?(@value)
-      return false unless allowed_iterable_type?(@value)
-      return true if @value.empty?
-
-      @value.none? do |key, value|
-        return true unless valid_hash_value?(key, value)
-
-        !allowed_raw_type?(key) || !allowed_raw_type?(value)
-      end
+      check_value(@value)
     end
 
     def error
-      return nil if @faulty_variable.nil?
+      return nil unless @faulty_value
 
-      "Field contains a wrong type: #{@faulty_variable.class}. The field returned: #{@value.inspect}"
+      "Field contains a wrong type: #{@faulty_value.class}. The field returned: #{@value.inspect}"
     end
 
-    def valid_hash_value?(key, value)
-      return true if !key.instance_of?(Hash) || !value.nil?
+    private
 
-      key.none? do |k, v|
-        !allowed_raw_type?(k) || allowed_raw_type?(v)
+    def check_value(val)
+      if allowed_raw_type?(val)
+        true
+      elsif allowed_iterable_type?(val)
+        if val.empty?
+          true
+        elsif val.is_a?(Array)
+          val.all? { |item| check_value(item) }
+        elsif val.is_a?(Hash)
+          val.all? { |k, v| check_key_and_value(k, v) }
+        else
+          set_faulty(val)
+          false
+        end
+      else
+        set_faulty(val)
+        false
       end
     end
 
-    def allowed_raw_type?(value)
-      return true if value.class.in?(allowed_raw_types)
+    def check_key_and_value(key, value)
+      # Keys must be allowed raw types
+      return set_faulty(key) && false unless allowed_raw_type?(key)
 
-      @faulty_variable = value
-      false
+      # Values can be raw types or nested iterables
+      check_value(value)
     end
 
-    def allowed_iterable_type?(value)
-      return true if value.class.in?(allowed_iterable_types)
+    def allowed_raw_type?(val)
+      allowed_raw_types.any? { |type| val.is_a?(type) }
+    end
 
-      @faulty_variable = value
+    def allowed_iterable_type?(val)
+      allowed_iterable_types.any? { |type| val.is_a?(type) }
+    end
+
+    def set_faulty(val)
+      @faulty_value ||= val
       false
     end
 

@@ -6,45 +6,38 @@ class LoadWorker
 
   sidekiq_options retry: 0
 
-  def perform(harvest_job_id, records, api_record_id = nil)
-    @harvest_job = HarvestJob.find(harvest_job_id)
-    @harvest_report = @harvest_job.harvest_report
+  def perform(harvest_job_id, records_json, api_record_id = nil)
+    setup(harvest_job_id)
 
     job_start
-    transformed_records = JSON.parse(records)
+
+    transformed_records = JSON.parse(records_json)
 
     transformed_records.each_slice(100) do |batch|
-      @harvest_job.reload
-
-      break if @harvest_job.cancelled? || @harvest_job.pipeline_job.cancelled?
+      break if cancelled?
 
       process_batch(batch, api_record_id)
     end
+
     job_end
-  end
-
-  def log_retry_attempt
-    proc do |exception, try, elapsed_time, next_interval|
-      if defined?(Sidekiq)
-        Rails.logger.info("
-          #{exception.class}: '#{exception.message}':
-          #{try} tries in #{elapsed_time} seconds and
-          #{next_interval} seconds until the next try.")
-      end
-    end
-  end
-
-  # :reek:UncommunicativeVariableName
-  # this reek has been ignored as 'e' is the variable name wanted by Rubocop
-  def process_batch(batch, api_record_id)
-    ::Retriable.retriable(on_retry: log_retry_attempt) do
-      Load::Execution.new(batch, @harvest_job, api_record_id).call
-
-      @harvest_report.increment_records_loaded!(batch.count)
-      @harvest_report.update(load_updated_time: Time.zone.now)
-    end
   rescue StandardError => e
-    Rails.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
+    Rails.logger.error "LoadWorker: Job failure - #{e.class}: #{e.message}"
+    raise
+  end
+
+  private
+
+  def setup(harvest_job_id)
+    @harvest_job = HarvestJob.find(harvest_job_id)
+    @harvest_report = @harvest_job.harvest_report
+    @pipeline_job = @harvest_job.pipeline_job
+    @source_id = @pipeline_job.pipeline.harvest_definitions.first.source_id
+    @destination = @pipeline_job.destination
+  end
+
+  def cancelled?
+    @harvest_job.reload
+    @harvest_job.cancelled? || @pipeline_job.cancelled?
   end
 
   def job_start
@@ -57,27 +50,37 @@ class LoadWorker
 
     finish_load if @harvest_report.load_workers_completed?
 
-    @harvest_job.pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
+    @pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
     @harvest_job.execute_delete_previous_records
   end
 
-  def source_id
-    @harvest_job.pipeline_job.pipeline.harvest_definitions.first.source_id
-  end
+  def process_batch(batch, api_record_id)
+    ::Retriable.retriable(on_retry: log_retry_attempt) do
+      Load::Execution.new(batch, @harvest_job, api_record_id).call
 
-  def destination
-    @harvest_job.pipeline_job.destination
+      @harvest_report.increment_records_loaded!(batch.size)
+      @harvest_report.update(load_updated_time: Time.zone.now)
+    end
+  rescue StandardError => e
+    Rails.logger.error "LoadWorker: Error in batch processing - #{e.class}: #{e.message}"
   end
-
-  private
 
   def finish_load
     @harvest_report.load_completed!
 
     ::Retriable.retriable(on_retry: log_retry_attempt) do
-      Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
+      Api::Utils::NotifyHarvesting.new(@destination, @source_id, false).call
     end
   rescue StandardError => e
-    Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}" if defined?(Sidekiq)
+    Rails.logger.error "LoadWorker: NotifyHarvesting failed - #{e.class}: #{e.message}"
+  end
+
+  def log_retry_attempt
+    proc do |exception, try, elapsed_time, next_interval|
+      Rails.logger.warn(
+        "Retrying after #{exception.class}: #{exception.message} - " \
+        "Attempt ##{try}, elapsed #{elapsed_time}s, next try in #{next_interval}s."
+      )
+    end
   end
 end

@@ -12,35 +12,35 @@ class DeleteWorker
 
     records_to_delete = JSON.parse(records)
 
-    job_start
+    mark_delete_started
 
-    records_to_delete.each do |record|
-      delete(record, destination)
-    end
+    delete_records(records_to_delete, destination)
 
-    job_end
-  end
-
-  def job_start
-    @harvest_report.delete_running!
-  end
-
-  def job_end
-    @harvest_report.increment_delete_workers_completed!
-    @harvest_report.reload
-
-    return unless @harvest_report.delete_workers_completed?
-
-    @harvest_report.delete_completed!
+    mark_delete_finished
   end
 
   private
 
-  def delete(record, destination)
-    Delete::Execution.new(record, destination).call
-    @harvest_report.increment_records_deleted!
+  def mark_delete_started
+    @harvest_report.delete_running!
+  end
+
+  def mark_delete_finished
+    @harvest_report.increment_delete_workers_completed!
+    @harvest_report.reload
+
+    @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
+
+    # Move this here to update just once per job
     @harvest_report.update(delete_updated_time: Time.zone.now)
-  rescue StandardError => e
-    Rails.logger.info "DeleteWorker: Delete Excecution error: #{e}" if defined?(Sidekiq)
+  end
+
+  def delete_records(records, destination)
+    records.each do |record|
+      Delete::Execution.new(record, destination).call
+      @harvest_report.increment_records_deleted!
+    rescue StandardError => e
+      Rails.logger.error("DeleteWorker: Failed to delete record: #{e.class} - #{e.message}")
+    end
   end
 end

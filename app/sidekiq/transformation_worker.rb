@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# rubocop:disable Metrics/ClassLength
 class TransformationWorker
   include PerformWithPriority
   include Sidekiq::Job
@@ -8,113 +7,134 @@ class TransformationWorker
   sidekiq_options retry: 0
 
   def perform(harvest_job_id, page = 1, api_record_id = nil)
-    @harvest_job = HarvestJob.find(harvest_job_id)
-    @extraction_job = @harvest_job.extraction_job
-    @transformation_definition = TransformationDefinition.find(@harvest_job.transformation_definition.id)
-    @harvest_report = @harvest_job.harvest_report
-    @page = page
-    @api_record_id = api_record_id
-    @pipeline_job = @harvest_job.pipeline_job
+    initialize_context(harvest_job_id, page, api_record_id)
 
-    job_start
+    return if cancelled?
 
-    child_perform
-    job_end
-  end
+    mark_transformation_started
 
-  def job_start
-    @harvest_report.transformation_running!
-  end
+    transformed_records = transform_records
 
-  def child_perform
-    transformed_records = transform_records.map(&:to_hash)
-
-    @harvest_job.reload
-
-    return if @harvest_job.cancelled? || @pipeline_job.cancelled?
+    return if cancelled?
 
     process_transformed_records(transformed_records)
+
+    mark_transformation_finished
   end
 
   private
 
-  def process_transformed_records(transformed_records)
-    valid_records, rejected_records, deleted_records = categorize_records(transformed_records)
-
-    update_harvest_report(transformed_records.count, rejected_records.count)
-
-    queue_load_worker(valid_records)
-    queue_delete_worker(deleted_records)
+  def initialize_context(harvest_job_id, page, api_record_id)
+    @harvest_job = HarvestJob.find(harvest_job_id)
+    @pipeline_job = @harvest_job.pipeline_job
+    @transformation_definition = @harvest_job.transformation_definition
+    @harvest_report = @harvest_job.harvest_report
+    @extraction_job = @harvest_job.extraction_job
+    @page = page
+    @api_record_id = api_record_id
   end
 
-  def categorize_records(transformed_records)
-    valid_records = transformed_records.select do |record|
-      record['rejection_reasons'].blank? && record['deletion_reasons'].blank?
-    end
-    rejected_records = transformed_records.select { |record| record['rejection_reasons'].present? }
-    deleted_records = transformed_records.select { |record| record['deletion_reasons'].present? }
-    [valid_records, rejected_records, deleted_records]
+  def cancelled?
+    @harvest_job.cancelled? || @pipeline_job.cancelled?
   end
 
-  def update_harvest_report(transformed_records_count, rejected_records_count)
-    @harvest_report.increment_records_transformed!(transformed_records_count)
-    @harvest_report.increment_records_rejected!(rejected_records_count)
-    @harvest_report.update(transformation_updated_time: Time.zone.now)
-  end
-
-  def job_end
-    @harvest_report.increment_transformation_workers_completed!
-    @harvest_report.reload
-
-    return unless @harvest_report.transformation_workers_completed?
-
-    @harvest_report.transformation_completed!
-    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
-    @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
-
-    return unless @harvest_report.delete_workers_queued.zero?
-
-    @harvest_report.delete_completed!
-    @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
+  def mark_transformation_started
+    @harvest_report.transformation_running!
   end
 
   def transform_records
-    Transformation::Execution.new(
-      records,
-      @transformation_definition.fields
-    ).call
+    raw_records = Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
+
+    Rails.logger.info "TransformationWorker: Transforming #{raw_records.count} records"
+
+    Transformation::Execution.new(raw_records, @transformation_definition.fields).call.map(&:to_hash)
   rescue StandardError => e
-    Rails.logger.info "TransformationWorker: Transformation Excecution error: #{e}" if defined?(Sidekiq)
+    Rails.logger.error "TransformationWorker: Transformation failed: #{e.class} - #{e.message}"
     []
+  end
+
+  def process_transformed_records(records)
+    valid, rejected, deleted = categorize_records(records)
+
+    @harvest_report.increment_records_transformed!(records.size)
+    @harvest_report.increment_records_rejected!(rejected.size)
+    @harvest_report.update(transformation_updated_time: Time.zone.now)
+
+    queue_load_worker(valid)
+    queue_delete_worker(deleted)
+  end
+
+  def categorize_records(records)
+    valid = []
+    rejected = []
+    deleted = []
+
+    records.each do |record|
+      if record['rejection_reasons'].present?
+        rejected << record
+      elsif record['deletion_reasons'].present?
+        deleted << record
+      else
+        valid << record
+      end
+    end
+
+    [valid, rejected, deleted]
   end
 
   def queue_load_worker(records)
     return if records.empty?
 
     @harvest_job.reload
+    return if cancelled?
 
-    return if @harvest_job.cancelled? || @pipeline_job.cancelled?
+    LoadWorker.perform_async_with_priority(
+      @pipeline_job.job_priority,
+      @harvest_job.id,
+      records.to_json,
+      @api_record_id
+    )
 
-    LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records.to_json, @api_record_id)
-
-    notify_harvesting_api
+    notify_harvesting_api if @harvest_report.load_workers_queued.zero?
     @harvest_report.increment_load_workers_queued!
   end
 
   def notify_harvesting_api
     ::Retriable.retriable(on_retry: log_retry_attempt) do
-      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
+      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call
     end
   rescue StandardError => e
-    Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
+    Rails.logger.error "TransformationWorker: Notification failed: #{e.class} - #{e.message}"
   end
 
   def queue_delete_worker(records)
     return if records.empty?
 
-    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
-                                             @harvest_report.id)
+    DeleteWorker.perform_async_with_priority(
+      @pipeline_job.job_priority,
+      records.to_json,
+      destination.id,
+      @harvest_report.id
+    )
+
     @harvest_report.increment_delete_workers_queued!
+  end
+
+  def mark_transformation_finished
+    @harvest_report.increment_transformation_workers_completed!
+    @harvest_report.reload
+
+    return unless @harvest_report.transformation_workers_completed?
+
+    @harvest_report.transformation_completed!
+
+    @harvest_report.load_completed!   if @harvest_report.load_workers_completed?
+    @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
+
+    return unless @harvest_report.delete_workers_queued.zero?
+
+    @harvest_report.delete_completed!
+    @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
   end
 
   def source_id
@@ -125,17 +145,9 @@ class TransformationWorker
     @pipeline_job.destination
   end
 
-  def records
-    Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
-  end
-
   def log_retry_attempt
     proc do |exception, try, elapsed_time, next_interval|
-      return unless defined?(Sidekiq)
-
-      Rails.logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
-                        "and #{next_interval} seconds until the next try.")
+      Rails.logger.info("#{exception.class}: #{exception.message} (attempt #{try}, elapsed #{elapsed_time}s, retry in #{next_interval}s)")
     end
   end
 end
-# rubocop:enable Metrics/ClassLength
