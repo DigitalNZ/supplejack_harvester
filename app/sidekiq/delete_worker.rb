@@ -40,7 +40,7 @@ class DeleteWorker
       Delete::Execution.new(record, destination).call
       @harvest_report.increment_records_deleted!
     rescue StandardError => e
-      Rails.logger.error("DeleteWorker: Failed to delete record: #{e.class} - #{e.message}")
+      Rails.logger.info "DeleteWorker: Delete Excecution error: #{e}" if defined?(Sidekiq)
     end
   end
 end

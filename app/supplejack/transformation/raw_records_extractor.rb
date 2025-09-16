@@ -12,7 +12,7 @@ module Transformation
       @extraction_job = extraction_job
       @documents = extraction_job.documents
       @format = compute_format
-      @record_selector = compute_record_selector
+      @record_selector = record_selector
     end
 
     # Returns the records from a specific request
@@ -51,7 +51,7 @@ module Transformation
       format == 'ARCHIVE_JSON' ? 'json' : format.downcase
     end
 
-    def compute_record_selector
+    def record_selector
       return @transformation_definition.record_selector if @transformation_definition.record_selector.present?
 
       @format == 'json' ? '*' : '/'

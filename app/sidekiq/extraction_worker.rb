@@ -57,11 +57,11 @@ class ExtractionWorker < ApplicationWorker
       return
     end
 
-    finalize_extraction_status
+    update_harvest_report!
     trigger_following_processes
   end
 
-  def finalize_extraction_status
+  def update_harvest_report!
     @harvest_report.extraction_completed! unless @job.extraction_definition.extract_text_from_file?
 
     @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?

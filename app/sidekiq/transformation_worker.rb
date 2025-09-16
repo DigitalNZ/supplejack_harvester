@@ -45,11 +45,9 @@ class TransformationWorker
   def transform_records
     raw_records = Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
 
-    Rails.logger.info "TransformationWorker: Transforming #{raw_records.count} records"
-
     Transformation::Execution.new(raw_records, @transformation_definition.fields).call.map(&:to_hash)
   rescue StandardError => e
-    Rails.logger.error "TransformationWorker: Transformation failed: #{e.class} - #{e.message}"
+    Rails.logger.info "TransformationWorker: Transformation Excecution error: #{e}" if defined?(Sidekiq)
     []
   end
 
@@ -88,12 +86,7 @@ class TransformationWorker
     @harvest_job.reload
     return if cancelled?
 
-    LoadWorker.perform_async_with_priority(
-      @pipeline_job.job_priority,
-      @harvest_job.id,
-      records.to_json,
-      @api_record_id
-    )
+    LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records.to_json, @api_record_id)
 
     notify_harvesting_api if @harvest_report.load_workers_queued.zero?
     @harvest_report.increment_load_workers_queued!
@@ -104,7 +97,7 @@ class TransformationWorker
       Api::Utils::NotifyHarvesting.new(destination, source_id, true).call
     end
   rescue StandardError => e
-    Rails.logger.error "TransformationWorker: Notification failed: #{e.class} - #{e.message}"
+    Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
   end
 
   def queue_delete_worker(records)

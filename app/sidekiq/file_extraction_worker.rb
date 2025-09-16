@@ -108,10 +108,10 @@ class FileExtractionWorker
 
   # Abstract methods to be implemented in subclasses
   def process_extracted_documents
-    raise NotImplementedError, "#{self.class} must implement `process_extracted_documents`"
+    raise 'process_extracted_documents not defined in child class'
   end
 
   def create_document
-    raise NotImplementedError, "#{self.class} must implement `create_document`"
+    raise 'create_document not defined in child class'
   end
 end

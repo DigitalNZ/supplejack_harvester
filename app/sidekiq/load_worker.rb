@@ -72,7 +72,7 @@ class LoadWorker
       Api::Utils::NotifyHarvesting.new(@destination, @source_id, false).call
     end
   rescue StandardError => e
-    Rails.logger.error "LoadWorker: NotifyHarvesting failed - #{e.class}: #{e.message}"
+    Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}" if defined?(Sidekiq)
   end
 
   def log_retry_attempt

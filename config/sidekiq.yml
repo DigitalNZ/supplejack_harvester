@@ -1,6 +1,4 @@
 ---
-development:
-  :concurrency: 10
 staging:
   :concurrency: <%= ENV.fetch('SIDEKIQ_CONCURRENCY') { 5 } %>
 production:
