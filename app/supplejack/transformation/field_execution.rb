@@ -17,7 +17,7 @@ module Transformation
         type_checker = TypeChecker.new(@value)
         raise TypeError, type_checker.error unless type_checker.valid?
       rescue Exception => e
-        Airbrake.notify "Error Tranforming field: #{@field.name} #{e}"
+        # Airbrake.notify "Error Tranforming field: #{@field.name} #{e}"
         @error = e
       end
 
