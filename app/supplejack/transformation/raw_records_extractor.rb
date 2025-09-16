@@ -4,62 +4,51 @@ module Transformation
   # This class extracts records from an extraction_job using the
   # transformation_definition record_selector
   class RawRecordsExtractor
-    MAX_DOCUMENT_SIZE = 10.megabytes
-    SUPPORTED_FORMATS = %w[json xml html].freeze
-
     def initialize(transformation_definition, extraction_job)
       @transformation_definition = transformation_definition
       @extraction_job = extraction_job
-      @documents = extraction_job.documents
-      @format = compute_format
-      @record_selector = record_selector
+      @documents = @extraction_job.documents
     end
 
     # Returns the records from a specific request
     #
     # @return Array
     def records(page_number)
-      page = page_number.to_i
-      document = @documents[page]
-      return [] unless document
-      return [] if document.size_in_bytes > MAX_DOCUMENT_SIZE
+      return [] if @documents[page_number.to_i].nil?
+      return [] if @documents[page_number.to_i].size_in_bytes > 10.megabytes
 
-      extractor = extractor()
-
-      return [] unless extractor
-
-      extractor.call(document.body, @record_selector)
-    rescue Nokogiri::XML::XPath::SyntaxError
-      []
+      begin
+        send(:"#{format.downcase}_extract", page_number)
+      rescue NoMethodError, Nokogiri::XML::XPath::SyntaxError
+        []
+      end
     end
 
     private
 
-    # rubocop:disable Metrics/MethodLength
-    def extractor
-      {
-        'html' => lambda { |body, selector|
-          Nokogiri::HTML(body).xpath(selector).map(&:to_xml)
-        },
-        'xml' => lambda { |body, selector|
-          Nokogiri::XML(body).xpath(selector).map(&:to_xml)
-        },
-        'json' => lambda { |body, selector|
-          JsonPath.new(selector).on(body).flatten
-        }
-      }[@format]
+    def html_extract(page)
+      Nokogiri::HTML(@documents[page].body).xpath(record_selector).map(&:to_xml)
     end
-    # rubocop:enable Metrics/MethodLength
 
-    def compute_format
-      format = @extraction_job.extraction_definition.format
-      format == 'ARCHIVE_JSON' ? 'json' : format.downcase
+    def xml_extract(page)
+      Nokogiri::XML(@documents[page].body).xpath(record_selector).map(&:to_xml)
+    end
+
+    def json_extract(page)
+      JsonPath.new(record_selector).on(@documents[page].body).flatten
+    end
+
+    def format
+      return 'JSON' if @extraction_job.extraction_definition.format == 'ARCHIVE_JSON'
+
+      @extraction_job.extraction_definition.format
     end
 
     def record_selector
       return @transformation_definition.record_selector if @transformation_definition.record_selector.present?
+      return '*' if format.in?(%w[JSON ARCHIVE_JSON])
 
-      @format == 'json' ? '*' : '/'
+      '/'
     end
   end
 end
