@@ -7,10 +7,11 @@ module Transformation
       @field = field
     end
 
+    # rubocop:disable Security/Eval
     # rubocop:disable Lint/RescueException
     def execute(extracted_record)
       begin
-        block = ->(record) { eval(@field.block) }
+        block = ->(_record) { eval(@field.block) }
 
         @value = block.call(extracted_record)
         type_checker = TypeChecker.new(@value)
@@ -23,5 +24,6 @@ module Transformation
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)
     end
     # rubocop:enable Lint/RescueException
+    # rubocop:enable Security/Eval
   end
 end

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class TransformationWorker
   include PerformWithPriority
   include Sidekiq::Job
@@ -62,6 +63,7 @@ class TransformationWorker
     queue_delete_worker(deleted)
   end
 
+  # rubocop:disable Metrics/MethodLength
   def categorize_records(records)
     valid = []
     rejected = []
@@ -79,6 +81,7 @@ class TransformationWorker
 
     [valid, rejected, deleted]
   end
+  # rubocop:enable Metrics/MethodLength
 
   def queue_load_worker(records)
     return if records.empty?
@@ -140,7 +143,9 @@ class TransformationWorker
 
   def log_retry_attempt
     proc do |exception, try, elapsed_time, next_interval|
-      Rails.logger.info("#{exception.class}: #{exception.message} (attempt #{try}, elapsed #{elapsed_time}s, retry in #{next_interval}s)")
+      Rails.logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
+                        "and #{next_interval} seconds until the next try.")
     end
   end
 end
+# rubocop:enable Metrics/ClassLength

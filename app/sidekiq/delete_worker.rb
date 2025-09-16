@@ -12,20 +12,20 @@ class DeleteWorker
 
     records_to_delete = JSON.parse(records)
 
-    mark_delete_started
+    job_start
 
-    delete_records(records_to_delete, destination)
+    delete(records_to_delete, destination)
 
-    mark_delete_finished
+    job_end
   end
 
   private
 
-  def mark_delete_started
+  def job_start
     @harvest_report.delete_running!
   end
 
-  def mark_delete_finished
+  def job_end
     @harvest_report.increment_delete_workers_completed!
     @harvest_report.reload
 
@@ -35,7 +35,7 @@ class DeleteWorker
     @harvest_report.update(delete_updated_time: Time.zone.now)
   end
 
-  def delete_records(records, destination)
+  def delete(records, destination)
     records.each do |record|
       Delete::Execution.new(record, destination).call
       @harvest_report.increment_records_deleted!

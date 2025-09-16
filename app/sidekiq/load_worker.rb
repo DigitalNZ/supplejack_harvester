@@ -6,6 +6,7 @@ class LoadWorker
 
   sidekiq_options retry: 0
 
+  # rubocop:disable Metrics/MethodLength
   def perform(harvest_job_id, records_json, api_record_id = nil)
     setup(harvest_job_id)
 
@@ -24,6 +25,7 @@ class LoadWorker
     Rails.logger.error "LoadWorker: Job failure - #{e.class}: #{e.message}"
     raise
   end
+  # rubocop:enable Metrics/MethodLength
 
   private
 

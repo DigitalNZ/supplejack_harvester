@@ -11,7 +11,8 @@ class ExtractionWorker < ApplicationWorker
     end
 
     Rails.logger.warn(
-      "ExtractionWorker: Job #{extraction_job_id} failed after retries. Args: #{job['args']}, Error: #{job['error_message']}"
+      "ExtractionWorker: Job #{extraction_job_id} failed after retries." \
+      "Args: #{job['args']}, Error: \#{job['error_message']}"
     )
   end
 
@@ -48,7 +49,7 @@ class ExtractionWorker < ApplicationWorker
   private
 
   def update_harvest_report
-    return unless @harvest_report.present?
+    return if @harvest_report.blank?
 
     @harvest_report.reload
 

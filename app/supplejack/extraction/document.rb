@@ -10,6 +10,7 @@ module Extraction
 
     Oj.default_options = { mode: :compat }
 
+    # rubocop:disable Metrics/ParameterLists
     def initialize(file_path = nil, url: nil, method: nil, params: nil, request_headers: nil, status: nil,
                    response_headers: nil, body: nil)
       @file_path = file_path
@@ -21,6 +22,7 @@ module Extraction
       @response_headers = response_headers
       @body = body
     end
+    # rubocop:enable Metrics/ParameterLists
 
     def successful?
       status.to_i >= 200 && status.to_i < 300
@@ -69,7 +71,7 @@ module Extraction
     end
 
     def to_json(*)
-      @__cached_json ||= Oj.dump(to_hash, mode: :compat)
+      @to_json ||= Oj.dump(to_hash, mode: :compat)
     end
   end
 end

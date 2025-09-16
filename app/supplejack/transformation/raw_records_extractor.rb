@@ -24,7 +24,8 @@ module Transformation
       return [] unless document
       return [] if document.size_in_bytes > MAX_DOCUMENT_SIZE
 
-      extractor = EXTRACTORS[@format]
+      extractor = extractor()
+
       return [] unless extractor
 
       extractor.call(document.body, @record_selector)
@@ -34,17 +35,21 @@ module Transformation
 
     private
 
-    EXTRACTORS = {
-      'html' => lambda { |body, selector|
-        Nokogiri::HTML(body).xpath(selector).map(&:to_xml)
-      },
-      'xml' => lambda { |body, selector|
-        Nokogiri::XML(body).xpath(selector).map(&:to_xml)
-      },
-      'json' => lambda { |body, selector|
-        JsonPath.new(selector).on(body).flatten
-      }
-    }.freeze
+    # rubocop:disable Metrics/MethodLength
+    def extractor
+      {
+        'html' => lambda { |body, selector|
+          Nokogiri::HTML(body).xpath(selector).map(&:to_xml)
+        },
+        'xml' => lambda { |body, selector|
+          Nokogiri::XML(body).xpath(selector).map(&:to_xml)
+        },
+        'json' => lambda { |body, selector|
+          JsonPath.new(selector).on(body).flatten
+        }
+      }[@format]
+    end
+    # rubocop:enable Metrics/MethodLength
 
     def compute_format
       format = @extraction_job.extraction_definition.format

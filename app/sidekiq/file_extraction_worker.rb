@@ -52,7 +52,7 @@ class FileExtractionWorker
   end
 
   def prepare_tmp_directory
-    FileUtils.mkdir_p(@tmp_directory) unless Dir.exist?(@tmp_directory)
+    FileUtils.mkdir_p(@tmp_directory)
   end
 
   def move_documents_to_tmp_directory

@@ -45,6 +45,8 @@ module Extraction
 
     private
 
+    # rubocop:disable Metrics/MethodLength
+    # rubocop:disable Metrics/AbcSize
     def preload_folder_structure
       @total_folders = 0
 
@@ -72,5 +74,7 @@ module Extraction
     rescue Errno::ENOENT
       @total_folders = 0
     end
+    # rubocop:enable Metrics/MethodLength
+    # rubocop:enable Metrics/AbcSize
   end
 end
