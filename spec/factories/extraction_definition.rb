@@ -8,6 +8,7 @@ FactoryBot.define do
     kind { 0 }
     per_page { 50 }
     paginated { false }
+    follow_redirects { true }
 
     trait :figshare do
       name     { 'api.figshare.com' }
@@ -21,6 +22,10 @@ FactoryBot.define do
     trait :harvest do
       kind { 0 }
     end
+
+    trait :no_follow do
+      follow_redirects { false }
+    end    
 
     trait :enrichment do
       kind { 1 }
