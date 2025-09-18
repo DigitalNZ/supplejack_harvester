@@ -115,6 +115,22 @@
                   ), {}, class: 'form-select' %>
             </div>
 
+            <div class="col-4">
+              <%= form.label :paginated, class: 'form-label' do %>
+                Follow 3xx Redirects
+
+                <span
+                  data-bs-toggle="tooltip"
+                  data-bs-title="For scroll harvest types, it's recommended to not follow 3xx redirects"><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+            <div class="col-8">
+              <%= form.select :follow_redirects, options_for_select(
+                    [['Follow Redirects', 'true'], ["Don't Follow Redirects", 'false']], model.follow_redirects
+                  ), {}, class: 'form-select' %>
+            </div>
+
             <div class="col-4 js-evaluate-js d-none">
               <%= form.label :extract_text_from_file, class: 'form-label' do %>
                 Evaluate JavaScript
