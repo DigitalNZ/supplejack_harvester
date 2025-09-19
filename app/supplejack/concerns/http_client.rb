@@ -3,6 +3,8 @@
 module HttpClient
   extend ActiveSupport::Concern
 
+  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Style/OptionalBooleanParameter
   def connection(url, params, headers, follow_redirects = true)
     if follow_redirects
       Faraday.new(url:, params:, headers:) do |f|
@@ -16,4 +18,6 @@ module HttpClient
       end
     end
   end
+  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Style/OptionalBooleanParameter
 end
