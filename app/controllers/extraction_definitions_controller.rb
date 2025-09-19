@@ -97,7 +97,7 @@ class ExtractionDefinitionsController < ApplicationController
 
   def extraction_definition_params
     safe_params = params.require(:extraction_definition).permit(
-      :pipeline_id, :name, :format, :base_url, :throttle, :page, :per_page,
+      :pipeline_id, :name, :format, :base_url, :throttle, :page, :per_page, :follow_redirects,
       :total_selector, :kind, :destination_id, :source_id, :enrichment_url, :paginated, :split, :split_selector,
       :extract_text_from_file, :fragment_source_id, :fragment_key, :evaluate_javascript, :fields, :include_sub_documents
     )

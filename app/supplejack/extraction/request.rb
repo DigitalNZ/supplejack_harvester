@@ -4,8 +4,8 @@ module Extraction
   # Makes the actual request
   # Stores the request and response details
   class Request
-    def initialize(url:, params: {}, headers: {}, method: 'get')
-      @connection = Connection.new(url:, params:, headers:, method:)
+    def initialize(url:, params: {}, headers: {}, method: 'get', follow_redirects: true)
+      @connection = Connection.new(url:, params:, headers:, method:, follow_redirects:)
     end
 
     # Returns a document based on the given request
