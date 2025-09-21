@@ -55,6 +55,7 @@ module Load
 
       record
     end
+
     def headers
       { 'Content-Type' => 'application/json' }
     end

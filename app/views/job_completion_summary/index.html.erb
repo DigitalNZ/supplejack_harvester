@@ -60,18 +60,18 @@
                     </td>
                     <td>
                       <small class="text-muted">
-                        <%= error_summary.first_error_at&.strftime("%Y-%m-%d %H:%M:%S") || 'N/A' %>
+                        <%= error_summary.first_error_at&.strftime('%Y-%m-%d %H:%M:%S') || 'N/A' %>
                       </small>
                     </td>
                     <td>
                       <small class="text-muted">
-                        <%= error_summary.last_error_at&.strftime("%Y-%m-%d %H:%M:%S") || 'N/A' %>
+                        <%= error_summary.last_error_at&.strftime('%Y-%m-%d %H:%M:%S') || 'N/A' %>
                       </small>
                     </td>
                     <td>
-                      <%= link_to "View Details", 
-                          job_completion_summary_path(error_summary), 
-                          class: "btn btn-sm btn-outline-primary" %>
+                      <%= link_to 'View Details',
+                                  job_completion_summary_path(error_summary),
+                                  class: 'btn btn-sm btn-outline-primary' %>
                     </td>
                   </tr>
                 <% end %>

@@ -73,4 +73,3 @@ class DeleteWorker
     Rails.logger.error "Failed to log delete worker error to JobCompletionSummary: #{e.message}"
   end
 end
-

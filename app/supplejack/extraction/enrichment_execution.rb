@@ -56,6 +56,7 @@ module Extraction
     def throttle
       sleep @extraction_definition.throttle / 1000.0
     end
+
     def page_from_index(index)
       ((@extraction_definition.page - 1) * @extraction_definition.per_page) + (index + 1)
     end

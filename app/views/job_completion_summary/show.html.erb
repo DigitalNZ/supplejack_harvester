@@ -37,11 +37,11 @@
             <% @job_completion_summary.error_details.each_with_index do |error, index| %>
               <div class="accordion-item">
                 <h2 class="accordion-header" id="heading<%= index %>">
-                  <button class="accordion-button <%= 'collapsed' unless index == 0 %>" 
-                          type="button" 
-                          data-bs-toggle="collapse" 
-                          data-bs-target="#collapse<%= index %>" 
-                          aria-expanded="<%= index == 0 ? 'true' : 'false' %>" 
+                  <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#collapse<%= index %>"
+                          aria-expanded="<%= index.zero? ? 'true' : 'false' %>"
                           aria-controls="collapse<%= index %>">
                     <div class="d-flex justify-content-between align-items-center w-100 me-3">
                       <div>
@@ -53,14 +53,18 @@
                         <% end %>
                       </div>
                       <small class="text-muted">
-                        <%= Time.parse(error['timestamp']).strftime("%Y-%m-%d %H:%M:%S") rescue 'Unknown time' %>
+                        <% begin %>
+                          <%= Time.zone.parse(error['timestamp']).strftime('%Y-%m-%d %H:%M:%S') %>
+                        <% rescue %>
+                          Unknown time
+                        <% end %>
                       </small>
                     </div>
                   </button>
                 </h2>
-                <div id="collapse<%= index %>" 
-                     class="accordion-collapse collapse <%= 'show' if index == 0 %>" 
-                     aria-labelledby="heading<%= index %>" 
+                <div id="collapse<%= index %>"
+                     class="accordion-collapse collapse <%= 'show' if index.zero? %>"
+                     aria-labelledby="heading<%= index %>"
                      data-bs-parent="#errorsAccordion">
                   <div class="accordion-body">
                     <div class="row">
@@ -69,7 +73,7 @@
                         <div class="bg-light p-3 rounded">
                           <p><strong>Name:</strong> <%= error.dig('details', 'stop_condition_name') %></p>
                           <p><strong>Content:</strong> <%= error.dig('details', 'stop_condition_content') %></p>
-                          <p><strong>Type:</strong> 
+                          <p><strong>Type:</strong>
                             <% if error.dig('details', 'is_system_condition') %>
                               <span class="badge bg-secondary">System Stop Condition</span>
                             <% else %>
@@ -83,14 +87,24 @@
                       <div class="row mt-3">
                         <div class="col-md-12">
                           <h6>Additional Details:</h6>
-                          <pre class="bg-light p-3 rounded"><%= JSON.pretty_generate(error['details']) rescue error['details'].to_s %></pre>
+                          <pre class="bg-light p-3 rounded">
+                            <% begin %>
+                              <%= JSON.pretty_generate(error['details']) %>
+                            <% rescue %>
+                              <%= error['details'].to_s %>
+                            <% end %>
+                          </pre>
                         </div>
                       </div>
                     <% end %>
                     <div class="row mt-3">
                       <div class="col-md-6">
-                        <strong>Occurred At:</strong> 
-                        <%= Time.parse(error['timestamp']).strftime("%Y-%m-%d %H:%M:%S") rescue 'Unknown time' %>
+                        <strong>Occurred At:</strong>
+                        <% begin %>
+                          <%= Time.zone.parse(error['timestamp']).strftime('%Y-%m-%d %H:%M:%S') %>
+                        <% rescue %>
+                          Unknown time
+                        <% end %>
                       </div>
                     </div>
                   </div>
@@ -119,12 +133,12 @@
           <dd class="col-sm-8">
             <code><%= @job_completion_summary.extraction_id %></code>
           </dd>
-          
+
           <dt class="col-sm-4">Extraction Name:</dt>
           <dd class="col-sm-8">
             <strong><%= @job_completion_summary.extraction_name %></strong>
           </dd>
-          
+
           <dt class="col-sm-4">Error Type:</dt>
           <dd class="col-sm-8">
             <% if @job_completion_summary.stop_condition? %>
@@ -137,25 +151,25 @@
               <span class="badge bg-danger"><%= @job_completion_summary.error_type.capitalize %></span>
             <% end %>
           </dd>
-          
+
           <dt class="col-sm-4">Total Errors:</dt>
           <dd class="col-sm-8">
             <span class="badge bg-warning text-dark">
               <%= @job_completion_summary.error_count %>
             </span>
           </dd>
-          
+
           <dt class="col-sm-4">First Error:</dt>
           <dd class="col-sm-8">
             <small class="text-muted">
-              <%= @job_completion_summary.first_error_at&.strftime("%Y-%m-%d %H:%M:%S") || 'N/A' %>
+              <%= @job_completion_summary.first_error_at&.strftime('%Y-%m-%d %H:%M:%S') || 'N/A' %>
             </small>
           </dd>
-          
+
           <dt class="col-sm-4">Last Error:</dt>
           <dd class="col-sm-8">
             <small class="text-muted">
-              <%= @job_completion_summary.last_error_at&.strftime("%Y-%m-%d %H:%M:%S") || 'N/A' %>
+              <%= @job_completion_summary.last_error_at&.strftime('%Y-%m-%d %H:%M:%S') || 'N/A' %>
             </small>
           </dd>
         </dl>
@@ -164,9 +178,9 @@
 
     <div class="card mt-3">
       <div class="card-body text-center">
-        <%= link_to "Back to Job Completion Summary", 
-            job_completion_summary_index_path, 
-            class: "btn btn-outline-primary" %>
+        <%= link_to 'Back to Job Completion Summary',
+                    job_completion_summary_index_path,
+                    class: 'btn btn-outline-primary' %>
       </div>
     </div>
   </div>
