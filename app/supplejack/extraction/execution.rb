@@ -2,7 +2,6 @@
 
 require 'zlib'
 require 'archive/tar/minitar'
-
 module Extraction
   # Performs the work as defined in the document extraction
   class Execution
@@ -27,6 +26,9 @@ module Extraction
 
         break if execution_cancelled? || stop_condition_met?
       end
+    rescue StandardError => e
+      log_extraction_error(e)
+      raise
     end
 
     private
@@ -48,7 +50,29 @@ module Extraction
     end
 
     def stop_condition_met?
-      [set_number_reached?, extraction_failed?, duplicate_document_extracted?, custom_stop_conditions_met?].any?(true)
+      conditions_met = []
+
+      if set_number_reached?
+        log_stop_condition_hit('set_number_reached', 'Set number limit reached',
+                               { condition_type: 'set_number_reached' })
+        conditions_met << true
+      end
+
+      if extraction_failed?
+        log_stop_condition_hit('extraction_failed', "Extraction failed with status #{@de.document.status}",
+                               { condition_type: 'extraction_failed' })
+        conditions_met << true
+      end
+
+      if duplicate_document_extracted?
+        log_stop_condition_hit('duplicate_document', 'Duplicate document detected',
+                               { condition_type: 'duplicate_document' })
+        conditions_met << true
+      end
+
+      conditions_met << true if custom_stop_conditions_met?
+
+      conditions_met.any?
     end
 
     def set_number_reached?
@@ -74,7 +98,30 @@ module Extraction
       stop_conditions = @extraction_definition.stop_conditions
       return false if stop_conditions.empty?
 
-      stop_conditions.map { |condition| condition.evaluate(@de.document.body) }.any?(true)
+      triggered_conditions = stop_conditions.select { |condition| condition.evaluate(@de.document.body) }
+
+      # Log each triggered stop condition
+      triggered_conditions.each do |condition|
+        log_stop_condition_hit(condition.name, condition.content)
+      end
+
+      triggered_conditions.any?
+    end
+
+    def log_stop_condition_hit(name, content, additional_details = {})
+      JobCompletionSummary.log_stop_condition_hit(
+        extraction_id: @extraction_definition.id.to_s,
+        extraction_name: @extraction_definition.name,
+        stop_condition_name: name,
+        stop_condition_content: content,
+        details: {
+          extraction_job_id: @extraction_job.id,
+          harvest_job_id: @harvest_job&.id,
+          pipeline_job_id: @harvest_job&.pipeline_job&.id,
+          page: @extraction_definition.page,
+          document_status: @de&.document&.status
+        }.merge(additional_details)
+      )
     end
 
     def throttle

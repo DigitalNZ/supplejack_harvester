@@ -1,0 +1,173 @@
+<%= content_for(:title) { "Job Completion Summary - #{@job_completion_summary.extraction_name}" } %>
+
+<%= content_for(:header) do %>
+  <%= render 'shared/breadcrumb_nav' %>
+
+  <div class='float-start'>
+    <h1>Job Completion Summary Details</h1>
+    <p><%= @job_completion_summary.extraction_name %> (<%= @job_completion_summary.extraction_id %>)</p>
+  </div>
+
+  <div class='clearfix'></div>
+<% end %>
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Details</h5>
+        <div>
+          <% if @job_completion_summary.stop_condition? %>
+            <% if @job_completion_summary.system_stop_condition? %>
+              <span class="badge bg-info me-2">System Stop Condition</span>
+            <% else %>
+              <span class="badge bg-info me-2">User Stop Condition</span>
+            <% end %>
+          <% else %>
+            <span class="badge bg-danger me-2"><%= @job_completion_summary.error_type.capitalize %></span>
+          <% end %>
+          <span class="badge bg-warning text-dark">
+            <%= @job_completion_summary.error_count %> errors
+          </span>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if @job_completion_summary.error_details.any? %>
+          <div class="accordion" id="errorsAccordion">
+            <% @job_completion_summary.error_details.each_with_index do |error, index| %>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="heading<%= index %>">
+                  <button class="accordion-button <%= 'collapsed' unless index == 0 %>" 
+                          type="button" 
+                          data-bs-toggle="collapse" 
+                          data-bs-target="#collapse<%= index %>" 
+                          aria-expanded="<%= index == 0 ? 'true' : 'false' %>" 
+                          aria-controls="collapse<%= index %>">
+                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                      <div>
+                        <%= error['message']&.truncate(100) || 'No message' %>
+                        <% if error.dig('details', 'is_system_condition') %>
+                          <span class="badge bg-secondary ms-2">System</span>
+                        <% else %>
+                          <span class="badge bg-info ms-2">User-defined</span>
+                        <% end %>
+                      </div>
+                      <small class="text-muted">
+                        <%= Time.parse(error['timestamp']).strftime("%Y-%m-%d %H:%M:%S") rescue 'Unknown time' %>
+                      </small>
+                    </div>
+                  </button>
+                </h2>
+                <div id="collapse<%= index %>" 
+                     class="accordion-collapse collapse <%= 'show' if index == 0 %>" 
+                     aria-labelledby="heading<%= index %>" 
+                     data-bs-parent="#errorsAccordion">
+                  <div class="accordion-body">
+                    <div class="row">
+                      <div class="col-md-12">
+                        <h6>Stop Condition Details:</h6>
+                        <div class="bg-light p-3 rounded">
+                          <p><strong>Name:</strong> <%= error.dig('details', 'stop_condition_name') %></p>
+                          <p><strong>Content:</strong> <%= error.dig('details', 'stop_condition_content') %></p>
+                          <p><strong>Type:</strong> 
+                            <% if error.dig('details', 'is_system_condition') %>
+                              <span class="badge bg-secondary">System Stop Condition</span>
+                            <% else %>
+                              <span class="badge bg-info">User-defined Stop Condition</span>
+                            <% end %>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <% if error['details'].present? %>
+                      <div class="row mt-3">
+                        <div class="col-md-12">
+                          <h6>Additional Details:</h6>
+                          <pre class="bg-light p-3 rounded"><%= JSON.pretty_generate(error['details']) rescue error['details'].to_s %></pre>
+                        </div>
+                      </div>
+                    <% end %>
+                    <div class="row mt-3">
+                      <div class="col-md-6">
+                        <strong>Occurred At:</strong> 
+                        <%= Time.parse(error['timestamp']).strftime("%Y-%m-%d %H:%M:%S") rescue 'Unknown time' %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-4">
+            <i class="bi bi-info-circle text-info" style="font-size: 2rem;"></i>
+            <p class="mt-2 text-muted">No error details available.</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Summary Information</h5>
+      </div>
+      <div class="card-body">
+        <dl class="row">
+          <dt class="col-sm-4">Extraction ID:</dt>
+          <dd class="col-sm-8">
+            <code><%= @job_completion_summary.extraction_id %></code>
+          </dd>
+          
+          <dt class="col-sm-4">Extraction Name:</dt>
+          <dd class="col-sm-8">
+            <strong><%= @job_completion_summary.extraction_name %></strong>
+          </dd>
+          
+          <dt class="col-sm-4">Error Type:</dt>
+          <dd class="col-sm-8">
+            <% if @job_completion_summary.stop_condition? %>
+              <% if @job_completion_summary.system_stop_condition? %>
+                <span class="badge bg-info">System Stop Condition</span>
+              <% else %>
+                <span class="badge bg-info">User Stop Condition</span>
+              <% end %>
+            <% else %>
+              <span class="badge bg-danger"><%= @job_completion_summary.error_type.capitalize %></span>
+            <% end %>
+          </dd>
+          
+          <dt class="col-sm-4">Total Errors:</dt>
+          <dd class="col-sm-8">
+            <span class="badge bg-warning text-dark">
+              <%= @job_completion_summary.error_count %>
+            </span>
+          </dd>
+          
+          <dt class="col-sm-4">First Error:</dt>
+          <dd class="col-sm-8">
+            <small class="text-muted">
+              <%= @job_completion_summary.first_error_at&.strftime("%Y-%m-%d %H:%M:%S") || 'N/A' %>
+            </small>
+          </dd>
+          
+          <dt class="col-sm-4">Last Error:</dt>
+          <dd class="col-sm-8">
+            <small class="text-muted">
+              <%= @job_completion_summary.last_error_at&.strftime("%Y-%m-%d %H:%M:%S") || 'N/A' %>
+            </small>
+          </dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-body text-center">
+        <%= link_to "Back to Job Completion Summary", 
+            job_completion_summary_index_path, 
+            class: "btn btn-outline-primary" %>
+      </div>
+    </div>
+  </div>
+</div>

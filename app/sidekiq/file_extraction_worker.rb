@@ -21,6 +21,9 @@ class FileExtractionWorker
 
     harvest_report.extraction_completed!
     create_transformation_jobs
+  rescue StandardError => e
+    log_file_extraction_error(e)
+    raise
   end
 
   private
@@ -44,7 +47,6 @@ class FileExtractionWorker
   def harvest_report
     @extraction_job.harvest_job.harvest_report
   end
-
   def pipeline_job
     harvest_report.pipeline_job
   end
@@ -86,8 +88,32 @@ class FileExtractionWorker
   def create_document
     raise 'create_document not defined in child class'
   end
-
   def folder_number(page = 1)
     (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
+  end
+
+  def log_file_extraction_error(exception)
+    return unless @extraction_definition&.harvest_definition&.source_id
+
+    JobCompletionSummary.log_error(
+      extraction_id: @extraction_definition.harvest_definition.source_id,
+      extraction_name: @extraction_definition.harvest_definition.name,
+      message: "FileExtractionWorker error: #{exception.class} - #{exception.message}",
+      details: {
+        worker_class: self.class.name,
+        exception_class: exception.class.name,
+        exception_message: exception.message,
+        stack_trace: exception.backtrace&.first(20),
+        extraction_job_id: @extraction_job.id,
+        extraction_definition_id: @extraction_definition.id,
+        harvest_job_id: @extraction_job.harvest_job&.id,
+        harvest_report_id: @extraction_job.harvest_job&.harvest_report&.id,
+        extraction_folder: @extraction_folder,
+        tmp_directory: @tmp_directory,
+        timestamp: Time.current.iso8601
+      }
+    )
+  rescue StandardError => e
+    Rails.logger.error "Failed to log file extraction error to JobCompletionSummary: #{e.message}"
   end
 end
