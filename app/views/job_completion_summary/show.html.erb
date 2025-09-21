@@ -52,13 +52,6 @@
                           <span class="badge bg-info ms-2">User-defined</span>
                         <% end %>
                       </div>
-                      <small class="text-muted">
-                        <% begin %>
-                          <%= Time.zone.parse(error['timestamp']).strftime('%Y-%m-%d %H:%M:%S') %>
-                        <% rescue %>
-                          Unknown time
-                        <% end %>
-                      </small>
                     </div>
                   </button>
                 </h2>
