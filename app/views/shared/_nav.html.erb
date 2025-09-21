@@ -1,4 +1,30 @@
-<% automation_templates_classes = class_names('nav-link', active: request.path.include?('automation_templates')) %>
+<nav class="<%= class_names('navbar navbar-expand-md', {
+                              'navbar-dark bg-dark' => %w[production test].include?(Rails.env),
+                              'navbar-light bg-light border-bottom border-2' => %w[production test].exclude?(Rails.env)
+                            }) %>">
+  <div class="container-fluid">
+    <%= link_to root_path, class: 'navbar-brand' do %>
+      <img src="<%= "/logo-#{Rails.env}.svg" %>" alt="Supplejack" height="20">
+    <% end %>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbar-nav"
+      aria-controls="navbar-nav"
+      aria-expanded="false"
+      aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <% pipelines_classes = class_names('nav-link', active: request.path.include?('pipelines')) %>
+    <% destinations_classes = class_names('nav-link', active: request.path.include?('destinations')) %>
+    <% schemas_classes = class_names('nav-link', active: request.path.include?('schemas')) %>
+    <% display_automations = request.path.include?('automations') && request.path.exclude?('automation_templates') %>
+    <% automations_classes = class_names('nav-link',
+                                         active: display_automations) %>
+    <% automation_templates_classes = class_names('nav-link', active: request.path.include?('automation_templates')) %>
     <% schedules_classes = class_names('nav-link', active: request.path == '/schedules') %>
     <% jobs_classes = class_names('nav-link', active: request.path == '/jobs') %>
      <% error_summary_classes = class_names('nav-link', active: request.path.include?('job_completion_summary')) %>
