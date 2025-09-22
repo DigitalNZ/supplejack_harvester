@@ -8,9 +8,9 @@
   <td>
     <% if error_summary.stop_condition? %>
       <% if error_summary.system_stop_condition? %>
-        <span class="badge" style="background-color: #0d6efd;">System Stop Condition</span>
+        <span class="badge" style="background-color: #0d6efd;">System stop condition</span>
       <% else %>
-        <span class="badge" style="background-color: #0d6efd;">User Stop Condition</span>
+        <span class="badge" style="background-color: #0d6efd;">User defined stop condition</span>
       <% end %>
     <% else %>
            <span class="badge bg-danger"><%= error_summary.completion_type.humanize %></span>

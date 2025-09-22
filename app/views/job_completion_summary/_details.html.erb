@@ -3,18 +3,9 @@
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="card-title mb-0">Details</h5>
       <div>
-        <% if @job_completion_summary.stop_condition? %>
-          <% if @job_completion_summary.system_stop_condition? %>
-            <span class="badge me-2" style="background-color: #0d6efd;">System Stop Condition</span>
-          <% else %>
-            <span class="badge me-2" style="background-color: #0d6efd;">User Stop Condition</span>
-          <% end %>
-        <% else %>
-            <span class="badge bg-danger me-2"><%= @job_completion_summary.completion_type.humanize %></span>
+        <% unless @job_completion_summary.stop_condition? %>
+          <span class="badge bg-danger me-2"><%= @job_completion_summary.completion_type.humanize %></span>
         <% end %>
-        <span class="badge bg-warning text-dark">
-          <%= @job_completion_summary.completion_count %> completions
-        </span>
       </div>
     </div>
     <div class="card-body">
@@ -32,15 +23,15 @@
                   <div class="d-flex justify-content-between align-items-center w-100 me-3">
                     <div>
                       <%= error['message']&.truncate(100) || 'No message' %>
-                      <% if @job_completion_summary.stop_condition? %>
-                        <% if error.dig('details', 'is_system_condition') %>
-                          <span class="badge bg-secondary ms-2">System</span>
+                        <% if @job_completion_summary.stop_condition? %>
+                          <% if error.dig('details', 'is_system_condition') %>
+                            <span class="badge bg-secondary ms-2">System stop condition</span>
+                          <% else %>
+                            <span class="badge ms-2" style="background-color: #0d6efd;">User defined stop condition</span>
+                          <% end %>
                         <% else %>
-                          <span class="badge bg-info ms-2">User-defined</span>
+                          <span class="badge bg-danger ms-2">Error</span>
                         <% end %>
-                      <% else %>
-                        <span class="badge bg-danger ms-2">Error</span>
-                      <% end %>
                     </div>
                   </div>
                 </button>
@@ -57,13 +48,13 @@
                         <div class="bg-light p-3 rounded">
                           <p><strong>Name:</strong> <%= error.dig('details', 'stop_condition_name') %></p>
                           <p><strong>Content:</strong> <%= error.dig('details', 'stop_condition_content') %></p>
-                          <p><strong>Type:</strong>
-                            <% if error.dig('details', 'is_system_condition') %>
-                              <span class="badge bg-secondary">System Stop Condition</span>
-                            <% else %>
-                              <span class="badge bg-info">User-defined Stop Condition</span>
-                            <% end %>
-                          </p>
+                            <p><strong>Type:</strong>
+                              <% if error.dig('details', 'is_system_condition') %>
+                                <span class="badge bg-secondary">System stop condition</span>
+                              <% else %>
+                                <span class="badge" style="background-color: #0d6efd;">User defined stop condition</span>
+                              <% end %>
+                            </p>
                         </div>
                       </div>
                     </div>
