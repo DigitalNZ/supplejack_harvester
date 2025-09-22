@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class JobCompletionSummaryController < ApplicationController
+class JobCompletionSummariesController < ApplicationController
   before_action :set_job_completion_summary, only: [:show]
 
   def index
