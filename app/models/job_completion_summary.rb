@@ -35,12 +35,25 @@ class JobCompletionSummary < ApplicationRecord
     stop_condition? && !system_stop_condition?
   end
 
-  def self.log_completion(extraction_id:, extraction_name:, message:, details: {})
+  def self.create_completion_summary(completion_entry, extraction_id, extraction_name, completion_type)
     completion_summary = find_or_initialize_by(extraction_id: extraction_id)
 
     completion_summary.extraction_name = extraction_name
-    completion_summary.completion_type = :error
+    completion_summary.completion_type = completion_type
 
+    completion_summary.completion_details = if completion_summary.completion_details.present?
+                                              completion_summary.completion_details + [completion_entry]
+                                            else
+                                              [completion_entry]
+                                            end
+
+    completion_summary.completion_count = completion_summary.completion_details.size
+    completion_summary.last_occurred_at = Time.current
+    completion_summary.save!
+    completion_summary
+  end
+
+  def self.log_completion(extraction_id:, extraction_name:, message:, details: {})
     completion_entry = {
       message: message,
       details: details,
@@ -54,25 +67,10 @@ class JobCompletionSummary < ApplicationRecord
       context: details[:context] || {}
     }
 
-    completion_summary.completion_details = if completion_summary.completion_details.present?
-                                    completion_summary.completion_details + [completion_entry]
-                                  else
-                                    [completion_entry]
-                                  end
-
-    completion_summary.completion_count = completion_summary.completion_details.size
-    completion_summary.last_occurred_at = Time.current
-
-    completion_summary.save!
-    completion_summary
+    create_completion_summary(completion_entry, extraction_id, extraction_name, :error)
   end
 
   def self.log_stop_condition_hit(extraction_id:, extraction_name:, stop_condition_name:, stop_condition_content:, details: {})
-    completion_summary = find_or_initialize_by(extraction_id: extraction_id)
-
-    completion_summary.extraction_name = extraction_name
-    completion_summary.completion_type = :stop_condition
-
     is_system_condition = details[:condition_type].present? && details[:condition_type] != 'user'
 
     completion_entry = {
@@ -89,16 +87,6 @@ class JobCompletionSummary < ApplicationRecord
       timestamp: Time.current.iso8601
     }
 
-    completion_summary.completion_details = if completion_summary.completion_details.present?
-                                    completion_summary.completion_details + [completion_entry]
-                                  else
-                                    [completion_entry]
-                                  end
-
-    completion_summary.completion_count = completion_summary.completion_details.size
-    completion_summary.last_occurred_at = Time.current
-
-    completion_summary.save!
-    completion_summary
+    create_completion_summary(completion_entry, extraction_id, extraction_name, :stop_condition)
   end
 end
