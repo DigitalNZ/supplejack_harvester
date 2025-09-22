@@ -11,7 +11,13 @@ class TextExtractionWorker < FileExtractionWorker
         create_document(extracted_text[:text], filepath, extracted_text[:process])
         @page += 1
       rescue StandardError => e
-        log_text_extraction_error(e, folder, file)
+        Supplejack::JobCompletionSummaryLogger.log_text_extraction_completion(
+          exception: e,
+          extraction_definition: @extraction_definition,
+          extraction_job: @extraction_job,
+          folder: folder,
+          file: file
+        )
         raise
       end
     end
@@ -63,29 +69,4 @@ class TextExtractionWorker < FileExtractionWorker
     { 'method' => 'GET', 'status' => 200, 'response_headers' => [], 'request_headers' => [] }
   end
 
-  def log_text_extraction_error(exception, folder, file)
-    return unless @extraction_definition&.harvest_definition&.source_id
-
-    JobCompletionSummary.log_error(
-      extraction_id: @extraction_definition.harvest_definition.source_id,
-      extraction_name: @extraction_definition.harvest_definition.name,
-      message: "TextExtractionWorker error: #{exception.class} - #{exception.message}",
-      details: {
-        worker_class: self.class.name,
-        exception_class: exception.class.name,
-        exception_message: exception.message,
-        stack_trace: exception.backtrace&.first(20),
-        extraction_job_id: @extraction_job.id,
-        extraction_definition_id: @extraction_definition.id,
-        harvest_job_id: @extraction_job.harvest_job&.id,
-        harvest_report_id: @extraction_job.harvest_job&.harvest_report&.id,
-        folder: folder,
-        file: file,
-        file_extension: File.extname(file),
-        timestamp: Time.current.iso8601
-      }
-    )
-  rescue StandardError => e
-    Rails.logger.error "Failed to log text extraction error to JobCompletionSummary: #{e.message}"
-  end
 end

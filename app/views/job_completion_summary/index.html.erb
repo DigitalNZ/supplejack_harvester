@@ -16,73 +16,34 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">Job completion summary</h5>
-        <span class="badge bg-secondary"><%= @job_completion_summary.total_count %> total</span>
+        <span class="badge bg-secondary"><%= @job_completion_summaries.total_count %> total</span>
       </div>
       <div class="card-body p-0">
-        <% if @job_completion_summary.any? %>
+        <% if @job_completion_summaries.any? %>
           <div class="table-responsive">
             <table class="table table-hover mb-0">
               <thead class="table-light">
                 <tr>
                   <th>Extraction ID</th>
                   <th>Extraction Name</th>
-                  <th>Type</th>
+                  <th>Completion Type</th>
                   <th>Count</th>
-                  <th>First Occurrence</th>
-                  <th>Last Occurrence</th>
+                  <th>Last Occurred</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <% @job_completion_summary.each do |error_summary| %>
-                  <tr>
-                    <td>
-                      <code><%= error_summary.extraction_id %></code>
-                    </td>
-                    <td>
-                      <strong><%= error_summary.extraction_name %></strong>
-                    </td>
-                    <td>
-                      <% if error_summary.stop_condition? %>
-                        <% if error_summary.system_stop_condition? %>
-                          <span class="badge bg-info">System Stop Condition</span>
-                        <% else %>
-                          <span class="badge bg-info">User Stop Condition</span>
-                        <% end %>
-                      <% else %>
-                        <span class="badge bg-danger"><%= error_summary.error_type.capitalize %></span>
-                      <% end %>
-                    </td>
-                    <td>
-                      <span class="badge bg-warning text-dark">
-                        <%= error_summary.error_count %>
-                      </span>
-                    </td>
-                    <td>
-                      <small class="text-muted">
-                        <%= error_summary.first_error_at&.strftime('%Y-%m-%d %H:%M:%S') || 'N/A' %>
-                      </small>
-                    </td>
-                    <td>
-                      <small class="text-muted">
-                        <%= error_summary.last_error_at&.strftime('%Y-%m-%d %H:%M:%S') || 'N/A' %>
-                      </small>
-                    </td>
-                    <td>
-                      <%= link_to 'View Details',
-                                  job_completion_summary_path(error_summary),
-                                  class: 'btn btn-sm btn-outline-primary' %>
-                    </td>
-                  </tr>
+                <% @job_completion_summaries.each do |error_summary| %>
+                  <%= render 'summary_row', error_summary: error_summary %>
                 <% end %>
               </tbody>
             </table>
           </div>
         <% else %>
           <div class="text-center py-5">
-            <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-            <h4 class="mt-3">No Job completion summary Found</h4>
-            <p class="text-muted">There are no job completion summary matching your criteria.</p>
+            <i class="bi bi-check-circle text-success"></i>
+            <h4 class="mt-3">No completion summary found</h4>
+            <p class="text-muted">No job completion summary matches your criteria.</p>
           </div>
         <% end %>
       </div>
@@ -90,10 +51,10 @@
   </div>
 </div>
 
-<% if @job_completion_summary.any? %>
+<% if @job_completion_summaries.any? %>
   <div class="row mt-3">
     <div class="col-md-12">
-      <%= render 'shared/pagination_below_table', items: @job_completion_summary %>
+      <%= render 'shared/pagination_below_table', items: @job_completion_summaries %>
     </div>
   </div>
 <% end %>

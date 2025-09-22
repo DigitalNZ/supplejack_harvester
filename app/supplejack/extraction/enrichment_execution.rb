@@ -64,7 +64,7 @@ module Extraction
     def log_enrichment_error(exception)
       return unless @extraction_definition&.harvest_definition&.source_id
 
-      JobCompletionSummary.log_error(
+      Supplejack::JobCompletionSummaryLogger.log_error(
         extraction_id: @extraction_definition.harvest_definition.source_id,
         extraction_name: @extraction_definition.harvest_definition.name,
         message: "Enrichment execution error: #{exception.class} - #{exception.message}",

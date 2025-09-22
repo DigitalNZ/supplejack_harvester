@@ -45,7 +45,13 @@ class LoadWorker
     end
   rescue StandardError => e
     Rails.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
-    log_load_worker_error(e, batch, api_record_id)
+    Supplejack::JobCompletionSummaryLogger.log_load_worker_completion(
+      exception: e,
+      harvest_job: @harvest_job,
+      harvest_report: @harvest_report,
+      batch: batch,
+      api_record_id: api_record_id
+    )
   end
 
   def job_start
@@ -82,26 +88,4 @@ class LoadWorker
     Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}" if defined?(Sidekiq)
   end
 
-  def log_load_worker_error(exception, batch, api_record_id)
-    return unless @harvest_job&.harvest_definition&.source_id
-
-    JobCompletionSummary.log_error(
-      extraction_id: @harvest_job.harvest_definition.source_id,
-      extraction_name: @harvest_job.harvest_definition.name,
-      message: "LoadWorker error: #{exception.class} - #{exception.message}",
-      details: {
-        worker_class: self.class.name,
-        exception_class: exception.class.name,
-        exception_message: exception.message,
-        stack_trace: exception.backtrace&.first(20),
-        harvest_job_id: @harvest_job.id,
-        harvest_report_id: @harvest_report&.id,
-        batch_size: batch&.size,
-        api_record_id: api_record_id,
-        timestamp: Time.current.iso8601
-      }
-    )
-  rescue StandardError => e
-    Rails.logger.error "Failed to log load worker error to JobCompletionSummary: #{e.message}"
-  end
 end

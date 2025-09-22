@@ -12,7 +12,11 @@ class ScheduleWorker
         job = create_pipeline_job(schedule)
         PipelineWorker.perform_async(job.id)
       rescue StandardError => e
-        log_schedule_worker_error(e, schedule, 'pipeline_job_creation')
+        Supplejack::JobCompletionSummaryLogger.log_schedule_worker_completion(
+          exception: e,
+          schedule: schedule,
+          error_context: 'pipeline_job_creation'
+        )
         raise
       end
     end
@@ -22,7 +26,11 @@ class ScheduleWorker
     begin
       AutomationTemplate.find(schedule.automation_template_id).run_automation
     rescue StandardError => e
-      log_schedule_worker_error(e, schedule, 'automation_template_execution')
+      Supplejack::JobCompletionSummaryLogger.log_schedule_worker_completion(
+        exception: e,
+        schedule: schedule,
+        error_context: 'automation_template_execution'
+      )
       raise
     end
   end
@@ -42,18 +50,4 @@ class ScheduleWorker
     )
   end
 
-  def log_schedule_worker_error(exception, schedule, error_context)
-    extraction_id = "schedule_#{schedule.id}"
-    extraction_name = "Schedule: #{schedule.name || 'Unnamed Schedule'}"
-
-    JobCompletionSummary.log_error(
-      extraction_id: extraction_id,
-      extraction_name: extraction_name,
-      message: "ScheduleWorker #{error_context} error: #{exception.class} - #{exception.message}",
-      details: error_context
-    )
-  rescue StandardError => e
-    Rails.logger.error "Failed to log ScheduleWorker error to JobCompletionSummary: #{e.message}"
-    Rails.logger.error "Original error: #{exception.class} - #{exception.message}"
-  end
 end

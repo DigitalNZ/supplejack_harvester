@@ -239,23 +239,20 @@ RSpec.describe JobCompletionSummary do
     end
   end
 
-  describe 'instance methods' do
+  describe '#stop_condition?' do
+    context 'when error_type is "stop condition"' do
+      let(:summary) { build(:job_completion_summary, :stop_condition) }
 
-    describe '#stop_condition?' do
-      context 'when error_type is "stop condition"' do
-        let(:summary) { build(:job_completion_summary, :stop_condition) }
-
-        it 'returns true' do
-          expect(summary.stop_condition?).to be true
-        end
+      it 'returns true' do
+        expect(summary.stop_condition?).to be true
       end
+    end
 
-      context 'when error_type is not "stop condition"' do
-        let(:summary) { build(:job_completion_summary, error_type: 'error') }
+    context 'when error_type is not "stop condition"' do
+      let(:summary) { build(:job_completion_summary, error_type: 'error') }
 
-        it 'returns false' do
-          expect(summary.stop_condition?).to be false
-        end
+      it 'returns false' do
+        expect(summary.stop_condition?).to be false
       end
     end
   end

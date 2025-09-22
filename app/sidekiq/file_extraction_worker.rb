@@ -22,7 +22,13 @@ class FileExtractionWorker
     harvest_report.extraction_completed!
     create_transformation_jobs
   rescue StandardError => e
-    log_file_extraction_error(e)
+    Supplejack::JobCompletionSummaryLogger.log_file_extraction_completion(
+      exception: e,
+      extraction_definition: @extraction_definition,
+      extraction_job: @extraction_job,
+      extraction_folder: @extraction_folder,
+      tmp_directory: @tmp_directory
+    )
     raise
   end
 
@@ -94,28 +100,4 @@ class FileExtractionWorker
     (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
   end
 
-  def log_file_extraction_error(exception)
-    return unless @extraction_definition&.harvest_definition&.source_id
-
-    JobCompletionSummary.log_error(
-      extraction_id: @extraction_definition.harvest_definition.source_id,
-      extraction_name: @extraction_definition.harvest_definition.name,
-      message: "FileExtractionWorker error: #{exception.class} - #{exception.message}",
-      details: {
-        worker_class: self.class.name,
-        exception_class: exception.class.name,
-        exception_message: exception.message,
-        stack_trace: exception.backtrace&.first(20),
-        extraction_job_id: @extraction_job.id,
-        extraction_definition_id: @extraction_definition.id,
-        harvest_job_id: @extraction_job.harvest_job&.id,
-        harvest_report_id: @extraction_job.harvest_job&.harvest_report&.id,
-        extraction_folder: @extraction_folder,
-        tmp_directory: @tmp_directory,
-        timestamp: Time.current.iso8601
-      }
-    )
-  rescue StandardError => e
-    Rails.logger.error "Failed to log file extraction error to JobCompletionSummary: #{e.message}"
-  end
 end

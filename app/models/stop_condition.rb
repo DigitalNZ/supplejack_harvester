@@ -5,10 +5,16 @@ class StopCondition < ApplicationRecord
 
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
-  def evaluate(document)
+  def evaluate(document, execution_context = nil)
     block = ->(response) { eval(content) }
 
-    block.call(document)
+    result = block.call(document)
+
+    if result == true && execution_context
+      execution_context.log_stop_condition_hit(name, content)
+    end
+    
+    result
   rescue StandardError => e
     e
   end

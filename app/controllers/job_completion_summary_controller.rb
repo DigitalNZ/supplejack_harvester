@@ -4,15 +4,15 @@ class JobCompletionSummaryController < ApplicationController
   before_action :set_job_completion_summary, only: [:show]
 
   def index
-    @job_completion_summary = JobCompletionSummary.recent_errors.page(params[:page])
+    @job_completion_summaries = JobCompletionSummary.recent_completions.page(params[:page])
 
-    if params[:error_type].present?
-      @job_completion_summary = @job_completion_summary.where(error_type: params[:error_type])
+    if params[:completion_type].present?
+      @job_completion_summaries = @job_completion_summaries.by_completion_type(params[:completion_type])
     end
 
     return if params[:extraction_id].blank?
 
-    @job_completion_summary = @job_completion_summary.where(extraction_id: params[:extraction_id])
+    @job_completion_summaries = @job_completion_summaries.where(extraction_id: params[:extraction_id])
   end
 
   def show; end

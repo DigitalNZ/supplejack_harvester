@@ -50,39 +50,29 @@ module Extraction
     end
 
     def stop_condition_met?
-      conditions_met = []
-
-      if set_number_reached?
-        log_stop_condition_hit('set_number_reached', 'Set number limit reached',
-                               { condition_type: 'set_number_reached' })
-        conditions_met << true
-      end
-
-      if extraction_failed?
-        log_stop_condition_hit('extraction_failed', "Extraction failed with status #{@de.document.status}",
-                               { condition_type: 'extraction_failed' })
-        conditions_met << true
-      end
-
-      if duplicate_document_extracted?
-        log_stop_condition_hit('duplicate_document', 'Duplicate document detected',
-                               { condition_type: 'duplicate_document' })
-        conditions_met << true
-      end
-
-      conditions_met << true if custom_stop_conditions_met?
-
-      conditions_met.any?
+      [set_number_reached?, extraction_failed?, duplicate_document_extracted?, custom_stop_conditions_met?].any?
     end
 
     def set_number_reached?
       return false unless @harvest_job.present? && @harvest_job.pipeline_job.set_number?
 
-      @harvest_job.pipeline_job.pages == @extraction_definition.page
+      result = @harvest_job.pipeline_job.pages == @extraction_definition.page
+      
+      if result
+        log_stop_condition_hit('set_number_reached', 'Set number limit reached', { condition_type: 'set_number_reached' })
+      end
+      
+      result
     end
 
     def extraction_failed?
-      @de.document.status >= 400 || @de.document.status < 200
+      result = @de.document.status >= 400 || @de.document.status < 200
+      
+      if result
+        log_stop_condition_hit('extraction_failed', "Extraction failed with status #{@de.document.status}", { condition_type: 'extraction_failed' })
+      end
+      
+      result
     end
 
     def duplicate_document_extracted?
@@ -91,36 +81,31 @@ module Extraction
 
       return false if previous_document.nil?
 
-      previous_document.body == @de.document.body
+      result = previous_document.body == @de.document.body
+      
+      if result
+        log_stop_condition_hit('duplicate_document', 'Duplicate document detected', { condition_type: 'duplicate_document' })
+      end
+      
+      result
     end
 
     def custom_stop_conditions_met?
       stop_conditions = @extraction_definition.stop_conditions
       return false if stop_conditions.empty?
 
-      triggered_conditions = stop_conditions.select { |condition| condition.evaluate(@de.document.body) }
-
-      # Log each triggered stop condition
-      triggered_conditions.each do |condition|
-        log_stop_condition_hit(condition.name, condition.content)
-      end
-
-      triggered_conditions.any?
+      stop_conditions.any? { |condition| condition.evaluate(@de.document.body, self) }
     end
 
     def log_stop_condition_hit(name, content, additional_details = {})
-      JobCompletionSummary.log_stop_condition_hit(
-        extraction_id: @extraction_definition.id.to_s,
-        extraction_name: @extraction_definition.name,
+      Supplejack::JobCompletionSummaryLogger.log_stop_condition_hit(
+        extraction_definition: @extraction_definition,
         stop_condition_name: name,
         stop_condition_content: content,
-        details: {
-          extraction_job_id: @extraction_job.id,
-          harvest_job_id: @harvest_job&.id,
-          pipeline_job_id: @harvest_job&.pipeline_job&.id,
-          page: @extraction_definition.page,
-          document_status: @de&.document&.status
-        }.merge(additional_details)
+        extraction_job: @extraction_job,
+        harvest_job: @harvest_job,
+        document: @de&.document,
+        additional_details: additional_details
       )
     end
 

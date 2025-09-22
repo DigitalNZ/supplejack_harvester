@@ -11,7 +11,13 @@ class SplitWorker < FileExtractionWorker
           @page += 1
         end
       rescue StandardError => e
-        log_split_worker_error(e, folder, file)
+        Supplejack::JobCompletionSummaryLogger.log_split_worker_completion(
+          exception: e,
+          extraction_definition: @extraction_definition,
+          extraction_job: @extraction_job,
+          folder: folder,
+          file: file
+        )
         raise
       end
     end
@@ -31,29 +37,4 @@ class SplitWorker < FileExtractionWorker
 
   private
 
-  def log_split_worker_error(exception, folder, file)
-    return unless @extraction_definition&.harvest_definition&.source_id
-
-    JobCompletionSummary.log_error(
-      extraction_id: @extraction_definition.harvest_definition.source_id,
-      extraction_name: @extraction_definition.harvest_definition.name,
-      message: "SplitWorker error: #{exception.class} - #{exception.message}",
-      details: {
-        worker_class: self.class.name,
-        exception_class: exception.class.name,
-        exception_message: exception.message,
-        stack_trace: exception.backtrace&.first(20),
-        extraction_job_id: @extraction_job.id,
-        extraction_definition_id: @extraction_definition.id,
-        harvest_job_id: @extraction_job.harvest_job&.id,
-        harvest_report_id: @extraction_job.harvest_job&.harvest_report&.id,
-        folder: folder,
-        file: file,
-        split_selector: @extraction_definition.split_selector,
-        timestamp: Time.current.iso8601
-      }
-    )
-  rescue StandardError => e
-    Rails.logger.error "Failed to log split worker error to JobCompletionSummary: #{e.message}"
-  end
 end

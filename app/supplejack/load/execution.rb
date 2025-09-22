@@ -63,7 +63,7 @@ module Load
     def log_load_error(exception)
       return unless @harvest_definition&.source_id
 
-      JobCompletionSummary.log_error(
+      Supplejack::JobCompletionSummaryLogger.log_error(
         extraction_id: @harvest_definition.source_id,
         extraction_name: @harvest_definition.name,
         message: "Load execution error: #{exception.class} - #{exception.message}",
@@ -75,8 +75,6 @@ module Load
           record_count: @records&.count
         }
       )
-    rescue StandardError => e
-      Rails.logger.error "Failed to log load error to JobCompletionSummary: #{e.message}"
     end
   end
 end
