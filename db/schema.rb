@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_09_22_050000) do
+ActiveRecord::Schema[7.2].define(version: 2025_09_22_050001) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -240,13 +240,12 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_22_050000) do
   create_table "job_completion_summaries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "extraction_id", null: false
     t.string "extraction_name", null: false
-    t.string "completion_type", null: false
     t.json "completion_details", null: false
     t.integer "completion_count", default: 0
     t.datetime "last_occurred_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["completion_type"], name: "index_job_completion_summaries_on_completion_type"
+    t.integer "completion_type", default: 0
     t.index ["extraction_id"], name: "index_job_completion_summaries_on_extraction_id", unique: true
     t.index ["last_occurred_at"], name: "index_job_completion_summaries_on_last_occurred_at"
   end

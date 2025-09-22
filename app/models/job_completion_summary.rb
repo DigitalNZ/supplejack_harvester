@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
 class JobCompletionSummary < ApplicationRecord
+  enum completion_type: {
+    error: 0,
+    stop_condition: 1
+  }
+
   validates :extraction_id, presence: true, uniqueness: true
   validates :extraction_name, presence: true
-  validates :completion_type, presence: true
   validates :completion_details, presence: true
   validates :completion_count, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
@@ -19,12 +23,12 @@ class JobCompletionSummary < ApplicationRecord
     sum(:completion_count)
   end
 
-  def stop_condition?
-    completion_type == :stop_condition || completion_type == 'stop_condition'
-  end
 
   def system_stop_condition?
-    stop_condition? && completion_details.any? { |detail| detail.dig('details', 'is_system_condition') }
+    return false unless stop_condition?
+
+    last_entry = completion_details.last
+    last_entry&.dig('details', 'is_system_condition') == true
   end
 
   def user_stop_condition?
@@ -69,8 +73,7 @@ class JobCompletionSummary < ApplicationRecord
     completion_summary.extraction_name = extraction_name
     completion_summary.completion_type = :stop_condition
 
-    # Determine if this is a system or user-defined stop condition
-    is_system_condition = details[:condition_type].present?
+    is_system_condition = details[:condition_type].present? && details[:condition_type] != 'user'
 
     completion_entry = {
       message: if is_system_condition

@@ -10,7 +10,7 @@
             <span class="badge me-2" style="background-color: #0d6efd;">User Stop Condition</span>
           <% end %>
         <% else %>
-          <span class="badge bg-danger me-2"><%= @job_completion_summary.completion_type.to_s.humanize %></span>
+            <span class="badge bg-danger me-2"><%= @job_completion_summary.completion_type.humanize %></span>
         <% end %>
         <span class="badge bg-warning text-dark">
           <%= @job_completion_summary.completion_count %> completions
