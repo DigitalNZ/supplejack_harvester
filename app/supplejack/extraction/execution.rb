@@ -75,7 +75,7 @@ module Extraction
     end
 
     def stop_condition_met?
-      [set_number_reached?, extraction_failed?, duplicate_document_extracted?, custom_stop_conditions_met?].any?
+      [set_number_reached?, extraction_failed?, duplicate_document_extracted?, custom_stop_conditions_met?].any?(true)
     end
 
     def set_number_reached?
