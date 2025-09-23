@@ -22,14 +22,13 @@ module Extraction
     rescue StandardError => e
       return unless @extraction_definition&.harvest_definition&.source_id
 
-      extraction_info = Supplejack::JobCompletionSummaryLogger.extract_from_extraction_definition(@extraction_definition)
-      return unless extraction_info
+      harvest_definition = @extraction_definition.harvest_definition
 
       Supplejack::JobCompletionSummaryLogger.log_completion(
         worker_class: 'Extraction::EnrichmentExecution',
         exception: e,
-        extraction_id: extraction_info[:extraction_id],
-        extraction_name: extraction_info[:extraction_name],
+        extraction_id: harvest_definition.source_id,
+        extraction_name: harvest_definition.name,
         details: {
           exception_class: e.class.name,
           exception_message: e.message,

@@ -65,7 +65,8 @@ module Supplejack
       }.merge(custom_details)
     end
 
-    def self.extract_from_harvest_definition(harvest_definition)
+    def self.extract_from_extraction_definition(extraction_definition)
+      harvest_definition = extraction_definition&.harvest_definition
       return nil unless harvest_definition&.source_id
 
       {
@@ -74,12 +75,14 @@ module Supplejack
       }
     end
 
-    def self.extract_from_extraction_definition(extraction_definition)
-      extract_from_harvest_definition(extraction_definition&.harvest_definition)
-    end
-
     def self.extract_from_harvest_job(harvest_job)
-      extract_from_harvest_definition(harvest_job&.harvest_definition)
+      harvest_definition = harvest_job&.harvest_definition
+      return nil unless harvest_definition&.source_id
+
+      {
+        extraction_id: harvest_definition.source_id,
+        extraction_name: harvest_definition.name
+      }
     end
 
     def self.extract_from_record_and_harvest_report(record, harvest_report)
@@ -103,23 +106,19 @@ module Supplejack
       }
     end
 
-    def self.extract_from_enrichment_params(enrichment_params)
-      params = JSON.parse(enrichment_params)
-      extraction_definition_id = params['extraction_definition_id']
-      extraction_definition = ExtractionDefinition.find(extraction_definition_id)
-      extract_from_extraction_definition(extraction_definition)
-    end
 
     private
 
     def self.extract_source_id_from_harvest_report(harvest_report)
-      first_harvest_definition = harvest_report&.pipeline_job&.harvest_definitions&.first
-      first_harvest_definition&.source_id
+      return nil unless harvest_report&.pipeline_job&.harvest_definitions&.first
+
+      harvest_report.pipeline_job.harvest_definitions.first.source_id
     end
 
     def self.extract_name_from_harvest_report(harvest_report)
-      first_harvest_definition = harvest_report&.pipeline_job&.harvest_definitions&.first
-      first_harvest_definition&.name
+      return nil unless harvest_report&.pipeline_job&.harvest_definitions&.first
+
+      harvest_report.pipeline_job.harvest_definitions.first.name
     end
   end
 end

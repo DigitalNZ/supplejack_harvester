@@ -8,15 +8,17 @@ class EnrichmentExtractionWorker
   def perform(enrichment_params)
     process_enrichment_extraction(enrichment_params)
   rescue StandardError => e
-    extraction_info = Supplejack::JobCompletionSummaryLogger.extract_from_enrichment_params(enrichment_params)
-    return unless extraction_info
-
     params = JSON.parse(enrichment_params)
+    extraction_definition_id = params['extraction_definition_id']
+    extraction_definition = ExtractionDefinition.find(extraction_definition_id)
+    harvest_definition = extraction_definition.harvest_definition
+    return unless harvest_definition&.source_id
+
     Supplejack::JobCompletionSummaryLogger.log_completion(
       worker_class: 'EnrichmentExtractionWorker',
       exception: e,
-      extraction_id: extraction_info[:extraction_id],
-      extraction_name: extraction_info[:extraction_name],
+      extraction_id: harvest_definition.source_id,
+      extraction_name: harvest_definition.name,
       details: {
         extraction_job_id: params['extraction_job_id'],
         extraction_definition_id: params['extraction_definition_id'],
