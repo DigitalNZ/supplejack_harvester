@@ -125,9 +125,46 @@ module Supplejack
       )
     end
 
-
-    # FILE AND TEXT EXTRACTIONS
+     # EXTRACTION EXECUTION
     #########################################################
+
+    def self.log_execution_error(exception:, extraction_definition:, extraction_job:, harvest_job: nil, harvest_report: nil, worker_class: 'Extraction::Execution')
+      return unless extraction_definition&.harvest_definition&.source_id
+
+      harvest_definition = extraction_definition.harvest_definition
+      exception_class = exception.class
+      exception_message = exception.message
+
+      log_completion(
+        worker_class: worker_class,
+        exception: exception,
+        extraction_id: harvest_definition.source_id,
+        extraction_name: harvest_definition.name,
+        details: {
+          exception_class: exception_class.name,
+          exception_message: exception_message,
+          stack_trace: exception.backtrace&.first(20),
+          extraction_job_id: extraction_job.id,
+          extraction_definition_id: extraction_definition.id,
+          harvest_job_id: harvest_job&.id,
+          harvest_report_id: harvest_report&.id,
+          timestamp: Time.current.iso8601
+        }
+      )
+    rescue StandardError => log_error
+      Rails.logger.error "Failed to log extraction execution error to JobCompletionSummary: #{log_error.message}"
+    end
+
+    def self.log_enrichment_execution_error(exception:, extraction_definition:, extraction_job:, harvest_job: nil, harvest_report: nil)
+      log_extraction_execution_error(
+        exception: exception,
+        extraction_definition: extraction_definition,
+        extraction_job: extraction_job,
+        harvest_job: harvest_job,
+        harvest_report: harvest_report,
+        worker_class: 'Extraction::EnrichmentExecution'
+      )
+    end
 
     def self.log_file_extraction_completion(params)
       exception = params[:exception]
@@ -176,10 +213,8 @@ module Supplejack
 
     # MAIN 
     #########################################################
-
     
-    
-  def self.log_completion(params)
+    def self.log_completion(params)
       worker_class = params[:worker_class]
       exception = params[:exception]
       extraction_id = params[:extraction_id]

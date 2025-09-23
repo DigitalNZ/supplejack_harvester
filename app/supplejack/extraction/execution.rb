@@ -27,32 +27,13 @@ module Extraction
         break if execution_cancelled? || stop_condition_met?
       end
     rescue StandardError => error
-      return unless @extraction_definition&.harvest_definition&.source_id
-
-      harvest_definition = @extraction_definition.harvest_definition
-      exception_class = error.class
-      exception_message = error.message
-
-      begin
-        Supplejack::JobCompletionSummaryLogger.log_completion(
-          extraction_id: harvest_definition.source_id,
-          extraction_name: harvest_definition.name,
-          message: "Extraction execution error: #{exception_class} - #{exception_message}",
-          details: {
-            worker_class: self.class.name,
-            exception_class: exception_class.name,
-            exception_message: exception_message,
-            stack_trace: error.backtrace&.first(20),
-            extraction_job_id: @extraction_job.id,
-            extraction_definition_id: @extraction_definition.id,
-            harvest_job_id: @harvest_job&.id,
-            harvest_report_id: @harvest_report&.id,
-            timestamp: Time.current.iso8601
-          }
-        )
-      rescue StandardError => log_error
-        Rails.logger.error "Failed to log extraction error to JobCompletionSummary: #{log_error.message}"
-      end
+      Supplejack::JobCompletionSummaryLogger.log_execution_error(
+        exception: error,
+        extraction_definition: @extraction_definition,
+        extraction_job: @extraction_job,
+        harvest_job: @harvest_job,
+        harvest_report: @harvest_report
+      )
       raise
     end
 

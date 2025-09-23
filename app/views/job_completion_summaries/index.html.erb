@@ -48,10 +48,4 @@
   </div>
 </div>
 
-<% if @job_completion_summaries.any? %>
-  <div class="row mt-3">
-    <div class="col-md-12">
-      <%= render 'shared/pagination_below_table', items: @job_completion_summaries %>
-    </div>
-  </div>
-<% end %>
+<%= render 'shared/conditional_pagination', items: @job_completion_summaries %>
