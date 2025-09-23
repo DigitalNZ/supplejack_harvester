@@ -27,12 +27,26 @@ module Extraction
         break if execution_cancelled? || stop_condition_met?
       end
     rescue StandardError => error
-      Supplejack::JobCompletionSummaryLogger.log_execution_error(
+      return unless @extraction_definition&.harvest_definition&.source_id
+
+      extraction_info = Supplejack::JobCompletionSummaryLogger.extract_from_extraction_definition(@extraction_definition)
+      return unless extraction_info
+
+      Supplejack::JobCompletionSummaryLogger.log_completion(
+        worker_class: 'Extraction::Execution',
         exception: error,
-        extraction_definition: @extraction_definition,
-        extraction_job: @extraction_job,
-        harvest_job: @harvest_job,
-        harvest_report: @harvest_report
+        extraction_id: extraction_info[:extraction_id],
+        extraction_name: extraction_info[:extraction_name],
+        details: {
+          exception_class: error.class.name,
+          exception_message: error.message,
+          stack_trace: error.backtrace&.first(20),
+          extraction_job_id: @extraction_job.id,
+          extraction_definition_id: @extraction_definition.id,
+          harvest_job_id: @harvest_job&.id,
+          harvest_report_id: @harvest_report&.id,
+          timestamp: Time.current.iso8601
+        }
       )
       raise
     end

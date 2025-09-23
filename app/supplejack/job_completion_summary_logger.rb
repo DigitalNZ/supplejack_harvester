@@ -2,213 +2,8 @@
 
 module Supplejack
   class JobCompletionSummaryLogger
-    # DELETE WORKER
-    #########################################################
-    def self.log_delete_worker_completion(exception:, record:, destination:, harvest_report:)
-      source_id = record.dig('transformed_record', 'source_id') ||
-                  extract_source_id_from_harvest_report(harvest_report) ||
-                  'unknown'
-      extraction_name = record.dig('transformed_record', 'job_id') ||
-                        extract_name_from_harvest_report(harvest_report) ||
-                        'unknown'
 
-      log_completion(
-        worker_class: 'DeleteWorker',
-        exception: exception,
-        extraction_id: source_id,
-        extraction_name: extraction_name,
-        details: {
-          record: record,
-          destination_id: destination.id,
-          destination_name: destination.name,
-          harvest_report_id: harvest_report&.id
-        }
-      )
-    end
-
-    # LOAD WORKER
-    #########################################################
-
-    # :reek:TooManyStatements
-    def self.log_load_worker_completion(params)
-      exception = params[:exception]
-      harvest_job = params[:harvest_job]
-      harvest_report = params[:harvest_report]
-      batch = params[:batch]
-      api_record_id = params[:api_record_id]
-
-      harvest_info = extract_harvest_info_from_job(harvest_job)
-      return unless harvest_info
-
-      log_completion(
-        worker_class: 'LoadWorker',
-        exception: exception,
-        extraction_id: harvest_info[:source_id],
-        extraction_name: harvest_info[:name],
-        details: {
-          harvest_job_id: harvest_job.id,
-          harvest_report_id: harvest_report&.id,
-          batch_size: batch&.size,
-          api_record_id: api_record_id
-        }
-      )
-    end
-
-    # SCHEDULE WORKER
-    #########################################################
-
-    def self.log_schedule_worker_completion(exception:, schedule:, error_context:)
-      schedule_id = schedule.id
-      schedule_name = schedule.name
-
-      log_completion(
-        worker_class: 'ScheduleWorker',
-        exception: exception,
-        extraction_id: "schedule_#{schedule_id}",
-        extraction_name: "Schedule: #{schedule_name || 'Unnamed Schedule'}",
-        message: "ScheduleWorker #{error_context} error: #{exception.class} - #{exception.message}",
-        details: {
-          schedule_id: schedule_id,
-          schedule_name: schedule_name,
-          error_context: error_context
-        }
-      )
-    end
-
-    # SPLIT WORKER
-    #########################################################
-
-    def self.log_split_worker_completion(params)
-      exception = params[:exception]
-      extraction_definition = params[:extraction_definition]
-      extraction_job = params[:extraction_job]
-      folder = params[:folder]
-      file = params[:file]
-
-      log_extraction_worker_completion(
-        worker_class: 'SplitWorker',
-        exception: exception,
-        extraction_definition: extraction_definition,
-        extraction_job: extraction_job,
-        additional_details: {
-          folder: folder,
-          file: file,
-          split_selector: extraction_definition.split_selector
-        }
-      )
-    end
-
-    def self.log_enrichment_extraction_completion(exception:, enrichment_params:)
-      params = JSON.parse(enrichment_params)
-      extraction_definition_id = params['extraction_definition_id']
-      extraction_definition = ExtractionDefinition.find(extraction_definition_id)
-
-      harvest_info = extract_harvest_info_from_definition(extraction_definition)
-      return unless harvest_info
-
-      log_completion(
-        worker_class: 'EnrichmentExtractionWorker',
-        exception: exception,
-        extraction_id: harvest_info[:source_id],
-        extraction_name: harvest_info[:name],
-        details: {
-          extraction_job_id: params['extraction_job_id'],
-          extraction_definition_id: extraction_definition_id,
-          harvest_job_id: params['harvest_job_id'],
-          api_record: params['api_record'],
-          page: params['page']
-        }
-      )
-    end
-
-    # EXTRACTION EXECUTION
-    #########################################################
-
-    def self.log_execution_error(exception:, extraction_definition:, extraction_job:, options: {})
-      return unless extraction_definition&.harvest_definition&.source_id
-
-      harvest_definition = extraction_definition.harvest_definition
-      harvest_job = options[:harvest_job]
-      harvest_report = options[:harvest_report]
-      worker_class = options[:worker_class] || 'Extraction::Execution'
-      
-      details = build_execution_error_details(exception, extraction_definition, extraction_job,
-                                              harvest_job, harvest_report)
-
-      log_completion(
-        worker_class: worker_class,
-        exception: exception,
-        extraction_id: harvest_definition.source_id,
-        extraction_name: harvest_definition.name,
-        details: details
-      )
-    rescue StandardError => e
-      Rails.logger.error "Failed to log extraction execution error to JobCompletionSummary: #{e.message}"
-    end
-
-    def self.log_enrichment_execution_error(exception:, extraction_definition:, extraction_job:,
-                                            harvest_job: nil, harvest_report: nil)
-      log_execution_error(
-        exception: exception,
-        extraction_definition: extraction_definition,
-        extraction_job: extraction_job,
-        options: {
-          harvest_job: harvest_job,
-          harvest_report: harvest_report,
-          worker_class: 'Extraction::EnrichmentExecution'
-        }
-      )
-    end
-
-    def self.log_file_extraction_completion(params)
-      exception = params[:exception]
-      extraction_definition = params[:extraction_definition]
-      extraction_job = params[:extraction_job]
-      extraction_folder = params[:extraction_folder]
-      tmp_directory = params[:tmp_directory]
-
-      log_extraction_worker_completion(
-        worker_class: 'FileExtractionWorker',
-        exception: exception,
-        extraction_definition: extraction_definition,
-        extraction_job: extraction_job,
-        additional_details: {
-          extraction_folder: extraction_folder,
-          tmp_directory: tmp_directory
-        }
-      )
-    end
-
-    def self.log_text_extraction_completion(params)
-      exception = params[:exception]
-      extraction_definition = params[:extraction_definition]
-      extraction_job = params[:extraction_job]
-      folder = params[:folder]
-      file = params[:file]
-
-      log_extraction_worker_completion(
-        worker_class: 'TextExtractionWorker',
-        exception: exception,
-        extraction_definition: extraction_definition,
-        extraction_job: extraction_job,
-        additional_details: {
-          folder: folder,
-          file: file,
-          file_extension: file ? File.extname(file) : nil
-        }
-      )
-    end
-
-    # MAIN
-    #########################################################
-
-    def self.log_completion(params)
-      worker_class = params[:worker_class]
-      exception = params[:exception]
-      extraction_id = params[:extraction_id]
-      extraction_name = params[:extraction_name]
-      details = params[:details] || {}
-      message = params[:message]
+    def self.log_completion(worker_class:, exception:, extraction_id:, extraction_name:, details: {}, message: nil)
       resolved_message = resolve_message(message, worker_class, exception)
 
       JobCompletionSummary.log_completion(
@@ -266,62 +61,52 @@ module Supplejack
       }.merge(custom_details)
     end
 
-    def self.extract_harvest_info_from_definition(extraction_definition)
-      extract_harvest_info_from_harvest_definition(extraction_definition&.harvest_definition)
-    end
-
-    def self.extract_harvest_info_from_job(harvest_job)
-      extract_harvest_info_from_harvest_definition(harvest_job&.harvest_definition)
-    end
-
-    private
-
-    def self.extract_harvest_info_from_harvest_definition(harvest_definition)
+    def self.extract_from_harvest_definition(harvest_definition)
       return nil unless harvest_definition&.source_id
 
       {
-        source_id: harvest_definition.source_id,
-        name: harvest_definition.name
+        extraction_id: harvest_definition.source_id,
+        extraction_name: harvest_definition.name
       }
     end
 
-    def self.log_extraction_worker_completion(worker_class:, exception:, extraction_definition:, 
-                                            extraction_job:, additional_details: {})
-      harvest_info = extract_harvest_info_from_definition(extraction_definition)
-      return unless harvest_info
-
-      log_completion(
-        worker_class: worker_class,
-        exception: exception,
-        extraction_id: harvest_info[:source_id],
-        extraction_name: harvest_info[:name],
-        details: build_extraction_job_details(extraction_job, extraction_definition).merge(additional_details)
-      )
+    def self.extract_from_extraction_definition(extraction_definition)
+      extract_from_harvest_definition(extraction_definition&.harvest_definition)
     end
 
-    def self.build_extraction_job_details(extraction_job, extraction_definition)
-      harvest_job = extraction_job.harvest_job
+    def self.extract_from_harvest_job(harvest_job)
+      extract_from_harvest_definition(harvest_job&.harvest_definition)
+    end
+
+    def self.extract_from_record_and_harvest_report(record, harvest_report)
+      source_id = record.dig('transformed_record', 'source_id') ||
+                  extract_source_id_from_harvest_report(harvest_report) ||
+                  'unknown'
+      extraction_name = record.dig('transformed_record', 'job_id') ||
+                        extract_name_from_harvest_report(harvest_report) ||
+                        'unknown'
+
       {
-        extraction_job_id: extraction_job.id,
-        extraction_definition_id: extraction_definition.id,
-        harvest_job_id: harvest_job&.id,
-        harvest_report_id: harvest_job&.harvest_report&.id
+        extraction_id: source_id,
+        extraction_name: extraction_name
       }
     end
 
-    def self.build_execution_error_details(exception, extraction_definition, extraction_job,
-                                           harvest_job, harvest_report)
+    def self.extract_from_schedule(schedule)
       {
-        exception_class: exception.class.name,
-        exception_message: exception.message,
-        stack_trace: exception.backtrace&.first(20),
-        extraction_job_id: extraction_job.id,
-        extraction_definition_id: extraction_definition.id,
-        harvest_job_id: harvest_job&.id,
-        harvest_report_id: harvest_report&.id,
-        timestamp: Time.current.iso8601
+        extraction_id: "schedule_#{schedule.id}",
+        extraction_name: "Schedule: #{schedule.name || 'Unnamed Schedule'}"
       }
     end
+
+    def self.extract_from_enrichment_params(enrichment_params)
+      params = JSON.parse(enrichment_params)
+      extraction_definition_id = params['extraction_definition_id']
+      extraction_definition = ExtractionDefinition.find(extraction_definition_id)
+      extract_from_extraction_definition(extraction_definition)
+    end
+
+    private
 
     def self.extract_source_id_from_harvest_report(harvest_report)
       return nil unless harvest_report&.pipeline_job&.harvest_definitions&.first

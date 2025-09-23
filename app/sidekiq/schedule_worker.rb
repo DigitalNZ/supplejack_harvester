@@ -30,10 +30,19 @@ class ScheduleWorker
   private
 
   def log_schedule_error(error, schedule, error_context)
-    Supplejack::JobCompletionSummaryLogger.log_schedule_worker_completion(
+    extraction_info = Supplejack::JobCompletionSummaryLogger.extract_from_schedule(schedule)
+    
+    Supplejack::JobCompletionSummaryLogger.log_completion(
+      worker_class: 'ScheduleWorker',
       exception: error,
-      schedule: schedule,
-      error_context: error_context
+      extraction_id: extraction_info[:extraction_id],
+      extraction_name: extraction_info[:extraction_name],
+      message: "ScheduleWorker #{error_context} error: #{error.class} - #{error.message}",
+      details: {
+        schedule_id: schedule.id,
+        schedule_name: schedule.name,
+        error_context: error_context
+      }
     )
   end
 

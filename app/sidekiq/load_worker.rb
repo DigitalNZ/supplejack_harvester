@@ -45,12 +45,21 @@ class LoadWorker
     end
   rescue StandardError => e
     Rails.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
-    Supplejack::JobCompletionSummaryLogger.log_load_worker_completion(
+    
+    extraction_info = Supplejack::JobCompletionSummaryLogger.extract_from_harvest_job(@harvest_job)
+    return unless extraction_info
+
+    Supplejack::JobCompletionSummaryLogger.log_completion(
+      worker_class: 'LoadWorker',
       exception: e,
-      harvest_job: @harvest_job,
-      harvest_report: @harvest_report,
-      batch: batch,
-      api_record_id: api_record_id
+      extraction_id: extraction_info[:extraction_id],
+      extraction_name: extraction_info[:extraction_name],
+      details: {
+        harvest_job_id: @harvest_job.id,
+        harvest_report_id: @harvest_report&.id,
+        batch_size: batch&.size,
+        api_record_id: api_record_id
+      }
     )
   end
 
