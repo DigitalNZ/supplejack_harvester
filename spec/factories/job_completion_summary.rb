@@ -4,11 +4,10 @@ FactoryBot.define do
     factory :job_completion_summary do
       extraction_id { SecureRandom.uuid }
       extraction_name { "Test Extraction #{SecureRandom.hex(4)}" }
-      error_type { "error" }
-      error_count { 1 }
-      first_error_at { Time.current }
-      last_error_at { Time.current }
-      error_details do
+      completion_type { :error }
+      completion_count { 1 }
+      last_occurred_at { Time.current }
+      completion_details do
         [
           {
             "message" => "Test error message",
@@ -23,8 +22,8 @@ FactoryBot.define do
       end
   
       trait :stop_condition do
-        error_type { "stop condition" }
-        error_details do
+        completion_type { :stop_condition }
+        completion_details do
           [
             {
               "message" => "Stop condition 'test_condition' was triggered",
@@ -40,8 +39,8 @@ FactoryBot.define do
       end
   
       trait :multiple_errors do
-        error_count { 3 }
-        error_details do
+        completion_count { 3 }
+        completion_details do
           [
             {
               "message" => "First error",
@@ -63,8 +62,8 @@ FactoryBot.define do
       end
   
       trait :no_errors do
-        error_count { 0 }
-        error_details { [{"message" => "", "details" => {}, "timestamp" => Time.current.iso8601}] }  # Empty structure to satisfy validation
+        completion_count { 0 }
+        completion_details { [{"message" => "No errors occurred", "details" => {}, "timestamp" => Time.current.iso8601}] }  # Valid structure to satisfy validation
       end
     end
   end

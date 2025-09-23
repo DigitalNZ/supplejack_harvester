@@ -49,8 +49,8 @@ class ApiCallWorker
 
     # Return true if the response was successful (2xx status code)
     response.is_a?(Net::HTTPSuccess)
-  rescue StandardError => e
-    create_or_update_api_response_report_with_error(e)
+  rescue StandardError => error
+    create_or_update_api_response_report_with_error(error)
     false
   end
 

@@ -19,8 +19,32 @@ module Extraction
         api_records = JSON.parse(api_document.body)['records']
         extract_and_save_enrichment_documents(api_records)
       end
-    rescue StandardError => e
-      log_enrichment_error(e)
+    rescue StandardError => error
+      return unless @extraction_definition&.harvest_definition&.source_id
+
+      harvest_definition = @extraction_definition.harvest_definition
+      exception_class = exception.class
+      exception_message = exception.message
+
+      Supplejack::JobCompletionSummaryLogger.log_error(
+        extraction_id: harvest_definition.source_id,
+        extraction_name: harvest_definition.name,
+        message: "Enrichment execution error: #{exception_class} - #{exception_message}",
+        details: {
+          worker_class: self.class.name,
+          exception_class: exception_class.name,
+          exception_message: exception_message,
+          stack_trace: exception.backtrace&.first(20),
+          extraction_job_id: @extraction_job.id,
+          extraction_definition_id: @extraction_definition.id,
+          harvest_job_id: @harvest_job&.id,
+          harvest_report_id: @harvest_report&.id,
+          timestamp: Time.current.iso8601
+        }
+      )
+      rescue StandardError => 
+        Rails.logger.error "Failed to log enrichment error to JobCompletionSummary: #{e.message}"
+      end
       raise
     end
 
@@ -59,33 +83,6 @@ module Extraction
 
     def page_from_index(index)
       ((@extraction_definition.page - 1) * @extraction_definition.per_page) + (index + 1)
-    end
-
-    def log_enrichment_error(exception)
-      return unless @extraction_definition&.harvest_definition&.source_id
-
-      harvest_definition = @extraction_definition.harvest_definition
-      exception_class = exception.class
-      exception_message = exception.message
-
-      Supplejack::JobCompletionSummaryLogger.log_error(
-        extraction_id: harvest_definition.source_id,
-        extraction_name: harvest_definition.name,
-        message: "Enrichment execution error: #{exception_class} - #{exception_message}",
-        details: {
-          worker_class: self.class.name,
-          exception_class: exception_class.name,
-          exception_message: exception_message,
-          stack_trace: exception.backtrace&.first(20),
-          extraction_job_id: @extraction_job.id,
-          extraction_definition_id: @extraction_definition.id,
-          harvest_job_id: @harvest_job&.id,
-          harvest_report_id: @harvest_report&.id,
-          timestamp: Time.current.iso8601
-        }
-      )
-    rescue StandardError => e
-      Rails.logger.error "Failed to log enrichment error to JobCompletionSummary: #{e.message}"
     end
   end
 end

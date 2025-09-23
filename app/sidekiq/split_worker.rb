@@ -10,9 +10,9 @@ class SplitWorker < FileExtractionWorker
           create_document(records, saved_response)
           @page += 1
         end
-      rescue StandardError => e
+      rescue StandardError => error
         Supplejack::JobCompletionSummaryLogger.log_split_worker_completion(
-          exception: e,
+          exception: error,
           extraction_definition: @extraction_definition,
           extraction_job: @extraction_job,
           folder: folder,
@@ -22,6 +22,8 @@ class SplitWorker < FileExtractionWorker
       end
     end
   end
+
+  private
 
   def create_document(records, saved_response)
     page_str = format('%09d', @page)[-9..]
