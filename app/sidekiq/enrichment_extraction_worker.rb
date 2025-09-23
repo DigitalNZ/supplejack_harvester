@@ -7,14 +7,11 @@ class EnrichmentExtractionWorker
 
   def perform(enrichment_params)
     process_enrichment_extraction(enrichment_params)
-  rescue StandardError => e
+  rescue StandardError => error
     Supplejack::JobCompletionSummaryLogger.log_enrichment_extraction_completion(
-      exception: e,
+      exception: error,
       enrichment_params: enrichment_params
     )
     raise
   end
-
-  private
-
 end
