@@ -1,7 +1,17 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-    factory :job_completion_summary do
+  # Helper method to create completion detail entries
+  sequence :completion_detail do |n|
+    {
+      "message" => "Error #{n}",
+      "details" => { "worker_class" => "Worker#{n}" },
+      "timestamp" => n.hours.ago.iso8601,
+      "worker_class" => "Worker#{n}"
+    }
+  end
+
+  factory :job_completion_summary do
       extraction_id { SecureRandom.uuid }
       extraction_name { "Test Extraction #{SecureRandom.hex(4)}" }
       completion_type { :error }
@@ -47,26 +57,7 @@ FactoryBot.define do
       trait :multiple_errors do
         completion_count { 3 }
         completion_details do
-          [
-            {
-              "message" => "First error",
-              "details" => { "worker_class" => "Worker1" },
-              "timestamp" => 3.hours.ago.iso8601,
-              "worker_class" => "Worker1"
-            },
-            {
-              "message" => "Second error", 
-              "details" => { "worker_class" => "Worker2" },
-              "timestamp" => 2.hours.ago.iso8601,
-              "worker_class" => "Worker2"
-            },
-            {
-              "message" => "Third error",
-              "details" => { "worker_class" => "Worker3" },
-              "timestamp" => 1.hour.ago.iso8601,
-              "worker_class" => "Worker3"
-            }
-          ]
+          Array.new(3) { |i| generate(:completion_detail, i + 1) }
         end
       end
   

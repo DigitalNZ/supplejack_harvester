@@ -36,13 +36,13 @@ class JobCompletionSummary < ApplicationRecord
 
   def self.create_completion_summary(completion_entry, extraction_id, extraction_name, completion_type)
     completion_summary = find_or_initialize_by(extraction_id: extraction_id)
-  
+
     completion_summary.extraction_name = extraction_name
     completion_summary.completion_type = completion_type
-  
+
     existing_details = completion_summary.completion_details || []
     new_details = existing_details + [completion_entry]
-    
+
     completion_summary.completion_details = new_details
     completion_summary.completion_count = new_details.length
     completion_summary.last_occurred_at = Time.current

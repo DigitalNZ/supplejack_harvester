@@ -13,8 +13,8 @@ class StopCondition < ApplicationRecord
     execution_context.log_stop_condition_hit(name, content) if result == true && execution_context
 
     result
-  rescue StandardError => error
-    error
+  rescue StandardError => e
+    e
   end
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval

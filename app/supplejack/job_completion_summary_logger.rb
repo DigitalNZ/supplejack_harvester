@@ -2,15 +2,14 @@
 
 module Supplejack
   class JobCompletionSummaryLogger
-
     # DELETE WORKER
     #########################################################
     def self.log_delete_worker_completion(exception:, record:, destination:, harvest_report:)
       source_id = record.dig('transformed_record', 'source_id') ||
-                  harvest_report&.pipeline_job&.harvest_definitions&.first&.source_id ||
+                  extract_source_id_from_harvest_report(harvest_report) ||
                   'unknown'
       extraction_name = record.dig('transformed_record', 'job_id') ||
-                        harvest_report&.pipeline_job&.harvest_definitions&.first&.name ||
+                        extract_name_from_harvest_report(harvest_report) ||
                         'unknown'
 
       log_completion(
@@ -86,19 +85,16 @@ module Supplejack
       folder = params[:folder]
       file = params[:file]
 
-      harvest_info = extract_harvest_info_from_definition(extraction_definition)
-      return unless harvest_info
-
-      log_completion(
+      log_extraction_worker_completion(
         worker_class: 'SplitWorker',
         exception: exception,
-        extraction_id: harvest_info[:source_id],
-        extraction_name: harvest_info[:name],
-        details: build_extraction_job_details(extraction_job, extraction_definition).merge(
+        extraction_definition: extraction_definition,
+        extraction_job: extraction_job,
+        additional_details: {
           folder: folder,
           file: file,
           split_selector: extraction_definition.split_selector
-        )
+        }
       )
     end
 
@@ -125,44 +121,42 @@ module Supplejack
       )
     end
 
-     # EXTRACTION EXECUTION
+    # EXTRACTION EXECUTION
     #########################################################
 
-    def self.log_execution_error(exception:, extraction_definition:, extraction_job:, harvest_job: nil, harvest_report: nil, worker_class: 'Extraction::Execution')
+    def self.log_execution_error(exception:, extraction_definition:, extraction_job:, options: {})
       return unless extraction_definition&.harvest_definition&.source_id
 
       harvest_definition = extraction_definition.harvest_definition
-      exception_class = exception.class
-      exception_message = exception.message
+      harvest_job = options[:harvest_job]
+      harvest_report = options[:harvest_report]
+      worker_class = options[:worker_class] || 'Extraction::Execution'
+      
+      details = build_execution_error_details(exception, extraction_definition, extraction_job,
+                                              harvest_job, harvest_report)
 
       log_completion(
         worker_class: worker_class,
         exception: exception,
         extraction_id: harvest_definition.source_id,
         extraction_name: harvest_definition.name,
-        details: {
-          exception_class: exception_class.name,
-          exception_message: exception_message,
-          stack_trace: exception.backtrace&.first(20),
-          extraction_job_id: extraction_job.id,
-          extraction_definition_id: extraction_definition.id,
-          harvest_job_id: harvest_job&.id,
-          harvest_report_id: harvest_report&.id,
-          timestamp: Time.current.iso8601
-        }
+        details: details
       )
-    rescue StandardError => log_error
-      Rails.logger.error "Failed to log extraction execution error to JobCompletionSummary: #{log_error.message}"
+    rescue StandardError => e
+      Rails.logger.error "Failed to log extraction execution error to JobCompletionSummary: #{e.message}"
     end
 
-    def self.log_enrichment_execution_error(exception:, extraction_definition:, extraction_job:, harvest_job: nil, harvest_report: nil)
-      log_extraction_execution_error(
+    def self.log_enrichment_execution_error(exception:, extraction_definition:, extraction_job:,
+                                            harvest_job: nil, harvest_report: nil)
+      log_execution_error(
         exception: exception,
         extraction_definition: extraction_definition,
         extraction_job: extraction_job,
-        harvest_job: harvest_job,
-        harvest_report: harvest_report,
-        worker_class: 'Extraction::EnrichmentExecution'
+        options: {
+          harvest_job: harvest_job,
+          harvest_report: harvest_report,
+          worker_class: 'Extraction::EnrichmentExecution'
+        }
       )
     end
 
@@ -173,18 +167,15 @@ module Supplejack
       extraction_folder = params[:extraction_folder]
       tmp_directory = params[:tmp_directory]
 
-      harvest_info = extract_harvest_info_from_definition(extraction_definition)
-      return unless harvest_info
-
-      log_completion(
+      log_extraction_worker_completion(
         worker_class: 'FileExtractionWorker',
         exception: exception,
-        extraction_id: harvest_info[:source_id],
-        extraction_name: harvest_info[:name],
-        details: build_extraction_job_details(extraction_job, extraction_definition).merge(
+        extraction_definition: extraction_definition,
+        extraction_job: extraction_job,
+        additional_details: {
           extraction_folder: extraction_folder,
           tmp_directory: tmp_directory
-        )
+        }
       )
     end
 
@@ -195,25 +186,22 @@ module Supplejack
       folder = params[:folder]
       file = params[:file]
 
-      harvest_info = extract_harvest_info_from_definition(extraction_definition)
-      return unless harvest_info
-
-      log_completion(
+      log_extraction_worker_completion(
         worker_class: 'TextExtractionWorker',
         exception: exception,
-        extraction_id: harvest_info[:source_id],
-        extraction_name: harvest_info[:name],
-        details: build_extraction_job_details(extraction_job, extraction_definition).merge(
+        extraction_definition: extraction_definition,
+        extraction_job: extraction_job,
+        additional_details: {
           folder: folder,
           file: file,
           file_extension: file ? File.extname(file) : nil
-        )
+        }
       )
     end
 
-    # MAIN 
+    # MAIN
     #########################################################
-    
+
     def self.log_completion(params)
       worker_class = params[:worker_class]
       exception = params[:exception]
@@ -229,8 +217,8 @@ module Supplejack
         message: resolved_message,
         details: build_completion_details(worker_class, exception, details)
       )
-    rescue StandardError => error
-      Rails.logger.error "Failed to log #{worker_class.downcase} completion to JobCompletionSummary: #{error.message}"
+    rescue StandardError => e
+      Rails.logger.error "Failed to log #{worker_class.downcase} completion to JobCompletionSummary: #{e.message}"
     end
 
     def self.log_stop_condition_hit(params)
@@ -264,6 +252,7 @@ module Supplejack
 
     def self.resolve_message(message, worker_class, exception)
       return message if message.present?
+
       "#{worker_class} error: #{exception.class} - #{exception.message}"
     end
 
@@ -277,9 +266,17 @@ module Supplejack
       }.merge(custom_details)
     end
 
-    # :reek:TooManyStatements
     def self.extract_harvest_info_from_definition(extraction_definition)
-      harvest_definition = extraction_definition&.harvest_definition
+      extract_harvest_info_from_harvest_definition(extraction_definition&.harvest_definition)
+    end
+
+    def self.extract_harvest_info_from_job(harvest_job)
+      extract_harvest_info_from_harvest_definition(harvest_job&.harvest_definition)
+    end
+
+    private
+
+    def self.extract_harvest_info_from_harvest_definition(harvest_definition)
       return nil unless harvest_definition&.source_id
 
       {
@@ -288,14 +285,18 @@ module Supplejack
       }
     end
 
-    def self.extract_harvest_info_from_job(harvest_job)
-      harvest_definition = harvest_job&.harvest_definition
-      return nil unless harvest_definition&.source_id
+    def self.log_extraction_worker_completion(worker_class:, exception:, extraction_definition:, 
+                                            extraction_job:, additional_details: {})
+      harvest_info = extract_harvest_info_from_definition(extraction_definition)
+      return unless harvest_info
 
-      {
-        source_id: harvest_definition.source_id,
-        name: harvest_definition.name
-      }
+      log_completion(
+        worker_class: worker_class,
+        exception: exception,
+        extraction_id: harvest_info[:source_id],
+        extraction_name: harvest_info[:name],
+        details: build_extraction_job_details(extraction_job, extraction_definition).merge(additional_details)
+      )
     end
 
     def self.build_extraction_job_details(extraction_job, extraction_definition)
@@ -306,6 +307,32 @@ module Supplejack
         harvest_job_id: harvest_job&.id,
         harvest_report_id: harvest_job&.harvest_report&.id
       }
+    end
+
+    def self.build_execution_error_details(exception, extraction_definition, extraction_job,
+                                           harvest_job, harvest_report)
+      {
+        exception_class: exception.class.name,
+        exception_message: exception.message,
+        stack_trace: exception.backtrace&.first(20),
+        extraction_job_id: extraction_job.id,
+        extraction_definition_id: extraction_definition.id,
+        harvest_job_id: harvest_job&.id,
+        harvest_report_id: harvest_report&.id,
+        timestamp: Time.current.iso8601
+      }
+    end
+
+    def self.extract_source_id_from_harvest_report(harvest_report)
+      return nil unless harvest_report&.pipeline_job&.harvest_definitions&.first
+
+      harvest_report.pipeline_job.harvest_definitions.first.source_id
+    end
+
+    def self.extract_name_from_harvest_report(harvest_report)
+      return nil unless harvest_report&.pipeline_job&.harvest_definitions&.first
+
+      harvest_report.pipeline_job.harvest_definitions.first.name
     end
   end
 end

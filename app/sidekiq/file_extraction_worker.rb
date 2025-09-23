@@ -21,9 +21,9 @@ class FileExtractionWorker
 
     harvest_report.extraction_completed!
     create_transformation_jobs
-  rescue StandardError => error
+  rescue StandardError => e
     Supplejack::JobCompletionSummaryLogger.log_file_extraction_completion(
-      exception: error,
+      exception: e,
       extraction_definition: @extraction_definition,
       extraction_job: @extraction_job,
       extraction_folder: @extraction_folder,

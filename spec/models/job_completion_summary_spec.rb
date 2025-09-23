@@ -100,15 +100,16 @@ RSpec.describe JobCompletionSummary do
       }
     end
 
+    subject do
+      described_class.log_completion(
+        extraction_id: extraction_id,
+        extraction_name: extraction_name,
+        message: message,
+        details: details
+      )
+    end
+
     context 'when creating a new completion summary' do
-      subject do
-        described_class.log_completion(
-          extraction_id: extraction_id,
-          extraction_name: extraction_name,
-          message: message,
-          details: details
-        )
-      end
 
       include_examples 'creates completion summary'
 
@@ -138,15 +139,6 @@ RSpec.describe JobCompletionSummary do
         create(:job_completion_summary, extraction_id: extraction_id, completion_count: 1)
       end
 
-      subject do
-        described_class.log_completion(
-          extraction_id: extraction_id,
-          extraction_name: extraction_name,
-          message: message,
-          details: details
-        )
-      end
-
       include_examples 'updates existing summary'
     end
   end
@@ -158,16 +150,17 @@ RSpec.describe JobCompletionSummary do
     let(:stop_condition_content) { 'if records.count > 100' }
     let(:details) { { additional: 'context' } }
 
+    subject do
+      described_class.log_stop_condition_hit(
+        extraction_id: extraction_id,
+        extraction_name: extraction_name,
+        stop_condition_name: stop_condition_name,
+        stop_condition_content: stop_condition_content,
+        details: details
+      )
+    end
+
     context 'when creating a new stop condition summary' do
-      subject do
-        described_class.log_stop_condition_hit(
-          extraction_id: extraction_id,
-          extraction_name: extraction_name,
-          stop_condition_name: stop_condition_name,
-          stop_condition_content: stop_condition_content,
-          details: details
-        )
-      end
 
       include_examples 'creates completion summary'
 
@@ -210,16 +203,6 @@ RSpec.describe JobCompletionSummary do
     context 'when updating an existing stop condition summary' do
       let!(:existing_summary) do
         create(:job_completion_summary, extraction_id: extraction_id, completion_type: 'stop_condition', completion_count: 1)
-      end
-
-      subject do
-        described_class.log_stop_condition_hit(
-          extraction_id: extraction_id,
-          extraction_name: extraction_name,
-          stop_condition_name: stop_condition_name,
-          stop_condition_content: stop_condition_content,
-          details: details
-        )
       end
 
       include_examples 'updates existing summary'

@@ -19,7 +19,7 @@ module Load
       return response unless response.status == 500
 
       raise StandardError, 'Destination API responded with status 500'
-    rescue StandardError => error
+    rescue StandardError
       Supplejack::JobCompletionSummaryLogger.log_error(
         extraction_id: @harvest_definition.source_id,
         extraction_name: @harvest_definition.name,

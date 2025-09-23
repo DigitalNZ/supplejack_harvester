@@ -11,8 +11,8 @@ class ScheduleWorker
       begin
         job = create_pipeline_job(schedule)
         PipelineWorker.perform_async(job.id)
-      rescue StandardError => error
-        log_schedule_error(error, schedule, 'pipeline_job_creation')
+      rescue StandardError => e
+        log_schedule_error(e, schedule, 'pipeline_job_creation')
         raise
       end
     end
@@ -21,8 +21,8 @@ class ScheduleWorker
 
     begin
       AutomationTemplate.find(schedule.automation_template_id).run_automation
-    rescue StandardError => error
-      log_schedule_error(error, schedule, 'automation_template_execution')
+    rescue StandardError => e
+      log_schedule_error(e, schedule, 'automation_template_execution')
       raise
     end
   end

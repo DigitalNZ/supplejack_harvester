@@ -19,9 +19,9 @@ module Extraction
         api_records = JSON.parse(api_document.body)['records']
         extract_and_save_enrichment_documents(api_records)
       end
-    rescue StandardError => error
+    rescue StandardError => e
       Supplejack::JobCompletionSummaryLogger.log_enrichment_execution_error(
-        exception: error,
+        exception: e,
         extraction_definition: @extraction_definition,
         extraction_job: @extraction_job,
         harvest_job: @harvest_job,
