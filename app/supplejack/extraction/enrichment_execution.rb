@@ -23,27 +23,28 @@ module Extraction
       return unless @extraction_definition&.harvest_definition&.source_id
 
       harvest_definition = @extraction_definition.harvest_definition
-      exception_class = exception.class
-      exception_message = exception.message
+      exception_class = error.class
+      exception_message = error.message
 
-      Supplejack::JobCompletionSummaryLogger.log_completion(
-        extraction_id: harvest_definition.source_id,
-        extraction_name: harvest_definition.name,
-        message: "Enrichment execution error: #{exception_class} - #{exception_message}",
-        details: {
-          worker_class: self.class.name,
-          exception_class: exception_class.name,
-          exception_message: exception_message,
-          stack_trace: exception.backtrace&.first(20),
-          extraction_job_id: @extraction_job.id,
-          extraction_definition_id: @extraction_definition.id,
-          harvest_job_id: @harvest_job&.id,
-          harvest_report_id: @harvest_report&.id,
-          timestamp: Time.current.iso8601
-        }
-      )
-      rescue StandardError => error
-        Rails.logger.error "Failed to log enrichment error to JobCompletionSummary: #{error.message}"
+      begin
+        Supplejack::JobCompletionSummaryLogger.log_completion(
+          extraction_id: harvest_definition.source_id,
+          extraction_name: harvest_definition.name,
+          message: "Enrichment execution error: #{exception_class} - #{exception_message}",
+          details: {
+            worker_class: self.class.name,
+            exception_class: exception_class.name,
+            exception_message: exception_message,
+            stack_trace: error.backtrace&.first(20),
+            extraction_job_id: @extraction_job.id,
+            extraction_definition_id: @extraction_definition.id,
+            harvest_job_id: @harvest_job&.id,
+            harvest_report_id: @harvest_report&.id,
+            timestamp: Time.current.iso8601
+          }
+        )
+      rescue StandardError => log_error
+        Rails.logger.error "Failed to log enrichment error to JobCompletionSummary: #{log_error.message}"
       end
       raise
     end
@@ -69,6 +70,7 @@ module Extraction
 
     def process_enrichment(enrichment_params)
       json_params = enrichment_params.to_json
+
       if @harvest_job&.pipeline_job&.run_enrichment_concurrently?
         EnrichmentExtractionWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, json_params)
       else
