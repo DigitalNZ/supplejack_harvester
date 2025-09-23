@@ -3,7 +3,14 @@
 module Supplejack
   class JobCompletionSummaryLogger
 
-    def self.log_completion(worker_class:, exception:, extraction_id:, extraction_name:, details: {}, message: nil)
+    def self.log_completion(params)
+      worker_class = params[:worker_class]
+      exception = params[:exception]
+      extraction_id = params[:extraction_id]
+      extraction_name = params[:extraction_name]
+      details = params[:details] || {}
+      message = params[:message]
+
       resolved_message = resolve_message(message, worker_class, exception)
 
       JobCompletionSummary.log_completion(
@@ -25,14 +32,18 @@ module Supplejack
       document = params[:document]
       additional_details = params[:additional_details] || {}
 
-      details = build_stop_condition_details(extraction_definition, extraction_job, harvest_job, document, additional_details)
-
       JobCompletionSummary.log_stop_condition_hit(
         extraction_id: extraction_definition.id.to_s,
         extraction_name: extraction_definition.name,
         stop_condition_name: stop_condition_name,
         stop_condition_content: stop_condition_content,
-        details: details
+        details: {
+          extraction_job_id: extraction_job&.id,
+          harvest_job_id: harvest_job&.id,
+          pipeline_job_id: harvest_job&.pipeline_job&.id,
+          page: extraction_definition.page,
+          document_status: document&.status
+        }.merge(additional_details)
       )
     rescue StandardError => e
       Rails.logger.error "Failed to log stop condition hit to JobCompletionSummary: #{e.message}"
@@ -52,16 +63,6 @@ module Supplejack
         stack_trace: exception.backtrace&.first(20),
         timestamp: Time.current.iso8601
       }.merge(custom_details)
-    end
-
-    def self.build_stop_condition_details(extraction_definition, extraction_job, harvest_job, document, additional_details)
-      {
-        extraction_job_id: extraction_job&.id,
-        harvest_job_id: harvest_job&.id,
-        pipeline_job_id: harvest_job&.pipeline_job&.id,
-        page: extraction_definition.page,
-        document_status: document&.status
-      }.merge(additional_details)
     end
 
     def self.extract_from_harvest_definition(harvest_definition)
