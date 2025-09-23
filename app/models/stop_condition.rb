@@ -10,10 +10,8 @@ class StopCondition < ApplicationRecord
 
     result = block.call(document)
 
-    if result == true && execution_context
-      execution_context.log_stop_condition_hit(name, content)
-    end
-    
+    execution_context.log_stop_condition_hit(name, content) if result == true && execution_context
+
     result
   rescue StandardError => e
     e

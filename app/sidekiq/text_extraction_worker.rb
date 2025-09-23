@@ -68,5 +68,4 @@ class TextExtractionWorker < FileExtractionWorker
   def saved_response
     { 'method' => 'GET', 'status' => 200, 'response_headers' => [], 'request_headers' => [] }
   end
-
 end

@@ -21,9 +21,9 @@ class FileExtractionWorker
 
     harvest_report.extraction_completed!
     create_transformation_jobs
-  rescue StandardError => error
+  rescue StandardError => e
     Supplejack::JobCompletionSummaryLogger.log_file_extraction_completion(
-      exception: error,
+      exception: e,
       extraction_definition: @extraction_definition,
       extraction_job: @extraction_job,
       extraction_folder: @extraction_folder,
@@ -99,5 +99,4 @@ class FileExtractionWorker
   def folder_number(page = 1)
     (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
   end
-
 end

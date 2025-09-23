@@ -4,11 +4,11 @@ module Supplejack
   class JobCompletionSummaryLogger
     def self.log_delete_worker_completion(exception:, record:, destination:, harvest_report:)
       source_id = record.dig('transformed_record', 'source_id') ||
-                 harvest_report&.pipeline_job&.harvest_definitions&.first&.source_id ||
-                 'unknown'
+                  harvest_report&.pipeline_job&.harvest_definitions&.first&.source_id ||
+                  'unknown'
       extraction_name = record.dig('transformed_record', 'job_id') ||
-                       harvest_report&.pipeline_job&.harvest_definitions&.first&.name ||
-                       'unknown'
+                        harvest_report&.pipeline_job&.harvest_definitions&.first&.name ||
+                        'unknown'
 
       log_completion(
         worker_class: 'DeleteWorker',
@@ -96,7 +96,7 @@ module Supplejack
     def self.log_schedule_worker_completion(exception:, schedule:, error_context:)
       schedule_id = schedule.id
       schedule_name = schedule.name
-      
+
       log_completion(
         worker_class: 'ScheduleWorker',
         exception: exception,
@@ -179,8 +179,8 @@ module Supplejack
           document_status: document&.status
         }.merge(additional_details)
       )
-    rescue StandardError => error
-      Rails.logger.error "Failed to log stop condition hit to JobCompletionSummary: #{error.message}"
+    rescue StandardError => e
+      Rails.logger.error "Failed to log stop condition hit to JobCompletionSummary: #{e.message}"
     end
 
     def self.log_error(
@@ -195,11 +195,9 @@ module Supplejack
         message: message,
         details: details
       )
-    rescue StandardError => error
-      Rails.logger.error "Failed to log error to JobCompletionSummary: #{error.message}"
+    rescue StandardError => e
+      Rails.logger.error "Failed to log error to JobCompletionSummary: #{e.message}"
     end
-
-    private
 
     def self.log_completion(params)
       worker_class = params[:worker_class]
@@ -209,15 +207,15 @@ module Supplejack
       details = params[:details] || {}
       message = params[:message]
       resolved_message = resolve_message(message, worker_class, exception)
-      
+
       JobCompletionSummary.log_completion(
         extraction_id: extraction_id,
         extraction_name: extraction_name,
         message: resolved_message,
         details: build_completion_details(worker_class, exception, details)
       )
-    rescue StandardError => error
-      Rails.logger.error "Failed to log #{worker_class.downcase} completion to JobCompletionSummary: #{error.message}"
+    rescue StandardError => e
+      Rails.logger.error "Failed to log #{worker_class.downcase} completion to JobCompletionSummary: #{e.message}"
     end
 
     def self.resolve_message(message, worker_class, exception)

@@ -19,8 +19,8 @@ module Extraction
         api_records = JSON.parse(api_document.body)['records']
         extract_and_save_enrichment_documents(api_records)
       end
-    rescue StandardError => error
-      log_enrichment_error(error)
+    rescue StandardError => e
+      log_enrichment_error(e)
       raise
     end
 
@@ -65,7 +65,7 @@ module Extraction
       return unless @extraction_definition&.harvest_definition&.source_id
 
       harvest_definition = @extraction_definition.harvest_definition
-      exception_class = exception.class 
+      exception_class = exception.class
       exception_message = exception.message
 
       Supplejack::JobCompletionSummaryLogger.log_error(
@@ -84,8 +84,8 @@ module Extraction
           timestamp: Time.current.iso8601
         }
       )
-    rescue StandardError => error
-      Rails.logger.error "Failed to log enrichment error to JobCompletionSummary: #{error.message}"
+    rescue StandardError => e
+      Rails.logger.error "Failed to log enrichment error to JobCompletionSummary: #{e.message}"
     end
   end
 end

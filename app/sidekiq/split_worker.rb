@@ -10,9 +10,9 @@ class SplitWorker < FileExtractionWorker
           create_document(records, saved_response)
           @page += 1
         end
-      rescue StandardError => error
+      rescue StandardError => e
         Supplejack::JobCompletionSummaryLogger.log_split_worker_completion(
-          exception: error,
+          exception: e,
           extraction_definition: @extraction_definition,
           extraction_job: @extraction_job,
           folder: folder,
@@ -34,7 +34,4 @@ class SplitWorker < FileExtractionWorker
       body: "<?xml version=\"1.0\"?><root><records>#{records.map(&:to_xml).join}</records></root>"
     ).save("#{@extraction_folder}/#{folder_number(@page)}/#{name_str}__-__#{page_str}.json")
   end
-
-  private
-
 end

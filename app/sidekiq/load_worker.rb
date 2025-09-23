@@ -43,10 +43,10 @@ class LoadWorker
       @harvest_report.increment_records_loaded!(batch.count)
       @harvest_report.update(load_updated_time: Time.zone.now)
     end
-  rescue StandardError => error
-    Rails.logger.info "Load Excecution error: #{error}" if defined?(Sidekiq)
+  rescue StandardError => e
+    Rails.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
     Supplejack::JobCompletionSummaryLogger.log_load_worker_completion(
-      exception: error,
+      exception: e,
       harvest_job: @harvest_job,
       harvest_report: @harvest_report,
       batch: batch,
@@ -84,7 +84,7 @@ class LoadWorker
     ::Retriable.retriable(on_retry: log_retry_attempt) do
       Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
     end
-  rescue StandardError => error
-    Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{error.message}" if defined?(Sidekiq)
+  rescue StandardError => e
+    Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}" if defined?(Sidekiq)
   end
 end

@@ -26,8 +26,8 @@ module Extraction
 
         break if execution_cancelled? || stop_condition_met?
       end
-    rescue StandardError => error
-      log_extraction_error(error)
+    rescue StandardError => e
+      log_extraction_error(e)
       raise
     end
 
@@ -55,36 +55,39 @@ module Extraction
 
     def set_number_reached?
       return false unless @harvest_job.present? && @harvest_job.pipeline_job.set_number?
-    
+
       if @harvest_job.pipeline_job.pages == @extraction_definition.page
-        log_stop_condition_hit('set_number_reached', 'Set number limit reached', { condition_type: 'set_number_reached' })
+        log_stop_condition_hit('set_number_reached', 'Set number limit reached',
+                               { condition_type: 'set_number_reached' })
         return true
       end
-      
-      return false
+
+      false
     end
-    
+
     def extraction_failed?
       if @de.document.status >= 400 || @de.document.status < 200
-        log_stop_condition_hit('extraction_failed', "Extraction failed with status #{@de.document.status}", { condition_type: 'extraction_failed' })
+        log_stop_condition_hit('extraction_failed', "Extraction failed with status #{@de.document.status}",
+                               { condition_type: 'extraction_failed' })
         return true
       end
-      
-      return false
+
+      false
     end
-    
+
     def duplicate_document_extracted?
       previous_page = @extraction_definition.page - 1
       previous_document = Extraction::Documents.new(@extraction_job.extraction_folder)[previous_page]
-    
+
       return false if previous_document.nil?
-    
+
       if previous_document.body == @de.document.body
-        log_stop_condition_hit('duplicate_document', 'Duplicate document detected', { condition_type: 'duplicate_document' })
+        log_stop_condition_hit('duplicate_document', 'Duplicate document detected',
+                               { condition_type: 'duplicate_document' })
         return true
       end
-      
-      return false
+
+      false
     end
 
     def custom_stop_conditions_met?

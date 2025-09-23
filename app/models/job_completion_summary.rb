@@ -23,7 +23,6 @@ class JobCompletionSummary < ApplicationRecord
     sum(:completion_count)
   end
 
-
   def system_stop_condition?
     return false unless stop_condition?
 
