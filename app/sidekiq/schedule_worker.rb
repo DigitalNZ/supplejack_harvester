@@ -11,9 +11,9 @@ class ScheduleWorker
       begin
         job = create_pipeline_job(schedule)
         PipelineWorker.perform_async(job.id)
-      rescue StandardError => e
+      rescue StandardError => error
         Supplejack::JobCompletionSummaryLogger.log_schedule_worker_completion(
-          exception: e,
+          exception: error,
           schedule: schedule,
           error_context: 'pipeline_job_creation'
         )
@@ -25,9 +25,9 @@ class ScheduleWorker
 
     begin
       AutomationTemplate.find(schedule.automation_template_id).run_automation
-    rescue StandardError => e
+    rescue StandardError => error
       Supplejack::JobCompletionSummaryLogger.log_schedule_worker_completion(
-        exception: e,
+        exception: error,
         schedule: schedule,
         error_context: 'automation_template_execution'
       )

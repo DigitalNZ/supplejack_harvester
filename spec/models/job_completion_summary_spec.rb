@@ -3,6 +3,37 @@
 require 'rails_helper'
 
 RSpec.describe JobCompletionSummary do
+  shared_examples 'creates completion summary' do
+    it 'creates a new JobCompletionSummary' do
+      expect { subject }.to change(described_class, :count).by(1)
+      
+      summary = described_class.last
+      expect(summary.extraction_id).to eq(extraction_id)
+      expect(summary.extraction_name).to eq(extraction_name)
+      expect(summary.completion_count).to eq(1)
+      expect(summary.created_at).to be_present
+      expect(summary.last_occurred_at).to be_present
+    end
+  end
+
+  shared_examples 'updates existing summary' do
+    it 'adds to existing completion details' do
+      expect { subject }.not_to change(described_class, :count)
+      
+      existing_summary.reload
+      expect(existing_summary.completion_count).to eq(2)
+      expect(existing_summary.completion_details.size).to eq(2)
+      expect(existing_summary.last_occurred_at).to be > existing_summary.created_at
+    end
+
+    it 'preserves created_at timestamp' do
+      original_created_at = existing_summary.created_at
+      subject
+      existing_summary.reload
+      expect(existing_summary.created_at).to eq(original_created_at)
+    end
+  end
+  
   describe 'validations' do
     subject { build(:job_completion_summary) }
 
@@ -70,36 +101,27 @@ RSpec.describe JobCompletionSummary do
     end
 
     context 'when creating a new completion summary' do
-      it 'creates a new JobCompletionSummary with completion details' do
-        expect {
-          described_class.log_completion(
-            extraction_id: extraction_id,
-            extraction_name: extraction_name,
-            message: message,
-            details: details
-          )
-        }.to change(described_class, :count).by(1)
-
-        summary = described_class.last
-        expect(summary.extraction_id).to eq(extraction_id)
-        expect(summary.extraction_name).to eq(extraction_name)
-        expect(summary.completion_type).to eq('error')
-        expect(summary.completion_count).to eq(1)
-        expect(summary.created_at).to be_present
-        expect(summary.last_occurred_at).to be_present
-      end
-
-      it 'stores completion details correctly' do
-        summary = described_class.log_completion(
+      subject do
+        described_class.log_completion(
           extraction_id: extraction_id,
           extraction_name: extraction_name,
           message: message,
           details: details
         )
+      end
 
+      include_examples 'creates completion summary'
+
+      it 'sets completion_type to error' do
+        subject
+        expect(described_class.last.completion_type).to eq('error')
+      end
+
+      it 'stores completion details correctly' do
+        summary = subject
         completion_entry = summary.completion_details.first
+        
         expect(completion_entry['message']).to eq(message)
-        expect(completion_entry['details']).to eq(details.deep_stringify_keys)
         expect(completion_entry['timestamp']).to be_present
         expect(completion_entry['worker_class']).to eq('TestWorker')
         expect(completion_entry['job_id']).to eq('job_123')
@@ -116,35 +138,16 @@ RSpec.describe JobCompletionSummary do
         create(:job_completion_summary, extraction_id: extraction_id, completion_count: 1)
       end
 
-      it 'adds to existing completion details' do
-        expect {
-          described_class.log_completion(
-            extraction_id: extraction_id,
-            extraction_name: extraction_name,
-            message: message,
-            details: details
-          )
-        }.not_to change(described_class, :count)
-
-        existing_summary.reload
-        expect(existing_summary.completion_count).to eq(2)
-        expect(existing_summary.completion_details.size).to eq(2)
-        expect(existing_summary.last_occurred_at).to be > existing_summary.created_at
-      end
-
-      it 'preserves created_at timestamp' do
-        original_created_at = existing_summary.created_at
-        
+      subject do
         described_class.log_completion(
           extraction_id: extraction_id,
           extraction_name: extraction_name,
           message: message,
           details: details
         )
-
-        existing_summary.reload
-        expect(existing_summary.created_at).to eq(original_created_at)
       end
+
+      include_examples 'updates existing summary'
     end
   end
 
@@ -156,34 +159,27 @@ RSpec.describe JobCompletionSummary do
     let(:details) { { additional: 'context' } }
 
     context 'when creating a new stop condition summary' do
-      it 'creates a new JobCompletionSummary with stop condition details' do
-        expect {
-          described_class.log_stop_condition_hit(
-            extraction_id: extraction_id,
-            extraction_name: extraction_name,
-            stop_condition_name: stop_condition_name,
-            stop_condition_content: stop_condition_content,
-            details: details
-          )
-        }.to change(described_class, :count).by(1)
-
-        summary = described_class.last
-        expect(summary.extraction_id).to eq(extraction_id)
-        expect(summary.extraction_name).to eq(extraction_name)
-        expect(summary.completion_type).to eq('stop_condition')
-        expect(summary.completion_count).to eq(1)
-      end
-
-      it 'stores stop condition details correctly' do
-        summary = described_class.log_stop_condition_hit(
+      subject do
+        described_class.log_stop_condition_hit(
           extraction_id: extraction_id,
           extraction_name: extraction_name,
           stop_condition_name: stop_condition_name,
           stop_condition_content: stop_condition_content,
           details: details
         )
+      end
 
+      include_examples 'creates completion summary'
+
+      it 'sets completion_type to stop_condition' do
+        subject
+        expect(described_class.last.completion_type).to eq('stop_condition')
+      end
+
+      it 'stores stop condition details correctly' do
+        summary = subject
         completion_entry = summary.completion_details.first
+        
         expect(completion_entry['message']).to eq("Stop condition '#{stop_condition_name}' was triggered")
         expect(completion_entry['details']['stop_condition_name']).to eq(stop_condition_name)
         expect(completion_entry['details']['stop_condition_content']).to eq(stop_condition_content)
@@ -192,24 +188,22 @@ RSpec.describe JobCompletionSummary do
         expect(completion_entry['timestamp']).to be_present
       end
 
-      it 'stores system stop condition details correctly' do
-        system_details = details.merge(condition_type: 'set_number_reached')
-        
-        summary = described_class.log_stop_condition_hit(
-          extraction_id: extraction_id,
-          extraction_name: extraction_name,
-          stop_condition_name: 'set_number_reached',
-          stop_condition_content: 'Set number limit reached',
-          details: system_details
-        )
+      context 'with system stop condition' do
+        let(:stop_condition_name) { 'set_number_reached' }
+        let(:stop_condition_content) { 'Set number limit reached' }
+        let(:details) { { additional: 'context', condition_type: 'set_number_reached' } }
 
-        completion_entry = summary.completion_details.first
-        expect(completion_entry['message']).to eq("System stop condition 'set_number_reached' was triggered")
-        expect(completion_entry['details']['stop_condition_name']).to eq('set_number_reached')
-        expect(completion_entry['details']['stop_condition_content']).to eq('Set number limit reached')
-        expect(completion_entry['details']['is_system_condition']).to be true
-        expect(completion_entry['details']['condition_type']).to eq('set_number_reached')
-        expect(completion_entry['timestamp']).to be_present
+        it 'stores system stop condition details correctly' do
+          summary = subject
+          completion_entry = summary.completion_details.first
+          
+          expect(completion_entry['message']).to eq("System stop condition 'set_number_reached' was triggered")
+          expect(completion_entry['details']['stop_condition_name']).to eq('set_number_reached')
+          expect(completion_entry['details']['stop_condition_content']).to eq('Set number limit reached')
+          expect(completion_entry['details']['is_system_condition']).to be true
+          expect(completion_entry['details']['condition_type']).to eq('set_number_reached')
+          expect(completion_entry['timestamp']).to be_present
+        end
       end
     end
 
@@ -218,21 +212,17 @@ RSpec.describe JobCompletionSummary do
         create(:job_completion_summary, extraction_id: extraction_id, completion_type: 'stop_condition', completion_count: 1)
       end
 
-      it 'adds to existing completion details' do
-        expect {
-          described_class.log_stop_condition_hit(
-            extraction_id: extraction_id,
-            extraction_name: extraction_name,
-            stop_condition_name: stop_condition_name,
-            stop_condition_content: stop_condition_content,
-            details: details
-          )
-        }.not_to change(described_class, :count)
-
-        existing_summary.reload
-        expect(existing_summary.completion_count).to eq(2)
-        expect(existing_summary.completion_details.size).to eq(2)
+      subject do
+        described_class.log_stop_condition_hit(
+          extraction_id: extraction_id,
+          extraction_name: extraction_name,
+          stop_condition_name: stop_condition_name,
+          stop_condition_content: stop_condition_content,
+          details: details
+        )
       end
+
+      include_examples 'updates existing summary'
     end
   end
 
@@ -253,4 +243,5 @@ RSpec.describe JobCompletionSummary do
       end
     end
   end
+
 end

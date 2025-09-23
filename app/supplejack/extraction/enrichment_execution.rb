@@ -26,7 +26,7 @@ module Extraction
       exception_class = exception.class
       exception_message = exception.message
 
-      Supplejack::JobCompletionSummaryLogger.log_error(
+      Supplejack::JobCompletionSummaryLogger.log_completion(
         extraction_id: harvest_definition.source_id,
         extraction_name: harvest_definition.name,
         message: "Enrichment execution error: #{exception_class} - #{exception_message}",
@@ -42,8 +42,8 @@ module Extraction
           timestamp: Time.current.iso8601
         }
       )
-      rescue StandardError => 
-        Rails.logger.error "Failed to log enrichment error to JobCompletionSummary: #{e.message}"
+      rescue StandardError => error
+        Rails.logger.error "Failed to log enrichment error to JobCompletionSummary: #{error.message}"
       end
       raise
     end

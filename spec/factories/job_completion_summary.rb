@@ -16,7 +16,10 @@ FactoryBot.define do
               "job_id" => SecureRandom.hex(8),
               "context" => { "test" => true }
             },
-            "timestamp" => Time.current.iso8601
+            "timestamp" => Time.current.iso8601,
+            "worker_class" => "TestWorker",
+            "job_id" => SecureRandom.hex(8),
+            "context" => { "test" => true }
           }
         ]
       end
@@ -32,7 +35,10 @@ FactoryBot.define do
                 "stop_condition_content" => "if records.count > 100",
                 "condition_type" => "stop_condition"
               },
-              "timestamp" => Time.current.iso8601
+              "timestamp" => Time.current.iso8601,
+              "stop_condition_name" => "test_condition",
+              "stop_condition_content" => "if records.count > 100",
+              "is_system_condition" => false
             }
           ]
         end
@@ -45,17 +51,20 @@ FactoryBot.define do
             {
               "message" => "First error",
               "details" => { "worker_class" => "Worker1" },
-              "timestamp" => 3.hours.ago.iso8601
+              "timestamp" => 3.hours.ago.iso8601,
+              "worker_class" => "Worker1"
             },
             {
               "message" => "Second error", 
               "details" => { "worker_class" => "Worker2" },
-              "timestamp" => 2.hours.ago.iso8601
+              "timestamp" => 2.hours.ago.iso8601,
+              "worker_class" => "Worker2"
             },
             {
               "message" => "Third error",
               "details" => { "worker_class" => "Worker3" },
-              "timestamp" => 1.hour.ago.iso8601
+              "timestamp" => 1.hour.ago.iso8601,
+              "worker_class" => "Worker3"
             }
           ]
         end
@@ -63,7 +72,7 @@ FactoryBot.define do
   
       trait :no_errors do
         completion_count { 0 }
-        completion_details { [{"message" => "No errors occurred", "details" => {}, "timestamp" => Time.current.iso8601}] }  # Valid structure to satisfy validation
+        completion_details { [{"message" => "No errors occurred", "details" => {}, "timestamp" => Time.current.iso8601, "context" => {}}] }  # Valid structure to satisfy validation
       end
     end
   end

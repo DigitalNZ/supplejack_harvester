@@ -2,6 +2,9 @@
 
 module Supplejack
   class JobCompletionSummaryLogger
+
+    # DELETE WORKER
+    #########################################################
     def self.log_delete_worker_completion(exception:, record:, destination:, harvest_report:)
       source_id = record.dig('transformed_record', 'source_id') ||
                   harvest_report&.pipeline_job&.harvest_definitions&.first&.source_id ||
@@ -21,6 +24,81 @@ module Supplejack
           destination_name: destination.name,
           harvest_report_id: harvest_report&.id
         }
+      )
+    end
+
+    # LOAD WORKER
+    #########################################################
+
+    # :reek:TooManyStatements
+    def self.log_load_worker_completion(params)
+      exception = params[:exception]
+      harvest_job = params[:harvest_job]
+      harvest_report = params[:harvest_report]
+      batch = params[:batch]
+      api_record_id = params[:api_record_id]
+
+      harvest_info = extract_harvest_info_from_job(harvest_job)
+      return unless harvest_info
+
+      log_completion(
+        worker_class: 'LoadWorker',
+        exception: exception,
+        extraction_id: harvest_info[:source_id],
+        extraction_name: harvest_info[:name],
+        details: {
+          harvest_job_id: harvest_job.id,
+          harvest_report_id: harvest_report&.id,
+          batch_size: batch&.size,
+          api_record_id: api_record_id
+        }
+      )
+    end
+
+    # SCHEDULE WORKER
+    #########################################################
+
+    def self.log_schedule_worker_completion(exception:, schedule:, error_context:)
+      schedule_id = schedule.id
+      schedule_name = schedule.name
+
+      log_completion(
+        worker_class: 'ScheduleWorker',
+        exception: exception,
+        extraction_id: "schedule_#{schedule_id}",
+        extraction_name: "Schedule: #{schedule_name || 'Unnamed Schedule'}",
+        message: "ScheduleWorker #{error_context} error: #{exception.class} - #{exception.message}",
+        details: {
+          schedule_id: schedule_id,
+          schedule_name: schedule_name,
+          error_context: error_context
+        }
+      )
+    end
+
+    # SPLIT WORKER
+    #########################################################
+
+    def self.log_split_worker_completion(params)
+      exception = params[:exception]
+      extraction_definition = params[:extraction_definition]
+      extraction_job = params[:extraction_job]
+      folder = params[:folder]
+      file = params[:file]
+
+      harvest_info = extract_harvest_info_from_definition(extraction_definition)
+      return unless harvest_info
+
+      log_completion(
+        worker_class: 'SplitWorker',
+        exception: exception,
+        extraction_id: harvest_info[:source_id],
+        extraction_name: harvest_info[:name],
+        details: build_extraction_job_details(extraction_job, extraction_definition).merge(
+          folder: folder,
+          file: file,
+          split_selector: extraction_definition.split_selector
+        )
       )
     end
 
@@ -47,6 +125,10 @@ module Supplejack
       )
     end
 
+
+    # FILE AND TEXT EXTRACTIONS
+    #########################################################
+
     def self.log_file_extraction_completion(params)
       exception = params[:exception]
       extraction_definition = params[:extraction_definition]
@@ -65,71 +147,6 @@ module Supplejack
         details: build_extraction_job_details(extraction_job, extraction_definition).merge(
           extraction_folder: extraction_folder,
           tmp_directory: tmp_directory
-        )
-      )
-    end
-
-    def self.log_load_worker_completion(params)
-      exception = params[:exception]
-      harvest_job = params[:harvest_job]
-      harvest_report = params[:harvest_report]
-      batch = params[:batch]
-      api_record_id = params[:api_record_id]
-
-      harvest_info = extract_harvest_info_from_job(harvest_job)
-      return unless harvest_info
-
-      log_completion(
-        worker_class: 'LoadWorker',
-        exception: exception,
-        extraction_id: harvest_info[:source_id],
-        extraction_name: harvest_info[:name],
-        details: {
-          harvest_job_id: harvest_job.id,
-          harvest_report_id: harvest_report&.id,
-          batch_size: batch&.size,
-          api_record_id: api_record_id
-        }
-      )
-    end
-
-    def self.log_schedule_worker_completion(exception:, schedule:, error_context:)
-      schedule_id = schedule.id
-      schedule_name = schedule.name
-
-      log_completion(
-        worker_class: 'ScheduleWorker',
-        exception: exception,
-        extraction_id: "schedule_#{schedule_id}",
-        extraction_name: "Schedule: #{schedule_name || 'Unnamed Schedule'}",
-        message: "ScheduleWorker #{error_context} error: #{exception.class} - #{exception.message}",
-        details: {
-          schedule_id: schedule_id,
-          schedule_name: schedule_name,
-          error_context: error_context
-        }
-      )
-    end
-
-    def self.log_split_worker_completion(params)
-      exception = params[:exception]
-      extraction_definition = params[:extraction_definition]
-      extraction_job = params[:extraction_job]
-      folder = params[:folder]
-      file = params[:file]
-
-      harvest_info = extract_harvest_info_from_definition(extraction_definition)
-      return unless harvest_info
-
-      log_completion(
-        worker_class: 'SplitWorker',
-        exception: exception,
-        extraction_id: harvest_info[:source_id],
-        extraction_name: harvest_info[:name],
-        details: build_extraction_job_details(extraction_job, extraction_definition).merge(
-          folder: folder,
-          file: file,
-          split_selector: extraction_definition.split_selector
         )
       )
     end
@@ -155,6 +172,30 @@ module Supplejack
           file_extension: file ? File.extname(file) : nil
         )
       )
+    end
+
+    # MAIN 
+    #########################################################
+
+    
+    
+  def self.log_completion(params)
+      worker_class = params[:worker_class]
+      exception = params[:exception]
+      extraction_id = params[:extraction_id]
+      extraction_name = params[:extraction_name]
+      details = params[:details] || {}
+      message = params[:message]
+      resolved_message = resolve_message(message, worker_class, exception)
+
+      JobCompletionSummary.log_completion(
+        extraction_id: extraction_id,
+        extraction_name: extraction_name,
+        message: resolved_message,
+        details: build_completion_details(worker_class, exception, details)
+      )
+    rescue StandardError => error
+      Rails.logger.error "Failed to log #{worker_class.downcase} completion to JobCompletionSummary: #{error.message}"
     end
 
     def self.log_stop_condition_hit(params)
@@ -183,43 +224,12 @@ module Supplejack
       Rails.logger.error "Failed to log stop condition hit to JobCompletionSummary: #{e.message}"
     end
 
-    def self.log_error(
-      extraction_id:,
-      extraction_name:,
-      message:,
-      details: {}
-    )
-      JobCompletionSummary.log_completion(
-        extraction_id: extraction_id,
-        extraction_name: extraction_name,
-        message: message,
-        details: details
-      )
-    rescue StandardError => e
-      Rails.logger.error "Failed to log error to JobCompletionSummary: #{e.message}"
-    end
-
-    def self.log_completion(params)
-      worker_class = params[:worker_class]
-      exception = params[:exception]
-      extraction_id = params[:extraction_id]
-      extraction_name = params[:extraction_name]
-      details = params[:details] || {}
-      message = params[:message]
-      resolved_message = resolve_message(message, worker_class, exception)
-
-      JobCompletionSummary.log_completion(
-        extraction_id: extraction_id,
-        extraction_name: extraction_name,
-        message: resolved_message,
-        details: build_completion_details(worker_class, exception, details)
-      )
-    rescue StandardError => e
-      Rails.logger.error "Failed to log #{worker_class.downcase} completion to JobCompletionSummary: #{e.message}"
-    end
+    # HELPERS
+    #########################################################
 
     def self.resolve_message(message, worker_class, exception)
-      message || "#{worker_class} error: #{exception.class} - #{exception.message}"
+      return message if message.present?
+      "#{worker_class} error: #{exception.class} - #{exception.message}"
     end
 
     def self.build_completion_details(worker_class, exception, custom_details)
@@ -232,6 +242,7 @@ module Supplejack
       }.merge(custom_details)
     end
 
+    # :reek:TooManyStatements
     def self.extract_harvest_info_from_definition(extraction_definition)
       harvest_definition = extraction_definition&.harvest_definition
       return nil unless harvest_definition&.source_id
