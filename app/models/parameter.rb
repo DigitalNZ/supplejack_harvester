@@ -25,7 +25,12 @@ class Parameter < ApplicationRecord
 
     Parameter.new(
       name:,
-      content: block.call(response_object&.body)
+      content: block.call(OpenStruct.new(
+                            {
+                              body: response_object&.body,
+                              headers: response_object&.response_headers
+                            }
+                          ))
     )
   rescue StandardError
     Parameter.new(
