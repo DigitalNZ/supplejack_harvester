@@ -8,9 +8,7 @@ class JobCompletionSummary < ApplicationRecord
 
   enum process_type: {
     extraction: 0,
-    transformation: 1,
-    loading: 2,
-    deletion: 3
+    transformation: 1
   }
 
   validates :source_id, presence: true

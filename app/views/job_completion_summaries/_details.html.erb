@@ -65,7 +65,6 @@
                         <div class="bg-light p-3 rounded">
                           <p><strong>Worker Class:</strong> <%= error.dig('details', 'worker_class') %></p>
                           <p><strong>Job ID:</strong> <%= error.dig('details', 'job_id') %></p>
-                          <p><strong>Harvest Job ID:</strong> <%= error.dig('details', 'harvest_job_id') %></p>
                           <p><strong>Pipeline Job ID:</strong> <%= error.dig('details', 'pipeline_job_id') %></p>
                           <% if error.dig('details', 'stack_trace').present? %>
                             <p><strong>Stack Trace:</strong></p>

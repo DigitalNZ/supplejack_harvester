@@ -18,7 +18,7 @@
         <dt class="col-sm-4">Process Type:</dt>
         <dd class="col-sm-8">
           <strong>
-            <%= @job_completion_summary.process_type.humanize %>
+            <%= @job_completion_summary.process_type&.humanize || 'Unknown' %>
           </strong>
         </dd>
        
