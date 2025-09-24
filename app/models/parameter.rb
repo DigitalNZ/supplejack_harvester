@@ -23,10 +23,15 @@ class Parameter < ApplicationRecord
   def dynamic_evaluation(response_object)
     Rails.logger.info "response_object: #{response_object}"
     Rails.logger.info "content: #{content}"
+    Rails.logger.info 'TESTING'
 
-    block = ->(response) { eval(content) }
+    block = lambda do |response|
+      eval(content)
+    end
 
-    Parameter.new(
+    Rails.logger.info "block: #{block}"
+
+    parameter = Parameter.new(
       name:,
       content: block.call(OpenStruct.new(
                             {
@@ -35,7 +40,11 @@ class Parameter < ApplicationRecord
                             }
                           ))
     )
-  rescue StandardError
+
+    Rails.logger.info "parameter:#{parameter}"
+    parameter
+  rescue StandardError => e
+    Rails.logger.info "ERROR:#{e}"
     Parameter.new(
       name:,
       content: "#{content}-evaluation-error".parameterize
