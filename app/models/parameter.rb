@@ -20,30 +20,33 @@ class Parameter < ApplicationRecord
     Parameter.new(name:, content: response_object.params[name].to_i + content.to_i)
   end
 
-  # rubocop:disable Metrics/MethodLength
-  # rubocop:disable Style/OpenStructUse
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
   def dynamic_evaluation(response_object)
     block = ->(response) { eval(content) }
 
-    Parameter.new(
-      name:,
-      content: block.call(OpenStruct.new(
-                            {
-                              body: response_object&.body,
-                              headers: response_object&.response_headers
-                            }
-                          ))
-    )
+    if content.include?('headers')
+      Parameter.new(
+        name:,
+        content: block.call(OpenStruct.new(
+                              {
+                                body: response_object&.body,
+                                headers: response_object&.response_headers
+                              }
+                            ))
+      )
+    else
+      Parameter.new(
+        name:,
+        content: block.call(response_object&.body)
+      )
+    end
   rescue StandardError
     Parameter.new(
       name:,
       content: "#{content}-evaluation-error".parameterize
     )
   end
-  # rubocop:enable Metrics/MethodLength
-  # rubocop:enable Style/OpenStructUse
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
 

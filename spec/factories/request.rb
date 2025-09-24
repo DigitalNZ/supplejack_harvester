@@ -42,7 +42,7 @@ FactoryBot.define do
   trait :inaturalist_main_request do
     after(:create) do |request|
       create(:parameter, name: 'per_page',   content: '30', request:)
-      create(:parameter, name: 'id_above',   content: 'JsonPath.new("$.results[(@.length-1)].id").on(response).first',
+      create(:parameter, name: 'id_above',   content: 'JsonPath.new("$.results[(@.length-1)].id").on(response.body).first',
                          request:, content_type: 1)
     end
   end
@@ -59,7 +59,7 @@ FactoryBot.define do
       create(
         :parameter,
         name: 'page',
-        content: 'Nokogiri::HTML.parse(response).at_xpath(\'./html/body/root/next\')' \
+        content: 'Nokogiri::HTML.parse(response.body).at_xpath(\'./html/body/root/next\')' \
                  '.content.match(/.+page=(?<page>.+?)&/)[:page]',
         request:,
         content_type: 1
@@ -78,7 +78,7 @@ FactoryBot.define do
   trait :trove_main_request do
     after(:create) do |request|
       create(:parameter, name: 'n',   content: '100', request:)
-      create(:parameter, name: 's',   content: 'Nokogiri::XML.parse(response).at_xpath(\'//records/@nextStart\')',
+      create(:parameter, name: 's',   content: 'Nokogiri::XML.parse(response.body).at_xpath(\'//records/@nextStart\')',
                          request:, content_type: 1)
     end
   end

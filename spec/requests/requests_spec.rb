@@ -93,7 +93,7 @@ RSpec.describe 'Requests' do
       let!(:request_one) { create(:request, extraction_definition:) }
       let!(:request_two) { create(:request, extraction_definition:) }
 
-      let!(:parameter)   { create(:parameter, content: "response.body['dc_identifier'].first", kind: 'slug', request: request_two, content_type: 'dynamic') }
+      let!(:parameter)   { create(:parameter, content: "response['dc_identifier'].first", kind: 'slug', request: request_two, content_type: 'dynamic') }
 
       before do
         stub_figshare_enrichment_page1(destination)
