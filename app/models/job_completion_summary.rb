@@ -52,7 +52,7 @@ class JobCompletionSummary < ApplicationRecord
       details = params[:details] || {}
 
       completion_entry = build_completion_entry_hash(params[:message], details)
-      [completion_entry, process_type, completion_type, job_type]
+      [completion_entry, process_type, completion_type, job_type, params[:source_id], params[:source_name]]
     end
 
     def build_completion_entry_hash(message, details)
@@ -70,16 +70,33 @@ class JobCompletionSummary < ApplicationRecord
 
     def stop_condition_details(params)
       details = params[:details] || {}
-      message = params[:message]
       enhanced_details = build_stop_condition_enhanced_details(details)
+      build_completion_hash(params, enhanced_details, :stop_condition)
+    end
 
+    def error_details(params)
+      details = params[:details] || {}
+      build_completion_hash(params, details, :error)
+    end
+
+    def build_completion_hash(params, details, completion_type)
       {
-        message: message,
-        details: enhanced_details,
-        job_type: 'ExtractionJob',
-        process_type: :extraction,
-        completion_type: :stop_condition
+        source_id: params[:source_id],
+        source_name: params[:source_name],
+        message: params[:message],
+        details: details,
+        job_type: determine_job_type(params, completion_type),
+        process_type: determine_process_type(params),
+        completion_type: completion_type
       }
+    end
+
+    def determine_job_type(params, completion_type)
+      params[:job_type] || default_job_type(completion_type)
+    end
+
+    def determine_process_type(params)
+      params[:process_type] || :extraction
     end
 
     def build_stop_condition_enhanced_details(details)
@@ -90,23 +107,8 @@ class JobCompletionSummary < ApplicationRecord
       )
     end
 
-    def error_details(params)
-      details = params[:details] || {}
-      process_type = params[:process_type] || :extraction
-      job_type = params[:job_type] || 'Unknown'
-      message = params[:message]
-
-      build_error_details_hash(message, details, job_type, process_type)
-    end
-
-    def build_error_details_hash(message, details, job_type, process_type)
-      {
-        message: message,
-        details: details,
-        job_type: job_type,
-        process_type: process_type,
-        completion_type: :error
-      }
+    def default_job_type(completion_type)
+      completion_type == :stop_condition ? 'ExtractionJob' : 'Unknown'
     end
 
     def build_completion_summary(entry_params)
