@@ -13,17 +13,6 @@ class ScheduleWorker
     end
 
     return if schedule.automation_template.blank?
-
-    AutomationTemplate.find(schedule.automation_template_id).run_automation
-  end
-
-    return if schedule.automation_template.blank?
-
-    begin
-      AutomationTemplate.find(schedule.automation_template_id).run_automation
-    rescue StandardError => e
-      raise
-    end
   end
 
   private

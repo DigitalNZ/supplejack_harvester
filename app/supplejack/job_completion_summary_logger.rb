@@ -20,7 +20,7 @@ module Supplejack
     details = args[:details] || {}
     worker_class = args[:worker_class]
   
-    is_stop_condition? = details[:stop_condition_name].present? # stop condtition details, 
+    is_stop_condition = details[:stop_condition_name].present? # stop condition details 
 
     extraction_definition = definition.is_a?(ExtractionDefinition)
     transformation_definition = definition.is_a?(TransformationDefinition)
@@ -45,14 +45,14 @@ module Supplejack
     end
 
     # Determine completion type
-    completion_type = if is_stop_condition?
+    completion_type = if is_stop_condition
                         :stop_condition
                       else
                         :error # fallback
                       end
 
     # stop condition message
-    if is_stop_condition?
+    if is_stop_condition
       message = if details[:stop_condition_type] != 'user'
         "System stop condition '#{details[:stop_condition_name]}' was triggered"
       else
@@ -98,5 +98,6 @@ module Supplejack
       message: message,
       details: enhanced_details
     }
+  end
   end
 end

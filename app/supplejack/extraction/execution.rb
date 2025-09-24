@@ -26,10 +26,10 @@ module Extraction
 
         break if execution_cancelled? || stop_condition_met?
       end
-    rescue StandardError => error
+    rescue StandardError => e
       return unless @extraction_definition&.harvest_definition&.source_id
 
-      log_stop_condition_hit(error, details)
+      log_stop_condition_hit(e, details)
       raise
     end
 
@@ -111,8 +111,9 @@ module Extraction
       stop_conditions.any? { |condition| condition.evaluate(@de.document.body, self) }
     end
 
-    def log_stop_condition_hit(error, details)
-      Supplejack::JobCompletionSummaryLogger.log_completion(worker_class: 'Extraction::Execution', error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
+    def log_stop_condition_hit(_error, details)
+      Supplejack::JobCompletionSummaryLogger.log_completion(worker_class: 'Extraction::Execution', error: nil,
+                                                            definition: @extraction_definition, job: @extraction_job, details: details)
     end
 
     def throttle
