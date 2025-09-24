@@ -21,6 +21,9 @@ class Parameter < ApplicationRecord
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
   def dynamic_evaluation(response_object)
+    Rails.logger.info "response_object: #{response_object}"
+    Rails.logger.info "content: #{content}"
+
     block = ->(response) { eval(content) }
 
     Parameter.new(
