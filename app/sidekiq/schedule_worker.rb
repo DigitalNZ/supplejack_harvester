@@ -8,13 +8,14 @@ class ScheduleWorker
     schedule = Schedule.find(id)
 
     if schedule.pipeline.present?
-      begin
-        job = create_pipeline_job(schedule)
-        PipelineWorker.perform_async(job.id)
-      rescue StandardError => e
-        raise
-      end
+      job = create_pipeline_job(schedule)
+      PipelineWorker.perform_async(job.id)
     end
+
+    return if schedule.automation_template.blank?
+
+    AutomationTemplate.find(schedule.automation_template_id).run_automation
+  end
 
     return if schedule.automation_template.blank?
 
