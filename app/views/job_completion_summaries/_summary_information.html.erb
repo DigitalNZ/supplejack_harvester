@@ -5,14 +5,21 @@
     </div>
     <div class="card-body">
       <dl class="row">
-        <dt class="col-sm-4">ID:</dt>
+        <dt class="col-sm-4">Source Identifier:</dt>
         <dd class="col-sm-8">
           <code><%= @job_completion_summary.source_id %></code>
         </dd>
 
-        <dt class="col-sm-4">Name:</dt>
+        <dt class="col-sm-4">Source Name:</dt>
         <dd class="col-sm-8">
           <strong><%= @job_completion_summary.source_name %></strong>
+        </dd>
+
+        <dt class="col-sm-4">Process Type:</dt>
+        <dd class="col-sm-8">
+          <strong>
+            <%= @job_completion_summary.process_type.humanize %>
+          </strong>
         </dd>
        
         <dt class="col-sm-4">Total:</dt>

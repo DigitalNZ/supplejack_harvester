@@ -23,14 +23,12 @@ module Supplejack
 
     extraction_definition = definition.is_a?(ExtractionDefinition)
     transformation_definition = definition.is_a?(TransformationDefinition)
-    load_definition = definition.is_a?(LoadDefinition)
 
     # Determine process type and job type based on what's present
     if extraction_definition
       process_type = :extraction
       job_type = 'ExtractionJob'
       harvest_definition = definition.harvest_definitions.first
-      harvest_job = harvest_definition&.harvest_jobs&.first
       source_id = harvest_definition&.source_id || 'unknown'
       source_name = harvest_definition&.name || 'unknown'
       worker_class = 'Extraction::Execution'
@@ -38,18 +36,9 @@ module Supplejack
       process_type = :transformation
       job_type = 'TransformationJob'
       harvest_definition = definition.harvest_definitions.first
-      harvest_job = harvest_definition&.harvest_jobs&.first
       source_id = harvest_definition&.source_id || 'unknown'
       source_name = harvest_definition&.name || 'unknown'
       worker_class = 'Transformation::Execution'
-    elsif load_definition
-      process_type = :load
-      job_type = 'LoadJob'
-      harvest_definition = definition.harvest_definitions.first
-      harvest_job = harvest_definition&.harvest_jobs&.first
-      source_id = harvest_definition&.source_id || 'unknown'
-      source_name = harvest_definition&.name || 'unknown'
-      worker_class = 'Load::Execution'
     else
       raise "Invalid definition type: #{definition.class.name}"
     end
@@ -63,11 +52,13 @@ module Supplejack
 
     # stop condition message
     if is_stop_condition?
-      message =  if details[:stop_condition_type] != 'user'
-        "System stop condition '#{params[:stop_condition_name]}' was triggered"
+      message = if details[:stop_condition_type] != 'user'
+        "System stop condition '#{details[:stop_condition_name]}' was triggered"
       else
-        "Stop condition '#{params[:stop_condition_name]}' was triggered"
+        "Stop condition '#{details[:stop_condition_name]}' was triggered"
       end
+    else
+      message = error ? "#{error.class.name}: #{error.message}" : "Unknown error occurred"
     end
 
     enhanced_details = {}
@@ -83,8 +74,6 @@ module Supplejack
 
     # Add job IDs
     enhanced_details[:job_id] = job&.id
-    enhanced_details[:harvest_job_id] = harvest_job&.id
-    enhanced_details[:pipeline_job_id] = harvest_job&.pipeline_job&.id
 
     # Add stop condition details if present
     if details[:stop_condition_name].present?
