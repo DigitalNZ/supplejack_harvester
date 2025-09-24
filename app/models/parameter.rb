@@ -23,17 +23,9 @@ class Parameter < ApplicationRecord
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
   def dynamic_evaluation(response_object)
-    Rails.logger.info "response_object: #{response_object}"
-    Rails.logger.info "content: #{content}"
-    Rails.logger.info 'TESTING'
+    block = ->(response) { eval(content) }
 
-    block = lambda do |response|
-      eval(content)
-    end
-
-    Rails.logger.info "block: #{block}"
-
-    parameter = Parameter.new(
+    Parameter.new(
       name:,
       content: block.call(OpenStruct.new(
                             {
@@ -42,11 +34,7 @@ class Parameter < ApplicationRecord
                             }
                           ))
     )
-
-    Rails.logger.info "parameter:#{parameter}"
-    parameter
-  rescue StandardError => e
-    Rails.logger.info "ERROR:#{e}"
+  rescue StandardError
     Parameter.new(
       name:,
       content: "#{content}-evaluation-error".parameterize
