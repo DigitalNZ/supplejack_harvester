@@ -5,29 +5,16 @@
     </div>
     <div class="card-body">
       <dl class="row">
-        <dt class="col-sm-4">Extraction ID:</dt>
+        <dt class="col-sm-4">ID:</dt>
         <dd class="col-sm-8">
-          <code><%= @job_completion_summary.extraction_id %></code>
+          <code><%= @job_completion_summary.source_id %></code>
         </dd>
 
-        <dt class="col-sm-4">Extraction Name:</dt>
+        <dt class="col-sm-4">Name:</dt>
         <dd class="col-sm-8">
-          <strong><%= @job_completion_summary.extraction_name %></strong>
+          <strong><%= @job_completion_summary.source_name %></strong>
         </dd>
-
-        <dt class="col-sm-4">Type:</dt>
-        <dd class="col-sm-8">
-          <% if @job_completion_summary.stop_condition? %>
-            <% if @job_completion_summary.system_stop_condition? %>
-              <span class="badge" style="background-color: #0d6efd;">System stop condition</span>
-            <% else %>
-              <span class="badge" style="background-color: #0d6efd;">User defined stop condition</span>
-            <% end %>
-          <% else %>
-            <span class="badge bg-danger"><%= @job_completion_summary.completion_type.humanize %></span>
-          <% end %>
-        </dd>
-
+       
         <dt class="col-sm-4">Total:</dt>
         <dd class="col-sm-8">
           <span class="badge bg-warning text-dark">

@@ -1,7 +1,7 @@
-<%= content_for(:title) { "Job Completion Summary - #{@job_completion_summary.extraction_name}" } %>
+<%= content_for(:title) { "Job Completion Summary - #{@job_completion_summary.source_name}" } %>
 <div class='float-start'>
   <h1>Job Completion Summary Details</h1>
-  <p><%= @job_completion_summary.extraction_name %> (<%= @job_completion_summary.extraction_id %>)</p>
+  <p><%= @job_completion_summary.source_name %> (<%= @job_completion_summary.source_id %>)</p>
 </div>
 <div class='clearfix'></div>
 

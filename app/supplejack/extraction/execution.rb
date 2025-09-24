@@ -29,24 +29,7 @@ module Extraction
     rescue StandardError => error
       return unless @extraction_definition&.harvest_definition&.source_id
 
-      harvest_definition = @extraction_definition.harvest_definition
-
-      Supplejack::JobCompletionSummaryLogger.log_completion(
-        worker_class: 'Extraction::Execution',
-        exception: error,
-        extraction_id: harvest_definition.source_id,
-        extraction_name: harvest_definition.name,
-        details: {
-          exception_class: error.class.name,
-          exception_message: error.message,
-          stack_trace: error.backtrace&.first(20),
-          extraction_job_id: @extraction_job.id,
-          extraction_definition_id: @extraction_definition.id,
-          harvest_job_id: @harvest_job&.id,
-          harvest_report_id: @harvest_report&.id,
-          timestamp: Time.current.iso8601
-        }
-      )
+      Supplejack::JobCompletionSummaryLogger.log_completion(error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
       raise
     end
 
@@ -76,8 +59,12 @@ module Extraction
       return false unless @harvest_job.present? && @harvest_job.pipeline_job.set_number?
 
       if @harvest_job.pipeline_job.pages == @extraction_definition.page
-        log_stop_condition_hit('set_number_reached', 'Set number limit reached',
-                               { condition_type: 'set_number_reached' })
+        details = {
+          stop_condition_type: 'set_number_reached',
+          stop_condition_name: 'Set number limit reached'
+        }
+
+        Supplejack::JobCompletionSummaryLogger.log_completion(error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
         return true
       end
 
@@ -86,8 +73,12 @@ module Extraction
 
     def extraction_failed?
       if @de.document.status >= 400 || @de.document.status < 200
-        log_stop_condition_hit('extraction_failed', "Extraction failed with status #{@de.document.status}",
-                               { condition_type: 'extraction_failed' })
+        details = {
+          stop_condition_type: 'extraction_failed',
+          stop_condition_name: 'Extraction failed'
+        }
+
+        Supplejack::JobCompletionSummaryLogger.log_completion(error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
         return true
       end
 
@@ -101,8 +92,12 @@ module Extraction
       return false if previous_document.nil?
 
       if previous_document.body == @de.document.body
-        log_stop_condition_hit('duplicate_document', 'Duplicate document detected',
-                               { condition_type: 'duplicate_document' })
+        details = {
+          stop_condition_type: 'duplicate_document',
+          stop_condition_name: 'Duplicate document detected'
+        }
+
+        Supplejack::JobCompletionSummaryLogger.log_completion(error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
         return true
       end
 
@@ -121,10 +116,7 @@ module Extraction
         extraction_definition: @extraction_definition,
         stop_condition_name: name,
         stop_condition_content: content,
-        extraction_job: @extraction_job,
-        harvest_job: @harvest_job,
-        document: @de&.document,
-        additional_details: additional_details
+        extraction_job: @extraction_job
       )
     end
 

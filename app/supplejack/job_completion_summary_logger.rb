@@ -3,122 +3,110 @@
 module Supplejack
   class JobCompletionSummaryLogger
 
-    def self.log_completion(params)
-      worker_class = params[:worker_class]
-      exception = params[:exception]
-      extraction_id = params[:extraction_id]
-      extraction_name = params[:extraction_name]
-      details = params[:details] || {}
-      message = params[:message]
+    def self.log_completion(args)
 
-      resolved_message = resolve_message(message, worker_class, exception)
+      context = build_context_from_args(args)
 
-      JobCompletionSummary.log_completion(
-        extraction_id: extraction_id,
-        extraction_name: extraction_name,
-        message: resolved_message,
-        details: build_completion_details(worker_class, exception, details)
-      )
+      JobCompletionSummary.log_completion(context)
     rescue StandardError => e
-      Rails.logger.error "Failed to log #{worker_class.downcase} completion to JobCompletionSummary: #{e.message}"
+      Rails.logger.error "Failed to log completion to JobCompletionSummary: #{e.message}"
     end
 
-    def self.log_stop_condition_hit(params)
-      extraction_definition = params[:extraction_definition]
-      stop_condition_name = params[:stop_condition_name]
-      stop_condition_content = params[:stop_condition_content]
-      extraction_job = params[:extraction_job]
-      harvest_job = params[:harvest_job]
-      document = params[:document]
-      additional_details = params[:additional_details] || {}
 
-      JobCompletionSummary.log_stop_condition_hit(
-        extraction_id: extraction_definition.id.to_s,
-        extraction_name: extraction_definition.name,
-        stop_condition_name: stop_condition_name,
-        stop_condition_content: stop_condition_content,
-        details: {
-          extraction_job_id: extraction_job&.id,
-          harvest_job_id: harvest_job&.id,
-          pipeline_job_id: harvest_job&.pipeline_job&.id,
-          page: extraction_definition.page,
-          document_status: document&.status
-        }.merge(additional_details)
+  def self.build_context_from_args(args)
+    error = args[:error]
+    definition = args[:definition]
+    job = args[:job] # source id, source name, 
+    details = args[:details] || {}
+  
+    is_stop_condition? = details[:stop_condition_name].present? # stop condtition details, 
+
+    extraction_definition = definition.is_a?(ExtractionDefinition)
+    transformation_definition = definition.is_a?(TransformationDefinition)
+    load_definition = definition.is_a?(LoadDefinition)
+
+    # Determine process type and job type based on what's present
+    if extraction_definition
+      process_type = :extraction
+      job_type = 'ExtractionJob'
+      harvest_definition = definition.harvest_definitions.first
+      harvest_job = harvest_definition&.harvest_jobs&.first
+      source_id = harvest_definition&.source_id || 'unknown'
+      source_name = harvest_definition&.name || 'unknown'
+      worker_class = 'Extraction::Execution'
+    elsif transformation_definition
+      process_type = :transformation
+      job_type = 'TransformationJob'
+      harvest_definition = definition.harvest_definitions.first
+      harvest_job = harvest_definition&.harvest_jobs&.first
+      source_id = harvest_definition&.source_id || 'unknown'
+      source_name = harvest_definition&.name || 'unknown'
+      worker_class = 'Transformation::Execution'
+    elsif load_definition
+      process_type = :load
+      job_type = 'LoadJob'
+      harvest_definition = definition.harvest_definitions.first
+      harvest_job = harvest_definition&.harvest_jobs&.first
+      source_id = harvest_definition&.source_id || 'unknown'
+      source_name = harvest_definition&.name || 'unknown'
+      worker_class = 'Load::Execution'
+    else
+      raise "Invalid definition type: #{definition.class.name}"
+    end
+
+    # Determine completion type
+    completion_type = if is_stop_condition?
+                        :stop_condition
+                      else
+                        :error # fallback
+                      end
+
+    # stop condition message
+    if is_stop_condition?
+      message =  if details[:stop_condition_type] != 'user'
+        "System stop condition '#{params[:stop_condition_name]}' was triggered"
+      else
+        "Stop condition '#{params[:stop_condition_name]}' was triggered"
+      end
+    end
+
+    enhanced_details = {}
+
+    # Add error details if present
+    if error
+      enhanced_details.merge!(
+        exception_class: error.class.name,
+        exception_message: error.message,
+        stack_trace: error.backtrace&.first(20)
       )
-    rescue StandardError => e
-      Rails.logger.error "Failed to log stop condition hit to JobCompletionSummary: #{e.message}"
     end
 
-    def self.resolve_message(message, worker_class, exception)
-      return message if message.present?
+    # Add job IDs
+    enhanced_details[:job_id] = job&.id
+    enhanced_details[:harvest_job_id] = harvest_job&.id
+    enhanced_details[:pipeline_job_id] = harvest_job&.pipeline_job&.id
 
-      "#{worker_class} error: #{exception.class} - #{exception.message}"
+    # Add stop condition details if present
+    if details[:stop_condition_name].present?
+      enhanced_details.merge!(
+        stop_condition_name: details[:stop_condition_name],
+        stop_condition_content: details[:stop_condition_content],
+        stop_condition_type: details[:stop_condition_type]
+      )
     end
 
-    def self.build_completion_details(worker_class, exception, custom_details)
-      {
-        worker_class: worker_class,
-        exception_class: exception.class.name,
-        exception_message: exception.message,
-        stack_trace: exception.backtrace&.first(20),
-        timestamp: Time.current.iso8601
-      }.merge(custom_details)
-    end
+    # Merge any additional details
+    enhanced_details.merge!(details.except(:stop_condition_name, :stop_condition_content, :stop_condition_type))
 
-    def self.extract_from_extraction_definition(extraction_definition)
-      harvest_definition = extraction_definition&.harvest_definition
-      return nil unless harvest_definition&.source_id
-
-      {
-        extraction_id: harvest_definition.source_id,
-        extraction_name: harvest_definition.name
-      }
-    end
-
-    def self.extract_from_harvest_job(harvest_job)
-      harvest_definition = harvest_job&.harvest_definition
-      return nil unless harvest_definition&.source_id
-
-      {
-        extraction_id: harvest_definition.source_id,
-        extraction_name: harvest_definition.name
-      }
-    end
-
-    def self.extract_from_record_and_harvest_report(record, harvest_report)
-      source_id = record.dig('transformed_record', 'source_id') ||
-                  extract_source_id_from_harvest_report(harvest_report) ||
-                  'unknown'
-      extraction_name = record.dig('transformed_record', 'job_id') ||
-                        extract_name_from_harvest_report(harvest_report) ||
-                        'unknown'
-
-      {
-        extraction_id: source_id,
-        extraction_name: extraction_name
-      }
-    end
-
-    def self.extract_from_schedule(schedule)
-      {
-        extraction_id: "schedule_#{schedule.id}",
-        extraction_name: "Schedule: #{schedule.name || 'Unnamed Schedule'}"
-      }
-    end
-
-
-    private
-
-    def self.extract_source_id_from_harvest_report(harvest_report)
-      return nil unless harvest_report&.pipeline_job&.harvest_definitions&.first
-
-      harvest_report.pipeline_job.harvest_definitions.first.source_id
-    end
-
-    def self.extract_name_from_harvest_report(harvest_report)
-      return nil unless harvest_report&.pipeline_job&.harvest_definitions&.first
-
-      harvest_report.pipeline_job.harvest_definitions.first.name
-    end
+    # context to pass to model for completion summary
+    {
+      source_id: source_id,
+      source_name: source_name,
+      process_type: process_type,
+      job_type: job_type,
+      completion_type: completion_type,
+      message: message,
+      details: enhanced_details
+    }
   end
 end

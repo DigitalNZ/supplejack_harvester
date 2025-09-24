@@ -48,15 +48,8 @@ class DeleteWorker
 
     Supplejack::JobCompletionSummaryLogger.log_completion(
       worker_class: 'DeleteWorker',
-      exception: e,
-      extraction_id: extraction_info[:extraction_id],
-      extraction_name: extraction_info[:extraction_name],
-      details: {
-        record: record,
-        destination_id: destination.id,
-        destination_name: destination.name,
-        harvest_report_id: @harvest_report&.id
-      }
+      exception: error,
+      details: extraction_info
     )
   end
 end

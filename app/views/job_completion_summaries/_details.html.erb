@@ -9,9 +9,9 @@
       </div>
     </div>
     <div class="card-body">
-      <% if @job_completion_summary.completion_details.any? %>
+      <% if @job_completion_summary.completion_entries.any? %>
         <div class="accordion" id="completionsAccordion">
-          <% @job_completion_summary.completion_details.each_with_index do |error, index| %>
+          <% @job_completion_summary.completion_entries.each_with_index do |error, index| %>
             <div class="accordion-item">
               <h2 class="accordion-header" id="heading<%= index %>">
                 <button class="accordion-button <%= 'collapsed' unless index.zero? %>"

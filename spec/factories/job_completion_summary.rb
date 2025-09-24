@@ -17,7 +17,7 @@ FactoryBot.define do
       completion_type { :error }
       completion_count { 1 }
       last_occurred_at { Time.current }
-      completion_details do
+      completion_entries do
         [
           {
             "message" => "Test error message",
@@ -36,7 +36,7 @@ FactoryBot.define do
   
       trait :stop_condition do
         completion_type { :stop_condition }
-        completion_details do
+        completion_entries do
           [
             {
               "message" => "Stop condition 'test_condition' was triggered",
@@ -56,14 +56,14 @@ FactoryBot.define do
   
       trait :multiple_errors do
         completion_count { 3 }
-        completion_details do
+        completion_entries do
           Array.new(3) { |i| generate(:completion_detail, i + 1) }
         end
       end
   
       trait :no_errors do
         completion_count { 0 }
-        completion_details { [{"message" => "No errors occurred", "details" => {}, "timestamp" => Time.current.iso8601, "context" => {}}] }  # Valid structure to satisfy validation
+        completion_entries { [{"message" => "No errors occurred", "details" => {}, "timestamp" => Time.current.iso8601, "context" => {}}] }  # Valid structure to satisfy validation
       end
     end
   end

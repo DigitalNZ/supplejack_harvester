@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_09_18_235838) do
+ActiveRecord::Schema[7.2].define(version: 2025_09_24_032229) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -238,17 +238,20 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_18_235838) do
   end
 
   create_table "job_completion_summaries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "extraction_id", null: false
-    t.string "extraction_name", null: false
+    t.string "source_id", null: false
+    t.string "source_name", null: false
     t.integer "completion_type", default: 0, null: false
-    t.json "completion_details", null: false
+    t.json "completion_entries", null: false
     t.integer "completion_count", default: 0
     t.datetime "last_occurred_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "process_type", default: 0, null: false
+    t.string "job_type", null: false
     t.index ["completion_type"], name: "index_job_completion_summaries_on_completion_type"
-    t.index ["extraction_id"], name: "index_job_completion_summaries_on_extraction_id", unique: true
     t.index ["last_occurred_at"], name: "index_job_completion_summaries_on_last_occurred_at"
+    t.index ["process_type"], name: "index_job_completion_summaries_on_process_type"
+    t.index ["source_id", "process_type", "job_type"], name: "index_job_completion_summaries_on_source_process_job", unique: true
   end
 
   create_table "parameters", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
