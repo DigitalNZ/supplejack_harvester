@@ -11,24 +11,12 @@ class SplitWorker < FileExtractionWorker
           @page += 1
         end
       rescue StandardError => e
-        extraction_info = Supplejack::JobCompletionSummaryLogger.extract_from_extraction_definition(@extraction_definition)
-        return unless extraction_info
-
-        harvest_job = @extraction_job.harvest_job
         Supplejack::JobCompletionSummaryLogger.log_completion(
           worker_class: 'SplitWorker',
-          exception: e,
-          extraction_id: extraction_info[:extraction_id],
-          extraction_name: extraction_info[:extraction_name],
-          details: {
-            extraction_job_id: @extraction_job.id,
-            extraction_definition_id: @extraction_definition.id,
-            harvest_job_id: harvest_job&.id,
-            harvest_report_id: harvest_job&.harvest_report&.id,
-            folder: folder,
-            file: file,
-            split_selector: @extraction_definition.split_selector
-          }
+          error: e,
+          definition: @extraction_definition,
+          job: @extraction_job,
+          details: {}
         )
         raise
       end

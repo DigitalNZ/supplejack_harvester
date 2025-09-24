@@ -11,24 +11,12 @@ class TextExtractionWorker < FileExtractionWorker
         create_document(extracted_text[:text], filepath, extracted_text[:process])
         @page += 1
       rescue StandardError => e
-        extraction_info = Supplejack::JobCompletionSummaryLogger.extract_from_extraction_definition(@extraction_definition)
-        return unless extraction_info
-
-        harvest_job = @extraction_job.harvest_job
         Supplejack::JobCompletionSummaryLogger.log_completion(
           worker_class: 'TextExtractionWorker',
-          exception: e,
-          extraction_id: extraction_info[:extraction_id],
-          extraction_name: extraction_info[:extraction_name],
-          details: {
-            extraction_job_id: @extraction_job.id,
-            extraction_definition_id: @extraction_definition.id,
-            harvest_job_id: harvest_job&.id,
-            harvest_report_id: harvest_job&.harvest_report&.id,
-            folder: folder,
-            file: file,
-            file_extension: file ? File.extname(file) : nil
-          }
+          error: e,
+          definition: @extraction_definition,
+          job: @extraction_definition.extraction_jobs.first,
+          details: {}
         )
         raise
       end

@@ -20,25 +20,12 @@ module Extraction
         extract_and_save_enrichment_documents(api_records)
       end
     rescue StandardError => e
-      return unless @extraction_definition&.harvest_definition&.source_id
-
-      harvest_definition = @extraction_definition.harvest_definition
-
       Supplejack::JobCompletionSummaryLogger.log_completion(
-        worker_class: 'Extraction::EnrichmentExecution',
-        exception: e,
-        extraction_id: harvest_definition.source_id,
-        extraction_name: harvest_definition.name,
-        details: {
-          exception_class: e.class.name,
-          exception_message: e.message,
-          stack_trace: e.backtrace&.first(20),
-          extraction_job_id: @extraction_job.id,
-          extraction_definition_id: @extraction_definition.id,
-          harvest_job_id: @harvest_job&.id,
-          harvest_report_id: @harvest_report&.id,
-          timestamp: Time.current.iso8601
-        }
+        worker_class: 'EnrichmentExecution',
+        error: e,
+        definition: @extraction_definition,
+        job: @extraction_job,
+        details: {}
       )
       raise
     end

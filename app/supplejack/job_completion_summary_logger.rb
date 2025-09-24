@@ -18,6 +18,7 @@ module Supplejack
     definition = args[:definition]
     job = args[:job] # source id, source name, 
     details = args[:details] || {}
+    worker_class = args[:worker_class]
   
     is_stop_condition? = details[:stop_condition_name].present? # stop condtition details, 
 
@@ -31,14 +32,14 @@ module Supplejack
       harvest_definition = definition.harvest_definitions.first
       source_id = harvest_definition&.source_id || 'unknown'
       source_name = harvest_definition&.name || 'unknown'
-      worker_class = 'Extraction::Execution'
+      worker_class = worker_class
     elsif transformation_definition
       process_type = :transformation
       job_type = 'TransformationJob'
       harvest_definition = definition.harvest_definitions.first
       source_id = harvest_definition&.source_id || 'unknown'
       source_name = harvest_definition&.name || 'unknown'
-      worker_class = 'Transformation::Execution'
+      worker_class = worker_class
     else
       raise "Invalid definition type: #{definition.class.name}"
     end

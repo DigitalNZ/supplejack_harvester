@@ -6,14 +6,10 @@ module Extraction
 
     def extract
       ::Retriable.retriable do
-        @document = if @extraction_definition&.evaluate_javascript?
-                      Extraction::JavascriptRequest.new(url:, params:).get
-                    else
-                      Extraction::Request.new(url:, params:, headers:, method: http_method).send(http_method)
-                    end
+        @document = Extraction::Request.new(url:, params:, headers:, method: http_method).send(http_method)
       end
     rescue StandardError => e
-      ::Sidekiq.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
+      ::Rails.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
     end
 
     def save

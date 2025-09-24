@@ -22,23 +22,11 @@ class FileExtractionWorker
     harvest_report.extraction_completed!
     create_transformation_jobs
   rescue StandardError => e
-    extraction_info = Supplejack::JobCompletionSummaryLogger.extract_from_extraction_definition(@extraction_definition)
-    return unless extraction_info
-
-    harvest_job = @extraction_job.harvest_job
     Supplejack::JobCompletionSummaryLogger.log_completion(
       worker_class: 'FileExtractionWorker',
-      exception: e,
-      extraction_id: extraction_info[:extraction_id],
-      extraction_name: extraction_info[:extraction_name],
-      details: {
-        extraction_job_id: @extraction_job.id,
-        extraction_definition_id: @extraction_definition.id,
-        harvest_job_id: harvest_job&.id,
-        harvest_report_id: harvest_job&.harvest_report&.id,
-        extraction_folder: @extraction_folder,
-        tmp_directory: @tmp_directory
-      }
+      error: e,
+      definition: @extraction_job.extraction_definition,
+      job: @extraction_job
     )
     raise
   end
@@ -94,7 +82,7 @@ class FileExtractionWorker
   end
 
   def move_extracted_documents_into_tmp_directory
-    Dir.children(@extraction_folder).reject { |folder| folder.ends_with?('tmp') }.each do |folder|
+    Dir.children(@extraction_folder).reject { |f| f.ends_with?('tmp') }.each do |folder|
       FileUtils.move("#{@extraction_folder}/#{folder}", @tmp_directory)
     end
   end

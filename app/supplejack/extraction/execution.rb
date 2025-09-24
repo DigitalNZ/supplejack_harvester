@@ -29,7 +29,7 @@ module Extraction
     rescue StandardError => error
       return unless @extraction_definition&.harvest_definition&.source_id
 
-      Supplejack::JobCompletionSummaryLogger.log_completion(error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
+      log_stop_condition_hit(error, details)
       raise
     end
 
@@ -64,7 +64,7 @@ module Extraction
           stop_condition_name: 'Set number limit reached'
         }
 
-        Supplejack::JobCompletionSummaryLogger.log_completion(error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
+        log_stop_condition_hit(error, details)
         return true
       end
 
@@ -78,7 +78,7 @@ module Extraction
           stop_condition_name: 'Extraction failed'
         }
 
-        Supplejack::JobCompletionSummaryLogger.log_completion(error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
+        log_stop_condition_hit(error, details)
         return true
       end
 
@@ -97,7 +97,7 @@ module Extraction
           stop_condition_name: 'Duplicate document detected'
         }
 
-        Supplejack::JobCompletionSummaryLogger.log_completion(error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
+        log_stop_condition_hit(error, details)
         return true
       end
 
@@ -111,13 +111,8 @@ module Extraction
       stop_conditions.any? { |condition| condition.evaluate(@de.document.body, self) }
     end
 
-    def log_stop_condition_hit(name, content, additional_details = {})
-      Supplejack::JobCompletionSummaryLogger.log_stop_condition_hit(
-        extraction_definition: @extraction_definition,
-        stop_condition_name: name,
-        stop_condition_content: content,
-        extraction_job: @extraction_job
-      )
+    def log_stop_condition_hit(error, details)
+      Supplejack::JobCompletionSummaryLogger.log_completion(worker_class: 'Extraction::Execution', error: nil, definition: @extraction_definition, job: @extraction_job, details: details)
     end
 
     def throttle
