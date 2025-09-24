@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_01_031216) do
+ActiveRecord::Schema[7.2].define(version: 2025_09_18_212601) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -118,6 +118,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_01_031216) do
     t.boolean "evaluate_javascript", default: false, null: false
     t.text "fields"
     t.boolean "include_sub_documents", default: true, null: false
+    t.boolean "follow_redirects", default: true
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_extraction_definitions_on_name", unique: true

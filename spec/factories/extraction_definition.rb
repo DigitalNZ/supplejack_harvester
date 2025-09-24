@@ -23,10 +23,6 @@ FactoryBot.define do
       kind { 0 }
     end
 
-    trait :no_follow do
-      follow_redirects { false }
-    end    
-
     trait :enrichment do
       kind { 1 }
       source_id { 'test' }

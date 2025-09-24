@@ -27,7 +27,6 @@ RSpec.describe Extraction::DocumentExtraction do
       it 'appends headers into the Extraction::Request' do
         expect(Extraction::Request).to receive(:new).with(
           url: request.url,
-          follow_redirects: true,
           headers: {
             'Content-Type' => 'application/json',
             'User-Agent' => 'Supplejack Harvester v2.0',
@@ -79,7 +78,6 @@ RSpec.describe Extraction::DocumentExtraction do
 
         expect(Extraction::Request).to receive(:new).with(
           url: request.url,
-          follow_redirects: true,          
           headers: {
             'Content-Type' => 'application/json',
             'User-Agent' => 'Supplejack Harvester v2.0',
@@ -100,12 +98,11 @@ RSpec.describe Extraction::DocumentExtraction do
       it 'evaluates provided ruby code as parameters based on a response' do
         previous_extraction = subject.extract
 
-        create(:parameter, kind: 'query', name: 'page', content: 'JSON.parse(response.body)[\'page_nr\'] + 1', request:,
+        create(:parameter, kind: 'query', name: 'page', content: 'JSON.parse(response)[\'page_nr\'] + 1', request:,
                            content_type: 1)
 
         expect(Extraction::Request).to receive(:new).with(
           url: request.url,
-          follow_redirects: true,
           headers: {
             'Content-Type' => 'application/json',
             'User-Agent' => 'Supplejack Harvester v2.0'

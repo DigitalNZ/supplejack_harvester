@@ -5,7 +5,11 @@ module Extraction
   # Stores the request and response details
   class Request
     def initialize(url:, params: {}, headers: {}, method: 'get', follow_redirects: true)
-      @connection = Connection.new(url:, params:, headers:, method:, follow_redirects:)
+      @connection = if follow_redirects
+                      Connection.new(url:, params:, headers:, method:)
+                    else
+                      DefaultConnection.new(url:, params:, headers:, method:)
+                    end
     end
 
     # Returns a document based on the given request

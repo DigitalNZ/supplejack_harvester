@@ -11,24 +11,23 @@ module Extraction
       @extraction_folder = extraction_folder
     end
 
-    # rubocop:disable Metrics/MethodLength
+    # rubocop:disable Layout/LineLength
     def extract
       ::Retriable.retriable do
         @document = if @extraction_definition.evaluate_javascript?
                       Extraction::JavascriptRequest.new(url:, params:).get
                     else
-                      follow_redirects = @extraction_definition.follow_redirects
                       Extraction::Request.new(url:, params:, headers:, method: http_method,
-                                              follow_redirects: follow_redirects).send(http_method)
+                                              follow_redirects: @extraction_definition.follow_redirects).send(http_method)
                     end
       end
     rescue StandardError => e
       ::Sidekiq.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
     end
-    # rubocop:enable Metrics/MethodLength
+    # rubocop:enable Layout/LineLength
 
     def valid?
-      url.present? && url.exclude?('evaluation-error')
+      url.exclude?('evaluation-error')
     end
 
     private
