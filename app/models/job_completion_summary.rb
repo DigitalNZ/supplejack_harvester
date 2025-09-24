@@ -26,7 +26,7 @@ class JobCompletionSummary < ApplicationRecord
   scope :recent_completions, -> { order(last_occurred_at: :desc) }
 
   def self.log_completion(params)
-    entry_params = if params[:completion_type] == 'stop_condition'
+    entry_params = if ['stop_condition', :stop_condition].include?(params[:completion_type])
                      stop_condition_details(params)
                    else
                      error_details(params)

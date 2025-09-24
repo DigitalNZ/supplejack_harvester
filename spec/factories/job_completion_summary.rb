@@ -12,8 +12,10 @@ FactoryBot.define do
   end
 
   factory :job_completion_summary do
-      extraction_id { SecureRandom.uuid }
-      extraction_name { "Test Extraction #{SecureRandom.hex(4)}" }
+      source_id { SecureRandom.uuid }
+      source_name { "Test Source #{SecureRandom.hex(4)}" }
+      job_type { "ExtractionJob" }
+      process_type { :extraction }
       completion_type { :error }
       completion_count { 1 }
       last_occurred_at { Time.current }
@@ -64,6 +66,11 @@ FactoryBot.define do
       trait :no_errors do
         completion_count { 0 }
         completion_entries { [{"message" => "No errors occurred", "details" => {}, "timestamp" => Time.current.iso8601, "context" => {}}] }  # Valid structure to satisfy validation
+      end
+
+      trait :transformation do
+        process_type { :transformation }
+        job_type { "TransformationJob" }
       end
     end
   end
