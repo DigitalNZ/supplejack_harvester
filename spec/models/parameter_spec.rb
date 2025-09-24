@@ -65,7 +65,7 @@ RSpec.describe Parameter do
     let(:dynamic)     { create(:parameter, kind: 'query', name: 'itemsPerPage', content: '1 + 1', content_type: 1) }
     let(:incremental) { create(:parameter, kind: 'query', name: 'itemsPerPage', content: '12', content_type: 2) }
     let(:dynamic_response) do
-      create(:parameter, kind: 'query', name: 'itemsPerPage', content: 'JSON.parse(response)["items_found"] + 10',
+      create(:parameter, kind: 'query', name: 'itemsPerPage', content: 'JSON.parse(response.body)["items_found"] + 10',
                          content_type: 1)
     end
     let(:erroring_dynamic_response) do

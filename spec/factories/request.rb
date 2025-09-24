@@ -25,7 +25,7 @@ FactoryBot.define do
         create(:parameter, content: 'search',   kind: 'slug', request:)
 
         create(:parameter, name: 'search_for',   content: 'zealand', request:)
-        create(:parameter, name: 'page',         content: "JSON.parse(response)['page_nr'] + 1", request:,
+        create(:parameter, name: 'page',         content: "JSON.parse(response.body)['page_nr'] + 1", request:,
                            content_type: 1)
         create(:parameter, name: 'itemsPerPage', content: '10', request:)
       end
