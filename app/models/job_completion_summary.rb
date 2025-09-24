@@ -51,8 +51,13 @@ class JobCompletionSummary < ApplicationRecord
       completion_type = params[:completion_type]
       details = params[:details] || {}
 
-      completion_entry = {
-        message: params[:message],
+      completion_entry = build_completion_entry_hash(params[:message], details)
+      [completion_entry, process_type, completion_type, job_type]
+    end
+
+    def build_completion_entry_hash(message, details)
+      {
+        message: message,
         details: details,
         timestamp: Time.current.iso8601,
         worker_class: details[:worker_class],
@@ -61,19 +66,12 @@ class JobCompletionSummary < ApplicationRecord
         stack_trace: details[:stack_trace],
         context: details[:context] || {}
       }
-
-      [completion_entry, process_type, completion_type, job_type]
     end
 
     def stop_condition_details(params)
       details = params[:details] || {}
-      stop_condition_type = details[:stop_condition_type]
       message = params[:message]
-      enhanced_details = details.merge(
-        stop_condition_name: details[:stop_condition_name],
-        stop_condition_content: details[:stop_condition_content],
-        stop_condition_type: stop_condition_type
-      )
+      enhanced_details = build_stop_condition_enhanced_details(details)
 
       {
         message: message,
@@ -84,12 +82,24 @@ class JobCompletionSummary < ApplicationRecord
       }
     end
 
+    def build_stop_condition_enhanced_details(details)
+      details.merge(
+        stop_condition_name: details[:stop_condition_name],
+        stop_condition_content: details[:stop_condition_content],
+        stop_condition_type: details[:stop_condition_type]
+      )
+    end
+
     def error_details(params)
       details = params[:details] || {}
       process_type = params[:process_type] || :extraction
       job_type = params[:job_type] || 'Unknown'
       message = params[:message]
 
+      build_error_details_hash(message, details, job_type, process_type)
+    end
+
+    def build_error_details_hash(message, details, job_type, process_type)
       {
         message: message,
         details: details,
@@ -101,18 +111,21 @@ class JobCompletionSummary < ApplicationRecord
 
     def build_completion_summary(entry_params)
       completion_entry, process_type, completion_type, job_type = build_completion_entry(entry_params)
+      completion_summary = find_or_create_completion_summary(entry_params, process_type, job_type)
+      update_completion_summary(completion_summary, entry_params, completion_entry, completion_type)
+    end
 
-      # Check for existing summary
-      completion_summary = find_or_initialize_by(
+    def find_or_create_completion_summary(entry_params, process_type, job_type)
+      find_or_initialize_by(
         source_id: entry_params[:source_id],
         process_type: process_type,
         job_type: job_type
       )
+    end
 
-      # Add new completion entry (a error or stop condition)
+    def update_completion_summary(completion_summary, entry_params, completion_entry, completion_type)
       completion_entries = completion_summary.completion_entries + [completion_entry]
 
-      # Update completion summary
       completion_summary.assign_attributes(
         source_name: entry_params[:source_name],
         completion_type: completion_type,

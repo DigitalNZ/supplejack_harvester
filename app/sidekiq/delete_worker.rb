@@ -41,11 +41,15 @@ class DeleteWorker
     @harvest_report.increment_records_deleted!
     @harvest_report.update(delete_updated_time: Time.zone.now)
   rescue StandardError => e
-    Rails.logger.info "DeleteWorker: Delete Excecution error: #{e}" if defined?(Sidekiq)
+    handle_delete_error(e)
+  end
+
+  def handle_delete_error(error)
+    Rails.logger.info "DeleteWorker: Delete Excecution error: #{error}" if defined?(Sidekiq)
 
     Supplejack::JobCompletionSummaryLogger.log_completion(
       worker_class: 'DeleteWorker',
-      error: e,
+      error: error,
       definition: @harvest_report.extraction_definition,
       job: @harvest_report.harvest_job&.extraction_job,
       details: {}

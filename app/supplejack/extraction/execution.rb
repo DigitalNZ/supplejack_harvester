@@ -13,23 +13,36 @@ module Extraction
     end
 
     def call
+      perform_initial_extraction
+      return if should_stop_early?
+
+      perform_paginated_extraction
+    rescue StandardError => e
+      handle_extraction_error(e)
+    end
+
+    def perform_initial_extraction
       extract(@extraction_definition.requests.first)
-      return if @extraction_job.is_sample? || set_number_reached?
-      return unless @extraction_definition.paginated?
+    end
 
+    def should_stop_early?
+      @extraction_job.is_sample? || set_number_reached? || !@extraction_definition.paginated?
+    end
+
+    def perform_paginated_extraction
       throttle
-
       loop do
         next_page
         extract(@extraction_definition.requests.last)
         throttle
-
         break if execution_cancelled? || stop_condition_met?
       end
-    rescue StandardError => e
+    end
+
+    def handle_extraction_error(error)
       return unless @extraction_definition&.harvest_definition&.source_id
 
-      log_stop_condition_hit(e, details)
+      log_stop_condition_hit(error, details)
       raise
     end
 
@@ -86,22 +99,30 @@ module Extraction
     end
 
     def duplicate_document_extracted?
+      previous_doc = previous_document
+      return false if previous_doc.nil?
+
+      check_for_duplicate_document(previous_doc)
+    end
+
+    def previous_document
       previous_page = @extraction_definition.page - 1
-      previous_document = Extraction::Documents.new(@extraction_job.extraction_folder)[previous_page]
+      Extraction::Documents.new(@extraction_job.extraction_folder)[previous_page]
+    end
 
-      return false if previous_document.nil?
+    def check_for_duplicate_document(previous_document)
+      return false unless previous_document.body == @de.document.body
 
-      if previous_document.body == @de.document.body
-        details = {
-          stop_condition_type: 'duplicate_document',
-          stop_condition_name: 'Duplicate document detected'
-        }
+      log_duplicate_document_detected
+      true
+    end
 
-        log_stop_condition_hit(error, details)
-        return true
-      end
-
-      false
+    def log_duplicate_document_detected
+      details = {
+        stop_condition_type: 'duplicate_document',
+        stop_condition_name: 'Duplicate document detected'
+      }
+      log_stop_condition_hit(error, details)
     end
 
     def custom_stop_conditions_met?
@@ -112,8 +133,13 @@ module Extraction
     end
 
     def log_stop_condition_hit(_error, details)
-      Supplejack::JobCompletionSummaryLogger.log_completion(worker_class: 'Extraction::Execution', error: nil,
-                                                            definition: @extraction_definition, job: @extraction_job, details: details)
+      Supplejack::JobCompletionSummaryLogger.log_completion(
+        worker_class: 'Extraction::Execution',
+        error: nil,
+        definition: @extraction_definition,
+        job: @extraction_job,
+        details: details
+      )
     end
 
     def throttle

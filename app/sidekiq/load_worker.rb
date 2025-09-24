@@ -34,21 +34,26 @@ class LoadWorker
     end
   end
 
-  # :reek:UncommunicativeVariableName
-  # this reek has been ignored as 'e' is the variable name wanted by Rubocop
   def process_batch(batch, api_record_id)
     ::Retriable.retriable(on_retry: log_retry_attempt) do
-      Load::Execution.new(batch, @harvest_job, api_record_id).call
-
-      @harvest_report.increment_records_loaded!(batch.count)
-      @harvest_report.update(load_updated_time: Time.zone.now)
+      execute_load(batch, api_record_id)
     end
   rescue StandardError => e
-    Rails.logger.info "Load Excecution error: #{e}" if defined?(Sidekiq)
+    handle_load_error(e)
+  end
+
+  def execute_load(batch, api_record_id)
+    Load::Execution.new(batch, @harvest_job, api_record_id).call
+    @harvest_report.increment_records_loaded!(batch.count)
+    @harvest_report.update(load_updated_time: Time.zone.now)
+  end
+
+  def handle_load_error(error)
+    Rails.logger.info "Load Excecution error: #{error}" if defined?(Sidekiq)
 
     Supplejack::JobCompletionSummaryLogger.log_completion(
       worker_class: 'LoadWorker',
-      error: e,
+      error: error,
       definition: @harvest_report.extraction_definition,
       job: @harvest_report.harvest_job&.extraction_job,
       details: {}

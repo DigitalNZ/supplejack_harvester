@@ -11,18 +11,30 @@ module Load
     end
 
     def call
-      response = if @harvest_definition.harvest?
-                   harvest_request
-                 elsif @harvest_definition.enrichment?
-                   enrichment_request
-                 end
+      response = determine_request_type
+      handle_response(response)
+    rescue StandardError => e
+      handle_load_error(e)
+    end
+
+    def determine_request_type
+      if @harvest_definition.harvest?
+        harvest_request
+      elsif @harvest_definition.enrichment?
+        enrichment_request
+      end
+    end
+
+    def handle_response(response)
       return response unless response.status == 500
 
       raise StandardError, 'Destination API responded with status 500'
-    rescue StandardError => e
+    end
+
+    def handle_load_error(error)
       Supplejack::JobCompletionSummaryLogger.log_completion(
         worker_class: 'LoadWorker',
-        error: e,
+        error: error,
         definition: @harvest_job&.extraction_definition,
         job: @harvest_job&.harvest_job&.extraction_job,
         details: {}

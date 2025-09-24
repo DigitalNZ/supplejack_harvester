@@ -12,7 +12,7 @@ class ScheduleWorker
       PipelineWorker.perform_async(job.id)
     end
 
-    return if schedule.automation_template.blank?
+    nil if schedule.automation_template.blank?
   end
 
   private

@@ -3,26 +3,37 @@
 class TextExtractionWorker < FileExtractionWorker
   def process_extracted_documents
     Dir.children(@tmp_directory).each do |folder|
-      Dir.children("#{@tmp_directory}/#{folder}").each do |file|
-        loaded_file = File.read("#{@tmp_directory}/#{folder}/#{file}")
-
-        extracted_text = extract_text(loaded_file, file, folder)
-        filepath = "#{@extraction_folder}/#{folder}/#{file}"
-        create_document(extracted_text[:text], filepath, extracted_text[:process])
-        @page += 1
-      rescue StandardError => e
-        Supplejack::JobCompletionSummaryLogger.log_completion(
-          worker_class: 'TextExtractionWorker',
-          error: e,
-          definition: @extraction_definition,
-          job: @extraction_definition.extraction_jobs.first,
-          details: {}
-        )
-        raise
-      end
+      process_text_folder(folder)
     end
 
     @extraction_definition.update(format: 'JSON')
+  end
+
+  def process_text_folder(folder)
+    Dir.children("#{@tmp_directory}/#{folder}").each do |file|
+      process_text_file(folder, file)
+    end
+  rescue StandardError => e
+    handle_text_extraction_error(e)
+  end
+
+  def process_text_file(folder, file)
+    loaded_file = File.read("#{@tmp_directory}/#{folder}/#{file}")
+    extracted_text = extract_text(loaded_file, file, folder)
+    filepath = "#{@extraction_folder}/#{folder}/#{file}"
+    create_document(extracted_text[:text], filepath, extracted_text[:process])
+    @page += 1
+  end
+
+  def handle_text_extraction_error(error)
+    Supplejack::JobCompletionSummaryLogger.log_completion(
+      worker_class: 'TextExtractionWorker',
+      error: error,
+      definition: @extraction_definition,
+      job: @extraction_definition.extraction_jobs.first,
+      details: {}
+    )
+    raise
   end
 
   def create_document(extracted_text, filepath, process)
