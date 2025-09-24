@@ -20,6 +20,8 @@ class Parameter < ApplicationRecord
     Parameter.new(name:, content: response_object.params[name].to_i + content.to_i)
   end
 
+  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Style/OpenStructUse
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
   def dynamic_evaluation(response_object)
@@ -40,6 +42,8 @@ class Parameter < ApplicationRecord
       content: "#{content}-evaluation-error".parameterize
     )
   end
+  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Style/OpenStructUse
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
 
