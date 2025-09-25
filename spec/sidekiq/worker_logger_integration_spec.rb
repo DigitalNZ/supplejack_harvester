@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../../app/supplejack/job_completion_summary_logger'
+require_relative '../../app/supplejack/job_completion/logger'
 
 RSpec.describe 'Worker Logger Integration' do
   let(:extraction_definition) { create(:extraction_definition) }
