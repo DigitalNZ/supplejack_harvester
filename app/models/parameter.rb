@@ -22,40 +22,22 @@ class Parameter < ApplicationRecord
 
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
-  # rubocop:disable Metrics/AbcSize
-  # rubocop:disable Metrics/MethodLength
-  # rubocop:disable Style/OpenStructUse
   def dynamic_evaluation(response_object)
     block = ->(response) { eval(content) }
 
-    if content.include?('headers')
-      Parameter.new(
-        name:,
-        content: block.call(OpenStruct.new(
-                              {
-                                body: response_object&.body,
-                                headers: response_object&.response_headers
-                              }
-                            ))
-      )
-    else
-      Parameter.new(
-        name:,
-        content: block.call(response_object&.body)
-      )
-    end
+    Parameter.new(
+      name:,
+      content: block.call(Extraction::ExtractionResponse.new(response_object))
+    )
   rescue StandardError
     Parameter.new(
       name:,
       content: "#{content}-evaluation-error".parameterize
     )
   end
+
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
-  # rubocop:enable Metrics/AbcSize
-  # rubocop:enable Metrics/MethodLength
-  # rubocop:enable Style/OpenStructUse
-
   def to_h
     return if slug?
 
