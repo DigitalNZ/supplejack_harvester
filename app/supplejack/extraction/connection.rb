@@ -2,6 +2,5 @@
 
 module Extraction
   class Connection < BaseConnection
-    include HttpClient
   end
 end

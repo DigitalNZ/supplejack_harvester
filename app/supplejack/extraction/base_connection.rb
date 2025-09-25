@@ -6,20 +6,16 @@
 #
 module Extraction
   class BaseConnection
+    include HttpClient
+
     attr_reader :url, :params, :headers
 
     def initialize(url:, params: {}, headers: {}, method: 'get')
       headers ||= {}
-      @connection = connection(url, params, headers)
-
-      @url = if method == 'get'
-               @connection.build_url
-             else
-               url
-             end
-
-      @params     = @connection.params
-      @headers    = @connection.headers
+      @connection = build_connection(url, params, headers)
+      @url = method == 'get' ? @connection.build_url : url
+      @params = @connection.params
+      @headers = @connection.headers
     end
 
     def get
@@ -27,21 +23,21 @@ module Extraction
     end
 
     def post
-      Response.new(connection(url, {}, headers).post(url, normalized_params.to_json, headers))
+      Response.new(@connection.post(url, normalized_params.to_json, headers))
     end
 
     private
+
+    def build_connection(url, params, headers)
+      connection(url, params, headers)
+    end
 
     # We store all values in the database as a string
     # but for POST requests the type can be important to the content source
     # so we need to convert string Integers into Integers
     def normalized_params
       params.transform_values do |value|
-        if Integer(value, exception: false)
-          Integer(value)
-        else
-          value
-        end
+        Integer(value, exception: false) || value
       end
     end
   end
