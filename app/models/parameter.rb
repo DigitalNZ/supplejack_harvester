@@ -23,10 +23,22 @@ class Parameter < ApplicationRecord
   def dynamic_evaluation(response_object)
     block = ->(response) { eval(content) }
 
-    Parameter.new(
-      name:,
-      content: block.call(Extraction::ExtractionResponse.new(response_object))
-    )
+    if content.include?('headers')
+      Parameter.new(
+        name:,
+        content: block.call(OpenStruct.new(
+                              {
+                                body: response_object&.body,
+                                headers: response_object&.response_headers
+                              }
+                            ))
+      )
+    else
+      Parameter.new(
+        name:,
+        content: block.call(response_object&.body)
+      )
+    end
   rescue StandardError
     Parameter.new(
       name:,
