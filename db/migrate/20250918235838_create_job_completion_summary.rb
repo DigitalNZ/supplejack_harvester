@@ -18,7 +18,7 @@ class CreateJobCompletionSummary < ActiveRecord::Migration[7.2]
                 unique: true, name: 'index_job_completion_summaries_on_source_process_job'
       add_index :job_completion_summaries, :completion_type
       add_index :job_completion_summaries, :process_type
-      add_index :job_completion_summaries, :last_completed_at
+      add_index :job_completion_summaries, :last_occurred_at
     else
       puts "Table job_completion_summaries already exists, skipping creation"
     end

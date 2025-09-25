@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module JobCompletion
+  # rubocop:disable Metrics/ClassLength
+  # TODO: break into a service or subclass in 161349
   class Logger
     def self.log_completion(args)
       context = build_context_from_args(args)
@@ -127,4 +129,5 @@ module JobCompletion
       )
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

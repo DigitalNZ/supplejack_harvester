@@ -122,7 +122,7 @@ module Extraction
         stop_condition_type: 'duplicate_document',
         stop_condition_name: 'Duplicate document detected'
       }
-      log_stop_condition_hit(error, details)
+      log_stop_condition_hit(nil, details)
     end
 
     def custom_stop_conditions_met?

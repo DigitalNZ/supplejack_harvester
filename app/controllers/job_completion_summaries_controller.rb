@@ -18,11 +18,7 @@ class JobCompletionSummariesController < ApplicationController
     @job_completion_summaries = @job_completion_summaries.where(extraction_id: extraction_id)
   end
 
-  def show; end
-
-  private
-
-  def set_job_completion_summary
+  def show
     @job_completion_summary = JobCompletionSummary.find(params[:id])
   end
 end
