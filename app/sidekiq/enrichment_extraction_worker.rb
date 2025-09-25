@@ -8,7 +8,7 @@ class EnrichmentExtractionWorker
   def perform(enrichment_params)
     process_enrichment_extraction(enrichment_params)
   rescue StandardError => e
-    JobCompletionSummary::Logger.log_completion(
+    JobCompletionSummaryLogger::Logger.log_completion(
       worker_class: 'EnrichmentExtractionWorker',
       error: e,
       definition: enrichment_params.extraction_definition,
