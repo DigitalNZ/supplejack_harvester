@@ -23,10 +23,10 @@ class JobCompletionSummary < ApplicationRecord
 
   after_initialize :set_defaults, if: :new_record?
 
-  scope :recent_completions, -> { order(last_occurred_at: :desc) }
+  scope :recent_completions, -> { order(last_completed_at: :desc) }
 
   def self.log_completion(params)
-    entry_params = if ['stop_condition', :stop_condition].include?(params[:completion_type])
+    entry_params = if params[:completion_type] == :stop_condition
                      stop_condition_details(params)
                    else
                      error_details(params)
@@ -133,7 +133,7 @@ class JobCompletionSummary < ApplicationRecord
         completion_type: completion_type,
         completion_entries: completion_entries,
         completion_count: completion_entries.length,
-        last_occurred_at: Time.current
+        last_completed_at: Time.current
       )
 
       completion_summary.save!

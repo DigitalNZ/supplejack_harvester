@@ -18,7 +18,7 @@ FactoryBot.define do
       process_type { :extraction }
       completion_type { :error }
       completion_count { 1 }
-      last_occurred_at { Time.current }
+      last_completed_at { Time.current }
       completion_entries do
         [
           {

@@ -21,7 +21,7 @@ RSpec.describe 'Worker Logger Integration' do
       
       allow_any_instance_of(EnrichmentExtractionWorker).to receive(:process_enrichment_extraction).and_raise(StandardError.new('Test error'))
       
-      expect(JobCompletionSummary::JobCompletionSummaryLogger).to receive(:log_completion).with(
+      expect(JobCompletionSummary::Logger).to receive(:log_completion).with(
         hash_including(
           worker_class: 'EnrichmentExtractionWorker',
           error: instance_of(StandardError)
@@ -38,7 +38,7 @@ RSpec.describe 'Worker Logger Integration' do
       
       allow_any_instance_of(FileExtractionWorker).to receive(:process_file_extraction).and_raise(StandardError.new('Test error'))
       
-      expect(JobCompletionSummary::JobCompletionSummaryLogger).to receive(:log_completion).with(
+      expect(JobCompletionSummary::Logger).to receive(:log_completion).with(
         hash_including(
           worker_class: 'FileExtractionWorker',
           error: instance_of(StandardError)
@@ -71,7 +71,7 @@ RSpec.describe 'Worker Logger Integration' do
       # Mock the delete execution to raise an error
       allow_any_instance_of(Delete::Execution).to receive(:call).and_raise(StandardError.new('Delete error'))
       
-      expect(JobCompletionSummary::JobCompletionSummaryLogger).to receive(:log_completion).with(
+      expect(JobCompletionSummary::Logger).to receive(:log_completion).with(
         hash_including(
           worker_class: 'DeleteWorker',
           error: instance_of(StandardError)
@@ -104,7 +104,7 @@ RSpec.describe 'Worker Logger Integration' do
       # Mock the execute_load method to raise an error directly
       allow_any_instance_of(LoadWorker).to receive(:execute_load).and_raise(StandardError.new('Load error'))
       
-      expect(JobCompletionSummary::JobCompletionSummaryLogger).to receive(:log_completion).with(
+      expect(JobCompletionSummary::Logger).to receive(:log_completion).with(
         hash_including(
           worker_class: 'LoadWorker',
           error: instance_of(StandardError)
@@ -126,7 +126,7 @@ RSpec.describe 'Worker Logger Integration' do
       allow_any_instance_of(EnrichmentExtractionWorker).to receive(:process_enrichment_extraction).and_raise(StandardError.new('Stop condition triggered'))
       
       # Mock the logger to capture the call
-      allow(JobCompletionSummary::JobCompletionSummaryLogger).to receive(:log_completion).and_call_original
+      allow(JobCompletionSummary::Logger).to receive(:log_completion).and_call_original
       
       expect { EnrichmentExtractionWorker.new.perform(enrichment_params) }.to raise_error(StandardError)
       
@@ -148,7 +148,7 @@ RSpec.describe 'Worker Logger Integration' do
         }
       }
       
-      expect { JobCompletionSummary::JobCompletionSummaryLogger.log_completion(stop_condition_args) }.to change(JobCompletionSummary, :count).by(1)
+      expect { JobCompletionSummary::Logger.log_completion(stop_condition_args) }.to change(JobCompletionSummary, :count).by(1)
       
       summary = JobCompletionSummary.last
       expect(summary.completion_type).to eq('stop_condition')

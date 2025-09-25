@@ -32,7 +32,7 @@
         <dt class="col-sm-4">Last Occurred:</dt>
         <dd class="col-sm-8">
           <small class="text-muted">
-            <%= @job_completion_summary.last_occurred_at&.strftime('%Y-%m-%d %H:%M:%S') || 'N/A' %>
+            <%= @job_completion_summary.last_completed_at&.strftime('%Y-%m-%d %H:%M:%S') || 'N/A' %>
           </small>
         </dd>
       </dl>

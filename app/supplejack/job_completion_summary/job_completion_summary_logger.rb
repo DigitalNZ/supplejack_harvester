@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module JobCompletionSummary
-  class JobCompletionSummaryLogger
+  class Logger
     def self.log_completion(args)
       context = build_context_from_args(args)
 

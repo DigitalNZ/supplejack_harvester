@@ -133,7 +133,7 @@ module Extraction
     end
 
     def log_stop_condition_hit(_error, details)
-      JobCompletionSummary::JobCompletionSummaryLogger.log_completion(
+      JobCompletionSummary::Logger.log_completion(
         worker_class: 'Extraction::Execution',
         error: nil,
         definition: @extraction_definition,

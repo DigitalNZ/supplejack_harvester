@@ -51,8 +51,8 @@ RSpec.describe JobCompletionSummary, type: :model do
 
   describe 'scopes' do
     it 'has recent_completions scope' do
-      create(:job_completion_summary, last_occurred_at: 2.days.ago)
-      recent = create(:job_completion_summary, last_occurred_at: 1.day.ago)
+      create(:job_completion_summary, last_completed_at: 2.days.ago)
+      recent = create(:job_completion_summary, last_completed_at: 1.day.ago)
       
       expect(JobCompletionSummary.recent_completions.first).to eq(recent)
     end
