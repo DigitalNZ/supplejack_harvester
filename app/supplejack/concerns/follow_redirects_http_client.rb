@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DefaultHttpClient
+module FollowRedirectsHttpClient
   extend ActiveSupport::Concern
 
   def connection(url, params, headers)

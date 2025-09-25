@@ -8,7 +8,7 @@ module Extraction
       @connection = if follow_redirects
                       Connection.new(url:, params:, headers:, method:)
                     else
-                      DefaultConnection.new(url:, params:, headers:, method:)
+                      FollowRedirectsConnection.new(url:, params:, headers:, method:)
                     end
     end
 
