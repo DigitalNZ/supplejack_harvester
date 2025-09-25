@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-require_relative '../../app/supplejack/job_completion_summary_logger'
+require_relative '../../app/supplejack/job_completion/logger'
 
-RSpec.describe JobCompletionSummaryLogger::Logger do
+RSpec.describe JobCompletion::Logger do
   let(:harvest_definition) do
     create(:harvest_definition, source_id: 'test_source', name: 'Test Source').tap do |hd|
       # Ensure the name is set correctly by updating it after creation
