@@ -34,7 +34,7 @@ class FileExtractionWorker
   end
 
   def handle_file_extraction_error(error)
-    Supplejack::JobCompletionSummaryLogger.log_completion(
+    JobCompletionSummary::JobCompletionSummaryLogger.log_completion(
       worker_class: 'FileExtractionWorker',
       error: error,
       definition: @extraction_job.extraction_definition,

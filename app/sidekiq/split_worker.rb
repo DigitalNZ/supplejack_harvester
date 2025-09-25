@@ -28,7 +28,7 @@ class SplitWorker < FileExtractionWorker
   end
 
   def handle_split_error(error)
-    Supplejack::JobCompletionSummaryLogger.log_completion(
+    JobCompletionSummary::JobCompletionSummaryLogger.log_completion(
       worker_class: 'SplitWorker',
       error: error,
       definition: @extraction_definition,

@@ -3,7 +3,7 @@
 require 'rails_helper'
 require_relative '../../app/supplejack/job_completion_summary_logger'
 
-RSpec.describe Supplejack::JobCompletionSummaryLogger do
+RSpec.describe JobCompletionSummary::JobCompletionSummaryLogger do
   let(:harvest_definition) do
     create(:harvest_definition, source_id: 'test_source', name: 'Test Source').tap do |hd|
       # Ensure the name is set correctly by updating it after creation

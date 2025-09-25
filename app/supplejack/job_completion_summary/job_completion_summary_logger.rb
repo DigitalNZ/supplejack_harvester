@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Supplejack
+module JobCompletionSummary
   class JobCompletionSummaryLogger
     def self.log_completion(args)
       context = build_context_from_args(args)

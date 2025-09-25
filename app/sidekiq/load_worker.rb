@@ -51,7 +51,7 @@ class LoadWorker
   def handle_load_error(error)
     Rails.logger.info "Load Excecution error: #{error}" if defined?(Sidekiq)
 
-    Supplejack::JobCompletionSummaryLogger.log_completion(
+    JobCompletionSummary::JobCompletionSummaryLogger.log_completion(
       worker_class: 'LoadWorker',
       error: error,
       definition: @harvest_report.extraction_definition,
