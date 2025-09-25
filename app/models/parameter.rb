@@ -20,6 +20,9 @@ class Parameter < ApplicationRecord
 
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
+  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Style/OpenStructUse
   def dynamic_evaluation(response_object)
     block = ->(response) { eval(content) }
 
@@ -48,6 +51,9 @@ class Parameter < ApplicationRecord
 
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
+  # rubocop:enable Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Style/OpenStructUse
   def to_h
     return if slug?
 
