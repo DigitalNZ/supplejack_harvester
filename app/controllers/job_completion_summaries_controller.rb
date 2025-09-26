@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class JobCompletionSummariesController < ApplicationController
-  before_action :set_job_completion_summary, only: [:show]
-
   def index
     @job_completion_summaries = JobCompletionSummary.recent_completions.page(params[:page])
 

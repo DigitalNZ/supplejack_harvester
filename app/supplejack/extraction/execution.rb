@@ -40,7 +40,9 @@ module Extraction
     end
 
     def handle_extraction_error(error)
-      return unless @extraction_definition&.harvest_definition&.source_id
+      harvest_definition = @extraction_definition&.harvest_definitions&.first
+      source_id = harvest_definition&.source_id
+      return unless source_id
 
       log_stop_condition_hit(error, details)
       raise
@@ -91,7 +93,7 @@ module Extraction
           stop_condition_name: 'Extraction failed'
         }
 
-        log_stop_condition_hit(error, details)
+        log_stop_condition_hit(nil, details)
         return true
       end
 
@@ -129,7 +131,7 @@ module Extraction
       stop_conditions = @extraction_definition.stop_conditions
       return false if stop_conditions.empty?
 
-      stop_conditions.any? { |condition| condition.evaluate(@de.document.body, self) }
+      stop_conditions.any? { |condition| condition.evaluate(@de.document.body) }
     end
 
     def log_stop_condition_hit(_error, details)
