@@ -36,7 +36,7 @@ module Load
         worker_class: 'LoadWorker',
         error: error,
         definition: @harvest_job&.extraction_definition,
-        job: @harvest_job&.harvest_job&.extraction_job,
+        job: @harvest_job&.extraction_job,
         details: {}
       )
       raise
