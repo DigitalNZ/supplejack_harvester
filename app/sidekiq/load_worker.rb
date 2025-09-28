@@ -54,8 +54,8 @@ class LoadWorker
     JobCompletion::Logger.log_completion(
       worker_class: 'LoadWorker',
       error: error,
-      definition: @harvest_report.extraction_definition,
-      job: @harvest_report.harvest_job&.extraction_job,
+      definition: @harvest_job.extraction_definition,
+      job: @harvest_job.harvest_job&.extraction_job,
       details: {}
     )
     raise
