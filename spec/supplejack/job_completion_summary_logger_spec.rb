@@ -63,7 +63,7 @@ RSpec.describe JobCompletion::Logger do
       end
     end
 
-    context 'with bad data' do
+    context 'error handling' do
       it 'handles nil definition gracefully' do
         bad_args = {
           worker_class: 'TestWorker',
@@ -72,7 +72,7 @@ RSpec.describe JobCompletion::Logger do
           job: extraction_job
         }
 
-        expect(Rails.logger).to receive(:error).with("Failed to log completion to JobCompletionSummary: Invalid definition type: NilClass")
+        expect(Rails.logger).to receive(:error).with("Failed to log completion: Invalid definition type: NilClass")
         expect { described_class.log_completion(bad_args) }.not_to raise_error
       end
 
@@ -84,7 +84,7 @@ RSpec.describe JobCompletion::Logger do
           job: extraction_job
         }
 
-        expect(Rails.logger).to receive(:error).with("Failed to log completion to JobCompletionSummary: Invalid definition type: String")
+        expect(Rails.logger).to receive(:error).with("Failed to log completion: Invalid definition type: String")
         expect { described_class.log_completion(bad_args) }.not_to raise_error
       end
 
@@ -145,24 +145,18 @@ RSpec.describe JobCompletion::Logger do
 
         expect { described_class.log_completion(args_with_empty_details) }.not_to raise_error
       end
-    end
 
-    context 'when JobCompletionSummary.log_completion raises an error' do
-      let(:test_args) do
-        {
+      it 'handles CompletionSummaryBuilder errors' do
+        test_args = {
           worker_class: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: extraction_definition,
           job: extraction_job
         }
-      end
 
-      before do
-        allow(JobCompletionSummary).to receive(:log_completion).and_raise(StandardError.new('Database error'))
-      end
+        allow(JobCompletion::CompletionSummaryBuilder).to receive(:build_completion_summary).and_raise(StandardError.new('Database error'))
 
-      it 'logs the error and does not raise' do
-        expect(Rails.logger).to receive(:error).with("Failed to log completion to JobCompletionSummary: Database error")
+        expect(Rails.logger).to receive(:error).with("Failed to log completion: Database error")
         
         expect { described_class.log_completion(test_args) }.not_to raise_error
       end

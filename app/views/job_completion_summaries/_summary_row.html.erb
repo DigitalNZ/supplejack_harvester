@@ -9,15 +9,17 @@
     <strong><%= error_summary.job_type %></strong>
   </td>
   <td>
-    <% if error_summary.stop_condition? %>
-      <% latest_entry = error_summary.completion_entries.last %>
-      <% if latest_entry&.dig('details', 'stop_condition_type') == 'system' %>
-        <span class="badge badge-stop-condition">System stop condition</span>
+    <% error_summary.completion_types_present.each do |type| %>
+      <% if type == 'stop_condition' %>
+        <% latest_entry = error_summary.completion_entries.find { |entry| entry.dig('details', 'stop_condition_name').present? } %>
+        <% if latest_entry&.dig('details', 'stop_condition_type') == 'system' %>
+          <span class="badge badge-stop-condition me-1">System stop condition</span>
+        <% else %>
+          <span class="badge badge-stop-condition me-1">User defined stop condition</span>
+        <% end %>
       <% else %>
-        <span class="badge badge-stop-condition">User defined stop condition</span>
+        <span class="badge bg-danger me-1">Error</span>
       <% end %>
-    <% else %>
-      <span class="badge bg-danger">Error</span>
     <% end %>
   </td>
   <td>
