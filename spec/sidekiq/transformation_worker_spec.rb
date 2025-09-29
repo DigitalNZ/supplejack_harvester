@@ -289,6 +289,21 @@ RSpec.describe TransformationWorker do
           expect(harvest_report.transformation_end_time).to be_present
         end 
       end
+
+      context "when there is an error notifying the API about a harvesting job" do
+        before do
+          allow(Api::Utils::NotifyHarvesting).to receive(:new).and_raise("Error")
+        end
+      
+        subject { TransformationWorker.new.perform(harvest_job.id) }
+      
+        include_examples 'expects harvest report attribute', :transformation_workers_completed, 1
+        include_examples 'expects harvest report attribute', :load_workers_queued, 1
+      
+        it "logs the error to JobCompletion::Logger" do
+          expect { subject }.to change(JobCompletionSummary.where(process_type: :transformation), :count).by(1)
+        end
+      end
     end
   end
 end
