@@ -17,7 +17,24 @@ module Transformation
         type_checker = TypeChecker.new(@value)
         raise TypeError, type_checker.error unless type_checker.valid?
       rescue Exception => e
-        handle_field_error(e)
+        harvest_definition = @field.transformation_definition.harvest_definitions.first
+        harvest_job = nil
+        if harvest_definition.present?
+          harvest_job = harvest_definition.harvest_jobs.first
+        end
+
+        JobCompletion::Logger.log_completion(
+          error: e,
+          definition: @field.transformation_definition,
+          job: harvest_job,
+          details: {
+            field_name: @field.name,
+            field_id: @field.id,
+            stop_condition_name: @field.name,
+            stop_condition_type: 'field_error'
+          }
+        )
+        @error = e
       end
 
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)
