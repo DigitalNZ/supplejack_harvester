@@ -19,8 +19,8 @@ module JobCompletion
         source_name: params[:source_name],
         message: params[:message],
         details: details,
-        job_type: CompletionTypeDeterminer.determine_job_type(params, completion_type),
-        process_type: CompletionTypeDeterminer.determine_process_type(params),
+        job_type: CompletionTypeHelper.determine_job_type(params, completion_type),
+        process_type: CompletionTypeHelper.determine_process_type(params),
         completion_type: completion_type
       }
     end

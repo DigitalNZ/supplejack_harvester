@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module JobCompletion
-  class CompletionTypeDeterminer
+  class CompletionTypeHelper
     def self.determine_job_type(params, completion_type)
       params[:job_type] || default_job_type(completion_type)
     end

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe JobCompletion::CompletionTypeDeterminer do
+RSpec.describe JobCompletion::CompletionTypeHelper do
   describe '.determine_job_type' do
     let(:params) { { job_type: 'CustomJob' } }
     let(:completion_type) { :error }

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module JobCompletion
-  class CompletionSummaryRepository
+  class CompletionSummaryManager
     def self.find_or_create_completion_summary(entry_params, process_type, job_type)
       JobCompletionSummary.find_or_initialize_by(
         source_id: entry_params[:source_id],

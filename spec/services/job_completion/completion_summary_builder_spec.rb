@@ -63,6 +63,6 @@ RSpec.describe JobCompletion::CompletionSummaryBuilder do
     end
   end
 
-  # These methods are now in CompletionSummaryRepository, not CompletionSummaryBuilder
+  # These methods are now in CompletionSummaryManager, not CompletionSummaryBuilder
   # The CompletionSummaryBuilder only orchestrates the process
 end
