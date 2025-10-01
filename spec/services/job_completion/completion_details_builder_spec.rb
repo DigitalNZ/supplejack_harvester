@@ -11,7 +11,7 @@ RSpec.describe JobCompletion::CompletionDetailsBuilder do
       job_type: 'ExtractionJob',
       process_type: :extraction,
       completion_type: :error,
-      details: { worker_class: 'TestWorker' }
+      details: { origin: 'TestWorker' }
     }
   end
 
@@ -22,7 +22,7 @@ RSpec.describe JobCompletion::CompletionDetailsBuilder do
           stop_condition_name: 'test_condition',
           stop_condition_content: 'if count > 100',
           stop_condition_type: 'user',
-          worker_class: 'TestWorker'
+          origin: 'TestWorker'
         }
       )
     end
@@ -42,7 +42,7 @@ RSpec.describe JobCompletion::CompletionDetailsBuilder do
         stop_condition_name: 'test_condition',
         stop_condition_content: 'if count > 100',
         stop_condition_type: 'user',
-        worker_class: 'TestWorker'
+        origin: 'TestWorker'
       )
     end
   end
@@ -59,12 +59,12 @@ RSpec.describe JobCompletion::CompletionDetailsBuilder do
         process_type: :extraction,
         completion_type: :error
       )
-      expect(result[:details]).to eq({ worker_class: 'TestWorker' })
+      expect(result[:details]).to eq({ origin: 'TestWorker' })
     end
   end
 
   describe '.build_completion_hash' do
-    let(:details) { { worker_class: 'TestWorker' } }
+    let(:details) { { origin: 'TestWorker' } }
     let(:completion_type) { :error }
 
     it 'builds completion hash with all fields' do
@@ -74,7 +74,7 @@ RSpec.describe JobCompletion::CompletionDetailsBuilder do
         source_id: 'test_source',
         source_name: 'Test Source',
         message: 'Test message',
-        details: { worker_class: 'TestWorker' },
+        details: { origin: 'TestWorker' },
         job_type: 'ExtractionJob',
         process_type: :extraction,
         completion_type: :error
@@ -88,7 +88,7 @@ RSpec.describe JobCompletion::CompletionDetailsBuilder do
         stop_condition_name: 'test_condition',
         stop_condition_content: 'if count > 100',
         stop_condition_type: 'user',
-        worker_class: 'TestWorker'
+        origin: 'TestWorker'
       }
     end
 
@@ -99,7 +99,7 @@ RSpec.describe JobCompletion::CompletionDetailsBuilder do
         stop_condition_name: 'test_condition',
         stop_condition_content: 'if count > 100',
         stop_condition_type: 'user',
-        worker_class: 'TestWorker'
+        origin: 'TestWorker'
       )
     end
   end

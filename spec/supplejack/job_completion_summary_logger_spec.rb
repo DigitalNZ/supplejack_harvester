@@ -17,7 +17,7 @@ RSpec.describe JobCompletion::Logger do
     context 'with valid arguments' do
       let(:valid_args) do
         {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: extraction_definition,
           job: extraction_job
@@ -37,13 +37,20 @@ RSpec.describe JobCompletion::Logger do
         expect(summary.process_type).to eq('extraction')
         expect(summary.job_type).to eq('ExtractionJob')
         expect(summary.completion_type).to eq('error')
+        
+        # Check completion entry structure
+        entry = summary.completion_entries.first
+        expect(entry['origin']).to eq('TestWorker')
+        expect(entry['details']['exception_class']).to eq('StandardError')
+        expect(entry['details']['exception_message']).to eq('Test error')
+        expect(entry['details']['stack_trace']).to be_present
       end
     end
 
     context 'with stop condition details' do
       let(:stop_condition_args) do
         {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           definition: extraction_definition,
           job: extraction_job,
           details: {
@@ -59,14 +66,20 @@ RSpec.describe JobCompletion::Logger do
         
         summary = JobCompletionSummary.last
         expect(summary.completion_type).to eq('stop_condition')
-        expect(summary.completion_entries.first['message']).to include("Stop condition 'test_condition' was triggered")
+        
+        entry = summary.completion_entries.first
+        expect(entry['message']).to include("Stop condition 'test_condition' was triggered")
+        expect(entry['origin']).to eq('TestWorker')
+        expect(entry['details']['stop_condition_name']).to eq('test_condition')
+        expect(entry['details']['stop_condition_content']).to eq('if records.count > 100')
+        expect(entry['details']['stop_condition_type']).to eq('user')
       end
     end
 
     context 'error handling' do
       it 'handles nil definition gracefully' do
         bad_args = {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: nil,
           job: extraction_job
@@ -78,7 +91,7 @@ RSpec.describe JobCompletion::Logger do
 
       it 'handles invalid definition type' do
         bad_args = {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: 'invalid_type',
           job: extraction_job
@@ -93,7 +106,7 @@ RSpec.describe JobCompletion::Logger do
         empty_extraction_definition.harvest_definitions.clear
         
         bad_args = {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: empty_extraction_definition,
           job: extraction_job
@@ -108,7 +121,7 @@ RSpec.describe JobCompletion::Logger do
 
       it 'handles nil error gracefully' do
         args_without_error = {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: nil,
           definition: extraction_definition,
           job: extraction_job
@@ -122,7 +135,7 @@ RSpec.describe JobCompletion::Logger do
 
       it 'handles nil job gracefully' do
         args_without_job = {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: extraction_definition,
           job: nil
@@ -131,12 +144,14 @@ RSpec.describe JobCompletion::Logger do
         expect { described_class.log_completion(args_without_job) }.not_to raise_error
         
         summary = JobCompletionSummary.last
-        expect(summary.completion_entries.first['details']['job_id']).to be_nil
+        entry = summary.completion_entries.first
+        expect(entry['details']['job_id']).to be_nil
+        expect(entry['job_id']).to be_nil
       end
 
       it 'handles empty details hash' do
         args_with_empty_details = {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: extraction_definition,
           job: extraction_job,
@@ -148,7 +163,7 @@ RSpec.describe JobCompletion::Logger do
 
       it 'handles CompletionSummaryBuilder errors' do
         test_args = {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: extraction_definition,
           job: extraction_job

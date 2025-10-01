@@ -19,7 +19,6 @@ module Transformation
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)
     end
     # rubocop:enable Lint/RescueException
-
     private
 
     # rubocop:disable Security/Eval
@@ -59,9 +58,7 @@ module Transformation
     def build_field_error_details
       {
         field_name: @field.name,
-        field_id: @field.id,
-        stop_condition_name: @field.name,
-        stop_condition_type: 'field_error'
+        field_id: @field.id
       }
     end
   end

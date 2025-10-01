@@ -11,7 +11,7 @@ RSpec.describe JobCompletion::CompletionEntryBuilder do
       job_type: 'ExtractionJob',
       process_type: :extraction,
       completion_type: :error,
-      details: { worker_class: 'TestWorker', job_id: '123' }
+      details: { origin: 'TestWorker', job_id: '123' }
     }
   end
 
@@ -22,9 +22,9 @@ RSpec.describe JobCompletion::CompletionEntryBuilder do
       
       expect(completion_entry).to include(
         message: 'Test error',
-        details: { worker_class: 'TestWorker', job_id: '123' },
+        details: { origin: 'TestWorker', job_id: '123' },
         timestamp: be_a(String),
-        worker_class: 'TestWorker',
+        origin: 'TestWorker',
         job_id: '123',
         context: {}
       )
@@ -39,7 +39,7 @@ RSpec.describe JobCompletion::CompletionEntryBuilder do
       let(:params) do
         super().merge(
           details: {
-            worker_class: 'TestWorker',
+            origin: 'TestWorker',
             stack_trace: ['line1', 'line2']
           }
         )
@@ -56,7 +56,7 @@ RSpec.describe JobCompletion::CompletionEntryBuilder do
       let(:params) do
         super().merge(
           details: {
-            worker_class: 'TestWorker',
+            origin: 'TestWorker',
             context: { test: true }
           }
         )
@@ -72,15 +72,15 @@ RSpec.describe JobCompletion::CompletionEntryBuilder do
 
   describe '.build_completion_entry_hash' do
     let(:message) { 'Test error message' }
-    let(:details) { { worker_class: 'TestWorker', job_id: '123' } }
+    let(:details) { { origin: 'TestWorker', job_id: '123' } }
 
     it 'builds completion entry hash with timestamp' do
       result = described_class.build_completion_entry_hash(message, details)
       
       expect(result).to include(
         message: 'Test error message',
-        details: { worker_class: 'TestWorker', job_id: '123' },
-        worker_class: 'TestWorker',
+        details: { origin: 'TestWorker', job_id: '123' },
+        origin: 'TestWorker',
         job_id: '123',
         context: {}
       )

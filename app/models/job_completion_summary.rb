@@ -45,6 +45,24 @@ class JobCompletionSummary < ApplicationRecord
     end.uniq
   end
 
+  def pipeline_name
+    harvest_definition = HarvestDefinition.find_by(source_id: source_id)
+    harvest_definition&.pipeline&.name
+  end
+
+  def definition_name
+    harvest_definition = HarvestDefinition.find_by(source_id: source_id)
+
+    case process_type
+    when 'extraction'
+      harvest_definition&.extraction_definition&.name
+    when 'transformation'
+      harvest_definition&.transformation_definition&.name
+    else
+      'Unknown Type'
+    end
+  end
+
   private
 
   def set_defaults

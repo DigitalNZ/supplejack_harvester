@@ -23,7 +23,7 @@ RSpec.describe 'Worker Logger Integration' do
       
       expect(JobCompletion::Logger).to receive(:log_completion).with(
         hash_including(
-          worker_class: 'EnrichmentExtractionWorker',
+          origin: 'EnrichmentExtractionWorker',
           error: instance_of(StandardError)
         )
       )
@@ -40,7 +40,7 @@ RSpec.describe 'Worker Logger Integration' do
       
       expect(JobCompletion::Logger).to receive(:log_completion).with(
         hash_including(
-          worker_class: 'FileExtractionWorker',
+          origin: 'FileExtractionWorker',
           error: instance_of(StandardError)
         )
       )
@@ -73,7 +73,7 @@ RSpec.describe 'Worker Logger Integration' do
       
       expect(JobCompletion::Logger).to receive(:log_completion).with(
         hash_including(
-          worker_class: 'DeleteWorker',
+          origin: 'DeleteWorker',
           error: instance_of(StandardError)
         )
       )
@@ -106,7 +106,7 @@ RSpec.describe 'Worker Logger Integration' do
       
       expect(JobCompletion::Logger).to receive(:log_completion).with(
         hash_including(
-          worker_class: 'LoadWorker',
+          origin: 'LoadWorker',
           error: instance_of(StandardError)
         )
       )
@@ -138,7 +138,7 @@ RSpec.describe 'Worker Logger Integration' do
 
     it 'logs stop condition when stop condition details are provided' do
       stop_condition_args = {
-        worker_class: 'TestWorker',
+        origin: 'TestWorker',
         definition: extraction_definition,
         job: extraction_job,
         details: {

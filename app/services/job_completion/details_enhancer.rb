@@ -2,10 +2,11 @@
 
 module JobCompletion
   class DetailsEnhancer
-    def self.build_enhanced_details(error, job, details)
+    def self.build_enhanced_details(error, job, details, origin)
       enhanced_details = {}
       add_error_details(enhanced_details, error) if error
-      add_job_details(enhanced_details, job)
+      enhanced_details[:job_id] = job&.id
+      enhanced_details[:origin] = origin
       add_stop_condition_details(enhanced_details, details)
       add_additional_details(enhanced_details, details)
       enhanced_details
@@ -17,10 +18,6 @@ module JobCompletion
         exception_message: error.message,
         stack_trace: error.backtrace&.first(20)
       )
-    end
-
-    def self.add_job_details(enhanced_details, job)
-      enhanced_details[:job_id] = job&.id
     end
 
     def self.add_stop_condition_details(enhanced_details, details)

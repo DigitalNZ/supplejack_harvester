@@ -18,7 +18,7 @@ RSpec.describe JobCompletion::ContextBuilder do
         error: error,
         definition: extraction_definition,
         job: job,
-        details: { worker_class: 'TestWorker' }
+        details: { origin: 'TestWorker' }
       }
     end
 
@@ -37,7 +37,7 @@ RSpec.describe JobCompletion::ContextBuilder do
         exception_class: 'StandardError',
         exception_message: 'Test error',
         job_id: job.id,
-        worker_class: 'TestWorker'
+        origin: 'TestWorker'
       )
     end
 
@@ -50,7 +50,7 @@ RSpec.describe JobCompletion::ContextBuilder do
           details: {
             stop_condition_name: 'test_condition',
             stop_condition_type: 'user',
-            worker_class: 'TestWorker'
+            origin: 'TestWorker'
           }
         }
       end
@@ -81,7 +81,7 @@ RSpec.describe JobCompletion::ContextBuilder do
     end
 
     context 'without stop condition name' do
-      let(:details) { { worker_class: 'TestWorker' } }
+      let(:details) { { origin: 'TestWorker' } }
 
       it 'returns error' do
         result = described_class.determine_completion_type(details)
@@ -101,7 +101,7 @@ RSpec.describe JobCompletion::ContextBuilder do
     end
     let(:completion_type) { :error }
     let(:message) { 'Test error message' }
-    let(:enhanced_details) { { worker_class: 'TestWorker' } }
+    let(:enhanced_details) { { origin: 'TestWorker' } }
 
     it 'builds final context hash' do
       result = described_class.build_final_context(process_info, completion_type, message, enhanced_details)
@@ -113,7 +113,7 @@ RSpec.describe JobCompletion::ContextBuilder do
         job_type: 'ExtractionJob',
         completion_type: :error,
         message: 'Test error message',
-        details: { worker_class: 'TestWorker' }
+        details: { origin: 'TestWorker' }
       })
     end
   end

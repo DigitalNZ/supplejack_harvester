@@ -11,7 +11,7 @@ RSpec.describe JobCompletion::CompletionSummaryBuilder do
       job_type: 'ExtractionJob',
       process_type: :extraction,
       completion_type: :error,
-      details: { worker_class: 'TestWorker' }
+      details: { origin: 'TestWorker' }
     }
   end
 

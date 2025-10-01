@@ -6,7 +6,7 @@
     <div class="card-body">
       <% if @job_completion_summary.completion_entries.any? %>
         <div class="accordion" id="completionsAccordion">
-          <% @job_completion_summary.completion_entries.each_with_index do |error, index| %>
+          <% @job_completion_summary.completion_entries.each_with_index do |entry, index| %>
             <div class="accordion-item">
               <h2 class="accordion-header" id="heading<%= index %>">
                 <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
@@ -17,9 +17,9 @@
                         aria-controls="collapse<%= index %>">
                   <div class="d-flex justify-content-between align-items-center w-100 me-3">
                     <div>
-                      <%= error['message']&.truncate(100) || 'No message' %>
-                        <% if error.dig('details', 'stop_condition_name').present? %>
-                          <% if error.dig('details', 'stop_condition_type') == 'system' %>
+                      <%= entry['message']&.truncate(100) || 'No message' %>
+                        <% if entry.dig('details', 'stop_condition_name').present? %>
+                          <% if entry.dig('details', 'stop_condition_type') == 'system' %>
                             <span class="badge bg-secondary ms-2">System stop condition</span>
                           <% else %>
                             <span class="badge ms-2" style="background-color: #0d6efd;">User defined stop condition</span>
@@ -36,15 +36,15 @@
                    aria-labelledby="heading<%= index %>"
                    data-bs-parent="#completionsAccordion">
                 <div class="accordion-body">
-                  <% if error.dig('details', 'stop_condition_name').present? %>
+                  <% if entry.dig('details', 'stop_condition_name').present? %>
                     <div class="row">
                       <div class="col-md-12">
                         <h6>Stop Condition Details:</h6>
                         <div class="bg-light p-3 rounded">
-                          <p><strong>Name:</strong> <%= error.dig('details', 'stop_condition_name') %></p>
-                          <p><strong>Content:</strong> <%= error.dig('details', 'stop_condition_content') %></p>
+                          <p><strong>Name:</strong> <%= entry.dig('details', 'stop_condition_name') %></p>
+                          <p><strong>Content:</strong> <%= entry.dig('details', 'stop_condition_content') %></p>
                             <p><strong>Type:</strong>
-                              <% if error.dig('details', 'stop_condition_type') == 'system' %>
+                              <% if entry.dig('details', 'stop_condition_type') == 'system' %>
                                 <span class="badge bg-secondary">System stop condition</span>
                               <% else %>
                                 <span class="badge" style="background-color: #0d6efd;">User defined stop condition</span>
@@ -58,26 +58,25 @@
                       <div class="col-md-12">
                         <h6>Error Details:</h6>
                         <div class="bg-light p-3 rounded">
-                          <p><strong>Worker Class:</strong> <%= error.dig('details', 'worker_class') %></p>
-                          <p><strong>Job ID:</strong> <%= error.dig('details', 'job_id') %></p>
-                          <p><strong>Pipeline Job ID:</strong> <%= error.dig('details', 'pipeline_job_id') %></p>
-                          <% if error.dig('details', 'stack_trace').present? %>
+                          <p><strong>Origin:</strong> <%= entry['origin'] %></p>
+                          <p><strong>Job:</strong> <%= @job_completion_summary.source_name %></p>
+                          <% if entry.dig('details', 'stack_trace').present? %>
                             <p><strong>Stack Trace:</strong></p>
-                            <pre class="bg-dark text-light p-2 rounded"><%= error.dig('details', 'stack_trace') %></pre>
+                            <pre class="bg-dark text-light p-2 rounded"><%= entry.dig('details', 'stack_trace') %></pre>
                           <% end %>
                         </div>
                       </div>
                     </div>
                   <% end %>
-                  <% if error['details'].present? %>
+                  <% if entry['details'].present? %>
                     <div class="row mt-3">
                       <div class="col-md-12">
                         <h6>Additional Details:</h6>
                         <pre class="bg-light p-3 rounded">
                           <% begin %>
-                            <%= JSON.pretty_generate(error['details']) %>
+                            <%= JSON.pretty_generate(entry['details']) %>
                           <% rescue %>
-                            <%= error['details'].to_s %>
+                            <%= entry['details'].to_s %>
                           <% end %>
                         </pre>
                       </div>
@@ -87,7 +86,7 @@
                     <div class="col-md-6">
                       <strong>Occurred At:</strong>
                       <% begin %>
-                        <%= Time.zone.parse(error['timestamp']).strftime('%Y-%m-%d %H:%M:%S') %>
+                        <%= Time.zone.parse(entry['timestamp']).strftime('%Y-%m-%d %H:%M:%S') %>
                       <% rescue %>
                         Unknown time
                       <% end %>

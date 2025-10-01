@@ -15,7 +15,7 @@ RSpec.describe JobCompletion::Logger, 'Integration' do
     context 'with error completion' do
       let(:args) do
         {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: extraction_definition,
           job: extraction_job
@@ -38,7 +38,7 @@ RSpec.describe JobCompletion::Logger, 'Integration' do
     context 'with stop condition completion' do
       let(:args) do
         {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           definition: extraction_definition,
           job: extraction_job,
           details: {
@@ -61,7 +61,7 @@ RSpec.describe JobCompletion::Logger, 'Integration' do
     context 'when service raises error' do
       let(:args) do
         {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: StandardError.new('Test error'),
           definition: extraction_definition,
           job: extraction_job

@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe JobCompletion::DetailsEnhancer do
   let(:job) { create(:extraction_job) }
   let(:error) { StandardError.new('Test error') }
-  let(:details) { { worker_class: 'TestWorker' } }
+  let(:details) { { origin: 'TestWorker' } }
 
   describe '.build_enhanced_details' do
     context 'with error, job, and details' do
@@ -17,7 +17,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
           exception_message: 'Test error',
           stack_trace: error.backtrace&.first(20),
           job_id: job.id,
-          worker_class: 'TestWorker'
+          origin: 'TestWorker'
         )
       end
     end
@@ -28,7 +28,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
           stop_condition_name: 'test_condition',
           stop_condition_content: 'if count > 100',
           stop_condition_type: 'user',
-          worker_class: 'TestWorker'
+          origin: 'TestWorker'
         }
       end
 
@@ -40,7 +40,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
           stop_condition_content: 'if count > 100',
           stop_condition_type: 'user',
           job_id: job.id,
-          worker_class: 'TestWorker'
+          origin: 'TestWorker'
         )
       end
     end
@@ -130,7 +130,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
   describe '.add_additional_details' do
     it 'adds remaining details excluding stop condition fields' do
       details = {
-        worker_class: 'TestWorker',
+        origin: 'TestWorker',
         pipeline_job_id: '123',
         stop_condition_name: 'test',
         stop_condition_content: 'content',
@@ -141,7 +141,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
       described_class.add_additional_details(enhanced_details, details)
       
       expect(enhanced_details).to include(
-        worker_class: 'TestWorker',
+        origin: 'TestWorker',
         pipeline_job_id: '123'
       )
       expect(enhanced_details).not_to have_key(:stop_condition_name)

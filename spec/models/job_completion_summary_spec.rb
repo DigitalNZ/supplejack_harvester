@@ -76,7 +76,7 @@ RSpec.describe JobCompletionSummary, type: :model do
         job_type: 'ExtractionJob',
         process_type: :extraction,
         completion_type: :error,
-        details: { worker_class: 'TestWorker' }
+        details: { origin: 'TestWorker' }
       }
     end
 
@@ -91,6 +91,105 @@ RSpec.describe JobCompletionSummary, type: :model do
       
       summary = JobCompletionSummary.last
       expect(summary.completion_count).to eq(2)
+    end
+  end
+
+  describe 'instance methods' do
+    let(:pipeline) { create(:pipeline, name: 'Test Pipeline') }
+    let(:harvest_definition) { create(:harvest_definition, source_id: 'test_source', pipeline: pipeline) }
+    let(:extraction_definition) { create(:extraction_definition, name: 'Test Extraction', pipeline: pipeline) }
+    let(:transformation_definition) { create(:transformation_definition, name: 'Test Transformation', pipeline: pipeline) }
+    let(:summary) { create(:job_completion_summary, source_id: 'test_source') }
+
+    before do
+      harvest_definition.update!(extraction_definition: extraction_definition, transformation_definition: transformation_definition)
+    end
+
+    describe '#pipeline_name' do
+      it 'returns the pipeline name' do
+        expect(summary.pipeline_name).to eq('Test Pipeline')
+      end
+
+      it 'returns nil when harvest definition not found' do
+        summary.update!(source_id: 'unknown_source')
+        expect(summary.pipeline_name).to be_nil
+      end
+    end
+
+    describe '#definition_name' do
+      it 'returns extraction definition name for extraction process' do
+        summary.update!(process_type: :extraction)
+        expect(summary.definition_name).to eq('Test Extraction')
+      end
+
+      it 'returns transformation definition name for transformation process' do
+        summary.update!(process_type: :transformation)
+        expect(summary.definition_name).to eq('Test Transformation')
+      end
+
+      it 'returns "Unknown Type" for unknown process type' do
+        # Use a valid process_type but test the else case by mocking the method
+        allow(summary).to receive(:process_type).and_return('unknown')
+        expect(summary.definition_name).to eq('Unknown Type')
+      end
+    end
+
+    describe '#origins' do
+      it 'returns unique origins from completion entries' do
+        summary.update!(completion_entries: [
+          { 'message' => 'test1', 'details' => {}, 'timestamp' => Time.current.iso8601, 'origin' => 'Worker1' },
+          { 'message' => 'test2', 'details' => {}, 'timestamp' => Time.current.iso8601, 'origin' => 'Worker2' },
+          { 'message' => 'test3', 'details' => {}, 'timestamp' => Time.current.iso8601, 'origin' => 'Worker1' }
+        ])
+        expect(summary.origins).to eq(['Worker1', 'Worker2'])
+      end
+
+      it 'returns empty array when no origins' do
+        summary.update!(completion_entries: [
+          { 'message' => 'test', 'details' => {}, 'timestamp' => Time.current.iso8601, 'other_field' => 'value' }
+        ])
+        expect(summary.origins).to eq([])
+      end
+    end
+
+    describe '#latest_origin' do
+      it 'returns the origin from the latest entry' do
+        summary.update!(completion_entries: [
+          { 'message' => 'test1', 'details' => {}, 'timestamp' => Time.current.iso8601, 'origin' => 'Worker1' },
+          { 'message' => 'test2', 'details' => {}, 'timestamp' => Time.current.iso8601, 'origin' => 'Worker2' }
+        ])
+        expect(summary.latest_origin).to eq('Worker2')
+      end
+
+      it 'returns nil when no entries' do
+        # Create a summary with minimal valid completion_entries
+        summary.update!(completion_entries: [{ 'message' => 'test', 'details' => {}, 'timestamp' => Time.current.iso8601 }])
+        # Then test with empty array by mocking
+        allow(summary).to receive(:completion_entries).and_return([])
+        expect(summary.latest_origin).to be_nil
+      end
+    end
+
+    describe '#job_ids' do
+      it 'returns unique job IDs from completion entries' do
+        summary.update!(completion_entries: [
+          { 'message' => 'test1', 'details' => {}, 'timestamp' => Time.current.iso8601, 'job_id' => 'job1' },
+          { 'message' => 'test2', 'details' => {}, 'timestamp' => Time.current.iso8601, 'job_id' => 'job2' },
+          { 'message' => 'test3', 'details' => {}, 'timestamp' => Time.current.iso8601, 'job_id' => 'job1' }
+        ])
+        expect(summary.job_ids).to eq(['job1', 'job2'])
+      end
+    end
+
+    describe '#pipeline_job_ids' do
+      it 'returns unique pipeline job IDs from completion entries' do
+        summary.update!(completion_entries: [
+          { 'message' => 'test1', 'details' => {}, 'timestamp' => Time.current.iso8601, 'pipeline_job_id' => 'pipeline_job1' },
+          { 'message' => 'test2', 'details' => {}, 'timestamp' => Time.current.iso8601, 'pipeline_job_id' => 'pipeline_job2' },
+          { 'message' => 'test3', 'details' => {}, 'timestamp' => Time.current.iso8601, 'pipeline_job_id' => 'pipeline_job1' }
+        ])
+        expect(summary.pipeline_job_ids).to eq(['pipeline_job1', 'pipeline_job2'])
+      end
     end
   end
 end

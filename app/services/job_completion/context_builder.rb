@@ -3,6 +3,7 @@
 module JobCompletion
   class ContextBuilder
     def self.build_context_from_args(args)
+      origin = args[:origin]
       error = args[:error]
       definition = args[:definition]
       job = args[:job]
@@ -11,7 +12,7 @@ module JobCompletion
       process_info = ProcessInfoBuilder.determine_process_info(definition)
       completion_type = determine_completion_type(details)
       message = MessageBuilder.build_message(error, details)
-      enhanced_details = DetailsEnhancer.build_enhanced_details(error, job, details)
+      enhanced_details = DetailsEnhancer.build_enhanced_details(error, job, details, origin)
 
       build_final_context(process_info, completion_type, message, enhanced_details)
     end

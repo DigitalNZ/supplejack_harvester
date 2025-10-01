@@ -12,7 +12,7 @@ RSpec.describe JobCompletionSummary, 'Integration with Services' do
         job_type: 'ExtractionJob',
         process_type: :extraction,
         completion_type: :error,
-        details: { worker_class: 'TestWorker' }
+        details: { origin: 'TestWorker' }
       }
     end
 
@@ -33,7 +33,7 @@ RSpec.describe JobCompletionSummary, 'Integration with Services' do
             stop_condition_name: 'test_condition',
             stop_condition_content: 'if count > 100',
             stop_condition_type: 'user',
-            worker_class: 'TestWorker'
+            origin: 'TestWorker'
           }
         )
       end

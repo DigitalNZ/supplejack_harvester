@@ -17,7 +17,7 @@ module JobCompletion
         message: message,
         details: details,
         timestamp: Time.current.iso8601,
-        worker_class: details[:worker_class],
+        origin: details[:origin],
         job_id: details[:job_id],
         pipeline_job_id: details[:pipeline_job_id],
         stack_trace: details[:stack_trace],

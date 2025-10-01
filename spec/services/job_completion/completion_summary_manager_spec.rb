@@ -43,7 +43,7 @@ RSpec.describe JobCompletion::CompletionSummaryManager do
     let(:completion_entry) do
       {
         'message' => 'Test error',
-        'details' => { 'worker_class' => 'TestWorker' },
+        'details' => { 'origin' => 'TestWorker' },
         'timestamp' => Time.current.iso8601
       }
     end
