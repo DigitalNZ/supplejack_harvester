@@ -10,7 +10,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
   describe '.build_enhanced_details' do
     context 'with error, job, and details' do
       it 'enhances details with all information' do
-        result = described_class.build_enhanced_details(error, job, details)
+        result = described_class.build_enhanced_details(error, job, details, 'TestWorker')
         
         expect(result).to include(
           exception_class: 'StandardError',
@@ -33,7 +33,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
       end
 
       it 'includes stop condition information' do
-        result = described_class.build_enhanced_details(nil, job, details)
+        result = described_class.build_enhanced_details(nil, job, details, 'TestWorker')
         
         expect(result).to include(
           stop_condition_name: 'test_condition',
@@ -47,7 +47,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
 
     context 'with nil error' do
       it 'does not include error details' do
-        result = described_class.build_enhanced_details(nil, job, details)
+        result = described_class.build_enhanced_details(nil, job, details, 'TestWorker')
         
         expect(result).not_to have_key(:exception_class)
         expect(result).not_to have_key(:exception_message)
@@ -57,7 +57,7 @@ RSpec.describe JobCompletion::DetailsEnhancer do
 
     context 'with nil job' do
       it 'does not include job details' do
-        result = described_class.build_enhanced_details(error, nil, details)
+        result = described_class.build_enhanced_details(error, nil, {}, 'TestWorker')
         
         expect(result[:job_id]).to be_nil
       end
@@ -77,23 +77,6 @@ RSpec.describe JobCompletion::DetailsEnhancer do
     end
   end
 
-  describe '.add_job_details' do
-    it 'adds job information to details' do
-      enhanced_details = {}
-      described_class.add_job_details(enhanced_details, job)
-      
-      expect(enhanced_details).to include(job_id: job.id)
-    end
-
-    context 'with nil job' do
-      it 'adds nil job_id' do
-        enhanced_details = {}
-        described_class.add_job_details(enhanced_details, nil)
-        
-        expect(enhanced_details).to include(job_id: nil)
-      end
-    end
-  end
 
   describe '.add_stop_condition_details' do
     context 'with stop condition details' do
