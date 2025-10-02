@@ -81,7 +81,6 @@ module Extraction
           stop_condition_name: 'Set number limit reached',
           completion_type: :stop_condition
         }
-
         log_stop_condition_hit(error, details)
         return true
       end
@@ -118,6 +117,7 @@ module Extraction
 
     def check_for_duplicate_document(previous_document)
       return false unless previous_document.body == @de.document.body
+
       details = {
         top_condition_type: 'system',
         stop_condition_name: 'Duplicate document detected',
@@ -131,7 +131,7 @@ module Extraction
     def custom_stop_conditions_met?
       stop_conditions = @extraction_definition.stop_conditions
       return false if stop_conditions.empty?
-  
+
       stop_conditions.any? do |condition|
         condition.evaluate(@de.document.body)
         details = {
@@ -140,7 +140,6 @@ module Extraction
           stop_condition_content: condition.content,
           completion_type: :stop_condition
         }
-
         log_stop_condition_hit(nil, details)
       end
     end

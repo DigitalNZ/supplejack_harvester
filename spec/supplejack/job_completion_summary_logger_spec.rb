@@ -16,9 +16,11 @@ RSpec.describe JobCompletion::Logger do
   describe '.log_completion' do
     context 'with valid arguments' do
       let(:valid_args) do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`', '/path/to/file.rb:45:in `other_method`'])
         {
           origin: 'TestWorker',
-          error: StandardError.new('Test error'),
+          error: error,
           definition: extraction_definition,
           job: extraction_job
         }
@@ -43,7 +45,7 @@ RSpec.describe JobCompletion::Logger do
         expect(entry['origin']).to eq('TestWorker')
         expect(entry['details']['exception_class']).to eq('StandardError')
         expect(entry['details']['exception_message']).to eq('Test error')
-        expect(entry['details']['stack_trace']).to be_present
+        expect(entry['details']['stack_trace']).to eq(['/path/to/file.rb:123:in `method_name`', '/path/to/file.rb:45:in `other_method`'])
       end
     end
 
@@ -78,9 +80,11 @@ RSpec.describe JobCompletion::Logger do
 
     context 'error handling' do
       it 'handles nil definition gracefully' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         bad_args = {
           origin: 'TestWorker',
-          error: StandardError.new('Test error'),
+          error: error,
           definition: nil,
           job: extraction_job
         }
@@ -90,9 +94,11 @@ RSpec.describe JobCompletion::Logger do
       end
 
       it 'handles invalid definition type' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         bad_args = {
           origin: 'TestWorker',
-          error: StandardError.new('Test error'),
+          error: error,
           definition: 'invalid_type',
           job: extraction_job
         }
@@ -105,9 +111,11 @@ RSpec.describe JobCompletion::Logger do
         empty_extraction_definition = create(:extraction_definition)
         empty_extraction_definition.harvest_definitions.clear
         
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         bad_args = {
           origin: 'TestWorker',
-          error: StandardError.new('Test error'),
+          error: error,
           definition: empty_extraction_definition,
           job: extraction_job
         }
@@ -134,9 +142,11 @@ RSpec.describe JobCompletion::Logger do
       end
 
       it 'handles nil job gracefully' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         args_without_job = {
           origin: 'TestWorker',
-          error: StandardError.new('Test error'),
+          error: error,
           definition: extraction_definition,
           job: nil
         }
@@ -150,9 +160,11 @@ RSpec.describe JobCompletion::Logger do
       end
 
       it 'handles empty details hash' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         args_with_empty_details = {
           origin: 'TestWorker',
-          error: StandardError.new('Test error'),
+          error: error,
           definition: extraction_definition,
           job: extraction_job,
           details: {}
@@ -162,9 +174,11 @@ RSpec.describe JobCompletion::Logger do
       end
 
       it 'handles CompletionSummaryBuilder errors' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         test_args = {
           origin: 'TestWorker',
-          error: StandardError.new('Test error'),
+          error: error,
           definition: extraction_definition,
           job: extraction_job
         }

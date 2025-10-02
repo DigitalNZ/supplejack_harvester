@@ -7,31 +7,25 @@ module Transformation
       @field = field
     end
 
-    # rubocop:disable Lint/RescueException
+    # rubocop:disable Lint/UnusedBlockArgument
+    # rubocop:disable Security/Eval
     def execute(extracted_record)
       begin
-        @value = execute_field_block(extracted_record)
-        validate_field_value
+        block = ->(record) { eval(@field.block) }
+
+        @value = block.call(extracted_record)
+        type_checker = TypeChecker.new(@value)
+        raise TypeError, type_checker.error unless type_checker.valid?
       rescue Exception => e
         handle_field_error(e)
       end
 
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)
     end
-    # rubocop:enable Lint/RescueException
-    private
-
-    # rubocop:disable Security/Eval
-    def execute_field_block(extracted_record)
-      block = ->(_record) { eval(@field.block) }
-      block.call(extracted_record)
-    end
+    # rubocop:enable Lint/UnusedBlockArgument
     # rubocop:enable Security/Eval
 
-    def validate_field_value
-      type_checker = TypeChecker.new(@value)
-      raise TypeError, type_checker.error unless type_checker.valid?
-    end
+    private
 
     def handle_field_error(error)
       harvest_job = find_harvest_job
@@ -48,6 +42,7 @@ module Transformation
 
     def log_field_error(error, harvest_job)
       JobCompletion::Logger.log_completion(
+        origin: 'Transformation::FieldExecution',
         error: error,
         definition: @field.transformation_definition,
         job: harvest_job,
