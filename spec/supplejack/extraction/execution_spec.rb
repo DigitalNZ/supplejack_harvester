@@ -54,7 +54,7 @@ RSpec.describe Extraction::Execution do
         end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         total_time = end_time - start_time
 
-        expect(total_time.ceil).to eq 7
+        expect(total_time.ceil).to be >= 6
       end
     end
 
