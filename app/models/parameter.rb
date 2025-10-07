@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'ostruct'
+
 class Parameter < ApplicationRecord
   belongs_to :request
 
