@@ -27,6 +27,7 @@ RSpec.describe Extraction::DocumentExtraction do
       it 'appends headers into the Extraction::Request' do
         expect(Extraction::Request).to receive(:new).with(
           url: request.url,
+          follow_redirects: true,
           headers: {
             'Content-Type' => 'application/json',
             'User-Agent' => 'Supplejack Harvester v2.0',
@@ -78,6 +79,7 @@ RSpec.describe Extraction::DocumentExtraction do
 
         expect(Extraction::Request).to receive(:new).with(
           url: request.url,
+          follow_redirects: true,
           headers: {
             'Content-Type' => 'application/json',
             'User-Agent' => 'Supplejack Harvester v2.0',
@@ -103,6 +105,7 @@ RSpec.describe Extraction::DocumentExtraction do
 
         expect(Extraction::Request).to receive(:new).with(
           url: request.url,
+          follow_redirects: true,
           headers: {
             'Content-Type' => 'application/json',
             'User-Agent' => 'Supplejack Harvester v2.0'
