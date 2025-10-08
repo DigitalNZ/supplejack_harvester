@@ -15,10 +15,27 @@ module Extraction
       SjApiEnrichmentIterator.new(@extraction_job).each do |api_document, page|
         break if api_document.body.blank?
 
-        @extraction_definition.page = page
-        api_records = JSON.parse(api_document.body)['records']
-        extract_and_save_enrichment_documents(api_records)
+        process_enrichment_page(api_document, page)
       end
+    rescue StandardError => e
+      handle_enrichment_error(e)
+    end
+
+    def process_enrichment_page(api_document, page)
+      @extraction_definition.page = page
+      api_records = JSON.parse(api_document.body)['records']
+      extract_and_save_enrichment_documents(api_records)
+    end
+
+    def handle_enrichment_error(error)
+      JobCompletion::Logger.log_completion(
+        worker_class: 'EnrichmentExecution',
+        error: error,
+        definition: @extraction_definition,
+        job: @extraction_job,
+        details: {}
+      )
+      raise
     end
 
     private

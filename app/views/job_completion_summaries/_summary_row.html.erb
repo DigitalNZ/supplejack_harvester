@@ -1,0 +1,38 @@
+<tr>
+  <td>
+    <code><%= error_summary.source_id %></code>
+  </td>
+  <td>
+    <strong><%= error_summary.source_name %></strong>
+  </td>
+  <td>
+    <strong><%= error_summary.job_type %></strong>
+  </td>
+  <td>
+    <% if error_summary.stop_condition? %>
+      <% latest_entry = error_summary.completion_entries.last %>
+      <% if latest_entry&.dig('details', 'stop_condition_type') == 'system' %>
+        <span class="badge badge-stop-condition">System stop condition</span>
+      <% else %>
+        <span class="badge badge-stop-condition">User defined stop condition</span>
+      <% end %>
+    <% else %>
+      <span class="badge bg-danger">Error</span>
+    <% end %>
+  </td>
+  <td>
+    <span class="badge bg-warning text-dark">
+      <%= error_summary.completion_count %>
+    </span>
+  </td>
+  <td>
+    <small class="text-muted">
+      <%= error_summary.last_completed_at&.strftime('%Y-%m-%d %H:%M') || 'N/A' %>
+    </small>
+  </td>
+  <td>
+    <%= link_to 'View Details',
+                job_completion_summary_path(error_summary),
+                class: 'btn btn-sm btn-outline-primary' %>
+  </td>
+</tr>

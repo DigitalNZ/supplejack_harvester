@@ -3,16 +3,42 @@
 class SplitWorker < FileExtractionWorker
   def process_extracted_documents
     Dir.children(@tmp_directory).each do |folder|
-      Dir.children("#{@tmp_directory}/#{folder}").each do |file|
-        saved_response = JSON.parse(File.read("#{@tmp_directory}/#{folder}/#{file}"))
-
-        Nokogiri::XML(saved_response['body']).xpath(@extraction_definition.split_selector).each_slice(100) do |records|
-          create_document(records, saved_response)
-          @page += 1
-        end
-      end
+      process_folder(folder)
     end
   end
+
+  def process_folder(folder)
+    Dir.children("#{@tmp_directory}/#{folder}").each do |file|
+      process_file(folder, file)
+    end
+  rescue StandardError => e
+    handle_split_error(e)
+  end
+
+  def process_file(folder, file)
+    saved_response = JSON.parse(File.read("#{@tmp_directory}/#{folder}/#{file}"))
+    process_xml_records(saved_response)
+  end
+
+  def process_xml_records(saved_response)
+    Nokogiri::XML(saved_response['body']).xpath(@extraction_definition.split_selector).each_slice(100) do |records|
+      create_document(records, saved_response)
+      @page += 1
+    end
+  end
+
+  def handle_split_error(error)
+    JobCompletion::Logger.log_completion(
+      worker_class: 'SplitWorker',
+      error: error,
+      definition: @extraction_definition,
+      job: @extraction_job,
+      details: {}
+    )
+    raise
+  end
+
+  private
 
   def create_document(records, saved_response)
     page_str = format('%09d', @page)[-9..]
