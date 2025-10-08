@@ -75,6 +75,8 @@ module JobCompletion
     def self.build_message(error, details)
       if details[:stop_condition_name].present?
         build_stop_condition_message(details)
+      elsif details[:field_name].present?
+        "Transformation failed '#{details[:field_name]}'"
       else
         build_error_message(error)
       end
@@ -129,5 +131,4 @@ module JobCompletion
       )
     end
   end
-  # rubocop:enable Metrics/ClassLength
 end
