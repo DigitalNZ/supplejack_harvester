@@ -24,7 +24,7 @@ module Extraction
     end
 
     def valid?
-      url.exclude?('evaluation-error')
+      url.present? && url.exclude?('evaluation-error')
     end
 
     private
