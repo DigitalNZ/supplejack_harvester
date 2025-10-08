@@ -35,7 +35,7 @@ class FileExtractionWorker
 
   def handle_file_extraction_error(error)
     JobCompletion::Logger.log_completion(
-      worker_class: 'FileExtractionWorker',
+      origin: 'FileExtractionWorker',
       error: error,
       definition: @extraction_job.extraction_definition,
       job: @extraction_job

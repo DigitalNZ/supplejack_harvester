@@ -76,7 +76,7 @@ RSpec.describe JobCompletionSummary, type: :model do
         job_type: 'ExtractionJob',
         process_type: :extraction,
         completion_type: :error,
-        details: { worker_class: 'TestWorker' }
+        details: { origin: 'TestWorker' }
       }
     end
 
@@ -91,6 +91,47 @@ RSpec.describe JobCompletionSummary, type: :model do
       
       summary = JobCompletionSummary.last
       expect(summary.completion_count).to eq(2)
+    end
+  end
+
+  describe 'instance methods' do
+    let(:pipeline) { create(:pipeline, name: 'Test Pipeline') }
+    let(:harvest_definition) { create(:harvest_definition, source_id: 'test_source', pipeline: pipeline) }
+    let(:extraction_definition) { create(:extraction_definition, name: 'Test Extraction', pipeline: pipeline) }
+    let(:transformation_definition) { create(:transformation_definition, name: 'Test Transformation', pipeline: pipeline) }
+    let(:summary) { create(:job_completion_summary, source_id: 'test_source') }
+
+    before do
+      harvest_definition.update!(extraction_definition: extraction_definition, transformation_definition: transformation_definition)
+    end
+
+    describe '#pipeline_name' do
+      it 'returns the pipeline name' do
+        expect(summary.pipeline_name).to eq('Test Pipeline')
+      end
+
+      it 'returns nil when harvest definition not found' do
+        summary.update!(source_id: 'unknown_source')
+        expect(summary.pipeline_name).to be_nil
+      end
+    end
+
+    describe '#definition_name' do
+      it 'returns extraction definition name for extraction process' do
+        summary.update!(process_type: :extraction)
+        expect(summary.definition_name).to eq('Test Extraction')
+      end
+
+      it 'returns transformation definition name for transformation process' do
+        summary.update!(process_type: :transformation)
+        expect(summary.definition_name).to eq('Test Transformation')
+      end
+
+      it 'returns "Unknown Type" for unknown process type' do
+        # Use a valid process_type but test the else case by mocking the method
+        allow(summary).to receive(:process_type).and_return('unknown')
+        expect(summary.definition_name).to eq('Unknown Type')
+      end
     end
   end
 end

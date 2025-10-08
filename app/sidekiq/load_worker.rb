@@ -52,7 +52,7 @@ class LoadWorker
     Rails.logger.info "Load Excecution error: #{error}" if defined?(Sidekiq)
 
     JobCompletion::Logger.log_completion(
-      worker_class: 'LoadWorker',
+      origin: 'LoadWorker',
       error: error,
       definition: @harvest_job&.extraction_definition,
       job: @harvest_job&.extraction_job,

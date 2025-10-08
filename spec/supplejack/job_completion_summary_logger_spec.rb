@@ -16,9 +16,11 @@ RSpec.describe JobCompletion::Logger do
   describe '.log_completion' do
     context 'with valid arguments' do
       let(:valid_args) do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`', '/path/to/file.rb:45:in `other_method`'])
         {
-          worker_class: 'TestWorker',
-          error: StandardError.new('Test error'),
+          origin: 'TestWorker',
+          error: error,
           definition: extraction_definition,
           job: extraction_job
         }
@@ -37,13 +39,20 @@ RSpec.describe JobCompletion::Logger do
         expect(summary.process_type).to eq('extraction')
         expect(summary.job_type).to eq('ExtractionJob')
         expect(summary.completion_type).to eq('error')
+        
+        # Check completion entry structure
+        entry = summary.completion_entries.first
+        expect(entry['origin']).to eq('TestWorker')
+        expect(entry['details']['exception_class']).to eq('StandardError')
+        expect(entry['details']['exception_message']).to eq('Test error')
+        expect(entry['details']['stack_trace']).to eq(['/path/to/file.rb:123:in `method_name`', '/path/to/file.rb:45:in `other_method`'])
       end
     end
 
     context 'with stop condition details' do
       let(:stop_condition_args) do
         {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           definition: extraction_definition,
           job: extraction_job,
           details: {
@@ -59,32 +68,42 @@ RSpec.describe JobCompletion::Logger do
         
         summary = JobCompletionSummary.last
         expect(summary.completion_type).to eq('stop_condition')
-        expect(summary.completion_entries.first['message']).to include("Stop condition 'test_condition' was triggered")
+        
+        entry = summary.completion_entries.first
+        expect(entry['message']).to include("Stop condition 'test_condition' was triggered")
+        expect(entry['origin']).to eq('TestWorker')
+        expect(entry['details']['stop_condition_name']).to eq('test_condition')
+        expect(entry['details']['stop_condition_content']).to eq('if records.count > 100')
+        expect(entry['details']['stop_condition_type']).to eq('user')
       end
     end
 
-    context 'with bad data' do
+    context 'error handling' do
       it 'handles nil definition gracefully' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         bad_args = {
-          worker_class: 'TestWorker',
-          error: StandardError.new('Test error'),
+          origin: 'TestWorker',
+          error: error,
           definition: nil,
           job: extraction_job
         }
 
-        expect(Rails.logger).to receive(:error).with("Failed to log completion to JobCompletionSummary: Invalid definition type: NilClass")
+        expect(Rails.logger).to receive(:error).with("Failed to log completion: Invalid definition type: NilClass")
         expect { described_class.log_completion(bad_args) }.not_to raise_error
       end
 
       it 'handles invalid definition type' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         bad_args = {
-          worker_class: 'TestWorker',
-          error: StandardError.new('Test error'),
+          origin: 'TestWorker',
+          error: error,
           definition: 'invalid_type',
           job: extraction_job
         }
 
-        expect(Rails.logger).to receive(:error).with("Failed to log completion to JobCompletionSummary: Invalid definition type: String")
+        expect(Rails.logger).to receive(:error).with("Failed to log completion: Invalid definition type: String")
         expect { described_class.log_completion(bad_args) }.not_to raise_error
       end
 
@@ -92,9 +111,11 @@ RSpec.describe JobCompletion::Logger do
         empty_extraction_definition = create(:extraction_definition)
         empty_extraction_definition.harvest_definitions.clear
         
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         bad_args = {
-          worker_class: 'TestWorker',
-          error: StandardError.new('Test error'),
+          origin: 'TestWorker',
+          error: error,
           definition: empty_extraction_definition,
           job: extraction_job
         }
@@ -108,7 +129,7 @@ RSpec.describe JobCompletion::Logger do
 
       it 'handles nil error gracefully' do
         args_without_error = {
-          worker_class: 'TestWorker',
+          origin: 'TestWorker',
           error: nil,
           definition: extraction_definition,
           job: extraction_job
@@ -121,9 +142,11 @@ RSpec.describe JobCompletion::Logger do
       end
 
       it 'handles nil job gracefully' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         args_without_job = {
-          worker_class: 'TestWorker',
-          error: StandardError.new('Test error'),
+          origin: 'TestWorker',
+          error: error,
           definition: extraction_definition,
           job: nil
         }
@@ -131,13 +154,17 @@ RSpec.describe JobCompletion::Logger do
         expect { described_class.log_completion(args_without_job) }.not_to raise_error
         
         summary = JobCompletionSummary.last
-        expect(summary.completion_entries.first['details']['job_id']).to be_nil
+        entry = summary.completion_entries.first
+        expect(entry['details']['job_id']).to be_nil
+        expect(entry['job_id']).to be_nil
       end
 
       it 'handles empty details hash' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
         args_with_empty_details = {
-          worker_class: 'TestWorker',
-          error: StandardError.new('Test error'),
+          origin: 'TestWorker',
+          error: error,
           definition: extraction_definition,
           job: extraction_job,
           details: {}
@@ -145,24 +172,20 @@ RSpec.describe JobCompletion::Logger do
 
         expect { described_class.log_completion(args_with_empty_details) }.not_to raise_error
       end
-    end
 
-    context 'when JobCompletionSummary.log_completion raises an error' do
-      let(:test_args) do
-        {
-          worker_class: 'TestWorker',
-          error: StandardError.new('Test error'),
+      it 'handles CompletionSummaryBuilder errors' do
+        error = StandardError.new('Test error')
+        error.set_backtrace(['/path/to/file.rb:123:in `method_name`'])
+        test_args = {
+          origin: 'TestWorker',
+          error: error,
           definition: extraction_definition,
           job: extraction_job
         }
-      end
 
-      before do
-        allow(JobCompletionSummary).to receive(:log_completion).and_raise(StandardError.new('Database error'))
-      end
+        allow(JobCompletion::CompletionSummaryBuilder).to receive(:build_completion_summary).and_raise(StandardError.new('Database error'))
 
-      it 'logs the error and does not raise' do
-        expect(Rails.logger).to receive(:error).with("Failed to log completion to JobCompletionSummary: Database error")
+        expect(Rails.logger).to receive(:error).with("Failed to log completion: Database error")
         
         expect { described_class.log_completion(test_args) }.not_to raise_error
       end

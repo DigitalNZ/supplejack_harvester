@@ -19,16 +19,16 @@ RSpec.describe TransformationWorker do
     end
   end
 
-  shared_examples 'expects worker to be queued' do |worker_class|
-    it "queues the #{worker_class}" do
-      expect(worker_class).to receive(:perform_async_with_priority)
+  shared_examples 'expects worker to be queued' do |origin|
+    it "queues the #{origin}" do
+      expect(origin).to receive(:perform_async_with_priority)
       subject
     end
   end
 
-  shared_examples 'expects worker not to be queued' do |worker_class|
-    it "does not queue the #{worker_class}" do
-      expect(worker_class).not_to receive(:perform_async_with_priority)
+  shared_examples 'expects worker not to be queued' do |origin|
+    it "does not queue the #{origin}" do
+      expect(origin).not_to receive(:perform_async_with_priority)
       subject
     end
   end
