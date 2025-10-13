@@ -27,7 +27,7 @@ module Extraction
     # rubocop:enable Layout/LineLength
 
     def valid?
-      url.exclude?('evaluation-error')
+      url.present? && url.exclude?('evaluation-error')
     end
 
     private
