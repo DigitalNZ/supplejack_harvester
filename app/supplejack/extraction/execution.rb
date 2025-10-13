@@ -19,6 +19,8 @@ module Extraction
       perform_paginated_extraction
     rescue StandardError => e
       handle_extraction_error(e)
+
+      log_stop_condition_hit(e, {})
     end
 
     def perform_initial_extraction
@@ -75,10 +77,10 @@ module Extraction
 
       if @harvest_job.pipeline_job.pages == @extraction_definition.page
         details = {
-          stop_condition_type: 'set_number_reached',
-          stop_condition_name: 'Set number limit reached'
+          stop_condition_type: 'system',
+          stop_condition_name: 'Set number limit reached',
+          completion_type: :stop_condition
         }
-
         log_stop_condition_hit(error, details)
         return true
       end
@@ -89,8 +91,9 @@ module Extraction
     def extraction_failed?
       if @de.document.status >= 400 || @de.document.status < 200
         details = {
-          stop_condition_type: 'extraction_failed',
-          stop_condition_name: 'Extraction failed'
+          stop_condition_type: 'system',
+          stop_condition_name: 'Extraction failed',
+          completion_type: :stop_condition
         }
 
         log_stop_condition_hit(nil, details)
@@ -115,29 +118,36 @@ module Extraction
     def check_for_duplicate_document(previous_document)
       return false unless previous_document.body == @de.document.body
 
-      log_duplicate_document_detected
-      true
-    end
-
-    def log_duplicate_document_detected
       details = {
-        stop_condition_type: 'duplicate_document',
-        stop_condition_name: 'Duplicate document detected'
+        top_condition_type: 'system',
+        stop_condition_name: 'Duplicate document detected',
+        completion_type: :stop_condition
       }
-      log_stop_condition_hit(nil, details)
+
+      log_duplicate_document_detected(nil, details)
+      true
     end
 
     def custom_stop_conditions_met?
       stop_conditions = @extraction_definition.stop_conditions
       return false if stop_conditions.empty?
 
-      stop_conditions.any? { |condition| condition.evaluate(@de.document.body) }
+      stop_conditions.any? do |condition|
+        condition.evaluate(@de.document.body)
+        details = {
+          stop_condition_type: 'user',
+          stop_condition_name: condition.name,
+          stop_condition_content: condition.content,
+          completion_type: :stop_condition
+        }
+        log_stop_condition_hit(nil, details)
+      end
     end
 
-    def log_stop_condition_hit(_error, details)
+    def log_stop_condition_hit(error, details)
       JobCompletion::Logger.log_completion(
-        worker_class: 'Extraction::Execution',
-        error: nil,
+        origin: 'Extraction::Execution',
+        error: error,
         definition: @extraction_definition,
         job: @extraction_job,
         details: details

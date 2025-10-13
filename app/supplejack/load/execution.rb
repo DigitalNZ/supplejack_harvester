@@ -33,7 +33,7 @@ module Load
 
     def handle_load_error(error)
       JobCompletion::Logger.log_completion(
-        worker_class: 'LoadWorker',
+        origin: 'LoadWorker',
         error: error,
         definition: @harvest_job&.extraction_definition,
         job: @harvest_job&.extraction_job,

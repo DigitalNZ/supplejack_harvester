@@ -5,14 +5,25 @@ FactoryBot.define do
   sequence :completion_detail do |n|
     {
       "message" => "Error #{n}",
-      "details" => { "worker_class" => "Worker#{n}" },
+      "details" => {
+        "exception_class" => "StandardError",
+        "exception_message" => "Error #{n}",
+        "stack_trace" => ["/app/test.rb:#{n}:in `test_method'"],
+        "job_id" => SecureRandom.hex(8),
+        "pipeline_job_id" => SecureRandom.hex(8),
+        "context" => { "test" => true }
+      },
       "timestamp" => n.hours.ago.iso8601,
-      "worker_class" => "Worker#{n}"
+      "origin" => "Worker#{n}",
+      "job_id" => SecureRandom.hex(8),
+      "pipeline_job_id" => SecureRandom.hex(8),
+      "stack_trace" => ["/app/test.rb:#{n}:in `test_method'"],
+      "context" => { "test" => true }
     }
   end
 
   factory :job_completion_summary do
-      source_id { SecureRandom.uuid }
+      source_id { "test-source-#{SecureRandom.hex(4)}" }
       source_name { "Test Source #{SecureRandom.hex(4)}" }
       job_type { "ExtractionJob" }
       process_type { :extraction }
@@ -24,13 +35,18 @@ FactoryBot.define do
           {
             "message" => "Test error message",
             "details" => {
-              "worker_class" => "TestWorker",
+              "exception_class" => "StandardError",
+              "exception_message" => "Test error message",
+              "stack_trace" => ["/app/test.rb:1:in `test_method'"],
               "job_id" => SecureRandom.hex(8),
+              "pipeline_job_id" => SecureRandom.hex(8),
               "context" => { "test" => true }
             },
             "timestamp" => Time.current.iso8601,
-            "worker_class" => "TestWorker",
+            "origin" => "TestWorker",
             "job_id" => SecureRandom.hex(8),
+            "pipeline_job_id" => SecureRandom.hex(8),
+            "stack_trace" => ["/app/test.rb:1:in `test_method'"],
             "context" => { "test" => true }
           }
         ]
@@ -45,12 +61,14 @@ FactoryBot.define do
               "details" => {
                 "stop_condition_name" => "test_condition",
                 "stop_condition_content" => "if records.count > 100",
-                "condition_type" => "stop_condition"
+                "stop_condition_type" => "user"
               },
               "timestamp" => Time.current.iso8601,
-              "stop_condition_name" => "test_condition",
-              "stop_condition_content" => "if records.count > 100",
-              "is_system_condition" => false
+              "origin" => "Extraction::Execution",
+              "job_id" => SecureRandom.hex(8),
+              "pipeline_job_id" => SecureRandom.hex(8),
+              "stack_trace" => nil,
+              "context" => {}
             }
           ]
         end
