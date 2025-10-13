@@ -29,7 +29,7 @@ module Extraction
 
     def handle_enrichment_error(error)
       JobCompletion::Logger.log_completion(
-        worker_class: 'EnrichmentExecution',
+        origin: 'EnrichmentExecution',
         error: error,
         definition: @extraction_definition,
         job: @extraction_job,

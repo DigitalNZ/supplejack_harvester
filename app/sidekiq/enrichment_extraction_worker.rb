@@ -9,7 +9,7 @@ class EnrichmentExtractionWorker
     process_enrichment_extraction(enrichment_params)
   rescue StandardError => e
     JobCompletion::Logger.log_completion(
-      worker_class: 'EnrichmentExtractionWorker',
+      origin: 'EnrichmentExtractionWorker',
       error: e,
       definition: enrichment_params.extraction_definition,
       job: enrichment_params.extraction_job

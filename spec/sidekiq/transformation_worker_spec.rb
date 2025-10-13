@@ -19,16 +19,16 @@ RSpec.describe TransformationWorker do
     end
   end
 
-  shared_examples 'expects worker to be queued' do |worker_class|
-    it "queues the #{worker_class}" do
-      expect(worker_class).to receive(:perform_async_with_priority)
+  shared_examples 'expects worker to be queued' do |origin|
+    it "queues the #{origin}" do
+      expect(origin).to receive(:perform_async_with_priority)
       subject
     end
   end
 
-  shared_examples 'expects worker not to be queued' do |worker_class|
-    it "does not queue the #{worker_class}" do
-      expect(worker_class).not_to receive(:perform_async_with_priority)
+  shared_examples 'expects worker not to be queued' do |origin|
+    it "does not queue the #{origin}" do
+      expect(origin).not_to receive(:perform_async_with_priority)
       subject
     end
   end
@@ -288,6 +288,21 @@ RSpec.describe TransformationWorker do
           harvest_report.reload
           expect(harvest_report.transformation_end_time).to be_present
         end 
+      end
+
+      context "when there is an error notifying the API about a harvesting job" do
+        before do
+          allow(Api::Utils::NotifyHarvesting).to receive(:new).and_raise("Error")
+        end
+      
+        subject { TransformationWorker.new.perform(harvest_job.id) }
+      
+        include_examples 'expects harvest report attribute', :transformation_workers_completed, 1
+        include_examples 'expects harvest report attribute', :load_workers_queued, 1
+      
+        it "logs the error to JobCompletion::Logger" do
+          expect { subject }.to change(JobCompletionSummary.where(process_type: :transformation), :count).by(1)
+        end
       end
     end
   end

@@ -48,7 +48,7 @@ class DeleteWorker
     Rails.logger.info "DeleteWorker: Delete Excecution error: #{error}" if defined?(Sidekiq)
 
     JobCompletion::Logger.log_completion(
-      worker_class: 'DeleteWorker',
+      origin: 'DeleteWorker',
       error: error,
       definition: @harvest_report.extraction_definition,
       job: @harvest_report.harvest_job&.extraction_job,
