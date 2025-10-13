@@ -27,6 +27,7 @@
     <% automation_templates_classes = class_names('nav-link', active: request.path.include?('automation_templates')) %>
     <% schedules_classes = class_names('nav-link', active: request.path == '/schedules') %>
     <% jobs_classes = class_names('nav-link', active: request.path == '/jobs') %>
+     <% error_summary_classes = class_names('nav-link', active: request.path.include?('job_completion_summary')) %>
 
     <div class="collapse navbar-collapse justify-content-between" id="navbar-nav">
       <ul class="navbar-nav">
@@ -48,6 +49,9 @@
           </li>
           <li class="nav-item">
             <%= link_to 'Jobs', jobs_path, class: jobs_classes %>
+          </li>
+          <li class="nav-item">
+            <%= link_to 'Job Completion Summary', job_completion_summary_index_path, class: error_summary_classes %>
           </li>
         <% end %>
       </ul>

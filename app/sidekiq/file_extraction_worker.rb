@@ -8,19 +8,39 @@ class FileExtractionWorker
 
   def perform(extraction_job_id)
     initialize_instance_variables(extraction_job_id)
+    reset_harvest_report_if_needed
+    process_file_extraction
+    cleanup_and_finalize
+  rescue StandardError => e
+    handle_file_extraction_error(e)
+  end
 
+  def reset_harvest_report_if_needed
     reset_harvest_report(harvest_report) if @extraction_job.harvest_job.present?
+  end
 
+  def process_file_extraction
     setup_tmp_directory
     move_extracted_documents_into_tmp_directory
     process_extracted_documents
+  end
 
+  def cleanup_and_finalize
     FileUtils.remove_dir(@tmp_directory)
-
     return if @extraction_job.harvest_job.blank?
 
     harvest_report.extraction_completed!
     create_transformation_jobs
+  end
+
+  def handle_file_extraction_error(error)
+    JobCompletion::Logger.log_completion(
+      worker_class: 'FileExtractionWorker',
+      error: error,
+      definition: @extraction_job.extraction_definition,
+      job: @extraction_job
+    )
+    raise
   end
 
   private

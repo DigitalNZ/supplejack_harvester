@@ -1,8 +1,60 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
- 
+
 RSpec.describe TransformationWorker do
+  # Shared examples for common test patterns
+  shared_examples 'executes worker and reloads harvest report' do
+    before do
+      TransformationWorker.new.perform(harvest_job.id)
+      harvest_report.reload
+    end
+  end
+
+  shared_examples 'expects harvest report attribute' do |attribute, expected_value|
+    it "updates the harvest report with #{attribute}" do
+      subject
+      harvest_report.reload
+      expect(harvest_report.send(attribute)).to eq(expected_value)
+    end
+  end
+
+  shared_examples 'expects worker to be queued' do |worker_class|
+    it "queues the #{worker_class}" do
+      expect(worker_class).to receive(:perform_async_with_priority)
+      subject
+    end
+  end
+
+  shared_examples 'expects worker not to be queued' do |worker_class|
+    it "does not queue the #{worker_class}" do
+      expect(worker_class).not_to receive(:perform_async_with_priority)
+      subject
+    end
+  end
+
+  shared_examples 'expects API notification' do
+    it "notifies the API that harvesting has begun" do
+      expect(Api::Utils::NotifyHarvesting).to receive(:new).and_call_original
+      subject
+    end
+  end
+
+  shared_examples 'expects no API notification' do
+    it "does not notify the API that harvesting has begun" do
+      expect(Api::Utils::NotifyHarvesting).not_to receive(:new)
+      subject
+    end
+  end
+
+  shared_examples 'expects transformation completion' do
+    it "marks the transformation as completed" do
+      expect(harvest_report.transformation_status).to eq('queued')
+      subject
+      harvest_report.reload
+      expect(harvest_report.transformation_status).to eq('completed')
+    end
+  end
   let!(:pipeline) { create(:pipeline, :figshare) }
   let!(:pipeline_job) { create(:pipeline_job, pipeline:) }
   let(:extraction_definition) { pipeline.harvest.extraction_definition }
@@ -94,55 +146,16 @@ RSpec.describe TransformationWorker do
 
     context "when the job is running" do
       context "when there are no errors in the transformation" do
-        it "updates the harvest report with the number of records transformed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.records_transformed).to eq(10)
-        end
-  
-        it "updates the harvest report with the number of records rejected" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.records_rejected).to eq(1)
-        end
-  
-        it "queues the load worker" do
-          expect(LoadWorker).to receive(:perform_async_with_priority)
-          TransformationWorker.new.perform(harvest_job.id)
-        end
-  
-        it "notifies the API that harvesting has begun on a particular source" do
-          expect(Api::Utils::NotifyHarvesting).to receive(:new).and_call_original
-          TransformationWorker.new.perform(harvest_job.id)
-        end
-  
-        it "increments the load workers queued" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload   
-  
-          expect(harvest_report.load_workers_queued).to eq(1)
-        end
-  
-        it "queues the delete worker" do
-          expect(DeleteWorker).to receive(:perform_async_with_priority)
-          TransformationWorker.new.perform(harvest_job.id)
-        end
-  
-        it "increments the delete workers queued" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.delete_workers_queued).to eq(1)
-        end
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-        it "marks the transformation as completed" do
-          expect(harvest_report.transformation_status).to eq('queued')
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload 
-          expect(harvest_report.transformation_status).to eq('completed')
-        end
+        include_examples 'expects harvest report attribute', :records_transformed, 10
+        include_examples 'expects harvest report attribute', :records_rejected, 1
+        include_examples 'expects harvest report attribute', :load_workers_queued, 1
+        include_examples 'expects harvest report attribute', :delete_workers_queued, 1
+        include_examples 'expects worker to be queued', LoadWorker
+        include_examples 'expects worker to be queued', DeleteWorker
+        include_examples 'expects API notification'
+        include_examples 'expects transformation completion'
       end
 
       context "when the transformation has errors" do
@@ -150,55 +163,16 @@ RSpec.describe TransformationWorker do
           allow(Transformation::Execution).to receive(:new).and_raise("Error")
         end
 
-        it "updates the harvest report with the number of records transformed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.records_transformed).to eq(0)
-        end
-  
-        it "updates the harvest report with the number of records rejected" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.records_rejected).to eq(0)
-        end
-  
-        it "does not queue the load worker" do
-          expect(LoadWorker).not_to receive(:perform_async_with_priority)
-          TransformationWorker.new.perform(harvest_job.id)
-        end
-  
-        it "does not notify the API that harvesting has begun on a particular source" do
-          expect(Api::Utils::NotifyHarvesting).not_to receive(:new)
-          TransformationWorker.new.perform(harvest_job.id)
-        end
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-        it "still marks the transformation as completed" do
-          expect(harvest_report.transformation_status).to eq('queued')
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload 
-          expect(harvest_report.transformation_status).to eq('completed')
-        end
-  
-        it "does not increment the load workers queued" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload   
-  
-          expect(harvest_report.load_workers_queued).to eq(0)
-        end
-  
-        it "does not queue the delete worker" do
-          expect(DeleteWorker).not_to receive(:perform_async_with_priority)
-          TransformationWorker.new.perform(harvest_job.id)
-        end
-  
-        it "does not increment the delete workers queued" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.delete_workers_queued).to eq(0)
-        end 
+        include_examples 'expects harvest report attribute', :records_transformed, 0
+        include_examples 'expects harvest report attribute', :records_rejected, 0
+        include_examples 'expects harvest report attribute', :load_workers_queued, 0
+        include_examples 'expects harvest report attribute', :delete_workers_queued, 0
+        include_examples 'expects worker not to be queued', LoadWorker
+        include_examples 'expects worker not to be queued', DeleteWorker
+        include_examples 'expects no API notification'
+        include_examples 'expects transformation completion'
       end
 
       context "when a field inside of the transformation definition has an error" do
@@ -206,62 +180,17 @@ RSpec.describe TransformationWorker do
           create(:field, name: 'error', block: "JsonPath.new('title').on(no_record).first", transformation_definition: transformation_definition)
         end
 
-        it "updates the harvest report with the number of records transformed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.records_transformed).to eq(10)
-        end
-  
-        it "updates the harvest report with the number of records rejected" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.records_rejected).to eq(1)
-        end
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-        it "still increments the number of transformation workers completed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-
-          expect(harvest_report.transformation_workers_completed).to eq(1)
-        end
-
-        it "still marks the transformation as completed" do
-          expect(harvest_report.transformation_status).to eq('queued')
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload 
-          expect(harvest_report.transformation_status).to eq('completed')
-        end
-  
-        it "still queues the load worker" do
-          expect(LoadWorker).to receive(:perform_async_with_priority)
-          TransformationWorker.new.perform(harvest_job.id)
-        end
-  
-        it "still notifies the API that harvesting has begun on a particular source" do
-          expect(Api::Utils::NotifyHarvesting).to receive(:new).and_call_original
-          TransformationWorker.new.perform(harvest_job.id)
-        end
-  
-        it "still increments the load workers queued" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload   
-  
-          expect(harvest_report.load_workers_queued).to eq(1)
-        end
-  
-        it "does still queue the delete worker" do
-          expect(DeleteWorker).to receive(:perform_async_with_priority)
-          TransformationWorker.new.perform(harvest_job.id)
-        end
-  
-        it "does increments the delete workers queued" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-  
-          expect(harvest_report.delete_workers_queued).to eq(1)
-        end 
+        include_examples 'expects harvest report attribute', :records_transformed, 10
+        include_examples 'expects harvest report attribute', :records_rejected, 1
+        include_examples 'expects harvest report attribute', :transformation_workers_completed, 1
+        include_examples 'expects harvest report attribute', :load_workers_queued, 1
+        include_examples 'expects harvest report attribute', :delete_workers_queued, 1
+        include_examples 'expects worker to be queued', LoadWorker
+        include_examples 'expects worker to be queued', DeleteWorker
+        include_examples 'expects API notification'
+        include_examples 'expects transformation completion'
       end
 
       context "when there is an error extracting the raw records from the extraction job" do
@@ -269,19 +198,10 @@ RSpec.describe TransformationWorker do
           allow(Transformation::RawRecordsExtractor).to receive(:new).and_raise("Error")
         end
 
-        it "still increments the number of transformation workers completed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-          expect(harvest_report.transformation_workers_completed).to eq(1)
-        end
-
-        it "still marks the transformation as completed" do
-          expect(harvest_report.transformation_status).to eq('queued')
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload 
-          expect(harvest_report.transformation_status).to eq('completed')
-        end
+        include_examples 'expects harvest report attribute', :transformation_workers_completed, 1
+        include_examples 'expects transformation completion'
       end
 
       context "when there is an error with notifying the API about a harvesting job" do
@@ -289,28 +209,21 @@ RSpec.describe TransformationWorker do
           allow(Api::Utils::NotifyHarvesting).to receive(:new).and_raise("Error")
         end
 
-        it "still increments the number of load workers queued" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-          expect(harvest_report.load_workers_queued).to eq(1)
-        end
+        include_examples 'expects harvest report attribute', :load_workers_queued, 1
       end
     end
 
     context "when the job ends" do
       context "when there are no errors in the transformation" do
-        it "increments the transformation workers completed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-          expect(harvest_report.transformation_workers_completed).to eq(1)
-        end
+        include_examples 'expects harvest report attribute', :transformation_workers_completed, 1
 
         it "marks the transformation as completed if all of the workers have completed" do
-          TransformationWorker.new.perform(harvest_job.id)
+          subject
           harvest_report.reload
-
           expect(harvest_report.transformation_end_time).to be_present
         end
       end
@@ -333,17 +246,13 @@ RSpec.describe TransformationWorker do
           allow(Transformation::Execution).to receive(:new).and_raise("Error")
         end
 
-        it "still increments the number of transformation workers completed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-          expect(harvest_report.transformation_workers_completed).to eq(1)
-        end
+        include_examples 'expects harvest report attribute', :transformation_workers_completed, 1
 
         it "still marks the transformation as completed" do
-          TransformationWorker.new.perform(harvest_job.id)
+          subject
           harvest_report.reload
-
           expect(harvest_report.transformation_end_time).to be_present
         end
       end
@@ -353,17 +262,13 @@ RSpec.describe TransformationWorker do
           create(:field, name: 'error', block: "JsonPath.new('title').on(no_record).first", transformation_definition: transformation_definition)
         end
 
-        it "still increments the number of transformation workers completed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-          expect(harvest_report.transformation_workers_completed).to eq(1)
-        end
+        include_examples 'expects harvest report attribute', :transformation_workers_completed, 1
 
         it "marks the transformation as completed if all of the workers have completed" do
-          TransformationWorker.new.perform(harvest_job.id)
+          subject
           harvest_report.reload
-
           expect(harvest_report.transformation_end_time).to be_present
         end
       end
@@ -373,24 +278,14 @@ RSpec.describe TransformationWorker do
           allow(Api::Utils::NotifyHarvesting).to receive(:new).and_raise("Error")
         end
 
-        it "still increments the number of transformation workers completed" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
+        subject { TransformationWorker.new.perform(harvest_job.id) }
 
-          expect(harvest_report.transformation_workers_completed).to eq(1)
-        end
+        include_examples 'expects harvest report attribute', :transformation_workers_completed, 1
+        include_examples 'expects harvest report attribute', :load_workers_queued, 1
 
-        it "still increments the number of load workers queued" do
-          TransformationWorker.new.perform(harvest_job.id)
-          harvest_report.reload
-
-          expect(harvest_report.load_workers_queued).to eq(1)
-        end
-    
         it "marks the transformation as completed if all of the workers have completed" do
-          TransformationWorker.new.perform(harvest_job.id)
+          subject
           harvest_report.reload
-
           expect(harvest_report.transformation_end_time).to be_present
         end 
       end

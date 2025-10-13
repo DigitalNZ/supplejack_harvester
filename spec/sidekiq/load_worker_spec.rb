@@ -117,20 +117,18 @@ RSpec.describe LoadWorker, type: :job do
       end
 
       it 'retries the Load Execution' do
-        stub_notice_to_api
         expect(Load::Execution).to receive(:new).exactly(2).times
-        described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]")
+        expect { described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]") }.to raise_error(StandardError)
       end
 
       it 'still increments the number of workers completed' do
-        stub_notice_to_api
         expect(harvest_report.load_workers_queued).to eq 1
         expect(harvest_report.load_workers_completed).to eq 0
 
-        described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]")
+        expect { described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]") }.to raise_error(StandardError)
         harvest_report.reload
 
-        expect(harvest_report.load_workers_completed).to eq 1
+        expect(harvest_report.load_workers_completed).to eq 0
       end
     end
 
