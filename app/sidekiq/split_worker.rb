@@ -29,7 +29,7 @@ class SplitWorker < FileExtractionWorker
 
   def handle_split_error(error)
     JobCompletion::Logger.log_completion(
-      worker_class: 'SplitWorker',
+      origin: 'SplitWorker',
       error: error,
       definition: @extraction_definition,
       job: @extraction_job,
