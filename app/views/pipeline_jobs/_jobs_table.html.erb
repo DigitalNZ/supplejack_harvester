@@ -3,60 +3,24 @@
 </div>
 
 <div class='float-end'>
-  <%= paginate jobs %>
+  <%= form_with url: jobs_path, method: :get, remote: true, html: { id: 'filters-form', class: 'form-inline' } do %>
+    <div class="form-group me-2">
+      <%= label_tag :destination, 'Destination', class: 'form-label me-1' %>
+      <%= select_tag :destination, options_for_select(Job.distinct.pluck(:destination).compact.prepend('All'), params[:destination]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
+    </div>
+
+    <div class="form-group me-2">
+      <%= label_tag :status, 'Status', class: 'form-label me-1' %>
+      <%= select_tag :status, options_for_select(Job.distinct.pluck(:status).compact.prepend('All'), params[:status]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
+    </div>
+
+    <div class="form-group me-2">
+      <%= label_tag :run_by, 'Last Run By', class: 'form-label me-1' %>
+      <%= select_tag :run_by, options_for_select(Job.distinct.pluck(:run_by).compact.prepend('All'), params[:run_by]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
+    </div>
+  <% end %>
 </div>
 
 <div class='clearfix'></div>
 
-<div class='card'>
-  <div class="table-responsive">
-    <table class="table table-borderless table--jobs">
-      <thead>
-        <tr class='table-primary'>
-          <% if show_pipeline_col %>
-            <th scope="col">Pipeline</th>
-          <% end %>
-          <th scope="col">Pipeline jobs</th>
-          <th scope="col">Run by</th>
-          <th scope="col">Status</th>
-          <th scope="col">Job started</th>
-          <th scope="col">Duration</th>
-          <th scope="col">Pages Extracted</th>
-          <th scope="col">Records Transformed</th>
-          <th scope="col">Records Loaded</th>
-          <th scope="col">Records Rejected</th>
-          <th scope="col">Records Deleted</th>
-          <th scope="col">Job Priority</th>
-          <th scope="col">Last Updated</th>
-          <% if show_destination_col %>
-            <th scope="col">Destination</th>
-          <% end %>
-          <th scope="col">More</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% total_jobs = jobs.count %>
-
-        <% jobs.each.with_index(1) do |job, outer_index| %>
-          <% inner_index = 0 %>
-          <% job.harvest_definitions_to_run.zip(job.harvest_reports) do |definition_id, report| %>
-            <%= render 'pipeline_jobs/job_row',
-                       job: job,
-                       report: report,
-                       definition_id: definition_id,
-                       show_pipeline_col: show_pipeline_col,
-                       show_destination_col: show_destination_col,
-                       row_index: inner_index %>
-            <% inner_index += 1 %>
-
-            <% if outer_index <= total_jobs - 1 %>
-              <tr class='table__divider'>
-                <td colspan='<%= 13 + (show_pipeline_col ? 1 : 0) + (show_destination_col ? 1 : 0) %>'><hr></td>
-              </tr>
-            <% end %>
-          <% end %>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
-</div>
+<%= render partial: 'table', locals: { jobs: jobs, show_pipeline_col: show_pipeline_col, show_destination_col: show_destination_col } %>
