@@ -26,14 +26,29 @@ module JobsHelper
     job.end_time.present? ? job.end_time.to_fs(:light) : '-'
   end
 
-  def job_duration(job)
-    job_duration_seconds(job&.duration_seconds)
+  def job_duration(job, format: :long)
+    return '-' if job&.duration_seconds.nil?
+
+    case format
+    when :short
+      job_duration_seconds_short(job.duration_seconds)
+    when :long
+      job_duration_seconds(job.duration_seconds)
+    else
+      raise "Unknown duration format #{format}"
+    end
   end
 
   def job_duration_seconds(seconds)
-    return '-' if seconds.nil?
-
     ActiveSupport::Duration.build(seconds).inspect
+  end
+
+  def job_duration_seconds_short(seconds)
+    hours   = seconds / 3_600
+    minutes = (seconds % 3_600) / 60
+    seconds %= 60
+
+    format('%<h>d:%<m>02d:%<s>02d', h: hours, m: minutes, s: seconds)
   end
 
   def job_badge_classes(report)

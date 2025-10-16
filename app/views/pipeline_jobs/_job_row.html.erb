@@ -27,7 +27,7 @@
     <td><%= job.destination.name %></td>
   <% end %>
   <td><%= job_started_at_label(report, job) %></td>
-  <td><%= job_duration_seconds(report&.duration_seconds) %></td>
+  <td class="text-end"><%= job_duration(report, format: :short) %></td>
   <td>
     <%= link_to number_to_delimited(report&.pages_extracted),
                 pipeline_harvest_definition_extraction_definition_extraction_job_path(
