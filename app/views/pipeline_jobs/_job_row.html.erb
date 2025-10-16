@@ -3,10 +3,18 @@
     <td><%= link_to job.pipeline.name, job.pipeline %></td>
   <% end %>
   <td>
-    <% if report.present? %>
-      <%= report.harvest_job&.name %>
-    <% else %>
-      <%= HarvestDefinition.find(definition_id).name %>
+    <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
+          job.pipeline.id,
+          report.harvest_definition.id,
+          report.extraction_definition.id,
+          report.harvest_job.extraction_job_id,
+          job.id
+        ) do %>
+      <% if report.present? %>
+        <%= report.harvest_job&.name %>
+      <% else %>
+        <%= HarvestDefinition.find(definition_id).name %>
+      <% end %>
     <% end %>
   </td>
   <td>
@@ -20,7 +28,15 @@
   <% end %>
   <td><%= job_started_at_label(report, job) %></td>
   <td><%= job_duration_seconds(report&.duration_seconds) %></td>
-  <td><%= report&.pages_extracted %></td>
+  <td>
+    <%= link_to report&.pages_extracted,
+                pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                  job.pipeline.id,
+                  report.harvest_definition.id,
+                  report.extraction_definition.id,
+                  report.harvest_job.extraction_job_id
+                ) %>
+  </td>
   <td><%= report&.records_transformed %></td>
   <td><%= report&.records_loaded %></td>
   <td><%= report&.records_rejected %></td>
