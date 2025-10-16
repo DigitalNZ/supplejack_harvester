@@ -5,18 +5,18 @@
 <div class='float-end mb-2'>
   <%= form_with url: jobs_path, method: :get, remote: true, html: { id: 'filters-form', class: 'form-inline' } do %>
     <div class="form-group me-2 float-end">
-      <%= label_tag :destination, 'Destination', class: 'form-label me-1' %>
-      <%= select_tag :destination, options_for_select(Destination.distinct.pluck(:name).compact.prepend('All'), params[:destination]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
+      <%= label_tag :run_by, 'Last Run By', class: 'form-label me-1' %>
+      <%= select_tag :run_by, options_for_select(User.distinct.pluck(:username).compact.prepend('Schedule').prepend('All'), params[:run_by]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
     </div>
-
+    
     <div class="form-group me-2 float-end">
       <%= label_tag :status, 'Status', class: 'form-label me-1' %>
       <%= select_tag :status, options_for_select(PipelineJob.distinct.pluck(:status).compact.prepend('All'), params[:status]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
     </div>
 
     <div class="form-group me-2 float-end">
-      <%= label_tag :run_by, 'Last Run By', class: 'form-label me-1' %>
-      <%= select_tag :run_by, options_for_select(User.distinct.pluck(:username).compact.prepend('All'), params[:run_by]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
+      <%= label_tag :destination, 'Destination', class: 'form-label me-1' %>
+      <%= select_tag :destination, options_for_select(Destination.distinct.pluck(:name).compact.prepend('All'), params[:destination]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
     </div>
   <% end %>
 </div>
