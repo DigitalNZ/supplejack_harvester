@@ -9,12 +9,15 @@
       <%= HarvestDefinition.find(definition_id).name %>
     <% end %>
   </td>
-  <td><%= job_launched_by_label(job) %></td>
   <td>
     <span class="<%= job_badge_classes(report) %>">
       <%= job_status_label(report, job) %>
     </span>
   </td>
+  <td><%= job_launched_by_label(job) %></td>
+  <% if show_destination_col %>
+    <td><%= job.destination.name %></td>
+  <% end %>
   <td><%= job_started_at_label(report, job) %></td>
   <td><%= job_duration_seconds(report&.duration_seconds) %></td>
   <td><%= report&.pages_extracted %></td>
@@ -22,50 +25,4 @@
   <td><%= report&.records_loaded %></td>
   <td><%= report&.records_rejected %></td>
   <td><%= report&.records_deleted %></td>
-  <td><%= job_priority_label(report) %></td>
-  <td><%= report&.last_updated&.strftime('%H:%M:%S %d/%m/%y') %></td>
-  <% if show_destination_col %>
-    <td><%= job.destination.name %></td>
-  <% end %>
-  <td>
-    <% if report&.harvest_definition %>
-      <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <% if report.harvest_job && report.harvest_job.extraction_job_id.present? %>
-          <li>
-            <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
-                  job.pipeline.id,
-                  report.harvest_definition.id,
-                  report.extraction_definition.id,
-                  report.harvest_job.extraction_job_id
-                ), class: 'dropdown-item' do %>
-              <i class="bi bi-link-45deg me-2"></i> View Extracted Data
-            <% end %>
-          </li>
-          <% if row_index == 0 %>
-            <li>
-              <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
-                    job.pipeline.id,
-                    report.harvest_definition.id,
-                    report.extraction_definition.id,
-                    report.harvest_job.extraction_job_id,
-                    job.id
-                  ), class: 'dropdown-item' do %>
-                <i class="bi bi-link-45deg me-2"></i> Job Details
-              <% end %>
-            </li>
-          <% end %>
-        <% end %>
-
-        <% if report.status == 'running' || report.status == 'queued' %>
-          <li>
-            <%= button_to cancel_pipeline_pipeline_job_path(job.pipeline.id, report.pipeline_job_id),
-                          class: 'dropdown-item' do %>
-              <i class="bi bi-x-circle me-2"></i> Cancel job
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
-    <% end %>
-  </td>
 </tr>
