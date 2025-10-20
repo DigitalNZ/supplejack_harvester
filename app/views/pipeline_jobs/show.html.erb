@@ -16,7 +16,7 @@
     </li>
 
     <li class='nav-item'>
-      <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link active' %>
+      <%= link_to 'Jobs', "#{pipeline_pipeline_jobs_path(@pipeline)}?run_by=All&status=All&destination=All", class: 'nav-link active' %>
     </li>
   </ul>
 <% end %>
