@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_09_18_212601) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_16_000000) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -245,10 +245,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_18_212601) do
     t.json "completion_entries", null: false
     t.integer "completion_count", default: 0
     t.datetime "last_completed_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.integer "process_type", default: 0, null: false
     t.string "job_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["completion_type"], name: "index_job_completion_summaries_on_completion_type"
     t.index ["last_completed_at"], name: "index_job_completion_summaries_on_last_completed_at"
     t.index ["process_type"], name: "index_job_completion_summaries_on_process_type"
@@ -423,6 +423,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_18_212601) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  add_foreign_key "api_response_reports", "automation_steps"
+  add_foreign_key "automation_step_templates", "automation_templates"
+  add_foreign_key "automation_step_templates", "pipelines"
   add_foreign_key "automation_steps", "automations"
   add_foreign_key "automation_steps", "pipelines"
   add_foreign_key "automation_steps", "users", column: "launched_by_id"
