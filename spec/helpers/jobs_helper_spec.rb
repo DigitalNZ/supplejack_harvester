@@ -98,4 +98,47 @@ RSpec.describe JobsHelper do
       expect(job_duration_seconds(job.duration_seconds)).to eq '-'
     end
   end
+
+  describe '#job_entries_info' do
+    let(:collection) do
+      # Using a mock object instead of actual ActiveRecord::Relation
+      double(
+        offset_value: 10,
+        length: 10,
+        total_count: 50
+      )
+    end
+
+    it 'returns formatted job entries info' do
+      expect(helper.job_entries_info(collection)).to eq('11 - 20 of 50 jobs')
+    end
+
+    context 'when on first page' do
+      let(:collection) do
+        double(
+          offset_value: 0,
+          length: 10,
+          total_count: 50
+        )
+      end
+
+      it 'returns entries starting from 1' do
+        expect(helper.job_entries_info(collection)).to eq('1 - 10 of 50 jobs')
+      end
+    end
+
+    context 'when only a few results exist' do
+      let(:collection) do
+        double(
+          offset_value: 0,
+          length: 5,
+          total_count: 5
+        )
+      end
+
+      it 'returns correct range for partial page' do
+        expect(helper.job_entries_info(collection)).to eq('1 - 5 of 5 jobs')
+      end
+    end
+  end  
 end

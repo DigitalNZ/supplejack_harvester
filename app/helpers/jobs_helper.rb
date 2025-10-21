@@ -77,4 +77,11 @@ module JobsHelper
       'No priority'
     end
   end
+
+  def job_entries_info(collection)
+    start = collection.offset_value + 1
+    end_count = collection.offset_value + collection.length
+    total = collection.total_count
+    "#{start} - #{end_count} of #{total} jobs"
+  end
 end
