@@ -38,7 +38,7 @@
             <%= render 'pipeline_jobs/job_row',
                        job: job,
                        report: report,
-                       definition_id: definition_id,
+                       harvest_definition: HarvestDefinition.find(definition_id),
                        show_pipeline_col: show_pipeline_col,
                        show_destination_col: show_destination_col %>
           <% end %>

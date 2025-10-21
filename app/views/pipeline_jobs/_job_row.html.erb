@@ -1,24 +1,25 @@
+<% extraction_job_id = report&.harvest_job&.extraction_job_id || job.extraction_job_id %>
+
 <tr>
   <% if show_pipeline_col %>
     <td><%= link_to job.pipeline.name, job.pipeline %></td>
   <% end %>
   <td>
-    <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
-          job.pipeline.id,
-          report.harvest_definition.id,
-          report.extraction_definition.id,
-          report.harvest_job.extraction_job_id,
-          job.id
-        ) do %>
-      <% if report.present? %>
-        <%= report.harvest_job&.name %>
-      <% else %>
-        <%= HarvestDefinition.find(definition_id).name %>
-      <% end %>
+    <% if extraction_job_id.blank? %>
+      <%= harvest_definition.name %>
+    <% else %>
+      <%= link_to report.harvest_job&.name,
+                  pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
+                    job.pipeline.id,
+                    harvest_definition.id,
+                    harvest_definition.extraction_definition.id,
+                    extraction_job_id,
+                    job.id
+                  ) %>
     <% end %>
   </td>
   <td class="d-inline-flex align-items-center gap-1">
-    <span class="<%= job_badge_classes(report) %>">
+    <span class="<%= job_badge_classes(report, job) %>">
       <%= job_status_label(report, job) %>
     </span>
     <%# Add the link to errors here %>
@@ -31,13 +32,15 @@
   <td><%= job_started_at_label(report, job) %></td>
   <td class="text-end"><%= job_duration(report, format: :short) %></td>
   <td>
-    <%= link_to number_to_delimited(report&.pages_extracted),
-                pipeline_harvest_definition_extraction_definition_extraction_job_path(
-                  job.pipeline.id,
-                  report.harvest_definition.id,
-                  report.extraction_definition.id,
-                  report.harvest_job.extraction_job_id
-                ) %>
+    <% if extraction_job_id.present? %>
+      <%= link_to number_to_delimited(report&.pages_extracted),
+                  pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                    job.pipeline.id,
+                    harvest_definition.id,
+                    harvest_definition.extraction_definition.id,
+                    extraction_job_id
+                  ) %>
+    <% end %>
   </td>
   <td><%= number_to_delimited(report&.records_transformed) %></td>
   <td><%= number_to_delimited(report&.records_loaded) %></td>

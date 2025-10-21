@@ -51,11 +51,13 @@ module JobsHelper
     format('%<h>d:%<m>02d:%<s>02d', h: hours, m: minutes, s: seconds)
   end
 
-  def job_badge_classes(report)
+  def job_badge_classes(report, job)
+    status = report&.status || job.status
+
     class_names(
       'badge',
-      'bg-primary': report&.status == 'completed',
-      'bg-secondary': %w[running queued cancelled].include?(report&.status)
+      'bg-primary': status == 'completed',
+      'bg-secondary': %w[running queued cancelled].include?(status)
     )
   end
 
