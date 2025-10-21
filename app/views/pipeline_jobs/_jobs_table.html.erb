@@ -32,25 +32,20 @@
         </tr>
       </thead>
       <tbody>
-        <% total_jobs = jobs.count %>
-
-        <% jobs.each.with_index(1) do |job, outer_index| %>
-          <% inner_index = 0 %>
-          <% job.harvest_definitions_to_run.zip(job.harvest_reports) do |definition_id, report| %>
+        <% total_jobs = jobs.size %>
+        <% jobs.each.with_index(1) do |job, job_idx| %>
+          <% job.harvest_definitions_to_run.zip(job.harvest_reports).each do |definition_id, report| %>
             <%= render 'pipeline_jobs/job_row',
                        job: job,
                        report: report,
                        definition_id: definition_id,
                        show_pipeline_col: show_pipeline_col,
-                       show_destination_col: show_destination_col,
-                       row_index: inner_index %>
-            <% inner_index += 1 %>
-
-            <% if outer_index <= total_jobs - 1 %>
-              <tr class='table__divider'>
-                <td colspan='<%= 13 + (show_pipeline_col ? 1 : 0) + (show_destination_col ? 1 : 0) %>'><hr></td>
-              </tr>
-            <% end %>
+                       show_destination_col: show_destination_col %>
+          <% end %>
+          <% if job_idx != total_jobs %>
+            <tr class='table__divider'>
+              <td colspan='<%= 10 + (show_pipeline_col ? 1 : 0) + (show_destination_col ? 1 : 0) %>'><hr></td>
+            </tr>
           <% end %>
         <% end %>
       </tbody>
