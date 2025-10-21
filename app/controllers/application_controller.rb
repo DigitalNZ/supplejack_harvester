@@ -18,16 +18,16 @@ class ApplicationController < ActionController::Base
 
     jobs = jobs.where(pipeline_id: pipeline_id) if pipeline_id.present?
     jobs = jobs.order(updated_at: :desc).page(params[:page])
-    jobs = jobs.where(status: status) if status != 'All'
+    jobs = jobs.where(status: status) if status.present? && status != 'All'
 
     if destination != 'All'
       dest = Destination.find_by(name: destination)
-      jobs = jobs.where(destination: dest) if dest
+      jobs = jobs.where(destination: dest) if dest.present?
     end
 
     if run_by != 'All'
       user = User.find_by(username: run_by)
-      jobs = jobs.where(launched_by: user) if user
+      jobs = jobs.where(launched_by: user) if user.present?
     end
 
     jobs
