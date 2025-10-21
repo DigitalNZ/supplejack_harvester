@@ -6,7 +6,7 @@ class JobsController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.js # Add this for AJAX fallback
+      format.js
     end
   end
 end
