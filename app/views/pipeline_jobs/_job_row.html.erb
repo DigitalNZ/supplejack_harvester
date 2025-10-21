@@ -17,10 +17,12 @@
       <% end %>
     <% end %>
   </td>
-  <td>
+  <td class="d-inline-flex align-items-center gap-1">
     <span class="<%= job_badge_classes(report) %>">
       <%= job_status_label(report, job) %>
     </span>
+    <%# Add the link to errors here %>
+    <%# link_to '3', '/', class: 'badge text-bg-danger text-decoration-none' %>
   </td>
   <td><%= job_launched_by_label(job) %></td>
   <% if show_destination_col %>
