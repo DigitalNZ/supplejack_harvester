@@ -46,7 +46,7 @@ module Extraction
       source_id = harvest_definition&.source_id
       return unless source_id
 
-      log_stop_condition_hit(error, details)
+      log_stop_condition_hit(error, nil)
       raise
     end
 
@@ -81,7 +81,7 @@ module Extraction
           stop_condition_name: 'Set number limit reached',
           completion_type: :stop_condition
         }
-        log_stop_condition_hit(error, details)
+        log_stop_condition_hit(nil, details)
         return true
       end
 
