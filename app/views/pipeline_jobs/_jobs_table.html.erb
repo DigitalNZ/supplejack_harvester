@@ -7,27 +7,42 @@
 <div class='mb-2'>
   <%= form_with url: jobs_path, method: :get, remote: true, html: { id: 'filters-form', class: 'row mb-5 float-end' } do %>
     <%= hidden_field_tag :pipeline_id, params[:pipeline_id] %>
-    
+
     <div class="col-auto pe-0">
       <%= label_tag :run_by, 'Last Run By:', class: 'col-form-label me-1' %>
     </div>
     <div class="col-auto">
-      <%= select_tag :run_by, options_for_select(User.distinct.pluck(:username).compact.sort.prepend('Schedule').prepend('All'), params[:run_by]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
+      <%= select_tag
+            :run_by,
+            options_for_select(User.distinct.pluck(:username).compact.sort.prepend('Schedule').prepend('All'),
+            params[:run_by]),
+            class: 'form-select',
+            onchange: 'this.form.requestSubmit()' %>
     </div>
 
     <div class="col-auto pe-0">
       <%= label_tag :status, 'Status:', class: 'col-form-label me-1' %>
     </div>
     <div class="col-auto">
-      <%= select_tag :status, options_for_select(PipelineJob.distinct.pluck(:status).compact.prepend('All'), params[:status]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
+      <%= select_tag
+            :status,
+            options_for_select(PipelineJob.distinct.pluck(:status).compact.prepend('All'),
+            params[:status]),
+            class: 'form-select',
+            onchange: 'this.form.requestSubmit()' %>
     </div>
 
     <div class="col-auto pe-0">
       <%= label_tag :destination, 'Destination:', class: 'col-form-label me-1' %>
     </div>
 
-    <div class="col-auto">  
-      <%= select_tag :destination, options_for_select(Destination.distinct.pluck(:name).compact.prepend('All'), params[:destination]), class: 'form-select', onchange: 'this.form.requestSubmit()' %>
+    <div class="col-auto">
+      <%= select_tag
+            :destination,
+            options_for_select(Destination.distinct.pluck(:name).compact.prepend('All'),
+            params[:destination]),
+            class: 'form-select',
+            onchange: 'this.form.requestSubmit()' %>
     </div>
   <% end %>
 </div>
@@ -35,5 +50,6 @@
 <div class='clearfix'></div>
 
 <% if jobs.present? %>
-  <%= render partial: 'pipeline_jobs/table', locals: { jobs: jobs, show_pipeline_col: show_pipeline_col, show_destination_col: show_destination_col } %>
+  <%= render partial: 'pipeline_jobs/table',
+             locals: { jobs: jobs, show_pipeline_col: show_pipeline_col, show_destination_col: show_destination_col } %>
 <% end %>
