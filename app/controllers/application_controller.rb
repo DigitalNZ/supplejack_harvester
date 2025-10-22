@@ -21,6 +21,8 @@ class ApplicationController < ActionController::Base
   def filter_by_pipeline(jobs)
     return jobs if params[:pipeline_id].blank?
 
+    return jobs unless jobs.any? && jobs.first.try(:pipeline_id).present?
+
     jobs.where(pipeline_id: params[:pipeline_id])
   end
 
