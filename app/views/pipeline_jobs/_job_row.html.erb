@@ -8,7 +8,8 @@
     <% if extraction_job_id.blank? %>
       <%= harvest_definition.name %>
     <% else %>
-      <%= link_to report.harvest_job&.name,
+      <% name = report&.harvest_job&.name || harvest_definition.name %>
+      <%= link_to name,
                   pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
                     job.pipeline.id,
                     harvest_definition.id,
@@ -31,7 +32,7 @@
   <td class="text-end"><%= job_duration(report, format: :short) %></td>
   <td class="text-end">
     <% if extraction_job_id.present? %>
-      <%= link_to number_to_delimited(report&.pages_extracted),
+      <%= link_to number_to_delimited(report&.pages_extracted) || '',
                   pipeline_harvest_definition_extraction_definition_extraction_job_path(
                     job.pipeline.id,
                     harvest_definition.id,

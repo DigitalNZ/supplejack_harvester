@@ -27,7 +27,7 @@ module JobsHelper
   end
 
   def job_duration(job, format: :long)
-    return '-' if job&.duration_seconds.nil?
+    return if job&.duration_seconds.nil?
 
     case format
     when :short
