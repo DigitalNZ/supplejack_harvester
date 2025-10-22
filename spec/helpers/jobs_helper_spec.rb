@@ -101,7 +101,6 @@ RSpec.describe JobsHelper do
 
   describe '#job_entries_info' do
     let(:collection) do
-      # Using a mock object instead of actual ActiveRecord::Relation
       double(
         offset_value: 10,
         length: 10,
