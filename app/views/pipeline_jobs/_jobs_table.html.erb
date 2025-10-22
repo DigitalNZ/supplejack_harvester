@@ -3,7 +3,7 @@
     <h3><%= job_entries_info jobs %></h3>
   </div>
 
-  <%= form_with url: jobs_path, method: :get, remote: true, html: { id: 'filters-form', class: 'row mb-5 float-end' } do %>
+  <%= form_with url: jobs_path, method: :get, remote: true, html: { id: 'filters-form', class: 'row mb-3 float-end' } do %>
     <% submit = 'this.form.requestSubmit()' %>
     <% klass = 'form-select' %>
     <%= hidden_field_tag :pipeline_id, params[:pipeline_id] %>
