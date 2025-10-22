@@ -8,30 +8,43 @@ class ApplicationController < ActionController::Base
   include ExtractionReduxState
   include SchemaReduxState
 
-  # rubocop:disable Metrics/AbcSize
-  # rubocop:disable Metrics/MethodLength
   def paginate_and_filter_jobs(jobs)
-    status      = params[:status]
-    destination = params[:destination]
-    run_by      = params[:run_by]
-    pipeline_id = params[:pipeline_id]
-
-    jobs = jobs.where(pipeline_id: pipeline_id) if pipeline_id.present?
+    jobs = filter_by_pipeline(jobs)
     jobs = jobs.order(updated_at: :desc).page(params[:page])
-    jobs = jobs.where(status: status) if status.present? && status != 'All'
-
-    if destination != 'All'
-      dest = Destination.find_by(name: destination)
-      jobs = jobs.where(destination: dest) if dest.present?
-    end
-
-    if run_by != 'All'
-      user = User.find_by(username: run_by)
-      jobs = jobs.where(launched_by: user) if user.present?
-    end
-
-    jobs
+    jobs = filter_by_status(jobs)
+    jobs = filter_by_destination(jobs)
+    filter_by_run_by(jobs)
   end
-  # rubocop:enable Metrics/AbcSize
-  # rubocop:enable Metrics/MethodLength
+
+  private
+
+  def filter_by_pipeline(jobs)
+    return jobs if params[:pipeline_id].blank?
+
+    jobs.where(pipeline_id: params[:pipeline_id])
+  end
+
+  def filter_by_status(jobs)
+    return jobs if params[:status].blank? || params[:status] == 'All'
+
+    jobs.where(status: params[:status])
+  end
+
+  def filter_by_destination(jobs)
+    return jobs if params[:destination] == 'All'
+
+    destination = Destination.find_by(name: params[:destination])
+    return jobs if destination.blank?
+
+    jobs.where(destination: destination)
+  end
+
+  def filter_by_run_by(jobs)
+    return jobs if params[:run_by] == 'All'
+
+    user = User.find_by(username: params[:run_by])
+    return jobs if user.blank?
+
+    jobs.where(launched_by: user)
+  end
 end
