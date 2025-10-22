@@ -31,7 +31,7 @@
   <% end %>
   <td><%= job_started_at_label(report, job) %></td>
   <td class="text-end"><%= job_duration(report, format: :short) %></td>
-  <td>
+  <td class="text-end">
     <% if extraction_job_id.present? %>
       <%= link_to number_to_delimited(report&.pages_extracted),
                   pipeline_harvest_definition_extraction_definition_extraction_job_path(
@@ -42,8 +42,8 @@
                   ) %>
     <% end %>
   </td>
-  <td><%= number_to_delimited(report&.records_transformed) %></td>
-  <td><%= number_to_delimited(report&.records_loaded) %></td>
-  <td><%= number_to_delimited(report&.records_rejected) %></td>
-  <td><%= number_to_delimited(report&.records_deleted) %></td>
+  <td class="text-end"><%= number_to_delimited(report&.records_transformed) %></td>
+  <td class="text-end"><%= number_to_delimited(report&.records_loaded) %></td>
+  <td class="text-end"><%= number_to_delimited(report&.records_rejected) %></td>
+  <td class="text-end"><%= number_to_delimited(report&.records_deleted) %></td>
 </tr>
