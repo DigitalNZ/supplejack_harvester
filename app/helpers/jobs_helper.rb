@@ -84,4 +84,21 @@ module JobsHelper
     total = collection.total_count
     "#{start} - #{end_count} of #{total} jobs"
   end
+
+  def jobs_filter_url(pipeline)
+    pipeline_url = pipeline_pipeline_jobs_path(pipeline)
+    "#{pipeline_url}?pipeline_id=#{pipeline.id}&run_by=All&status=All&destination=All"
+  end
+
+  def user_opts
+    User.distinct.pluck(:username).compact.sort.unshift('Schedule').unshift('All')
+  end
+
+  def pipeline_opts
+    PipelineJob.distinct.pluck(:status).compact.unshift('All')
+  end
+
+  def dest_opts
+    Destination.distinct.pluck(:name).compact.unshift('All')
+  end
 end

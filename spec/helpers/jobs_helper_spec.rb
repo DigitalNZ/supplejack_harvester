@@ -140,5 +140,15 @@ RSpec.describe JobsHelper do
         expect(helper.job_entries_info(collection)).to eq('1 - 5 of 5 jobs')
       end
     end
-  end  
+  end
+
+  describe '#jobs_filter_url' do
+    let(:pipeline) { create(:pipeline) }
+
+    it 'generates the correct jobs filter URL' do
+      expected_url = "#{pipeline_pipeline_jobs_path(pipeline)}?pipeline_id=#{pipeline.id}&run_by=All&status=All&destination=All"
+
+      expect(helper.jobs_filter_url(pipeline)).to eq(expected_url)
+    end
+  end
 end
