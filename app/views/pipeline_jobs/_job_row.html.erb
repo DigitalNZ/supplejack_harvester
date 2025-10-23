@@ -2,8 +2,10 @@
 
 <tr>
   <% if show_pipeline_col %>
-    <td><%= link_to job.pipeline.name, job.pipeline %></td>
+    <td><%= link_to job.pipeline.name, job.pipeline unless row_index.positive? %></td>
   <% end %>
+  <td><%= job.destination.name unless row_index.positive? %></td>
+  <td><%= job_launched_by_label(job) unless row_index.positive? %></td>
   <td>
     <% if extraction_job_id.blank? %>
       <%= harvest_definition.name %>
@@ -26,8 +28,6 @@
     <%# Add the link to errors here %>
     <%# link_to '3', '/', class: 'badge text-bg-danger text-decoration-none' %>
   </td>
-  <td><%= job_launched_by_label(job) %></td>
-  <td><%= job.destination.name %></td>
   <td><%= job_started_at_label(report, job) %></td>
   <td class="text-end"><%= job_duration(report, format: :short) %></td>
   <td class="text-end">

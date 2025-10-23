@@ -16,12 +16,10 @@
           <% if show_pipeline_col %>
             <th scope="col">Pipeline</th>
           <% end %>
+          <th scope="col">Destination</th>
+          <th scope="col">Run by</th>
           <th scope="col">Job</th>
           <th scope="col">Status</th>
-          <th scope="col">Run by</th>
-          <% if show_destination_col %>
-            <th scope="col">Destination</th>
-          <% end %>
           <th scope="col">Time started</th>
           <th scope="col" class="text-end">Duration</th>
           <th scope="col" class="text-end">Pages</th>
@@ -34,16 +32,17 @@
       <tbody>
         <% total_jobs = jobs.size %>
         <% jobs.each.with_index(1) do |job, job_idx| %>
-          <% job.harvest_definitions_to_run.zip(job.harvest_reports).each do |definition_id, report| %>
+          <% job.harvest_definitions_to_run.zip(job.harvest_reports).each_with_index do |(definition_id, report), row_index| %>
             <%= render 'pipeline_jobs/job_row',
                        job: job,
                        report: report,
                        harvest_definition: HarvestDefinition.find(definition_id),
-                       show_pipeline_col: show_pipeline_col %>
+                       show_pipeline_col: show_pipeline_col,
+                       row_index: %>
           <% end %>
           <% if job_idx != total_jobs %>
             <tr class='table__divider'>
-              <td colspan='<%= 10 + (show_pipeline_col ? 1 : 0) + (show_destination_col ? 1 : 0) %>'><hr></td>
+              <td colspan='<%= 11 + (show_pipeline_col ? 1 : 0) %>'><hr></td>
             </tr>
           <% end %>
         <% end %>
