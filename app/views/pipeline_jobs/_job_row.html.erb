@@ -26,9 +26,7 @@
     <%# link_to '3', '/', class: 'badge text-bg-danger text-decoration-none' %>
   </td>
   <td><%= job_launched_by_label(job) %></td>
-  <% if show_destination_col %>
-    <td><%= job.destination.name %></td>
-  <% end %>
+  <td><%= job.destination.name %></td>
   <td><%= job_started_at_label(report, job) %></td>
   <td class="text-end"><%= job_duration(report, format: :short) %></td>
   <td class="text-end">
