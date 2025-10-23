@@ -43,6 +43,10 @@ Rails/Date:
 Style/DateTime:
   Enabled: true
 
+Metrics/AbcSize:
+  Exclude:
+    - "lib/tasks/reset_extractions.rake"
+
 Metrics/ClassLength:
   Exclude:
     - "app/models/job_completion_summary.rb"
@@ -52,6 +56,7 @@ Metrics/ClassLength:
 Metrics/MethodLength:
   Exclude:
     - "app/supplejack/extraction/execution.rb"
+    - "lib/tasks/reset_extractions.rake"
 
 Lint/RescueException:
   Exclude:
