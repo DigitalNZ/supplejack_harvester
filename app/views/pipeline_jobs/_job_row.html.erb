@@ -22,7 +22,7 @@
     <% end %>
   </td>
   <td class="d-inline-flex align-items-center gap-1">
-    <span class="<%= job_badge_classes(report, job) %>">
+    <span class="<%= job_badge_classes(report&.status || job.status) %>">
       <%= job_status_label(report, job) %>
     </span>
     <%# Add the link to errors here %>
