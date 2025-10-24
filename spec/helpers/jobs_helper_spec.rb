@@ -68,14 +68,14 @@ RSpec.describe JobsHelper do
       expect(job_duration(job)).to eq ActiveSupport::Duration.build(job.duration_seconds).inspect
     end
 
-    it 'returns - if start_time is nil' do
+    it 'returns empty string if start_time is nil' do
       job.start_time = nil
-      expect(job_duration(job)).to eq '-'
+      expect(job_duration(job)).to eq ''
     end
 
-    it 'returns - if end_time is nil' do
+    it 'returns empty string if end_time is nil' do
       job.end_time = nil
-      expect(job_duration(job)).to eq '-'
+      expect(job_duration(job)).to eq ''
     end
   end
 
@@ -88,14 +88,14 @@ RSpec.describe JobsHelper do
       )
     end
 
-    it 'returns - if start_time is nil' do
+    it 'returns empty string if start_time is nil' do
       job.start_time = nil
-      expect(job_duration_seconds(job.duration_seconds)).to eq '-'
+      expect(job_duration_seconds(job.duration_seconds)).to eq ''
     end
 
-    it 'returns - if end_time is nil' do
+    it 'returns empty string if end_time is nil' do
       job.end_time = nil
-      expect(job_duration_seconds(job.duration_seconds)).to eq '-'
+      expect(job_duration_seconds(job.duration_seconds)).to eq ''
     end
   end
 
