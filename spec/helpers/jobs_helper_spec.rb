@@ -98,4 +98,56 @@ RSpec.describe JobsHelper do
       expect(job_duration_seconds(job.duration_seconds)).to eq ''
     end
   end
+
+  describe '#job_entries_info' do
+    let(:collection) do
+      double(
+        offset_value: 10,
+        length: 10,
+        total_count: 50
+      )
+    end
+
+    it 'returns formatted job entries info' do
+      expect(helper.job_entries_info(collection)).to eq('11 - 20 of 50 jobs')
+    end
+
+    context 'when on first page' do
+      let(:collection) do
+        double(
+          offset_value: 0,
+          length: 10,
+          total_count: 50
+        )
+      end
+
+      it 'returns entries starting from 1' do
+        expect(helper.job_entries_info(collection)).to eq('1 - 10 of 50 jobs')
+      end
+    end
+
+    context 'when only a few results exist' do
+      let(:collection) do
+        double(
+          offset_value: 0,
+          length: 5,
+          total_count: 5
+        )
+      end
+
+      it 'returns correct range for partial page' do
+        expect(helper.job_entries_info(collection)).to eq('1 - 5 of 5 jobs')
+      end
+    end
+  end
+
+  describe '#jobs_filter_url' do
+    let(:pipeline) { create(:pipeline) }
+
+    it 'generates the correct jobs filter URL' do
+      expected_url = "#{pipeline_pipeline_jobs_path(pipeline)}?pipeline_id=#{pipeline.id}&run_by=All&status=All&destination=All"
+
+      expect(helper.jobs_filter_url(pipeline)).to eq(expected_url)
+    end
+  end
 end

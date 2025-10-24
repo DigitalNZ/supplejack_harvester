@@ -2,6 +2,7 @@
 <% extraction_id = @extraction_definition&.id %>
 <% transformation_id = @transformation_definition&.id %>
 <% harvest_definition_id = @harvest_definition&.id %>
+<% @destination = @destination.is_a?(String) ? Destination.find_by(name: @destination) : @destination %>
 <% destination_id = @destination&.id %>
 <% automation_template_id = @automation_template&.id %>
 <% automation_id = @automation&.id %>
