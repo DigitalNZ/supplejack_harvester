@@ -1,71 +1,48 @@
+<% extraction_job_id = report&.harvest_job&.extraction_job_id || job.extraction_job_id %>
+
 <tr>
   <% if show_pipeline_col %>
-    <td><%= link_to job.pipeline.name, job.pipeline %></td>
+    <td><%= link_to job.pipeline.name, job.pipeline unless row_index.positive? %></td>
   <% end %>
+  <td><%= job.destination.name unless row_index.positive? %></td>
+  <td><%= job_launched_by_label(job) unless row_index.positive? %></td>
   <td>
-    <% if report.present? %>
-      <%= report.harvest_job&.name %>
+    <% if extraction_job_id.blank? %>
+      <%= harvest_definition.name %>
     <% else %>
-      <%= HarvestDefinition.find(definition_id).name %>
+      <% name = report&.harvest_job&.name || harvest_definition.name %>
+      <%= link_to name,
+                  pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
+                    job.pipeline.id,
+                    harvest_definition.id,
+                    harvest_definition.extraction_definition.id,
+                    extraction_job_id,
+                    job.id
+                  ) %>
     <% end %>
   </td>
-  <td><%= job_launched_by_label(job) %></td>
-  <td>
-    <span class="<%= job_badge_classes(report) %>">
+  <td class="d-inline-flex align-items-center gap-1">
+    <span class="<%= job_badge_classes(report&.status || job.status) %>">
       <%= job_status_label(report, job) %>
     </span>
+    <%# Add the link to errors here %>
+    <%# link_to '3', '/', class: 'badge text-bg-danger text-decoration-none' %>
   </td>
   <td><%= job_started_at_label(report, job) %></td>
-  <td><%= job_duration_seconds(report&.duration_seconds) %></td>
-  <td><%= report&.pages_extracted %></td>
-  <td><%= report&.records_transformed %></td>
-  <td><%= report&.records_loaded %></td>
-  <td><%= report&.records_rejected %></td>
-  <td><%= report&.records_deleted %></td>
-  <td><%= job_priority_label(report) %></td>
-  <td><%= report&.last_updated&.strftime('%H:%M:%S %d/%m/%y') %></td>
-  <% if show_destination_col %>
-    <td><%= job.destination.name %></td>
-  <% end %>
-  <td>
-    <% if report&.harvest_definition %>
-      <i class="bi bi-three-dots-vertical table__control" data-bs-toggle='dropdown'></i>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <% if report.harvest_job && report.harvest_job.extraction_job_id.present? %>
-          <li>
-            <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
-                  job.pipeline.id,
-                  report.harvest_definition.id,
-                  report.extraction_definition.id,
-                  report.harvest_job.extraction_job_id
-                ), class: 'dropdown-item' do %>
-              <i class="bi bi-link-45deg me-2"></i> View Extracted Data
-            <% end %>
-          </li>
-          <% if row_index == 0 %>
-            <li>
-              <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
+  <td class="text-end"><%= job_duration(report, format: :short) %></td>
+  <td class="text-end">
+    <% if extraction_job_id.present? %>
+      <%= link_to number_to_delimited(report&.pages_extracted) || '',
+                  pipeline_harvest_definition_extraction_definition_extraction_job_path(
                     job.pipeline.id,
-                    report.harvest_definition.id,
-                    report.extraction_definition.id,
-                    report.harvest_job.extraction_job_id,
-                    job.id
-                  ), class: 'dropdown-item' do %>
-                <i class="bi bi-link-45deg me-2"></i> Job Details
-              <% end %>
-            </li>
-          <% end %>
-        <% end %>
-
-        <% if report.status == 'running' || report.status == 'queued' %>
-          <li>
-            <%= button_to cancel_pipeline_pipeline_job_path(job.pipeline.id, report.pipeline_job_id),
-                          class: 'dropdown-item' do %>
-              <i class="bi bi-x-circle me-2"></i> Cancel job
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
+                    harvest_definition.id,
+                    harvest_definition.extraction_definition.id,
+                    extraction_job_id
+                  ) %>
     <% end %>
   </td>
+  <td class="text-end"><%= number_to_delimited(report&.records_transformed) %></td>
+  <td class="text-end"><%= number_to_delimited(report&.records_loaded) %></td>
+  <td class="text-end"><%= number_to_delimited(report&.records_rejected) %></td>
+  <td class="text-end"><%= number_to_delimited(report&.records_deleted) %></td>
 </tr>
