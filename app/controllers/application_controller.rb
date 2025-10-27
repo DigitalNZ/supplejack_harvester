@@ -9,10 +9,44 @@ class ApplicationController < ActionController::Base
   include SchemaReduxState
 
   def paginate_and_filter_jobs(jobs)
-    @status = params[:status]
+    jobs = filter_by_pipeline(jobs)
     jobs = jobs.order(updated_at: :desc).page(params[:page])
-    jobs = jobs.where(status: @status) if @status
+    jobs = filter_by_status(jobs)
+    jobs = filter_by_destination(jobs)
+    filter_by_run_by(jobs)
+  end
 
-    jobs
+  private
+
+  def filter_by_pipeline(jobs)
+    return jobs if params[:pipeline_id].blank?
+
+    return jobs unless jobs.any? && jobs.first.try(:pipeline_id).present?
+
+    jobs.where(pipeline_id: params[:pipeline_id])
+  end
+
+  def filter_by_status(jobs)
+    return jobs if params[:status].blank? || params[:status] == 'All'
+
+    jobs.where(status: params[:status])
+  end
+
+  def filter_by_destination(jobs)
+    return jobs if params[:destination] == 'All'
+
+    destination = Destination.find_by(name: params[:destination])
+    return jobs if destination.blank?
+
+    jobs.where(destination: destination)
+  end
+
+  def filter_by_run_by(jobs)
+    return jobs if params[:run_by] == 'All'
+
+    user = User.find_by(username: params[:run_by])
+    return jobs if user.blank?
+
+    jobs.where(launched_by: user)
   end
 end
