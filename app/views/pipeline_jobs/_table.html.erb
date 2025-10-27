@@ -25,11 +25,11 @@
           <% jobs.each.with_index(1) do |job, job_idx| %>
             <% job.harvest_definitions_to_run.zip(job.harvest_reports).each_with_index do |(definition_id, report), row_index| %>
               <%= render 'pipeline_jobs/job_row',
-                        job: job,
-                        report: report,
-                        harvest_definition: HarvestDefinition.find(definition_id),
-                        show_pipeline_col: show_pipeline_col,
-                        row_index: %>
+                         job: job,
+                         report: report,
+                         harvest_definition: HarvestDefinition.find(definition_id),
+                         show_pipeline_col: show_pipeline_col,
+                         row_index: %>
             <% end %>
             <% if job_idx != total_jobs %>
               <tr class='table__divider'>
