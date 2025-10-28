@@ -1,6 +1,4 @@
 .alert {
-  right: 1rem;
-  left: auto;
   --bs-alert-color: #{$white}
 }
 
@@ -11,7 +9,7 @@
 
 .alert-success {
   --bs-alert-bg: #{$primary};
-  --bs-alert-border-color: #{$primary}; 
+  --bs-alert-border-color: #{$primary};
 }
 
 .alert-dismissible .btn-close:hover {

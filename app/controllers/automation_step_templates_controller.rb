@@ -2,19 +2,19 @@
 
 class AutomationStepTemplatesController < ApplicationController
   before_action :set_automation_template
-  before_action :set_automation_step_template, only: %i[edit update destroy]
+  before_action :set_automation_step_template, only: %i[show update destroy]
+
+  def show
+    @pipelines = Pipeline.all
+    @selected_pipeline = @automation_step_template.pipeline
+    @harvest_definitions = @selected_pipeline.harvest_definitions if @selected_pipeline
+  end
 
   def new
     @automation_step_template = @automation_template.automation_step_templates.build(
       position: @automation_template.automation_step_templates.count
     )
     @pipelines = Pipeline.all
-  end
-
-  def edit
-    @pipelines = Pipeline.all
-    @selected_pipeline = @automation_step_template.pipeline
-    @harvest_definitions = @selected_pipeline.harvest_definitions if @selected_pipeline
   end
 
   def create
@@ -37,7 +37,7 @@ class AutomationStepTemplatesController < ApplicationController
       handle_successful_update
     else
       setup_form_variables
-      render :edit
+      render :show
     end
   end
 

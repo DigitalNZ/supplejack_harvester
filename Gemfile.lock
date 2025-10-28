@@ -208,6 +208,9 @@ GEM
       raabro (~> 1.4)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    gretel (5.0.1)
+      actionview (>= 6.1)
+      railties (>= 6.1)
     hashdiff (1.1.0)
     http (5.2.0)
       addressable (~> 2.8)
@@ -532,6 +535,7 @@ DEPENDENCIES
   faraday (~> 2.9)
   faraday-follow_redirects
   foreman
+  gretel
   jaro_winkler
   jsonpath
   kaminari
