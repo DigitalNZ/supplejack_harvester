@@ -18,7 +18,7 @@ class ExtractionJob < ApplicationRecord
   validates :kind, presence: true, inclusion: { in: kinds.keys }, if: -> { kind.present? }
 
   after_create do
-    self.name = "#{extraction_definition.name}__#{kind}-job-#{id}"
+    self.name = "#{id}_#{kind}-extraction"
     save!
   end
 

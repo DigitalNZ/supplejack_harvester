@@ -21,7 +21,7 @@ class ExtractionDefinition < ApplicationRecord
 
   after_create do
     if name.blank?
-      self.name = "#{pipeline.name.parameterize}__#{kind}-extraction-#{id}"
+      self.name = "#{id}_#{kind}-extraction"
       save!
     end
   end

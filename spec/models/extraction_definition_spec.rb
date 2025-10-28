@@ -10,7 +10,7 @@ RSpec.describe ExtractionDefinition do
 
   describe '#name' do
     it 'autogenerates a sensible name' do
-      expect(subject.name).to eq "national-library-of-new-zealand__harvest-extraction-#{subject.id}"
+      expect(subject.name).to eq "#{subject.id}_harvest-extraction"
     end
   end
 
