@@ -1,8 +1,7 @@
 <%= content_for(:title) { "#{@extraction_definition.name} job" } %>
+<% breadcrumb :pipeline_job, @pipeline_job %>
 
 <%= content_for(:header) do %>
-  <%= render 'shared/breadcrumb_nav' %>
-
   <div class="float-start">
     <h1><%= @extraction_job.extraction_definition.name %></h1>
     <strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong>
@@ -64,14 +63,12 @@
           <tr>
             <td>
               <% if @extraction_job.id %>
-                <%= link_to pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                <%= link_to @extraction_job.name, pipeline_harvest_definition_extraction_definition_extraction_job_path(
                       @pipeline.id,
                       @harvest_report.harvest_definition.id,
                       @harvest_report.extraction_definition.id,
                       @extraction_job.id
-                    ), class: 'dropdown-item' do %>
-                  <i class="bi bi-link-45deg me-2"></i> <%= @extraction_job.name %>
-                <% end %>
+                    ) %>
               <% else %>
                 New Extraction
               <% end %>

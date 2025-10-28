@@ -54,10 +54,10 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :schedules, except: %i[show]
+  resources :schedules, except: %i[edit]
 
   resources :jobs, only: %i[index]
-  resources :job_completion_summary, only: %i[index show], controller: 'job_completion_summaries'
+  resources :job_completion_summaries, only: %i[index show]
 
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
