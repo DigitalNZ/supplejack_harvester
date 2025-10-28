@@ -1,0 +1,48 @@
+<div id="jobs-table">
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-borderless table--jobs">
+        <thead>
+          <tr class='table-primary'>
+            <% if show_pipeline_col %>
+              <th scope="col">Pipeline</th>
+            <% end %>
+            <th scope="col">Destination</th>
+            <th scope="col">Run by</th>
+            <th scope="col">Job</th>
+            <th scope="col">Status</th>
+            <th scope="col">Time started</th>
+            <th scope="col" class="text-end">Duration</th>
+            <th scope="col" class="text-end">Pages</th>
+            <th scope="col" class="text-end">Transform</th>
+            <th scope="col" class="text-end">Load</th>
+            <th scope="col" class="text-end">Reject</th>
+            <th scope="col" class="text-end">Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% total_jobs = jobs.size %>
+          <% jobs.each.with_index(1) do |job, job_idx| %>
+            <% job.harvest_definitions_to_run.zip(job.harvest_reports).each_with_index do |(definition_id, report), row_index| %>
+              <%= render 'pipeline_jobs/job_row',
+                         job: job,
+                         report: report,
+                         harvest_definition: HarvestDefinition.find(definition_id),
+                         show_pipeline_col: show_pipeline_col,
+                         row_index: %>
+            <% end %>
+            <% if job_idx != total_jobs %>
+              <tr class='table__divider'>
+                <td colspan='<%= 11 + (show_pipeline_col ? 1 : 0) %>'><hr></td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class='clearfix mt-2'>
+    <%= paginate jobs, remote: true %>
+  </div>
+</div>
