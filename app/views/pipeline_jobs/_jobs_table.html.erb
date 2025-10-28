@@ -1,52 +1,40 @@
-<div class='float-start'>
-  <h3><%= page_entries_info jobs %></h3>
-</div>
+<div class='mb-2'>
+  <div class='float-start'>
+    <h3><%= job_entries_info jobs %></h3>
+  </div>
 
-<div class='float-end'>
-  <%= paginate jobs %>
+  <%= form_with url: jobs_path, method: :get, remote: true, html: { id: 'filters-form', class: 'row mb-3 float-end' } do %>
+    <% submit = 'this.form.requestSubmit()' %>
+    <% klass = 'form-select' %>
+    <%= hidden_field_tag :pipeline_id, params[:pipeline_id] %>
+
+    <div class="col-auto pe-0">
+      <%= label_tag :run_by, 'Last Run By:', class: 'col-form-label me-1' %>
+    </div>
+    <div class="col-auto">
+      <%= select_tag :run_by, options_for_select(user_opts, params[:run_by]), class: klass, onchange: submit %>
+    </div>
+
+    <div class="col-auto pe-0">
+      <%= label_tag :status, 'Status:', class: 'col-form-label me-1' %>
+    </div>
+    <div class="col-auto">
+      <%= select_tag :status, options_for_select(pipeline_opts, params[:status]), class: klass, onchange: submit %>
+    </div>
+
+    <div class="col-auto pe-0">
+      <%= label_tag :destination, 'Destination:', class: 'col-form-label me-1' %>
+    </div>
+
+    <div class="col-auto">
+      <%= select_tag :destination, options_for_select(dest_opts, params[:destination]), class: klass, onchange: submit %>
+    </div>
+  <% end %>
 </div>
 
 <div class='clearfix'></div>
 
-<div class='card'>
-  <div class="table-responsive">
-    <table class="table table-borderless table--jobs">
-      <thead>
-        <tr class='table-primary'>
-          <% if show_pipeline_col %>
-            <th scope="col">Pipeline</th>
-          <% end %>
-          <th scope="col">Destination</th>
-          <th scope="col">Run by</th>
-          <th scope="col">Job</th>
-          <th scope="col">Status</th>
-          <th scope="col">Time started</th>
-          <th scope="col" class="text-end">Duration</th>
-          <th scope="col" class="text-end">Pages</th>
-          <th scope="col" class="text-end">Transform</th>
-          <th scope="col" class="text-end">Load</th>
-          <th scope="col" class="text-end">Reject</th>
-          <th scope="col" class="text-end">Delete</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% total_jobs = jobs.size %>
-        <% jobs.each.with_index(1) do |job, job_idx| %>
-          <% job.harvest_definitions_to_run.zip(job.harvest_reports).each_with_index do |(definition_id, report), row_index| %>
-            <%= render 'pipeline_jobs/job_row',
-                       job: job,
-                       report: report,
-                       harvest_definition: HarvestDefinition.find(definition_id),
-                       show_pipeline_col: show_pipeline_col,
-                       row_index: %>
-          <% end %>
-          <% if job_idx != total_jobs %>
-            <tr class='table__divider'>
-              <td colspan='<%= 11 + (show_pipeline_col ? 1 : 0) %>'><hr></td>
-            </tr>
-          <% end %>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
-</div>
+<% if jobs.present? %>
+  <%= render partial: 'pipeline_jobs/table',
+             locals: { jobs: jobs, show_pipeline_col: show_pipeline_col, show_destination_col: show_destination_col } %>
+<% end %>
