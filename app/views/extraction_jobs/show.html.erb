@@ -4,8 +4,8 @@
   <%= render 'shared/breadcrumb_nav' %>
 
   <div class="float-start">
-    <h1><%= @extraction_job.extraction_definition.name %></h1>
-    <strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong>
+    <h1>Extracted Data</h1>
+    <p><%= @extraction_job.extraction_definition.name %>&nbsp;|&nbsp;<strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong></p>
   </div>
 
   <div class="float-end">
@@ -21,8 +21,8 @@
                     form_class: 'd-inline' %>
     <% end %>
 
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
-      <i class="bi bi-trash" aria-hidden="true"></i> Delete results
+    <button type="button" class="btn btn-danger px-1 py-1" data-bs-toggle="modal" data-bs-target="#delete-modal">
+      <i class="bi bi-trash" aria-hidden="true"></i> Delete data
     </button>
   </div>
 
@@ -36,17 +36,17 @@
   <p>It will delete all the data related to it.</p>
 <% end %>
 
-<ul class="list-group list-group-horizontal my-4">
-  <li class="list-group-item">Status: <%= job_status_text(@extraction_job) %></li>
-    <%- if @extraction_job.duration_seconds.present? %>
-      <li class="list-group-item">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></li>
-    <% end %>
-    <% if @document.present? %>
-      <li class="list-group-item">File size: <%= number_to_human_size(@document.size_in_bytes) %></li>
-    <% end %>
-    <li class="list-group-item">Folder size: <%= number_to_human_size(@extraction_job.extraction_folder_size_in_bytes) %></li>
-    <li class="list-group-item">Total Pages: <%= @extraction_job.documents.total_pages %></li>
-</ul>
+<div class="my-4">
+  <span>Status: <span class="badge bg-primary"><%= job_status_text(@extraction_job) %></span></span>&nbsp;|&nbsp;
+  <%- if @extraction_job.duration_seconds.present? %>
+    <span>Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>&nbsp;|&nbsp;
+  <% end %>
+  <% if @document.present? %>
+    <span>File size: <%= number_to_human_size(@document.size_in_bytes) %></span>&nbsp;|&nbsp;
+  <% end %>
+  <span>Folder size: <%= number_to_human_size(@extraction_job.extraction_folder_size_in_bytes) %></span>&nbsp;|&nbsp;
+  <span>Total Pages: <%= @extraction_job.documents.total_pages %></span>
+</div>
 
 <% if @document.blank? %>
   <% if @extraction_job.errored? %>
