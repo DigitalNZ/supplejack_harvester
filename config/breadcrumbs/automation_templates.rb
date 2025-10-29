@@ -23,11 +23,6 @@ crumb :new_automation_template do
   parent :automation_templates
 end
 
-crumb :automation_template_job do |pipeline_job|
-  link "Automation job overview ##{pipeline_job.id}"
-  parent :automation_template, pipeline_job.pipeline
-end
-
 crumb :automations do |automation_template|
   link "Automations", automation_template_path(automation_template, anchor: 'history')
   parent :automation_template, automation_template

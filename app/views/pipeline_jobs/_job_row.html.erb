@@ -2,29 +2,20 @@
 
 <tr>
   <% if show_pipeline_col %>
-    <td><%= link_to job.pipeline.name, job.pipeline unless row_index.positive? %></td>
+    <td><%= link_to job.pipeline.name, job.pipeline if row_index.zero? %></td>
   <% end %>
-  <td><%= job.destination.name unless row_index.positive? %></td>
-  <td><%= job_launched_by_label(job) unless row_index.positive? %></td>
+  <td><%= job.destination.name if row_index.zero? %></td>
+  <td><%= job_launched_by_label(job) if row_index.zero? %></td>
   <td>
     <% if extraction_job_id.blank? %>
       <%= harvest_definition.name %>
     <% else %>
       <% name = report&.harvest_job&.name || harvest_definition.name %>
-      <%= link_to name,
-                  pipeline_harvest_definition_extraction_definition_extraction_job_detail_path(
-                    job.pipeline.id,
-                    harvest_definition.id,
-                    harvest_definition.extraction_definition.id,
-                    extraction_job_id,
-                    job.id
-                  ) %>
+      <%= link_to name, pipeline_pipeline_job_path(job.pipeline.id, job.id) %>
     <% end %>
   </td>
   <td class="d-inline-flex align-items-center gap-1">
-    <span class="<%= job_badge_classes(report&.status || job.status) %>">
-      <%= job_status_label(report, job) %>
-    </span>
+    <%= job_status_badge(report, job) %>
     <%# Add the link to errors here %>
     <%# link_to '3', '/', class: 'badge text-bg-danger text-decoration-none' %>
   </td>

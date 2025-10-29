@@ -1,135 +1,31 @@
 <%= content_for(:title) { @pipeline.name_in_database } %>
-<% breadcrumb :automation_template_job, @pipeline_job %>
+<% breadcrumb :pipeline_job, @pipeline_job %>
 
 <%= content_for(:header) do %>
-  <div class='float-start'>
-    <h1><%= @pipeline.name %></h1>
-    <p><%= @pipeline.description %></p>
+  <div class="float-start">
+    <h1>Job <%= @pipeline_job.id %></h1>
+    <% if @pipeline_job.start_time %>
+      <strong><%= "Started #{@pipeline_job.start_time.to_fs(:verbose)}" %></strong>
+    <% else %>
+      <strong>Has not yet started</strong>
+    <% end %>
   </div>
 
-  <div class='clearfix'></div>
-
-  <div class='mt-4'></div>
-  <ul class="nav nav-tabs">
-    <li class='nav-item'>
-      <%= link_to 'Pipeline', pipeline_path(@pipeline), class: 'nav-link' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to 'Jobs', jobs_filter_url(@pipeline), class: 'nav-link active' %>
-    </li>
-  </ul>
-<% end %>
-
-<%- @pipeline_job.harvest_reports.each do |report| %>
-  <div class='card p-4 definition-group--spacer'>
-    <div class='d-flex'>
-      <div class='me-auto'>
-        <h4 class='mb-4'><%= report.harvest_job.harvest_definition.source_id %> </h4>
-      </div>
-    </div>
-
-    <%# Processing Pipeline %>
-    <div class='row'>
-      <div class='col'>
-        <div class='card harvest-card'>
-          <div class='card-body'>
-            <h5 class='card-title'>Extraction</h5>
-            <p><%= report.extraction_status %></p>
-            <p><%= number_with_delimiter(report.pages_extracted) %> pages</p>
-          </div>
-          <i class='bi bi-arrow-right harvest-card__right-arrow'></i>
-        </div>
-      </div>
-
-      <div class='col'>
-        <div class='card harvest-card'>
-          <div class='card-body'>
-            <h5 class='card-title'>Transformation</h5>
-            <p><%= report.transformation_status %></p>
-            <p>
-              <%= number_with_delimiter(report.records_transformed) %> transformations
-              <% if report.transformation_definition.fields.any?(&:reject_if?) %>
-                | <%= number_with_delimiter(report.records_rejected) %> rejected
-              <% end %>
-            </p>
-          </div>
-          <i class='bi bi-arrow-right harvest-card__right-arrow'></i>
-        </div>
-      </div>
-
-      <div class='col'>
-        <div class='harvest-card card'>
-          <div class='card-body'>
-            <h5 class='card-title'>Load</h5>
-            <p><%= report.load_status %></p>
-            <p><%= number_with_delimiter(report.records_loaded) %> processed</p>
-          </div>
-          <% if report.transformation_definition.fields.any?(&:delete_if?) %>
-            <i class='bi bi-arrow-right harvest-card__right-arrow'></i>
-          <% end %>
-        </div>
-      </div>
-
-      <% if report.transformation_definition.fields.any?(&:delete_if?) %>
-        <div class='col'>
-          <div class='card'>
-            <div class='card-body'>
-              <h5 class='card-title'>Delete</h5>
-              <p><%= report.load_status %></p>
-              <p><%= number_with_delimiter(report.records_deleted) %> marked for deletion</p>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    </div>
-
-    <%# Processing Rate %>
-    <div class='row mt-4'>
-      <div class='col-md-12'>
-        <div class='card'>
-          <div class='card-header bg-info text-white'>
-            <h5 class='mb-0'>Processing Statistics</h5>
-          </div>
-          <div class='card-body'>
-            <div class='row'>
-              <div class='col-md-4'>
-                <h6>Total Duration</h6>
-                <p><%= distance_of_time_in_words(report.duration_seconds) if report.duration_seconds %></p>
-              </div>
-              <div class='col-md-4'>
-                <h6>Started At</h6>
-                <p><%= report.extraction_start_time&.strftime('%B %d, %Y %H:%M:%S') %></p>
-              </div>
-              <div class='col-md-4'>
-                <h6>Latest Update</h6>
-                <p>
-                  <% latest_time = [
-                       report.extraction_end_time,
-                       report.transformation_end_time,
-                       report.load_end_time,
-                       report.delete_end_time
-                     ].compact.max %>
-                  <%= latest_time&.strftime('%B %d, %Y %H:%M:%S') %>
-                </p>
-              </div>
-            </div>
-            <% if report.records_loaded > 0 && report.duration_seconds && report.duration_seconds > 0 %>
-              <div class='row mt-3'>
-                <div class='col-md-12'>
-                  <h6>Processing Rate</h6>
-                  <p>
-                    <% records_per_second = (report.records_loaded.to_f / report.duration_seconds).round(2) %>
-                    <% records_per_minute = (records_per_second * 60).round(2) %>
-                    <strong><%= records_per_second %></strong> transformations processed per second
-                    (<strong><%= records_per_minute %></strong> per minute)
-                  </p>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="float-end">
+    <% unless @pipeline_job.finished? %>
+      <%= button_to 'Cancel pipeline',
+                    cancel_pipeline_pipeline_job_path(@pipeline.id, @pipeline_job.id),
+                    class: 'btn btn-outline-danger me-1',
+                    form_class: 'd-inline' %>
+    <% end %>
   </div>
+
+  <div class="clearfix"></div>
 <% end %>
+
+<% @pipeline_job.harvest_reports.each do |report| %>
+  <%= render 'harvest_reports/report_details', pipeline_job: @pipeline_job, report: report %>
+<% end %>
+
+<h2>Job details</h2>
+<%= render 'job_details', pipeline_job: @pipeline_job %>
