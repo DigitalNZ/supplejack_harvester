@@ -1,8 +1,7 @@
 <%= content_for(:title) { 'Schedules' } %>
+<% breadcrumb :schedules %>
 
 <%= content_for :header do %>
-  <%= render 'shared/breadcrumb_nav' %>
-
   <h1 class="header__title">Schedules</h1>
 
   <div class="header__actions">
@@ -105,7 +104,7 @@
               <div class='float-end'>
                 <ul class='list-inline'>
                   <li class='list-inline-item'>
-                    <%= link_to edit_schedule_path(process), class: 'btn btn-link p-0' do %>
+                    <%= link_to schedule_path(process), class: 'btn btn-link p-0' do %>
                       Edit <i class="bi bi-pencil-square" aria-hidden="true"></i>
                     <% end %>
                   </li>

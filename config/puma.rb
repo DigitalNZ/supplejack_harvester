@@ -1,3 +1,7 @@
+# https://www.rubydoc.info/gems/puma/Puma%2FDSL:raise_exception_on_sigterm
+# keep this to avoid errors when the app scales down
+raise_exception_on_sigterm false
+
 # Puma can serve each request in a thread from an internal thread pool.
 # The `threads` method setting takes two numbers: a minimum and maximum.
 # Any libraries that use thread pools should be configured to match

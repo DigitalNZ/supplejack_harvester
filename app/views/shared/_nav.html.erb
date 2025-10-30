@@ -24,7 +24,8 @@
     <% display_automations = request.path.include?('automations') && request.path.exclude?('automation_templates') %>
     <% automations_classes = class_names('nav-link',
                                          active: display_automations) %>
-    <% automation_templates_classes = class_names('nav-link', active: request.path.include?('automation_templates')) %>
+    <% automation_templates_classes = class_names('nav-link',
+                                                  active: request.path.starts_with?('/automation_templates')) %>
     <% schedules_classes = class_names('nav-link', active: request.path == '/schedules') %>
     <% jobs_classes = class_names('nav-link', active: request.path == '/jobs') %>
      <% error_summary_classes = class_names('nav-link', active: request.path.include?('job_completion_summary')) %>
@@ -51,7 +52,7 @@
             <%= link_to 'Jobs', jobs_path, class: jobs_classes %>
           </li>
           <li class="nav-item">
-            <%= link_to 'Job Completion Summary', job_completion_summary_index_path, class: error_summary_classes %>
+            <%= link_to 'Job Completion Summary', job_completion_summaries_path, class: error_summary_classes %>
           </li>
         <% end %>
       </ul>

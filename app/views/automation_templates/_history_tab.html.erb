@@ -27,7 +27,7 @@
                   </span>
                 </td>
                 <td><%= automation.created_at.strftime('%Y-%m-%d %H:%M') %></td>
-                <td><%= automation.job_priority.presence&.humanize || 'No priority' %></td>
+                <td><%= job_priority_label(automation) %></td>
               </tr>
             <% end %>
           </tbody>
