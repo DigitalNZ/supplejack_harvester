@@ -46,7 +46,6 @@ module Transformation
 
     def handle_field_error(error)
       harvest_job = find_harvest_job
-      log_field_error(error, harvest_job)
       @error = error
     end
 
