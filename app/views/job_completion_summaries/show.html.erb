@@ -1,4 +1,6 @@
 <%= content_for(:title) { "Job Completion Summary - #{@job_completion_summary.source_name}" } %>
+<% breadcrumb :job_completion_summary, @job_completion_summary %>
+
 <div class='float-start'>
   <h1 class="mb-3">Job Completion Summary Details</h1>
 </div>

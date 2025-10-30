@@ -17,16 +17,16 @@ RSpec.describe 'AutomationStepTemplates' do
       get new_automation_template_automation_step_template_path(automation_template)
 
       expect(response).to have_http_status :ok
-      expect(response.body).to include 'New Step Template'
+      expect(response.body).to include 'New Step'
     end
   end
 
   describe 'GET /automation_templates/:automation_template_id/automation_step_templates/:id/edit' do
     it 'displays the edit step template form' do
-      get edit_automation_template_automation_step_template_path(automation_template, automation_step_template)
+      get automation_template_automation_step_template_path(automation_template, automation_step_template)
 
       expect(response).to have_http_status :ok
-      expect(response.body).to include 'Edit Step Template'
+      expect(response.body).to include "Step #{automation_step_template.position + 1}"
     end
   end
 
@@ -57,7 +57,7 @@ RSpec.describe 'AutomationStepTemplates' do
 
       it 'renders the new step template form' do
         post automation_template_automation_step_templates_path(automation_template), params: { automation_step_template: invalid_attributes }
-        expect(response.body).to include 'New Step Template'
+        expect(response.body).to include 'New Step'
       end
     end
   end
@@ -89,9 +89,9 @@ RSpec.describe 'AutomationStepTemplates' do
         expect(automation_step_template.pipeline_id).to eq(original_pipeline_id)
       end
 
-      it 'renders the edit step template form' do
+      it 'renders the show step template form' do
         patch automation_template_automation_step_template_path(automation_template, automation_step_template), params: { automation_step_template: invalid_attributes }
-        expect(response.body).to include 'Edit Step Template'
+        expect(response.body).to include "Step #{automation_step_template.position + 1}"
       end
     end
   end
@@ -132,9 +132,9 @@ RSpec.describe 'AutomationStepTemplates' do
 
     it 'returns harvest definitions for the selected pipeline' do
       get harvest_definitions_automation_template_automation_step_templates_path(automation_template), params: { pipeline_id: pipeline.id }, xhr: true
-      
+
       expect(response).to have_http_status :ok
       expect(response.body).to include harvest_definition.name
     end
   end
-end 
+end

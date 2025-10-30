@@ -1,8 +1,7 @@
 <%= content_for(:title) { "#{@extraction_definition.name} job" } %>
+<% breadcrumb :extraction_job, @harvest_definition, @extraction_job %>
 
 <%= content_for(:header) do %>
-  <%= render 'shared/breadcrumb_nav' %>
-
   <div class="float-start">
     <h1><%= @extraction_job.extraction_definition.name %></h1>
     <strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong>

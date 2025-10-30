@@ -1,8 +1,7 @@
 <%= content_for(:title) { @extraction_definition.name_in_database } %>
+<% breadcrumb :extraction_definition, @harvest_definition, @extraction_definition %>
 
 <%= content_for(:header) do %>
-  <%= render 'shared/breadcrumb_nav' %>
-
   <h1 class='header__title'><%= @extraction_definition.name %></h1>
 
   <div class="header__actions">

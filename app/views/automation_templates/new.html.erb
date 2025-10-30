@@ -1,11 +1,14 @@
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>New Automation Template</h1>
-  </div>
+<%= content_for(:title) { 'New Automation Template' } %>
+<% breadcrumb :new_automation_template %>
 
-  <div class="card">
-    <div class="card-body">
-      <%= render 'form', automation_template: @automation_template %>
-    </div>
+<%= content_for :header do %>
+  <h1 class="header__title">New Automation Template</h1>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<div class="card">
+  <div class="card-body">
+    <%= render 'form', automation_template: @automation_template %>
   </div>
 </div>

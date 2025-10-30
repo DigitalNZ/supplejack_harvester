@@ -1,6 +1,6 @@
-<%= content_for :header do %>
-  <%= render 'shared/breadcrumb_nav' %>
+<% breadcrumb :automation, @automation %>
 
+<%= content_for :header do %>
   <h1 class="header__title"><%= @automation.name %></h1>
 
   <div class="header__actions">

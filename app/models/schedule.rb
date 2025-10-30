@@ -41,8 +41,7 @@ class Schedule < ApplicationRecord
   end
 
   after_create do
-    subject = pipeline.presence || automation_template
-    self.name = schedule_name(subject)
+    self.name = schedule_name
     save!
   end
 
@@ -79,9 +78,13 @@ class Schedule < ApplicationRecord
     errors.add(:base, 'Either a pipeline or an automation template must be associated with this schedule')
   end
 
+  def subject
+    pipeline.presence || automation_template
+  end
+
   private
 
-  def schedule_name(subject)
+  def schedule_name
     name = subject.name.parameterize(separator: '_')
     destination_name = destination.name.parameterize(separator: '_')
     time_name = time.parameterize(separator: '_')
