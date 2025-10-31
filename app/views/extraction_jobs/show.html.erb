@@ -5,7 +5,7 @@
 
   <div class="float-start">
     <h1>Extracted Data</h1>
-    <p><%= @extraction_job.extraction_definition.name %>&nbsp;|&nbsp;<strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong></p>
+    <p><span class="me-1"><%= @extraction_job.extraction_definition.name %></span>|<span class="ms-1"><strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong></span></p>
   </div>
 
   <div class="float-end">
@@ -37,15 +37,15 @@
 <% end %>
 
 <div class="my-4">
-  <span>Status: <span class="badge bg-primary"><%= job_status_text(@extraction_job) %></span></span>&nbsp;|&nbsp;
+  <span>Status: <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span></span>|
   <%- if @extraction_job.duration_seconds.present? %>
-    <span>Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>&nbsp;|&nbsp;
+    <span class="ms-1 me-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>|
   <% end %>
   <% if @document.present? %>
-    <span>File size: <%= number_to_human_size(@document.size_in_bytes) %></span>&nbsp;|&nbsp;
+    <span class="ms-1 me-1">File size: <%= number_to_human_size(@document.size_in_bytes) %></span>|
   <% end %>
-  <span>Folder size: <%= number_to_human_size(@extraction_job.extraction_folder_size_in_bytes) %></span>&nbsp;|&nbsp;
-  <span>Total Pages: <%= @extraction_job.documents.total_pages %></span>
+  <span class="ms-1 me-1">Folder size: <%= number_to_human_size(@extraction_job.extraction_folder_size_in_bytes) %></span>|
+  <span class="ms-1">Total Pages: <%= @extraction_job.documents.total_pages %></span>
 </div>
 
 <% if @document.blank? %>
