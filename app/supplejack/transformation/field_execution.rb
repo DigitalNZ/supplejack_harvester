@@ -17,7 +17,7 @@ module Transformation
         type_checker = TypeChecker.new(@value)
         raise TypeError, type_checker.error unless type_checker.valid?
       rescue Exception => e
-        handle_field_error(e)
+        handle_field_error(error)
       end
 
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)
@@ -30,23 +30,16 @@ module Transformation
     def handle_field_error(error)
       harvest_job = find_harvest_job
       log_field_error(error, harvest_job)
-      @error = error
-    end
-
-    def find_harvest_job
-      harvest_definition = @field.transformation_definition.harvest_definitions.first
-      return nil if harvest_definition.blank?
-
-      harvest_definition.harvest_jobs.first
     end
 
     def log_field_error(error, harvest_job)
-      JobCompletion::Logger.log_completion(
-        origin: 'Transformation::FieldExecution',
-        error: error,
-        definition: @field.transformation_definition,
-        job: harvest_job,
-        details: build_field_error_details
+      return unless harvest_job
+
+      JobCompletion::Logger.store_field_error(
+        error,
+        @field.transformation_definition,
+        harvest_job,
+        build_field_error_details
       )
     end
 
@@ -55,6 +48,13 @@ module Transformation
         field_name: @field.name,
         field_id: @field.id
       }
+    end
+
+    def find_harvest_job
+      harvest_definition = @field.transformation_definition.harvest_definitions.first
+      return nil if harvest_definition.blank?
+
+      harvest_definition.harvest_jobs.first
     end
   end
 end
