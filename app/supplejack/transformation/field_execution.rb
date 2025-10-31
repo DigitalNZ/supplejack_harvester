@@ -17,7 +17,7 @@ module Transformation
         type_checker = TypeChecker.new(@value)
         raise TypeError, type_checker.error unless type_checker.valid?
       rescue Exception => e
-        Rails.logger.error "Transformation::FieldExecution: #{e.message}"
+        handle_field_error(error)
       end
 
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)
@@ -29,17 +29,18 @@ module Transformation
 
     def handle_field_error(error)
       harvest_job = find_harvest_job
-      @error = error
-    end
-
-    def find_harvest_job
-      harvest_definition = @field.transformation_definition.harvest_definitions.first
-      return nil if harvest_definition.blank?
-
-      harvest_definition.harvest_jobs.first
+      log_field_error(error, harvest_job)
     end
 
     def log_field_error(error, harvest_job)
+
+      # To prevent hammering the DB, we want to log once every 30 seconds
+      @last_log_time ||= {}
+      cache_key = "#{@field.transformation_definition.id}_#{@field.id}"
+      last_log = @last_log_time[cache_key]
+      
+      return if last_log && (Time.current - last_log) < 30.seconds
+
       JobCompletion::Logger.log_completion(
         origin: 'Transformation::FieldExecution',
         error: error,
@@ -47,6 +48,8 @@ module Transformation
         job: harvest_job,
         details: build_field_error_details
       )
+
+      @last_log_time[cache_key] = Time.current
     end
 
     def build_field_error_details
@@ -54,6 +57,13 @@ module Transformation
         field_name: @field.name,
         field_id: @field.id
       }
+    end
+
+    def find_harvest_job
+      harvest_definition = @field.transformation_definition.harvest_definitions.first
+      return nil if harvest_definition.blank?
+
+      harvest_definition.harvest_jobs.first
     end
   end
 end
