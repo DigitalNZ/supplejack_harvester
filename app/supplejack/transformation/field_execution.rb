@@ -33,23 +33,14 @@ module Transformation
     end
 
     def log_field_error(error, harvest_job)
+      return unless harvest_job
 
-      # To prevent hammering the DB, we want to log once every 30 seconds
-      @last_log_time ||= {}
-      cache_key = "#{@field.transformation_definition.id}_#{@field.id}"
-      last_log = @last_log_time[cache_key]
-      
-      return if last_log && (Time.current - last_log) < 30.seconds
-
-      JobCompletion::Logger.log_completion(
-        origin: 'Transformation::FieldExecution',
-        error: error,
-        definition: @field.transformation_definition,
-        job: harvest_job,
-        details: build_field_error_details
+      JobCompletion::Logger.store_field_error(
+        error,
+        @field.transformation_definition,
+        harvest_job,
+        build_field_error_details
       )
-
-      @last_log_time[cache_key] = Time.current
     end
 
     def build_field_error_details
