@@ -19,7 +19,7 @@ class HarvestDefinition < ApplicationRecord
   enum :kind, { harvest: 0, enrichment: 1 }
 
   after_create do
-    self.name = "#{pipeline.name.parameterize}__#{kind}-#{id}"
+    self.name = "#{id}_#{kind}"
     save!
   end
 

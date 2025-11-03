@@ -19,7 +19,7 @@ class HarvestJob < ApplicationRecord
   validates :key, uniqueness: true
 
   after_create do
-    self.name = "#{harvest_definition.name}__job-#{id}"
+    self.name = "#{id}_#{harvest_definition.kind}"
     save!
   end
 

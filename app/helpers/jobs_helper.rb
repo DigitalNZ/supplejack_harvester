@@ -110,8 +110,8 @@ module JobsHelper
     User.distinct.pluck(:username).compact.sort.unshift('Schedule').unshift('All')
   end
 
-  def pipeline_opts
-    PipelineJob.distinct.pluck(:status).compact.unshift('All')
+  def status_opts
+    %w[All Queued Cancelled Completed Running Errored]
   end
 
   def dest_opts

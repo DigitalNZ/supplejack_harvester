@@ -37,7 +37,7 @@ RSpec.describe HarvestDefinition do
 
   describe '#name' do
     it 'automatically generates a sensible name' do
-      expect(subject.name).to eq "national-library-of-new-zealand__harvest-#{subject.id}"
+      expect(subject.name).to eq "#{subject.id}_harvest"
     end
   end
 
