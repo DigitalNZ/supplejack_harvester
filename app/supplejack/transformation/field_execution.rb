@@ -33,28 +33,29 @@ module Transformation
       @error = error
     end
 
-    def find_harvest_job
-      harvest_definition = @field.transformation_definition.harvest_definitions.first
-      return nil if harvest_definition.blank?
-
-      harvest_definition.harvest_jobs.first
-    end
-
     def log_field_error(error, harvest_job)
-      JobCompletion::Logger.log_completion(
-        origin: 'Transformation::FieldExecution',
-        error: error,
-        definition: @field.transformation_definition,
-        job: harvest_job,
-        details: build_field_error_details
+      return unless harvest_job
+
+      JobCompletion::Logger.store_field_error(
+        error,
+        @field.transformation_definition,
+        harvest_job,
+        build_field_error_details
       )
     end
-
+    
     def build_field_error_details
       {
         field_name: @field.name,
         field_id: @field.id
       }
+    end
+
+    def find_harvest_job
+      harvest_definition = @field.transformation_definition.harvest_definitions.first
+      return nil if harvest_definition.blank?
+
+      harvest_definition.harvest_jobs.first
     end
   end
 end
