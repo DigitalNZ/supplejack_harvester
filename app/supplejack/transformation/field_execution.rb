@@ -17,7 +17,7 @@ module Transformation
         type_checker = TypeChecker.new(@value)
         raise TypeError, type_checker.error unless type_checker.valid?
       rescue Exception => e
-        # test 
+        handle_field_error(e)
       end
 
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)

@@ -69,7 +69,7 @@ class TransformationWorker
     return unless @harvest_report.transformation_workers_completed?
 
     # Flush accumulated field errors to database
-    JobCompletion::Logger.update_summary_with_field_errors(@harvest_job.id)
+    # JobCompletion::Logger.update_summary_with_field_errors(@harvest_job.id)
 
     @harvest_report.transformation_completed!
     @harvest_report.load_completed! if @harvest_report.load_workers_completed?
@@ -88,8 +88,8 @@ class TransformationWorker
     ).call
   rescue StandardError => e
     Rails.logger.info "TransformationWorker: Transformation Excecution error: #{e}" if defined?(Sidekiq)
-    JobCompletion::Logger.log_completion(error: e, definition: @transformation_definition, job: @harvest_job,
-    details: {})
+    # JobCompletion::Logger.log_completion(error: e, definition: @transformation_definition, job: @harvest_job,
+    # details: {})
     []
   end
 
@@ -112,8 +112,8 @@ class TransformationWorker
     end
   rescue StandardError => e
     Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
-    JobCompletion::Logger.log_completion(error: e, definition: @transformation_definition, job: @pipeline_job,
-                                         details: {})
+    # JobCompletion::Logger.log_completion(error: e, definition: @transformation_definition, job: @pipeline_job,
+    #                                      details: {})
   end
 
   def queue_delete_worker(records)
@@ -140,8 +140,8 @@ class TransformationWorker
     proc do |exception, try, elapsed_time, next_interval|
       return unless defined?(Sidekiq)
 
-      JobCompletion::Logger.log_completion(error: exception, definition: @transformation_definition,
-                                           job: @pipeline_job, details: {})
+      # JobCompletion::Logger.log_completion(error: exception, definition: @transformation_definition,
+      #                                      job: @pipeline_job, details: {})
       Rails.logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
                         "and #{next_interval} seconds until the next try.")
     end
