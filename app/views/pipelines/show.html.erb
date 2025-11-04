@@ -1,7 +1,7 @@
 <%= content_for(:title) { @pipeline.name_in_database } %>
-<%= content_for(:header) do %>
-  <%= render 'shared/breadcrumb_nav' %>
+<% breadcrumb :pipeline, @pipeline %>
 
+<%= content_for(:header) do %>
   <div class='float-start'>
 
     <%= render layout: 'shared/inline_editable_element', locals:

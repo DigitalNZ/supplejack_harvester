@@ -1,7 +1,7 @@
 <%= content_for(:title) { @pipeline.name_in_database } %>
-<%= content_for(:header) do %>
-  <%= render 'shared/breadcrumb_nav' %>
+<% breadcrumb :automation_template_job, @pipeline_job %>
 
+<%= content_for(:header) do %>
   <div class='float-start'>
     <h1><%= @pipeline.name %></h1>
     <p><%= @pipeline.description %></p>
