@@ -10,14 +10,14 @@ module JobCompletion
       )
     end
 
-    def self.update_completion_summary(completion_summary, entry_params, completion_entry, completion_type, count)
+    def self.update_completion_summary(completion_summary, entry_params, completion_entry, completion_type)
       completion_entries = completion_summary.completion_entries + [completion_entry]
 
       completion_summary.assign_attributes(
         source_name: entry_params[:source_name],
         completion_type: completion_type,
         completion_entries: completion_entries,
-        completion_count: count,
+        completion_count: completion_entries.length,
         last_completed_at: Time.current
       )
 

@@ -8,17 +8,17 @@ module JobCompletion
       definition = args[:definition]
       job = args[:job]
       details = args[:details] || {}
-      count = args[:count] || 1
+      # count = args[:count] || 1
 
       process_info = ProcessInfoBuilder.determine_process_info(definition)
       completion_type = determine_completion_type(details)
       message = MessageBuilder.build_message(error, details)
       enhanced_details = DetailsEnhancer.build_enhanced_details(error, job, details, origin)
 
-      build_final_context(process_info, completion_type, message, enhanced_details, count)
+      build_final_context(process_info, completion_type, message, enhanced_details)
     end
 
-    def self.build_final_context(process_info, completion_type, message, enhanced_details, count = 1)
+    def self.build_final_context(process_info, completion_type, message, enhanced_details)
       {
         source_id: process_info[:source_id],
         source_name: process_info[:source_name],
@@ -26,8 +26,7 @@ module JobCompletion
         job_type: process_info[:job_type],
         completion_type: completion_type,
         message: message,
-        details: enhanced_details,
-        count: count
+        details: enhanced_details
       }
     end
 
