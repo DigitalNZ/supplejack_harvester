@@ -13,7 +13,7 @@ class TransformationDefinition < ApplicationRecord
 
   after_create do
     if name.blank?
-      self.name = "#{pipeline.name.parameterize}__#{kind}-transformation-#{id}"
+      self.name = "#{id}_#{kind}-transformation"
       save!
     end
   end
