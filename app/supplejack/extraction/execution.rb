@@ -46,6 +46,13 @@ module Extraction
       source_id = harvest_definition&.source_id
       return unless source_id
 
+      details = {
+        stop_condition_type: 'system',
+        stop_condition_name: 'Extraction error',
+        stop_condition_content: nil,
+        completion_type: :stop_condition
+      }
+
       log_stop_condition_hit(error, details)
       raise
     end
@@ -79,6 +86,7 @@ module Extraction
         details = {
           stop_condition_type: 'system',
           stop_condition_name: 'Set number limit reached',
+          stop_condition_content: nil,
           completion_type: :stop_condition
         }
         log_stop_condition_hit(nil, details)
@@ -93,6 +101,7 @@ module Extraction
         details = {
           stop_condition_type: 'system',
           stop_condition_name: 'Extraction failed',
+          stop_condition_content: nil,
           completion_type: :stop_condition
         }
 
@@ -119,12 +128,13 @@ module Extraction
       return false unless previous_document.body == @de.document.body
 
       details = {
-        top_condition_type: 'system',
+        stop_condition_type: 'system',
         stop_condition_name: 'Duplicate document detected',
+        stop_condition_content: nil,
         completion_type: :stop_condition
       }
 
-      log_duplicate_document_detected(nil, details)
+      log_stop_condition_hit(nil, details)
       true
     end
 

@@ -68,8 +68,8 @@ class TransformationWorker
 
     return unless @harvest_report.transformation_workers_completed?
 
-    # Flush accumulated field errors to database
-    JobCompletion::Logger.update_summary_with_field_errors(@harvest_job.id)
+    # Flush accumulated errors and stop conditions to database
+    JobCompletion::Logger.update_summary_with_accumulated_errors(@harvest_job.id)
 
     @harvest_report.transformation_completed!
     @harvest_report.load_completed! if @harvest_report.load_workers_completed?
