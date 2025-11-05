@@ -73,12 +73,25 @@ module JobCompletion
     # This is called once the transformation is finished
     # It will log all the accumulated field errors to the database
     def self.update_summary_with_field_errors(harvest_job_id)
-      errors_hash = accumulated_errors.delete(harvest_job_id)
-      return unless errors_hash
+      field_errors_to_process = nil
 
-      errors_hash.each do |signature, error_data|
-        next unless error_data[:type] == :field_error
+      mutex.synchronize do
+        errors_hash = accumulated_errors[harvest_job_id]
+        return unless errors_hash
 
+        # Filter and process only field errors, then remove them from the hash
+        field_errors_to_process = errors_hash.select { |_signature, error_data| error_data[:type] == :field_error }
+        return if field_errors_to_process.empty?
+
+        # Remove processed entries from the hash
+        field_errors_to_process.each_key { |signature| errors_hash.delete(signature) }
+        
+        # Clean up empty hash
+        accumulated_errors.delete(harvest_job_id) if errors_hash.empty?
+      end
+
+      # Process outside the mutex to avoid holding the lock during I/O
+      field_errors_to_process.each do |_signature, error_data|
         log_completion(
           origin: 'Transformation::FieldExecution',
           error: error_data[:error],
@@ -95,12 +108,25 @@ module JobCompletion
     # This is called once the extraction is finished
     # It will log all the accumulated stop conditions to the database
     def self.update_summary_with_stop_conditions(extraction_job_id)
-      errors_hash = accumulated_errors.delete(extraction_job_id)
-      return unless errors_hash
+      stop_conditions_to_process = nil
 
-      errors_hash.each do |signature, error_data|
-        next unless error_data[:type] == :stop_condition
+      mutex.synchronize do
+        errors_hash = accumulated_errors[extraction_job_id]
+        return unless errors_hash
 
+        # Filter and process only stop conditions, then remove them from the hash
+        stop_conditions_to_process = errors_hash.select { |_signature, error_data| error_data[:type] == :stop_condition }
+        return if stop_conditions_to_process.empty?
+
+        # Remove processed entries from the hash
+        stop_conditions_to_process.each_key { |signature| errors_hash.delete(signature) }
+        
+        # Clean up empty hash
+        accumulated_errors.delete(extraction_job_id) if errors_hash.empty?
+      end
+
+      # Process outside the mutex to avoid holding the lock during I/O
+      stop_conditions_to_process.each do |_signature, error_data|
         log_completion(
           origin: 'Extraction::Execution',
           error: error_data[:condition],
