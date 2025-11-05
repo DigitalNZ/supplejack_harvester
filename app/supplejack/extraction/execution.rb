@@ -81,7 +81,7 @@ module Extraction
           stop_condition_name: 'Set number limit reached',
           completion_type: :stop_condition
         }
-        log_stop_condition_hit(error, details)
+        log_stop_condition_hit(nil, details)
         return true
       end
 
@@ -145,12 +145,11 @@ module Extraction
     end
 
     def log_stop_condition_hit(error, details)
-      JobCompletion::Logger.log_completion(
-        origin: 'Extraction::Execution',
-        error: error,
-        definition: @extraction_definition,
-        job: @extraction_job,
-        details: details
+      JobCompletion::Logger.store_stop_condition(
+        error,
+        @extraction_definition,
+        @extraction_job,
+        details
       )
     end
 
