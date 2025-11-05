@@ -51,12 +51,12 @@ class LoadWorker
   def handle_load_error(error)
     Rails.logger.info "Load Excecution error: #{error}" if defined?(Sidekiq)
 
-    JobCompletion::Logger.log_completion(
-      origin: 'LoadWorker',
+    JobCompletion::Logger.store_completion(
       error: error,
       definition: @harvest_job&.extraction_definition,
       job: @harvest_job&.extraction_job,
-      details: {}
+      details: {},
+      origin: 'LoadWorker'
     )
     raise
   end
@@ -68,6 +68,10 @@ class LoadWorker
   def job_end
     @harvest_report.increment_load_workers_completed!
     @harvest_report.reload
+
+    # Flush accumulated errors to database (if any were stored during load operations)
+    extraction_job_id = @harvest_job&.extraction_job&.id
+    JobCompletion::Logger.update_summary_with_accumulated_errors(extraction_job_id) if extraction_job_id
 
     finish_load if @harvest_report.load_workers_completed?
 

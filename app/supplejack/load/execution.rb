@@ -32,12 +32,12 @@ module Load
     end
 
     def handle_load_error(error)
-      JobCompletion::Logger.log_completion(
-        origin: 'LoadWorker',
+      JobCompletion::Logger.store_completion(
         error: error,
         definition: @harvest_job&.extraction_definition,
         job: @harvest_job&.extraction_job,
-        details: {}
+        details: {},
+        origin: 'LoadWorker'
       )
       raise
     end

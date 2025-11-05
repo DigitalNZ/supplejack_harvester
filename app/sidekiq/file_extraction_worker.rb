@@ -34,11 +34,12 @@ class FileExtractionWorker
   end
 
   def handle_file_extraction_error(error)
-    JobCompletion::Logger.log_completion(
-      origin: 'FileExtractionWorker',
+    JobCompletion::Logger.store_completion(
       error: error,
       definition: @extraction_job.extraction_definition,
-      job: @extraction_job
+      job: @extraction_job,
+      details: {},
+      origin: 'FileExtractionWorker'
     )
     raise
   end

@@ -68,7 +68,7 @@ class TransformationWorker
 
     return unless @harvest_report.transformation_workers_completed?
 
-    # Flush accumulated errors and stop conditions to database
+    # Update the summary once the transformation is finished
     JobCompletion::Logger.update_summary_with_accumulated_errors(@harvest_job.id)
 
     @harvest_report.transformation_completed!
@@ -88,8 +88,8 @@ class TransformationWorker
     ).call
   rescue StandardError => e
     Rails.logger.info "TransformationWorker: Transformation Excecution error: #{e}" if defined?(Sidekiq)
-    JobCompletion::Logger.log_completion(error: e, definition: @transformation_definition, job: @harvest_job,
-    details: {})
+    JobCompletion::Logger.store_completion(error: e, definition: @transformation_definition, job: @harvest_job,
+                                           details: {}, origin: 'TransformationWorker')
     []
   end
 
@@ -112,8 +112,8 @@ class TransformationWorker
     end
   rescue StandardError => e
     Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
-    JobCompletion::Logger.log_completion(error: e, definition: @transformation_definition, job: @pipeline_job,
-                                         details: {})
+    JobCompletion::Logger.store_completion(error: e, definition: @transformation_definition, job: @harvest_job,
+                                           details: {}, origin: 'TransformationWorker')
   end
 
   def queue_delete_worker(records)
@@ -140,8 +140,8 @@ class TransformationWorker
     proc do |exception, try, elapsed_time, next_interval|
       return unless defined?(Sidekiq)
 
-      JobCompletion::Logger.log_completion(error: exception, definition: @transformation_definition,
-                                           job: @pipeline_job, details: {})
+      JobCompletion::Logger.store_completion(error: exception, definition: @transformation_definition,
+                                             job: @harvest_job, details: {}, origin: 'TransformationWorker')
       Rails.logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
                         "and #{next_interval} seconds until the next try.")
     end

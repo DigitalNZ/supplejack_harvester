@@ -26,12 +26,12 @@ class TextExtractionWorker < FileExtractionWorker
   end
 
   def handle_text_extraction_error(error)
-    JobCompletion::Logger.log_completion(
-      origin: 'TextExtractionWorker',
+    JobCompletion::Logger.store_completion(
       error: error,
       definition: @extraction_definition,
       job: @extraction_definition.extraction_jobs.first,
-      details: {}
+      details: {},
+      origin: 'TextExtractionWorker'
     )
     raise
   end

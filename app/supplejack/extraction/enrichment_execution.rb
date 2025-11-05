@@ -28,12 +28,12 @@ module Extraction
     end
 
     def handle_enrichment_error(error)
-      JobCompletion::Logger.log_completion(
-        origin: 'EnrichmentExecution',
+      JobCompletion::Logger.store_completion(
         error: error,
         definition: @extraction_definition,
         job: @extraction_job,
-        details: {}
+        details: {},
+        origin: 'EnrichmentExecution'
       )
       raise
     end
