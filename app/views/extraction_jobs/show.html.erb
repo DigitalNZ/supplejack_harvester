@@ -39,7 +39,7 @@
 <% end %>
 
 <div class="my-4">
-  <span>Status: <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span></span>|
+  <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span>|
   <%- if @extraction_job.duration_seconds.present? %>
     <span class="ms-1 me-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>|
   <% end %>
