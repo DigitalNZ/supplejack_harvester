@@ -21,12 +21,14 @@
                     form_class: 'd-inline' %>
     <% end %>
 
-    <button type="button" class="btn btn-danger px-1 py-1" data-bs-toggle="modal" data-bs-target="#delete-modal">
+    <button type="button" class="btn btn-danger px-2 py-2" data-bs-toggle="modal" data-bs-target="#delete-modal">
       <i class="bi bi-trash" aria-hidden="true"></i> Delete data
     </button>
   </div>
 
   <div class="clearfix"></div>
+
+  <%= render 'shared/pagination_above_table', items: @documents %>
 <% end %>
 
 <% path = pipeline_harvest_definition_extraction_definition_extraction_job_path(@pipeline, @harvest_definition,
@@ -156,7 +158,5 @@
     </ol>
   </div>
 </div>
-
-<%= render 'shared/pagination_below_table', items: @documents %>
 
 <% end %>
