@@ -19,7 +19,7 @@
                     class: 'btn btn-outline-danger me-1',
                     form_class: 'd-inline' %>
     <% end %>
-    <% if @harvest_report.status.in? %w[running queued] %>
+    <% if @harvest_report&.status.in? %w[running queued] %>
       <%= button_to 'Cancel pipeline',
                     cancel_pipeline_pipeline_job_path(@pipeline.id, @harvest_report.pipeline_job_id),
                     class: 'btn btn-outline-danger me-1',
