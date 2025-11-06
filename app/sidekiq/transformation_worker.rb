@@ -137,8 +137,6 @@ class TransformationWorker
     proc do |exception, try, elapsed_time, next_interval|
       return unless defined?(Sidekiq)
 
-      JobCompletionServices::ContextBuilder.create_job_completion({error: exception, definition: @transformation_definition,
-                                             job: @harvest_job, details: {}, origin: 'TransformationWorker'})
       Rails.logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
                         "and #{next_interval} seconds until the next try.")
     end

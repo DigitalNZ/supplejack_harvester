@@ -12,9 +12,15 @@ module JobCompletionServices
       source_id, source_name, process_type, job_type = extract_process_info(definition)
       process_type_string = process_type.to_s
 
-      # Check to see if there is an existing job completion for the same origin, definition, and job
+      # Build message early so we can check for exact error match
+      completion_type = determine_completion_type(details)
+      message = MessageBuilder.build_message(error, details)
+      message_prefix = message[0..49]  # First 50 characters
+
+      # Check to see if there is an existing job completion for the same source, process, job, origin, AND message
       # if so, update the count and return 
-      if is_existing_job_completion?(source_id, source_name, process_type, job_type)
+      if is_existing_job_completion?(source_id, process_type, job_type, origin, message_prefix)
+        Rails.logger.info "Existing job completion found for source_id: #{source_id}, process_type: #{process_type_string}, job_type: #{job_type}, origin: #{origin}, message_prefix: #{message_prefix}"
         current_job_competion_summary = JobCompletionSummary.find_by(source_id: source_id, process_type: process_type_string, job_type: job_type)
         return if current_job_competion_summary.nil?
 
@@ -22,23 +28,12 @@ module JobCompletionServices
         current_job_competion_summary.increment_completion_count
         current_job_competion_summary.touch # updated_at
         current_job_competion_summary.save!
-    
+        
         return
       end
 
-      # Determine completion type
-      completion_type = determine_completion_type(details)
-
-      # Build message
-      message = MessageBuilder.build_message(error, details)
-
-      # Extract stack trace from error (empty array for stop conditions without errors)
       stack_trace = extract_stack_trace(error) || []  
-
-      # Build enhanced details
       enhanced_details = build_enhanced_details(error, job, details, origin)
-
-      # Build context hash (always ensure it's a hash, not nil)
       context = build_context_hash(error, job, details, origin) || {}
 
       # Find or create JobCompletionSummary (uses enum values)
@@ -58,6 +53,8 @@ module JobCompletionServices
         job_type: job_type,
         completion_type: completion_type,
         message: message,
+        message_prefix: message_prefix,
+        origin: origin,
         stack_trace: stack_trace,
         context: context,
         details: enhanced_details
@@ -96,16 +93,25 @@ module JobCompletionServices
 
     private
 
-    def self.is_existing_job_completion?(source_id, source_name, process_type, job_type)
-      # Enums accept symbols/strings directly, no conversion needed
-      return JobCompletion.find_by(source_id: source_id, process_type: process_type, job_type: job_type).present?
+    def self.is_existing_job_completion?(source_id, process_type, job_type, origin, message_prefix)
+      # Query for existing JobCompletion with:
+      # - Same source_id, process_type, job_type, origin, and message_prefix
+      # Uses indexed columns for fast lookup
+      JobCompletion.where(
+        source_id: source_id,
+        process_type: process_type,
+        job_type: job_type,
+        origin: origin,
+        message_prefix: message_prefix
+      ).exists?
     end
 
     def self.extract_stack_trace(error)
       return [] unless error&.respond_to?(:backtrace)
       return [] unless error.backtrace
 
-      error.backtrace&.first(20) || []
+      # only take the first line of the stack traceev
+      error.backtrace&.first(1) || []
     end
 
     def self.extract_pipeline_job_id(job)
@@ -172,7 +178,6 @@ module JobCompletionServices
     end
 
     def self.find_or_create_summary(source_id:, source_name:, process_type:, job_type:, completion_type:)
-      # Convert symbols to string enum names for JobCompletionSummary
       process_type_enum = process_type.to_s
       completion_type_enum = completion_type.to_s
 

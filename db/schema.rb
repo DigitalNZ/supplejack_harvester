@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_06_025742) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_06_202433) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -258,14 +258,16 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_06_025742) do
     t.datetime "updated_at", null: false
     t.string "source_id", null: false
     t.string "source_name", null: false
+    t.string "origin"
     t.string "job_type", null: false
     t.integer "process_type", null: false
     t.integer "completion_type", null: false
     t.text "message", null: false
+    t.string "message_prefix", limit: 50
     t.json "stack_trace", null: false
     t.json "context", null: false
     t.json "details", null: false
-    t.index ["source_id", "process_type", "job_type"], name: "index_job_completions_on_source_process_job", unique: true
+    t.index ["source_id", "process_type", "job_type", "origin", "message_prefix"], name: "idx_jc_source_process_job_origin_msg", unique: true, length: { source_id: 100, job_type: 50, origin: 100 }
   end
 
   create_table "parameters", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
