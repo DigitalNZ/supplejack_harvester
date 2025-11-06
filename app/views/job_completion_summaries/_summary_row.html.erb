@@ -1,42 +1,37 @@
 <tr>
   <td>
-    <strong><%= error_summary.pipeline_name %></strong>
+    <strong><%= job_completion_summary.pipeline_name %></strong>
   </td>
   <td>
-    <strong><%= error_summary.definition_name %></strong>
+    <strong><%= job_completion_summary.definition_name %></strong>
   </td>
   <td>
-    <strong><%= error_summary.job_type %></strong>
+    <strong><%= job_completion_summary.process_type.humanize %></strong>
   </td>
   <td>
-    <% error_summary.completion_types_present.each do |type| %>
-      <% if type == 'stop_condition' %>
-        <% latest_entry = error_summary.completion_entries.find do |entry| %>
-          <% entry.dig('details', 'stop_condition_name').present? %>
-        <% end %>
-        <% if latest_entry&.dig('details', 'stop_condition_type') == 'system' %>
-          <span class="badge badge-stop-condition me-1">System stop condition</span>
-        <% else %>
-          <span class="badge badge-stop-condition me-1">User defined stop condition</span>
-        <% end %>
+    <% if job_completion_summary.completion_type == 'stop_condition' %>
+      <% if job_completion.job_completions.first&.details&.dig('stop_condition_type') == 'system' %>
+        <span class="badge badge-stop-condition me-1">System stop condition</span>
       <% else %>
-        <span class="badge bg-danger me-1">Error</span>
+        <span class="badge badge-stop-condition me-1">User defined stop condition</span>
       <% end %>
+    <% else %>
+      <span class="badge bg-danger me-1">Error</span>
     <% end %>
   </td>
   <td>
     <span class="badge bg-warning text-dark">
-      <%= error_summary.completion_count %>
+      <%= job_completion_summary.completion_count %>
     </span>
   </td>
   <td>
     <small class="text-muted">
-      <%= error_summary.last_completed_at&.strftime('%Y-%m-%d %H:%M') || 'N/A' %>
+      <%= job_completion_summary.updated_at&.strftime('%Y-%m-%d %H:%M') || 'N/A' %>
     </small>
   </td>
   <td>
     <%= link_to 'View Details',
-                job_completion_summary_path(error_summary),
+                job_completion_summary_path(job_completion_summary),
                 class: 'btn btn-sm btn-outline-primary' %>
   </td>
 </tr>

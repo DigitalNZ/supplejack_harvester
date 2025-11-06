@@ -2,7 +2,7 @@
 
 class JobCompletionSummariesController < ApplicationController
   def index
-    @job_completion_summaries = JobCompletionSummary.recent_completions.page(params[:page])
+    @job_completion_summaries = JobCompletionSummary.last_completed_at.page(params[:page])
 
     completion_type = params[:completion_type]
     extraction_id = params[:extraction_id]
@@ -13,7 +13,7 @@ class JobCompletionSummariesController < ApplicationController
 
     return if extraction_id.blank?
 
-    @job_completion_summaries = @job_completion_summaries.where(extraction_id: extraction_id)
+    @job_completion_summaries = @job_completion_summaries.where(source_id: extraction_id)
   end
 
   def show

@@ -13,7 +13,6 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">Job completion summary</h5>
-        <span class="badge bg-secondary"><%= @job_completion_summaries.total_count %> total</span>
       </div>
       <div class="card-body p-0">
         <% if @job_completion_summaries.any? %>
@@ -31,8 +30,8 @@
                 </tr>
               </thead>
               <tbody>
-                <% @job_completion_summaries.each do |error_summary| %>
-                  <%= render 'summary_row', error_summary: error_summary %>
+                <% @job_completion_summaries.each do |job_completion_summary| %>
+                  <%= render 'summary_row', job_completion_summary: job_completion_summary %>
                 <% end %>
               </tbody>
             </table>

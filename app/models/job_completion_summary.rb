@@ -18,32 +18,11 @@ class JobCompletionSummary < ApplicationRecord
 
   validates :source_id, uniqueness: { scope: %i[process_type job_type] }
 
-  validates :completion_entries, presence: true
-  validates :completion_count, presence: true, numericality: { greater_than_or_equal_to: 0 }
-
   after_initialize :set_defaults, if: :new_record?
 
-  scope :recent_completions, -> { order(last_completed_at: :desc) }
-
-  def self.log_completion(params)
-    entry_params = if params[:completion_type] == :stop_condition
-                     JobCompletion::CompletionDetailsBuilder.stop_condition_details(params)
-                   else
-                     JobCompletion::CompletionDetailsBuilder.error_details(params)
-                   end
-
-    JobCompletion::CompletionSummaryBuilder.build_completion_summary(entry_params)
-  end
-
-  def completion_types_present
-    completion_entries.map do |entry|
-      if entry['details']&.dig('stop_condition_name').present?
-        'stop_condition'
-      else
-        'error'
-      end
-    end.uniq
-  end
+  scope :last_completed_at, -> { order(last_completed_at: :desc) }
+  scope :recent_completions, -> { last_completed_at }
+  scope :by_completion_type, ->(type) { where(completion_type: type) }
 
   def pipeline_name
     harvest_definition = HarvestDefinition.find_by(source_id: source_id)
@@ -63,10 +42,15 @@ class JobCompletionSummary < ApplicationRecord
     end
   end
 
-  private
+  def job_completions
+    JobCompletion.where(source_id: source_id)
+  end
 
-  def set_defaults
-    self.completion_entries ||= []
-    self.completion_count ||= 0
+  def completion_count
+    job_completions&.count || 0
+  end
+
+  def last_completed_at
+    job_completions.order(updated_at: :desc).first&.updated_at
   end
 end

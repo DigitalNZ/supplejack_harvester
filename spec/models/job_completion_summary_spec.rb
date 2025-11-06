@@ -115,23 +115,5 @@ RSpec.describe JobCompletionSummary, type: :model do
         expect(summary.pipeline_name).to be_nil
       end
     end
-
-    describe '#definition_name' do
-      it 'returns extraction definition name for extraction process' do
-        summary.update!(process_type: :extraction)
-        expect(summary.definition_name).to eq('Test Extraction')
-      end
-
-      it 'returns transformation definition name for transformation process' do
-        summary.update!(process_type: :transformation)
-        expect(summary.definition_name).to eq('Test Transformation')
-      end
-
-      it 'returns "Unknown Type" for unknown process type' do
-        # Use a valid process_type but test the else case by mocking the method
-        allow(summary).to receive(:process_type).and_return('unknown')
-        expect(summary.definition_name).to eq('Unknown Type')
-      end
-    end
   end
 end

@@ -4,9 +4,9 @@
       <h5 class="card-title mb-0">Details</h5>
     </div>
     <div class="card-body">
-      <% if @job_completion_summary.completion_entries.any? %>
+      <% if @job_completion_summary.job_completions.any? %>
         <div class="accordion" id="completionsAccordion">
-          <% @job_completion_summary.completion_entries.each_with_index do |entry, index| %>
+          <% @job_completion_summary.job_completions.order(last_completed_at: :desc).each_with_index do |completion, index| %>
             <div class="accordion-item">
               <h2 class="accordion-header" id="heading<%= index %>">
                 <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
@@ -17,9 +17,9 @@
                         aria-controls="collapse<%= index %>">
                   <div class="d-flex justify-content-between align-items-center w-100 me-3">
                     <div>
-                      <%= entry['message']&.truncate(100) || 'No message' %>
-                        <% if entry.dig('details', 'stop_condition_name').present? %>
-                          <% if entry.dig('details', 'stop_condition_type') == 'system' %>
+                      <%= completion.message&.truncate(100) || 'No message' %>
+                        <% if completion.details&.dig('stop_condition_name').present? || completion.completion_type.to_s == 'stop_condition' %>
+                          <% if completion.details&.dig('stop_condition_type') == 'system' %>
                             <span class="badge bg-secondary ms-2">System stop condition</span>
                           <% else %>
                             <span class="badge ms-2" style="background-color: #0d6efd;">User defined stop condition</span>
@@ -36,15 +36,15 @@
                    aria-labelledby="heading<%= index %>"
                    data-bs-parent="#completionsAccordion">
                 <div class="accordion-body">
-                  <% if entry.dig('details', 'stop_condition_name').present? %>
+                  <% if completion.details&.dig('stop_condition_name').present? || completion.completion_type.to_s == 'stop_condition' %>
                     <div class="row">
                       <div class="col-md-12">
                         <h6>Stop Condition Details:</h6>
                         <div class="bg-light p-3 rounded">
-                          <p><strong>Name:</strong> <%= entry.dig('details', 'stop_condition_name') %></p>
-                          <p><strong>Content:</strong> <%= entry.dig('details', 'stop_condition_content') %></p>
+                          <p><strong>Name:</strong> <%= completion.details&.dig('stop_condition_name') %></p>
+                          <p><strong>Content:</strong> <%= completion.details&.dig('stop_condition_content') %></p>
                             <p><strong>Type:</strong>
-                              <% if entry.dig('details', 'stop_condition_type') == 'system' %>
+                              <% if completion.details&.dig('stop_condition_type') == 'system' %>
                                 <span class="badge bg-secondary">System stop condition</span>
                               <% else %>
                                 <span class="badge" style="background-color: #0d6efd;">User defined stop condition</span>
@@ -58,25 +58,39 @@
                       <div class="col-md-12">
                         <h6>Error Details:</h6>
                         <div class="bg-light p-3 rounded">
-                          <p><strong>Origin:</strong> <%= entry['origin'] %></p>
+                          <p><strong>Origin:</strong> <%= completion.details&.dig('origin') || 'Unknown' %></p>
                           <p><strong>Job:</strong> <%= @job_completion_summary.source_name %></p>
-                          <% if entry.dig('details', 'stack_trace').present? %>
+                          <% if completion.stack_trace.present? %>
                             <p><strong>Stack Trace:</strong></p>
-                            <pre class="bg-dark text-light p-2 rounded"><%= entry.dig('details', 'stack_trace') %></pre>
+                            <pre class="bg-dark text-light p-2 rounded"><%= completion.stack_trace.is_a?(Array) ? completion.stack_trace.join("\n") : completion.stack_trace %></pre>
                           <% end %>
                         </div>
                       </div>
                     </div>
                   <% end %>
-                  <% if entry['details'].present? %>
+                  <% if completion.details.present? %>
                     <div class="row mt-3">
                       <div class="col-md-12">
                         <h6>Additional Details:</h6>
                         <pre class="bg-light p-3 rounded">
                           <% begin %>
-                            <%= JSON.pretty_generate(entry['details']) %>
+                            <%= JSON.pretty_generate(completion.details) %>
                           <% rescue %>
-                            <%= entry['details'].to_s %>
+                            <%= completion.details.to_s %>
+                          <% end %>
+                        </pre>
+                      </div>
+                    </div>
+                  <% end %>
+                  <% if completion.context.present? %>
+                    <div class="row mt-3">
+                      <div class="col-md-12">
+                        <h6>Context:</h6>
+                        <pre class="bg-light p-3 rounded">
+                          <% begin %>
+                            <%= JSON.pretty_generate(completion.context) %>
+                          <% rescue %>
+                            <%= completion.context.to_s %>
                           <% end %>
                         </pre>
                       </div>
@@ -85,9 +99,11 @@
                   <div class="row mt-3">
                     <div class="col-md-6">
                       <strong>Occurred At:</strong>
-                      <% begin %>
-                        <%= Time.zone.parse(entry['timestamp']).strftime('%Y-%m-%d %H:%M:%S') %>
-                      <% rescue %>
+                      <% if completion.last_completed_at.present? %>
+                        <%= completion.last_completed_at.strftime('%Y-%m-%d %H:%M:%S') %>
+                      <% elsif completion.created_at.present? %>
+                        <%= completion.created_at.strftime('%Y-%m-%d %H:%M:%S') %>
+                      <% else %>
                         Unknown time
                       <% end %>
                     </div>
