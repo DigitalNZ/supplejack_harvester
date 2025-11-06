@@ -27,5 +27,12 @@ class MigrateNames < ActiveRecord::Migration[7.2]
       job.name = "#{job.id}_#{job.kind}-extraction"
       job.save
     end
+
+    # transformation definitions
+    transformation_definitions = TransformationDefinition.all
+    transformation_definitions.each do |definition|
+      definition.name = "#{definition.id}_#{definition.kind}-transformation"
+      definition.save
+    end
   end
 end

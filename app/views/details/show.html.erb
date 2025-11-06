@@ -3,7 +3,7 @@
 
 <%= content_for(:header) do %>
   <div class="float-start">
-    <h1><%= @extraction_job.extraction_definition.name %></h1>
+    <h1>Job <%= @harvest_report.pipeline_job_id %></h1>
     <strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong>
   </div>
 
