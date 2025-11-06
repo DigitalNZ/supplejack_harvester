@@ -10,7 +10,7 @@
   </td>
   <td>
     <% if job_completion_summary.completion_type == 'stop_condition' %>
-      <% if job_completion.job_completions.first&.details&.dig('stop_condition_type') == 'system' %>
+      <% if job_completion_summary.job_completions.first&.details&.dig('stop_condition_type') == 'system' %>
         <span class="badge badge-stop-condition me-1">System stop condition</span>
       <% else %>
         <span class="badge badge-stop-condition me-1">User defined stop condition</span>

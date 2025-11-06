@@ -31,10 +31,6 @@ class DeleteWorker
 
     return unless @harvest_report.delete_workers_completed?
 
-    # Flush accumulated errors to database (if any were stored during delete operations)
-    extraction_job_id = @harvest_report.harvest_job&.extraction_job&.id
-    JobCompletion::Logger.update_summary_with_accumulated_errors(extraction_job_id) if extraction_job_id
-
     @harvest_report.delete_completed!
   end
 
@@ -51,12 +47,12 @@ class DeleteWorker
   def handle_delete_error(error)
     Rails.logger.info "DeleteWorker: Delete Excecution error: #{error}" if defined?(Sidekiq)
 
-    JobCompletion::Logger.store_completion(
+    JobCompletionServices::ContextBuilder.create_job_completion({
       error: error,
       definition: @harvest_report.extraction_definition,
       job: @harvest_report.harvest_job&.extraction_job,
       details: {},
       origin: 'DeleteWorker'
-    )
+    })
   end
 end

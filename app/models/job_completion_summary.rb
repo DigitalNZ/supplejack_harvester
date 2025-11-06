@@ -13,15 +13,13 @@ class JobCompletionSummary < ApplicationRecord
 
   validates :source_id, presence: true
   validates :source_name, presence: true
-
+  validates :completion_count, presence: true
   validates :job_type, presence: true
 
   validates :source_id, uniqueness: { scope: %i[process_type job_type] }
 
   after_initialize :set_defaults, if: :new_record?
 
-  scope :last_completed_at, -> { order(last_completed_at: :desc) }
-  scope :recent_completions, -> { last_completed_at }
   scope :by_completion_type, ->(type) { where(completion_type: type) }
 
   def pipeline_name
@@ -43,14 +41,20 @@ class JobCompletionSummary < ApplicationRecord
   end
 
   def job_completions
-    JobCompletion.where(source_id: source_id)
-  end
-
-  def completion_count
-    job_completions&.count || 0
+    JobCompletion.where(source_id: source_id, process_type: process_type, job_type: job_type)
   end
 
   def last_completed_at
     job_completions.order(updated_at: :desc).first&.updated_at
+  end
+
+  def increment_completion_count
+    update(completion_count: completion_count + 1)
+  end
+
+  private
+
+  def set_defaults
+    self.completion_count ||= 0
   end
 end

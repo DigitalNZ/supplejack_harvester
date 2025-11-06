@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe JobCompletion::DetailsEnhancer do
+RSpec.describe JobCompletionServices::DetailsEnhancer do
   let(:job) { create(:extraction_job) }
   let(:error) { StandardError.new('Test error') }
   let(:details) { { origin: 'TestWorker' } }

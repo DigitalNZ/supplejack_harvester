@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module JobCompletion
+module JobCompletionServices
   class ContextBuilder
     def self.create_job_completion(args)
       origin = args[:origin]
@@ -9,12 +9,22 @@ module JobCompletion
       job = args[:job]
       details = args[:details] || {}
 
-      # Extract process information
-      process_info = ProcessInfoBuilder.determine_process_info(definition)
-      source_id = process_info[:source_id]
-      source_name = process_info[:source_name]
-      process_type = process_info[:process_type]
-      job_type = process_info[:job_type]
+      source_id, source_name, process_type, job_type = extract_process_info(definition)
+      process_type_string = process_type.to_s
+
+      # Check to see if there is an existing job completion for the same origin, definition, and job
+      # if so, update the count and return 
+      if is_existing_job_completion?(source_id, source_name, process_type, job_type)
+        current_job_competion_summary = JobCompletionSummary.find_by(source_id: source_id, process_type: process_type_string, job_type: job_type)
+        return if current_job_competion_summary.nil?
+
+        # Increment the completion count 
+        current_job_competion_summary.increment_completion_count
+        current_job_competion_summary.touch # updated_at
+        current_job_competion_summary.save!
+    
+        return
+      end
 
       # Determine completion type
       completion_type = determine_completion_type(details)
@@ -40,23 +50,17 @@ module JobCompletion
         completion_type: completion_type
       )
 
-      # Convert symbols to integer values for JobCompletion
-      process_type_value = convert_process_type_to_integer(process_type)
-      completion_type_value = convert_completion_type_to_integer(completion_type)
-
-      # Create JobCompletion record
+      # Create JobCompletion record (enums accept symbols/strings directly)
       JobCompletion.create!(
-        job_completion_summary_id: job_completion_summary.id,
         source_id: source_id,
         source_name: source_name,
-        process_type: process_type_value,
+        process_type: process_type,
         job_type: job_type,
-        completion_type: completion_type_value,
+        completion_type: completion_type,
         message: message,
         stack_trace: stack_trace,
         context: context,
-        details: enhanced_details,
-        last_completed_at: Time.current
+        details: enhanced_details
       )
     rescue StandardError => e
       Rails.logger.error "Failed to create job completion: #{e.message}"
@@ -91,6 +95,11 @@ module JobCompletion
     end
 
     private
+
+    def self.is_existing_job_completion?(source_id, source_name, process_type, job_type)
+      # Enums accept symbols/strings directly, no conversion needed
+      return JobCompletion.find_by(source_id: source_id, process_type: process_type, job_type: job_type).present?
+    end
 
     def self.extract_stack_trace(error)
       return [] unless error&.respond_to?(:backtrace)
@@ -174,7 +183,6 @@ module JobCompletion
       ) do |summary|
         summary.source_name = source_name
         summary.completion_type = completion_type_enum
-        summary.last_completed_at = Time.current
       end
     end
 
@@ -182,28 +190,14 @@ module JobCompletion
       details[:stop_condition_name].present? ? :stop_condition : :error
     end
 
-    def self.convert_process_type_to_integer(process_type)
-      case process_type
-      when :extraction, 'extraction'
-        0
-      when :transformation, 'transformation'
-        1
-      else
-        # Default to extraction if unknown
-        0
-      end
-    end
+    def self.extract_process_info(definition)
+      process_info = ProcessInfoBuilder.determine_process_info(definition)
+      source_id = process_info[:source_id]
+      source_name = process_info[:source_name]
+      process_type = process_info[:process_type]
+      job_type = process_info[:job_type]
 
-    def self.convert_completion_type_to_integer(completion_type)
-      case completion_type
-      when :error, 'error'
-        0
-      when :stop_condition, 'stop_condition'
-        1
-      else
-        # Default to error if unknown
-        0
-      end
+      return source_id, source_name, process_type, job_type
     end
   end
 end

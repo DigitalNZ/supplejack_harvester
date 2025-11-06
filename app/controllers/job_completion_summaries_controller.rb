@@ -2,7 +2,7 @@
 
 class JobCompletionSummariesController < ApplicationController
   def index
-    @job_completion_summaries = JobCompletionSummary.last_completed_at.page(params[:page])
+    @job_completion_summaries = JobCompletionSummary.all.page(params[:page])
 
     completion_type = params[:completion_type]
     extraction_id = params[:extraction_id]

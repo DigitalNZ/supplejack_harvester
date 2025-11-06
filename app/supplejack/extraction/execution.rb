@@ -155,12 +155,13 @@ module Extraction
     end
 
     def log_stop_condition_hit(error, details)
-      JobCompletion::Logger.store_stop_condition(
-        error,
-        @extraction_definition,
-        @extraction_job,
-        details
-      )
+      JobCompletionServices::ContextBuilder.create_job_completion({
+        origin: 'Extraction::Execution',
+        error: error,
+        definition: @extraction_definition,
+        job: @extraction_job,
+        details: details
+      })
     end
 
     def throttle

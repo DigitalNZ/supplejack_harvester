@@ -6,7 +6,7 @@
     <div class="card-body">
       <% if @job_completion_summary.job_completions.any? %>
         <div class="accordion" id="completionsAccordion">
-          <% @job_completion_summary.job_completions.order(last_completed_at: :desc).each_with_index do |completion, index| %>
+          <% @job_completion_summary.job_completions.order(updated_at: :desc).each_with_index do |completion, index| %>
             <div class="accordion-item">
               <h2 class="accordion-header" id="heading<%= index %>">
                 <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
@@ -99,8 +99,8 @@
                   <div class="row mt-3">
                     <div class="col-md-6">
                       <strong>Occurred At:</strong>
-                      <% if completion.last_completed_at.present? %>
-                        <%= completion.last_completed_at.strftime('%Y-%m-%d %H:%M:%S') %>
+                      <% if completion.updated_at.present? %>
+                        <%= completion.updated_at.strftime('%Y-%m-%d %H:%M:%S') %>
                       <% elsif completion.created_at.present? %>
                         <%= completion.created_at.strftime('%Y-%m-%d %H:%M:%S') %>
                       <% else %>

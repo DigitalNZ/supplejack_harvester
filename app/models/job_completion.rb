@@ -1,6 +1,16 @@
 # frozen_string_literal: true
 
 class JobCompletion < ApplicationRecord
+  enum completion_type: {
+    error: 0,
+    stop_condition: 1
+  }
+
+  enum process_type: {
+    extraction: 0,
+    transformation: 1
+  }
+
   validates :source_id, uniqueness: { scope: %i[process_type job_type] }
   validates :source_name, presence: true
 

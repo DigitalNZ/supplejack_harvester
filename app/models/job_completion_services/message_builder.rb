@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module JobCompletion
+module JobCompletionServices
   class MessageBuilder
     def self.build_message(error, details)
       if details[:stop_condition_name].present?

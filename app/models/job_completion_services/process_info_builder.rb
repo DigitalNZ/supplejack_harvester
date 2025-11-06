@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module JobCompletion
+module JobCompletionServices
   class ProcessInfoBuilder
     def self.determine_process_info(definition)
       if definition.is_a?(ExtractionDefinition)

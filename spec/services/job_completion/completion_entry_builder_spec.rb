@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe JobCompletion::CompletionEntryBuilder do
+RSpec.describe JobCompletionServices::CompletionEntryBuilder do
   let(:params) do
     {
       source_id: 'test_source',

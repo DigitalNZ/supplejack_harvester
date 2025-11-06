@@ -36,12 +36,13 @@ module Transformation
     def log_field_error(error, harvest_job)
       return unless harvest_job
 
-      JobCompletion::Logger.store_field_error(
-        error,
-        @field.transformation_definition,
-        harvest_job,
-        build_field_error_details
-      )
+      JobCompletionServices::ContextBuilder.create_job_completion({
+        origin: 'Transformation::FieldExecution',
+        error: error,
+        definition: @field.transformation_definition,
+        job: harvest_job,
+        details: build_field_error_details
+      })
     end
     
     def build_field_error_details

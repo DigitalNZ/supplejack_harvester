@@ -43,9 +43,6 @@ class ExtractionWorker < ApplicationWorker
   def job_end
     super
 
-    # Flush accumulated errors and stop conditions to database
-    JobCompletion::Logger.update_summary_with_accumulated_errors(@job.id) if @job.present?
-
     update_harvest_report
   end
 

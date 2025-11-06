@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe JobCompletion::ContextBuilder do
+RSpec.describe JobCompletionServices::ContextBuilder do
   let(:harvest_definition) do
     create(:harvest_definition, source_id: 'test_source', name: 'Test Source').tap do |hd|
       hd.update!(name: 'Test Source')
