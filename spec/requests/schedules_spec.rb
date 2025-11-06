@@ -112,13 +112,13 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe 'GET /edit' do
+  describe 'GET /show' do
     let(:harvest_definition)         { create(:harvest_definition, pipeline:) }
     let(:harvest_definitions_to_run) { [harvest_definition.id] }
     let(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
 
     it 'returns a successful response' do
-      get edit_schedule_path(schedule)
+      get schedule_path(schedule)
 
       expect(response).to have_http_status :ok
     end
