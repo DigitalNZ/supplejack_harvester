@@ -14,7 +14,12 @@ class JobCompletion < ActiveRecord::Migration[7.2]
       add_column :job_completions, :stack_trace, :json, null: false unless column_exists?(:job_completions, :stack_trace)
       add_column :job_completions, :context, :json, null: false unless column_exists?(:job_completions, :context)
       add_column :job_completions, :details, :json, null: false unless column_exists?(:job_completions, :details)
-      add_column :job_completions, :last_completed_at, :datetime unless column_exists?(:job_completions, :last_completed_at)
+      
+      # Remove last_completed_at if it exists (consolidated from 20251106020823)
+      if column_exists?(:job_completions, :last_completed_at)
+        remove_index :job_completions, :last_completed_at if index_exists?(:job_completions, :last_completed_at)
+        remove_column :job_completions, :last_completed_at
+      end
       
       # Populate message_prefix for existing records
       execute <<-SQL
@@ -23,7 +28,7 @@ class JobCompletion < ActiveRecord::Migration[7.2]
         WHERE message_prefix IS NULL AND message IS NOT NULL
       SQL
     else
-      # Create table if it doesn't exist
+      # Create table if it doesn't exist (without last_completed_at)
       create_table :job_completions do |t|
         t.string :source_id, null: false
         t.string :source_name, null: false
@@ -36,7 +41,6 @@ class JobCompletion < ActiveRecord::Migration[7.2]
         t.json :stack_trace, null: false
         t.json :context, null: false
         t.json :details, null: false
-        t.datetime :last_completed_at
         t.timestamps
       end
     end
@@ -66,7 +70,5 @@ class JobCompletion < ActiveRecord::Migration[7.2]
                 name: 'idx_jc_source_process_job_origin_msg',
                 length: { source_id: 100, job_type: 50, origin: 100, message_prefix: 50 }
     end
-    
-    add_index :job_completions, :last_completed_at unless index_exists?(:job_completions, :last_completed_at)
   end
 end
