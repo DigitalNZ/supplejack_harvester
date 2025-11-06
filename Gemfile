@@ -33,6 +33,9 @@ gem 'kaminari'
 
 gem 'foreman'
 
+# handles breadcrumbs
+gem 'gretel'
+
 # used for pipelines
 gem 'activerecord-nulldb-adapter' # allows to run pipeline without credentials
 

@@ -1,11 +1,13 @@
 <%= content_for(:title) { "#{@extraction_definition.name} job" } %>
+<% breadcrumb :extraction_job, @harvest_definition, @extraction_job %>
 
 <%= content_for(:header) do %>
-  <%= render 'shared/breadcrumb_nav' %>
-
   <div class="float-start">
-    <h1><%= @extraction_job.extraction_definition.name %></h1>
-    <strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong>
+    <h1>Extracted Data</h1>
+    <p>
+      <span class="me-1"><%= @extraction_job.extraction_definition.name %></span>|
+      <span class="ms-1"><strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong></span>
+    </p>
   </div>
 
   <div class="float-end">
@@ -21,8 +23,8 @@
                     form_class: 'd-inline' %>
     <% end %>
 
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
-      <i class="bi bi-trash" aria-hidden="true"></i> Delete results
+    <button type="button" class="btn btn-danger px-2 py-2" data-bs-toggle="modal" data-bs-target="#delete-modal">
+      <i class="bi bi-trash" aria-hidden="true"></i> Delete data
     </button>
   </div>
 
@@ -36,17 +38,18 @@
   <p>It will delete all the data related to it.</p>
 <% end %>
 
-<ul class="list-group list-group-horizontal my-4">
-  <li class="list-group-item">Status: <%= job_status_text(@extraction_job) %></li>
-    <%- if @extraction_job.duration_seconds.present? %>
-      <li class="list-group-item">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></li>
-    <% end %>
-    <% if @document.present? %>
-      <li class="list-group-item">File size: <%= number_to_human_size(@document.size_in_bytes) %></li>
-    <% end %>
-    <li class="list-group-item">Folder size: <%= number_to_human_size(@extraction_job.extraction_folder_size_in_bytes) %></li>
-    <li class="list-group-item">Total Pages: <%= @extraction_job.documents.total_pages %></li>
-</ul>
+<div class="my-4">
+  <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span>|
+  <%- if @extraction_job.duration_seconds.present? %>
+    <span class="ms-1 me-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>|
+  <% end %>
+  <% if @document.present? %>
+    <span class="ms-1 me-1">File size: <%= number_to_human_size(@document.size_in_bytes) %></span>|
+  <% end %>
+  <span class="ms-1 me-1">Folder size: <%= number_to_human_size(@extraction_job.extraction_folder_size_in_bytes) %></span>|
+  <span class="ms-1">Total Pages: <%= @extraction_job.documents.total_pages %></span>
+  <%= render 'shared/pagination_above_table', items: @documents %>
+</div>
 
 <% if @document.blank? %>
   <% if @extraction_job.errored? %>
@@ -156,7 +159,5 @@
     </ol>
   </div>
 </div>
-
-<%= render 'shared/pagination_below_table', items: @documents %>
 
 <% end %>

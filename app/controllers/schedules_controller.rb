@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
 class SchedulesController < ApplicationController
-  before_action :find_destinations, only: %i[new create edit update]
+  before_action :find_destinations, only: %i[new create show update]
   before_action :find_schedule, except: %i[index new create]
-  before_action :assign_scheduleable_items, only: %i[new create edit update]
+  before_action :assign_scheduleable_items, only: %i[new create show update]
 
   def index
     @schedules = Schedule.schedules_within_range(Time.current.to_date, 30.days.from_now.to_date)
   end
 
+  def show; end
+
   def new
     @schedule = Schedule.new
   end
-
-  def edit; end
 
   def create
     @schedule = Schedule.new(schedule_params)
@@ -33,7 +33,7 @@ class SchedulesController < ApplicationController
       redirect_to schedules_path, notice: t('.success')
     else
       flash.alert = t('.failure')
-      render :edit
+      render :show
     end
   end
 

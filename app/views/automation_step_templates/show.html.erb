@@ -1,0 +1,14 @@
+<%= content_for(:title) { 'Edit Automation Step' } %>
+<% breadcrumb :automation_step, @automation_step_template %>
+
+<%= content_for :header do %>
+  <h1 class="header__title">Step <%= @automation_step_template.position + 1 %><h1>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<div class="card">
+  <div class="card-body">
+    <%= render 'form', automation_step_template: @automation_step_template %>
+  </div>
+</div>

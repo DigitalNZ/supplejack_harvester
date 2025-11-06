@@ -1,8 +1,6 @@
 <%= content_for(:title) { automation_template.name } %>
 
 <%= content_for :header do %>
-  <%= render 'shared/breadcrumb_nav' %>
-
   <h1 class="header__title"><%= automation_template.name %></h1>
 
   <div class="header__actions mb-4">
@@ -38,7 +36,7 @@
 
   <% if ENV['JOB_PRIORITIES'].present? %>
     <p>
-      <strong><%= automation_template.job_priority.presence&.humanize || 'No priority set' %></strong>
+      <strong><%= job_priority_label(automation_template) %></strong>
     </p>
   <% end %>
 

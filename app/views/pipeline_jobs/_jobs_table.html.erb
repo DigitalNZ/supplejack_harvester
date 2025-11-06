@@ -19,7 +19,7 @@
       <%= label_tag :status, 'Status:', class: 'col-form-label me-1' %>
     </div>
     <div class="col-auto">
-      <%= select_tag :status, options_for_select(pipeline_opts, params[:status]), class: klass, onchange: submit %>
+      <%= select_tag :status, options_for_select(status_opts, params[:status]), class: klass, onchange: submit %>
     </div>
 
     <div class="col-auto pe-0">
@@ -36,5 +36,5 @@
 
 <% if jobs.present? %>
   <%= render partial: 'pipeline_jobs/table',
-             locals: { jobs: jobs, show_pipeline_col: show_pipeline_col, show_destination_col: show_destination_col } %>
+             locals: { jobs: jobs, show_pipeline_col: show_pipeline_col } %>
 <% end %>

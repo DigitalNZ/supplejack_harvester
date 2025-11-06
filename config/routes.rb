@@ -54,16 +54,16 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :schedules, except: %i[show]
+  resources :schedules, except: %i[edit]
 
   resources :jobs, only: %i[index]
-  resources :job_completion_summary, only: %i[index show], controller: 'job_completion_summaries'
+  resources :job_completion_summaries, only: %i[index show]
 
   resources :pipelines, only: %i[index show create update destroy] do
     post :clone, on: :member
     get :harvest_definitions, on: :member
 
-    resources :pipeline_jobs, only: %i[create show index] do
+    resources :pipeline_jobs, path: :jobs, only: %i[index show create] do
       post :cancel, on: :member
     end
 
@@ -80,8 +80,6 @@ Rails.application.routes.draw do
         end
 
         resources :extraction_jobs, only: %i[index show create destroy] do
-          resources :details, only: %i[show]
-
           post :cancel, on: :member
         end
 

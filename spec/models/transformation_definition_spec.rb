@@ -59,7 +59,7 @@ RSpec.describe TransformationDefinition do
 
   describe '#name' do
     it 'automatically generates a sensible name' do
-      expect(subject.name).to eq "national-library-of-new-zealand__harvest-transformation-#{subject.id}"
+      expect(subject.name).to eq "#{subject.id}_harvest-transformation"
     end
     
     it { is_expected.to validate_uniqueness_of(:name).case_insensitive.with_message('has already been taken') }
