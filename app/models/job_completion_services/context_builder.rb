@@ -94,9 +94,6 @@ module JobCompletionServices
     private
 
     def self.is_existing_job_completion?(source_id, process_type, job_type, origin, message_prefix)
-      # Query for existing JobCompletion with:
-      # - Same source_id, process_type, job_type, origin, and message_prefix
-      # Uses indexed columns for fast lookup
       JobCompletion.where(
         source_id: source_id,
         process_type: process_type,
