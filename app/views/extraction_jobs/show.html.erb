@@ -29,8 +29,6 @@
   </div>
 
   <div class="clearfix"></div>
-
-  <%= render 'shared/pagination_above_table', items: @documents %>
 <% end %>
 
 <% path = pipeline_harvest_definition_extraction_definition_extraction_job_path(@pipeline, @harvest_definition,
@@ -50,6 +48,7 @@
   <% end %>
   <span class="ms-1 me-1">Folder size: <%= number_to_human_size(@extraction_job.extraction_folder_size_in_bytes) %></span>|
   <span class="ms-1">Total Pages: <%= @extraction_job.documents.total_pages %></span>
+  <%= render 'shared/pagination_above_table', items: @documents %>
 </div>
 
 <% if @document.blank? %>
