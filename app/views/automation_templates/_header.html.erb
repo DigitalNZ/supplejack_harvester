@@ -36,7 +36,7 @@
 
   <% if ENV['JOB_PRIORITIES'].present? %>
     <p>
-      <strong><%= automation_template.job_priority.presence&.humanize || 'No priority set' %></strong>
+      <strong><%= job_priority_label(automation_template) %></strong>
     </p>
   <% end %>
 

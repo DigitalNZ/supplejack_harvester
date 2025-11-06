@@ -1,0 +1,68 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2><%= report.harvest_job.name %></h2>
+
+  <div>
+    <% job_completion_summary = JobCompletionSummary.find_by(source_id: report.harvest_definition.source_id) %>
+    <%= if job_completion_summary
+          link_to 'View error details', job_completion_summary_path(job_completion_summary),
+                  class: 'btn btn-outline-danger text-nowrap me-2'
+        end %>
+
+    <%= link_to 'View extracted data',
+                pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                  pipeline_job.pipeline.id,
+                  report.harvest_definition.id,
+                  report.harvest_definition.extraction_definition.id,
+                  report.harvest_job.extraction_job_id
+                ),
+                class: 'btn btn-outline-primary text-nowrap' %>
+  </div>
+</div>
+
+<%# Processing Pipeline %>
+<div class='row mb-3'>
+  <div class='col'>
+    <div class='card harvest-card'>
+      <div class='card-body'>
+        <h5 class='card-title'>Extraction</h5>
+        <p class="my-0 py-1"><%= status_badge(report.extraction_status) %></p>
+        <p class="my-0 py-1"><%= number_with_delimiter(report.pages_extracted) %> pages</p>
+        <p class="my-0 py-1"><b>Started</b> <%= report.extraction_start_time&.to_fs(:medium) %></p>
+        <p class="my-0 py-1"><b>Last Updated</b> <%= report.extraction_updated_time&.to_fs(:medium) %></p>
+        <p class="my-0 py-1"><b>Ended</b> <%= report.extraction_end_time&.to_fs(:medium) %></p>
+      </div>
+      <i class='bi bi-arrow-right harvest-card__right-arrow'></i>
+    </div>
+  </div>
+
+  <div class='col'>
+    <div class='card harvest-card'>
+      <div class='card-body'>
+        <h5 class='card-title'>Transformation</h5>
+        <p class="my-0 py-1"><%= status_badge(report.transformation_status) %></p>
+        <p class="my-0 py-1"><%= number_with_delimiter(report.records_transformed) %> records</p>
+        <p class="my-0 py-1"><b>Started</b> <%= report.transformation_start_time&.to_fs(:medium) %></p>
+        <p class="my-0 py-1"><b>Last Updated</b> <%= report.transformation_updated_time&.to_fs(:medium) %></p>
+        <p class="my-0 py-1"><b>Ended</b> <%= report.transformation_end_time&.to_fs(:medium) %></p>
+      </div>
+      <i class='bi bi-arrow-right harvest-card__right-arrow'></i>
+    </div>
+  </div>
+
+  <div class='col'>
+    <div class='harvest-card card'>
+      <div class='card-body'>
+        <h5 class='card-title'>Load</h5>
+        <p class="my-0 py-1"><%= status_badge(report.load_status) %></p>
+        <p class="my-0 py-1">
+          <%= number_with_delimiter(report.records_loaded) %> loaded
+          | <%= number_with_delimiter(report.records_rejected) %> rejected
+          | <%= number_with_delimiter(report.records_deleted) %> deleted
+        </p>
+        <p class="my-0 py-1"><b>Started</b> <%= report.load_start_time&.to_fs(:medium) %></p>
+        <p class="my-0 py-1"><b>Last Updated</b> <%= report.load_updated_time&.to_fs(:medium) %></p>
+        <p class="my-0 py-1"><b>Ended</b> <%= report.load_end_time&.to_fs(:medium) %></p>
+      </div>
+    </div>
+  </div>
+</div>

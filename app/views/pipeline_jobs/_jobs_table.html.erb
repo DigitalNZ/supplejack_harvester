@@ -36,5 +36,5 @@
 
 <% if jobs.present? %>
   <%= render partial: 'pipeline_jobs/table',
-             locals: { jobs: jobs, show_pipeline_col: show_pipeline_col, show_destination_col: show_destination_col } %>
+             locals: { jobs: jobs, show_pipeline_col: show_pipeline_col } %>
 <% end %>

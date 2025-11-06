@@ -63,7 +63,7 @@ Rails.application.routes.draw do
     post :clone, on: :member
     get :harvest_definitions, on: :member
 
-    resources :pipeline_jobs, only: %i[create show index] do
+    resources :pipeline_jobs, path: :jobs, only: %i[index show create] do
       post :cancel, on: :member
     end
 
@@ -80,8 +80,6 @@ Rails.application.routes.draw do
         end
 
         resources :extraction_jobs, only: %i[index show create destroy] do
-          resources :details, only: %i[show]
-
           post :cancel, on: :member
         end
 

@@ -54,6 +54,16 @@ module JobsHelper
     format('%<h>d:%<m>02d:%<s>02d', h: hours, m: minutes, s: seconds)
   end
 
+  def job_status_badge(report, job)
+    status_badge(report&.status || job.status)
+  end
+
+  def status_badge(status)
+    tag.span(class: job_badge_classes(status)) do
+      status.capitalize
+    end
+  end
+
   def job_badge_classes(status)
     class_names(
       'badge',
@@ -69,10 +79,9 @@ module JobsHelper
   end
 
   def job_launched_by_label(pipeline_job)
-    automation_step = pipeline_job.automation_step
-    if pipeline_job.schedule.present?
-      'Schedule'
-    elsif automation_step.present?
+    if (schedule = pipeline_job.schedule.presence)
+      link_to 'Schedule', schedule_path(schedule)
+    elsif (automation_step = pipeline_job.automation_step.presence)
       link_to 'Automation', automation_path(automation_step.automation)
     else
       pipeline_job.launched_by&.username
@@ -87,11 +96,14 @@ module JobsHelper
     end
   end
 
-  def job_priority_label(report)
-    return '' unless report
+  def job_priority_label(job)
+    return '' unless job
 
-    priority = report.harvest_job&.pipeline_job&.job_priority
-    priority.presence&.humanize || 'No priority'
+    job.job_priority.presence&.humanize || 'Default'
+  end
+
+  def job_report_priority_label(report)
+    job_priority_label(report&.harvest_job&.pipeline_job)
   end
 
   def job_entries_info(collection)

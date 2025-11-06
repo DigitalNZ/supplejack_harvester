@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_16_000000) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_05_143642) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -269,7 +269,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_16_000000) do
   create_table "pipeline_jobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.timestamp "start_time"
     t.timestamp "end_time"
-    t.text "name"
     t.integer "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

@@ -1,0 +1,35 @@
+<div class="card">
+  <div class="card-body">
+    <dl class="row dl-lined">
+      <dt class="col-3">Run by</dt>
+      <dd class="col-9"><%= job_launched_by_label(pipeline_job) %></dd>
+
+      <dt class="col-3">Status</dt>
+      <dd class="col-9">
+        <span class="visually-hidden">Status: </span>
+        <%= job_status_badge(nil, pipeline_job) %>
+      </dd>
+
+      <dt class="col-3">Transformation input</dt>
+      <dd class="col-9"><%= pipeline_job_transformation_input(pipeline_job) %></dd>
+
+      <dt class="col-3">Pages to transform</dt>
+      <dd class="col-9"><%= pipeline_job.page_type.humanize %></dd>
+
+      <dt class="col-3">Destination</dt>
+      <dd class="col-9"><%= pipeline_job.destination.name %></dd>
+
+      <dt class="col-3">Delete previous records</dt>
+      <dd class="col-9"><%= pipeline_job.delete_previous_records ? 'Yes' : 'No' %></dd>
+
+      <dt class="col-3">Run enrichments concurrently</dt>
+      <dd class="col-9"><%= pipeline_job.run_enrichment_concurrently ? 'Yes' : 'No' %></dd>
+
+      <dt class="col-3">Skip previously enriched</dt>
+      <dd class="col-9"><%= pipeline_job.skip_previously_enriched ? 'Yes' : 'No' %></dd>
+
+      <dt class="col-3">Job priority</dt>
+      <dd class="col-9"><%= job_priority_label(pipeline_job) %></dd>
+    </dl>
+  </div>
+</div>
