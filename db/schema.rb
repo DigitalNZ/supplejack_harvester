@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_06_202433) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_07_012758) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -242,7 +242,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_06_202433) do
     t.string "source_id", null: false
     t.string "source_name", null: false
     t.integer "completion_type", default: 0, null: false
-    t.json "completion_entries", null: false
     t.integer "process_type", default: 0, null: false
     t.string "job_type", null: false
     t.datetime "created_at", null: false
