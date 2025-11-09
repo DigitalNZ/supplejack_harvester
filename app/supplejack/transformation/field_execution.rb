@@ -22,8 +22,8 @@ module Transformation
         if harvest_definition.present?
           harvest_job = harvest_definition.harvest_jobs.first
         end
-
-        log_field_error
+        
+        log_field_error(e, harvest_job)
         @error = e
       end
 
