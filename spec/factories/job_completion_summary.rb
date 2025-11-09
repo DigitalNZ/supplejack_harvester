@@ -40,14 +40,12 @@ FactoryBot.define do
               "stack_trace" => ["/app/test.rb:1:in `test_method'"],
               "job_id" => SecureRandom.hex(8),
               "pipeline_job_id" => SecureRandom.hex(8),
-              "context" => { "test" => true }
             },
             "timestamp" => Time.current.iso8601,
             "origin" => "TestWorker",
             "job_id" => SecureRandom.hex(8),
             "pipeline_job_id" => SecureRandom.hex(8),
             "stack_trace" => ["/app/test.rb:1:in `test_method'"],
-            "context" => { "test" => true }
           }
         ]
       end

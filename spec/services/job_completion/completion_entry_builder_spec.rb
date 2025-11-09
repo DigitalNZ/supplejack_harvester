@@ -25,8 +25,7 @@ RSpec.describe JobCompletionServices::CompletionEntryBuilder do
         details: { origin: 'TestWorker', job_id: '123' },
         timestamp: be_a(String),
         origin: 'TestWorker',
-        job_id: '123',
-        context: {}
+        job_id: '123'
       )
       expect(process_type).to eq(:extraction)
       expect(completion_type).to eq(:error)
@@ -51,23 +50,6 @@ RSpec.describe JobCompletionServices::CompletionEntryBuilder do
         expect(completion_entry[:stack_trace]).to eq(['line1', 'line2'])
       end
     end
-
-    context 'with context in details' do
-      let(:params) do
-        super().merge(
-          details: {
-            origin: 'TestWorker',
-            context: { test: true }
-          }
-        )
-      end
-
-      it 'includes context in completion entry' do
-        completion_entry, = described_class.build_completion_entry(params)
-        
-        expect(completion_entry[:context]).to eq({ test: true })
-      end
-    end
   end
 
   describe '.build_completion_entry_hash' do
@@ -81,21 +63,9 @@ RSpec.describe JobCompletionServices::CompletionEntryBuilder do
         message: 'Test error message',
         details: { origin: 'TestWorker', job_id: '123' },
         origin: 'TestWorker',
-        job_id: '123',
-        context: {}
+        job_id: '123'
       )
       expect(result[:timestamp]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
-    end
-
-    context 'with empty details' do
-      let(:details) { {} }
-
-      it 'builds completion entry with empty context' do
-        result = described_class.build_completion_entry_hash(message, details)
-        
-        expect(result[:context]).to eq({})
-        expect(result[:details]).to eq({})
-      end
     end
   end
 end

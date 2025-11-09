@@ -17,7 +17,6 @@ class JobCompletion < ApplicationRecord
   validates :job_type, presence: true
 
   validates :stack_trace, presence: true
-  validates :context, presence: true
   validates :message, presence: true
   validates :details, presence: true
   validates :completion_type, presence: true
