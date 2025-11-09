@@ -23,17 +23,7 @@ module Transformation
           harvest_job = harvest_definition.harvest_jobs.first
         end
 
-        JobCompletion::Logger.log_completion(
-          error: e,
-          definition: @field.transformation_definition,
-          job: harvest_job,
-          details: {
-            field_name: @field.name,
-            field_id: @field.id,
-            stop_condition_name: @field.name,
-            stop_condition_type: 'field_error'
-          }
-        )
+        log_field_error
         @error = e
       end
 
