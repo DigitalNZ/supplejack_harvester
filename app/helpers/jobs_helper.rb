@@ -60,7 +60,7 @@ module JobsHelper
 
   def status_badge(status)
     tag.span(class: job_badge_classes(status)) do
-      status.capitalize
+      status&.capitalize
     end
   end
 
