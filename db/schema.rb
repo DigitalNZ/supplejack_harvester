@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_09_222338) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_07_012758) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -242,19 +242,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_09_222338) do
     t.string "source_id", null: false
     t.string "source_name", null: false
     t.integer "completion_type", default: 0, null: false
+    t.datetime "last_completed_at"
     t.integer "process_type", default: 0, null: false
     t.string "job_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "completion_count", default: 0, null: false
     t.index ["completion_type"], name: "index_job_completion_summaries_on_completion_type"
+    t.index ["last_completed_at"], name: "index_job_completion_summaries_on_last_completed_at"
     t.index ["process_type"], name: "index_job_completion_summaries_on_process_type"
     t.index ["source_id", "process_type", "job_type"], name: "index_job_completion_summaries_on_source_process_job", unique: true
   end
 
   create_table "job_completions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.string "source_id", null: false
     t.string "source_name", null: false
     t.string "origin"
@@ -265,7 +265,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_09_222338) do
     t.string "message_prefix", limit: 50
     t.json "stack_trace", null: false
     t.json "details", null: false
-    t.index ["source_id", "process_type", "job_type", "origin", "message_prefix"], name: "idx_jc_source_process_job_origin_msg", unique: true, length: { source_id: 100, job_type: 50, origin: 100 }
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_id", "process_type", "job_type", "origin", "message_prefix"], name: "index_job_completions_on_source_process_origin_message", unique: true, length: { source_id: 100, job_type: 50, origin: 100 }
+    t.index ["source_id", "process_type", "job_type"], name: "index_job_completions_on_source_process_job"
   end
 
   create_table "parameters", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

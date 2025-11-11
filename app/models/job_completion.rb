@@ -22,8 +22,6 @@ class JobCompletion < ApplicationRecord
   validates :completion_type, presence: true
   validates :process_type, presence: true
 
-  scope :last_completed_at, -> { order(last_completed_at: :desc) }
-
   def stop_condition_name
     details&.dig('stop_condition_name')
   end

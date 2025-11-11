@@ -4,117 +4,218 @@ require 'rails_helper'
 
 RSpec.describe JobCompletionServices::ContextBuilder do
   let(:harvest_definition) do
-    create(:harvest_definition, source_id: 'test_source', name: 'Test Source').tap do |hd|
-      hd.update!(name: 'Test Source')
-    end
+    create(:harvest_definition, source_id: 'test_source', name: 'Test Source')
   end
   let(:extraction_definition) { harvest_definition.extraction_definition }
   let(:job) { create(:extraction_job) }
   let(:error) { StandardError.new('Test error') }
 
-  describe '.build_context_from_args' do
-    let(:args) do
-      {
-        error: error,
-        definition: extraction_definition,
-        job: job,
-        details: { origin: 'TestWorker' }
-      }
-    end
+  describe '.create_job_completion' do
+    context 'with error' do
+      it 'creates a new job completion and summary' do
+        expect {
+          described_class.create_job_completion(
+            origin: 'TestWorker',
+            error: error,
+            definition: extraction_definition,
+            job: job,
+            details: { origin: 'TestWorker' }
+          )
+        }.to change(JobCompletionSummary, :count).by(1)
+          .and change(JobCompletion, :count).by(1)
 
-    it 'builds complete context' do
-      result = described_class.build_context_from_args(args)
-      
-      expect(result).to include(
-        source_id: 'test_source',
-        source_name: 'Test Source',
-        process_type: :extraction,
-        job_type: 'ExtractionJob',
-        completion_type: :error,
-        message: 'StandardError: Test error'
-      )
-      expect(result[:details]).to include(
-        exception_class: 'StandardError',
-        exception_message: 'Test error',
-        job_id: job.id,
-        origin: 'TestWorker'
-      )
-    end
+        summary = JobCompletionSummary.last
+        expect(summary.source_id).to eq('test_source')
+        expect(summary.source_name).to eq('Test Source')
+        expect(summary.process_type).to eq('extraction')
+        expect(summary.job_type).to eq('ExtractionJob')
+        expect(summary.completion_type).to eq('error')
+        expect(summary.completion_count).to eq(1)
 
-    context 'with stop condition details' do
-      let(:args) do
-        {
-          error: nil,
+        completion = JobCompletion.last
+        expect(completion.source_id).to eq('test_source')
+        expect(completion.source_name).to eq('Test Source')
+        expect(completion.process_type).to eq('extraction')
+        expect(completion.job_type).to eq('ExtractionJob')
+        expect(completion.completion_type).to eq('error')
+        expect(completion.origin).to eq('TestWorker')
+        expect(completion.message).to include('Test error')
+        expect(completion.details['exception_class']).to eq('StandardError')
+        expect(completion.details['exception_message']).to eq('Test error')
+        expect(completion.details['origin']).to eq('TestWorker')
+        expect(completion.details['job_id']).to eq(job.id)
+        expect(completion.details['job_class']).to eq(job.class.name)
+      end
+
+      it 'creates job completion with stack trace' do
+        error_with_backtrace = StandardError.new('Test error')
+        error_with_backtrace.set_backtrace(['/app/test.rb:1:in `test_method'])
+
+        described_class.create_job_completion(
+          origin: 'TestWorker',
+          error: error_with_backtrace,
           definition: extraction_definition,
           job: job,
-          details: {
-            stop_condition_name: 'test_condition',
-            stop_condition_type: 'user',
-            origin: 'TestWorker'
-          }
-        }
-      end
-
-      it 'builds stop condition context' do
-        result = described_class.build_context_from_args(args)
-        
-        expect(result).to include(
-          completion_type: :stop_condition,
-          message: "Stop condition 'test_condition' was triggered"
+          details: {}
         )
-        expect(result[:details]).to include(
-          stop_condition_name: 'test_condition',
-          stop_condition_type: 'user'
+
+        completion = JobCompletion.last
+        expect(completion.stack_trace).to eq(['/app/test.rb:1:in `test_method'])
+        expect(completion.details['stack_trace']).to eq(['/app/test.rb:1:in `test_method'])
+      end
+
+      it 'handles error without backtrace' do
+        error_no_backtrace = StandardError.new('Test error')
+
+        described_class.create_job_completion(
+          origin: 'TestWorker',
+          error: error_no_backtrace,
+          definition: extraction_definition,
+          job: job,
+          details: {}
         )
-      end
-    end
-  end
 
-  describe '.determine_completion_type' do
-    context 'with stop condition name' do
-      let(:details) { { stop_condition_name: 'test_condition' } }
-
-      it 'returns stop_condition' do
-        result = described_class.determine_completion_type(details)
-        expect(result).to eq(:stop_condition)
+        completion = JobCompletion.last
+        expect(completion.stack_trace).to eq([])
       end
     end
 
-    context 'without stop condition name' do
-      let(:details) { { origin: 'TestWorker' } }
+    context 'with stop condition' do
+      it 'creates stop condition completion' do
+        expect {
+          described_class.create_job_completion(
+            origin: 'TestWorker',
+            error: nil,
+            definition: extraction_definition,
+            job: job,
+            details: {
+              stop_condition_name: 'test_condition',
+              stop_condition_content: 'if count > 100',
+              stop_condition_type: 'user'
+            }
+          )
+        }.to change(JobCompletionSummary, :count).by(1)
+          .and change(JobCompletion, :count).by(1)
 
-      it 'returns error' do
-        result = described_class.determine_completion_type(details)
-        expect(result).to eq(:error)
+        summary = JobCompletionSummary.last
+        expect(summary.completion_type).to eq('stop_condition')
+
+        completion = JobCompletion.last
+        expect(completion.completion_type).to eq('stop_condition')
+        expect(completion.details['stop_condition_name']).to eq('test_condition')
+        expect(completion.details['stop_condition_content']).to eq('if count > 100')
+        expect(completion.details['stop_condition_type']).to eq('user')
       end
     end
-  end
 
-  describe '.build_final_context' do
-    let(:process_info) do
-      {
-        source_id: 'test_source',
-        source_name: 'Test Source',
-        process_type: :extraction,
-        job_type: 'ExtractionJob'
-      }
+    context 'with duplicate job completion' do
+      it 'increments summary count instead of creating duplicate completion' do
+        # Create first completion
+        described_class.create_job_completion(
+          origin: 'TestWorker',
+          error: error,
+          definition: extraction_definition,
+          job: job,
+          details: { origin: 'TestWorker' }
+        )
+
+        summary = JobCompletionSummary.last
+        initial_count = summary.completion_count
+        initial_completion_count = JobCompletion.count
+
+        # Try to create duplicate (same source, process, job, origin, and message prefix)
+        described_class.create_job_completion(
+          origin: 'TestWorker',
+          error: error,
+          definition: extraction_definition,
+          job: job,
+          details: { origin: 'TestWorker' }
+        )
+
+        expect(JobCompletion.count).to eq(initial_completion_count)
+        expect(summary.reload.completion_count).to eq(initial_count + 1)
+      end
+
+      it 'creates new completion when message prefix differs' do
+        error1 = StandardError.new('Error one')
+        error2 = StandardError.new('Error two')
+
+        described_class.create_job_completion(
+          origin: 'TestWorker',
+          error: error1,
+          definition: extraction_definition,
+          job: job,
+          details: {}
+        )
+
+        expect {
+          described_class.create_job_completion(
+            origin: 'TestWorker',
+            error: error2,
+            definition: extraction_definition,
+            job: job,
+            details: {}
+          )
+        }.to change(JobCompletion, :count).by(1)
+      end
+
+      it 'creates new completion when origin differs' do
+        described_class.create_job_completion(
+          origin: 'Worker1',
+          error: error,
+          definition: extraction_definition,
+          job: job,
+          details: {}
+        )
+
+        expect {
+          described_class.create_job_completion(
+            origin: 'Worker2',
+            error: error,
+            definition: extraction_definition,
+            job: job,
+            details: {}
+          )
+        }.to change(JobCompletion, :count).by(1)
+      end
     end
-    let(:completion_type) { :error }
-    let(:message) { 'Test error message' }
-    let(:enhanced_details) { { origin: 'TestWorker' } }
 
-    it 'builds final context hash' do
-      result = described_class.build_final_context(process_info, completion_type, message, enhanced_details)
-      
-      expect(result).to eq({
-        source_id: 'test_source',
-        source_name: 'Test Source',
-        process_type: :extraction,
-        job_type: 'ExtractionJob',
-        completion_type: :error,
-        message: 'Test error message',
-        details: { origin: 'TestWorker' }
-      })
+    context 'with transformation definition' do
+      let(:transformation_definition) { harvest_definition.transformation_definition }
+
+      it 'creates completion with transformation process type' do
+        described_class.create_job_completion(
+          origin: 'TestWorker',
+          error: error,
+          definition: transformation_definition,
+          job: job,
+          details: {}
+        )
+
+        summary = JobCompletionSummary.last
+        expect(summary.process_type).to eq('transformation')
+        expect(summary.job_type).to eq('TransformationJob')
+
+        completion = JobCompletion.last
+        expect(completion.process_type).to eq('transformation')
+        expect(completion.job_type).to eq('TransformationJob')
+      end
+    end
+
+    context 'error handling' do
+      it 'raises error when creation fails' do
+        allow(JobCompletion).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(JobCompletion.new))
+
+        expect {
+          described_class.create_job_completion(
+            origin: 'TestWorker',
+            error: error,
+            definition: extraction_definition,
+            job: job,
+            details: {}
+          )
+        }.to raise_error(ActiveRecord::RecordInvalid)
+      end
     end
   end
 end
