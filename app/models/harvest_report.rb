@@ -126,11 +126,14 @@ class HarvestReport < ApplicationRecord
   end
 
   def idle_offset
-    return 0 if extraction_end_time.blank?
+    extraction_end = extraction_end_time
+    return 0 if extraction_end.blank?
     return @idle_offset if @idle_offset.present?
-    return 0 if transformation_start_time.blank? || extraction_end_time.blank?
 
-    @idle_offset = transformation_start_time - extraction_end_time
+    transformation_start = transformation_start_time
+    return 0 if transformation_start.blank?
+
+    @idle_offset = transformation_start - extraction_end
     @idle_offset = 0 if @idle_offset.negative?
     @idle_offset
   end

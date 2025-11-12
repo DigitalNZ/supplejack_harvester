@@ -80,36 +80,36 @@ module Extraction
     end
 
     def set_number_reached?
-      return false unless @harvest_job.present? && @harvest_job.pipeline_job.set_number?
+      return false unless @harvest_job.present?
 
-      if @harvest_job.pipeline_job.pages == @extraction_definition.page
-        details = {
-          stop_condition_type: 'system',
-          stop_condition_name: 'Set number limit reached',
-          stop_condition_content: nil,
-          completion_type: :stop_condition
-        }
-        log_stop_condition_hit(nil, details)
-        return true
-      end
+      pipeline_job = @harvest_job.pipeline_job
+      return false unless pipeline_job.set_number?
 
-      false
+      return false unless pipeline_job.pages == @extraction_definition.page
+
+      details = {
+        stop_condition_type: 'system',
+        stop_condition_name: 'Set number limit reached',
+        stop_condition_content: nil,
+        completion_type: :stop_condition
+      }
+      log_stop_condition_hit(nil, details)
+      true
     end
 
     def extraction_failed?
-      if @de.document.status >= 400 || @de.document.status < 200
-        details = {
-          stop_condition_type: 'system',
-          stop_condition_name: 'Extraction failed',
-          stop_condition_content: nil,
-          completion_type: :stop_condition
-        }
+      document_status = @de.document.status
+      return false unless document_status >= 400 || document_status < 200
 
-        log_stop_condition_hit(nil, details)
-        return true
-      end
+      details = {
+        stop_condition_type: 'system',
+        stop_condition_name: 'Extraction failed',
+        stop_condition_content: nil,
+        completion_type: :stop_condition
+      }
 
-      false
+      log_stop_condition_hit(nil, details)
+      true
     end
 
     def duplicate_document_extracted?
