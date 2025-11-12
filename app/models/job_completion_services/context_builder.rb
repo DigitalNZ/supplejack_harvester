@@ -29,7 +29,7 @@ module JobCompletionServices
         job_type: process_info[:job_type],
         completion_type: determine_completion_type(details),
         message: MessageBuilder.build_message(error, details),
-        message_prefix: nil # Will be set after message is built
+        message_prefix: nil # Added once the message is built
       }
     end
 
@@ -41,7 +41,6 @@ module JobCompletionServices
       summary = find_or_create_summary(context)
       return false unless summary
 
-      increment_summary_count(summary, context)
       true
     end
 
@@ -53,17 +52,6 @@ module JobCompletionServices
                             message_prefix: context[:message_prefix])
     end
 
-    def self.increment_summary_count(summary, context)
-      logger = Rails.logger
-      logger.info "Existing job completion found for source_id: #{context[:source_id]}, " \
-                  "process_type: #{context[:process_type]}, job_type: #{context[:job_type]}, " \
-                  "origin: #{context[:origin]}, message_prefix: #{context[:message_prefix]}"
-
-      summary.increment_completion_count
-      summary.touch
-      summary.save!
-    end
-
     def self.create_new_completion(context)
       context[:message_prefix] = context[:message][0..49]
       context[:stack_trace] = extract_stack_trace(context[:error]) || []
@@ -73,8 +61,9 @@ module JobCompletionServices
       create_job_completion_record(context, summary)
     end
 
-    def self.create_job_completion_record(context, _summary)
+    def self.create_job_completion_record(context, summary)
       JobCompletion.create!(
+        job_completion_summary_id: summary.id,
         source_id: context[:source_id],
         source_name: context[:source_name],
         process_type: context[:process_type],

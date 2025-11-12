@@ -11,6 +11,8 @@ class JobCompletion < ApplicationRecord
     transformation: 1
   }
 
+  belongs_to :job_completion_summary
+
   validates :source_id, uniqueness: { scope: %i[process_type job_type origin message_prefix] }
   validates :source_name, presence: true
 

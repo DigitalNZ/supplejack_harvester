@@ -6,12 +6,15 @@ class JobCompletionSummary < ApplicationRecord
     transformation: 1
   }
 
+  validates: job_completion_summary_id, presence: true
   validates :source_id, presence: true
   validates :source_name, presence: true
   validates :completion_count, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :job_type, presence: true
 
   validates :source_id, uniqueness: { scope: %i[process_type job_type] }
+
+  has_many :job_completions, dependent: :destroy
 
   after_initialize :set_defaults, if: :new_record?
 
@@ -31,10 +34,6 @@ class JobCompletionSummary < ApplicationRecord
     else
       'Unknown Type'
     end
-  end
-
-  def job_completions
-    JobCompletion.where(source_id: source_id, process_type: process_type, job_type: job_type)
   end
 
   def last_completed_at
