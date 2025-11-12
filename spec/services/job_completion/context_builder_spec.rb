@@ -29,7 +29,6 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         expect(summary.source_name).to eq('Test Source')
         expect(summary.process_type).to eq('extraction')
         expect(summary.job_type).to eq('ExtractionJob')
-        expect(summary.completion_type).to eq('error')
         expect(summary.completion_count).to eq(1)
 
         completion = JobCompletion.last
@@ -37,7 +36,6 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         expect(completion.source_name).to eq('Test Source')
         expect(completion.process_type).to eq('extraction')
         expect(completion.job_type).to eq('ExtractionJob')
-        expect(completion.completion_type).to eq('error')
         expect(completion.origin).to eq('TestWorker')
         expect(completion.message).to include('Test error')
         expect(completion.details['exception_class']).to eq('StandardError')
@@ -98,10 +96,8 @@ RSpec.describe JobCompletionServices::ContextBuilder do
           .and change(JobCompletion, :count).by(1)
 
         summary = JobCompletionSummary.last
-        expect(summary.completion_type).to eq('stop_condition')
 
         completion = JobCompletion.last
-        expect(completion.completion_type).to eq('stop_condition')
         expect(completion.details['stop_condition_name']).to eq('test_condition')
         expect(completion.details['stop_condition_content']).to eq('if count > 100')
         expect(completion.details['stop_condition_type']).to eq('user')

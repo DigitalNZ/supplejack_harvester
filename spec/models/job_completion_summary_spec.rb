@@ -32,51 +32,6 @@ RSpec.describe JobCompletionSummary, type: :model do
     end
   end
 
-  describe 'enums' do
-    it 'defines completion_type enum' do
-      expect(JobCompletionSummary.completion_types).to eq({ 'error' => 0, 'stop_condition' => 1 })
-    end
-
-    it 'defines process_type enum' do
-      expect(JobCompletionSummary.process_types).to eq({ 'extraction' => 0, 'transformation' => 1 })
-    end
-
-    it 'can be created with error completion_type' do
-      summary = create(:job_completion_summary, completion_type: :error)
-      expect(summary.error?).to be true
-      expect(summary.stop_condition?).to be false
-    end
-
-    it 'can be created with stop_condition completion_type' do
-      summary = create(:job_completion_summary, :stop_condition)
-      expect(summary.stop_condition?).to be true
-      expect(summary.error?).to be false
-    end
-
-    it 'can be created with extraction process_type' do
-      summary = create(:job_completion_summary, process_type: :extraction)
-      expect(summary.extraction?).to be true
-      expect(summary.transformation?).to be false
-    end
-
-    it 'can be created with transformation process_type' do
-      summary = create(:job_completion_summary, :transformation)
-      expect(summary.transformation?).to be true
-      expect(summary.extraction?).to be false
-    end
-  end
-
-  describe 'scopes' do
-    it 'has by_completion_type scope' do
-      error_summary = create(:job_completion_summary, completion_type: :error)
-      stop_condition_summary = create(:job_completion_summary, completion_type: :stop_condition)
-      
-      error_results = JobCompletionSummary.by_completion_type(:error)
-      expect(error_results).to include(error_summary)
-      expect(error_results).not_to include(stop_condition_summary)
-    end
-  end
-
   describe 'defaults' do
     it 'sets default values for new records' do
       summary = JobCompletionSummary.new

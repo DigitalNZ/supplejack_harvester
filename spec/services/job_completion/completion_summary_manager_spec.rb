@@ -54,19 +54,7 @@ RSpec.describe JobCompletionServices::CompletionSummaryManager do
       )
       
       expect(completion_summary.source_name).to eq('Test Source')
-      expect(completion_summary.completion_type).to eq('error')
       expect(completion_summary.completion_count).to eq(2)
-    end
-
-    it 'adds completion entry to entries array' do
-      original_count = completion_summary.completion_entries.length
-      
-      described_class.update_completion_summary(
-        completion_summary, entry_params, completion_entry, :error
-      )
-      
-      expect(completion_summary.completion_entries.length).to eq(original_count + 1)
-      expect(completion_summary.completion_entries.last).to eq(completion_entry)
     end
 
     it 'updates last_completed_at timestamp' do

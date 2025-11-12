@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
 class JobCompletionSummary < ApplicationRecord
-  enum completion_type: {
-    error: 0,
-    stop_condition: 1
-  }
-
   enum process_type: {
     extraction: 0,
     transformation: 1
@@ -19,8 +14,6 @@ class JobCompletionSummary < ApplicationRecord
   validates :source_id, uniqueness: { scope: %i[process_type job_type] }
 
   after_initialize :set_defaults, if: :new_record?
-
-  scope :by_completion_type, ->(type) { where(completion_type: type) }
 
   def pipeline_name
     harvest_definition = HarvestDefinition.find_by(source_id: source_id)

@@ -160,7 +160,6 @@ module JobCompletionServices
         job_type: context[:job_type]
       ) do |summary|
         summary.source_name = context[:source_name]
-        summary.completion_type = context[:completion_type].to_s
       end
     end
 

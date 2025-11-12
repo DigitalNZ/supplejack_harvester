@@ -6,12 +6,7 @@ FactoryBot.define do
     source_name { "Test Source #{SecureRandom.hex(4)}" }
     job_type { "ExtractionJob" }
     process_type { :extraction }
-    completion_type { :error }
     completion_count { 1 }
-
-    trait :stop_condition do
-      completion_type { :stop_condition }
-    end
 
     trait :multiple_errors do
       completion_count { 3 }

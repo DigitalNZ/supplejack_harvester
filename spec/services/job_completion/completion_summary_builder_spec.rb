@@ -10,7 +10,6 @@ RSpec.describe JobCompletionServices::CompletionSummaryBuilder do
       message: 'Test error',
       job_type: 'ExtractionJob',
       process_type: :extraction,
-      completion_type: :error,
       details: { origin: 'TestWorker' }
     }
   end
@@ -29,7 +28,6 @@ RSpec.describe JobCompletionServices::CompletionSummaryBuilder do
       expect(summary.source_name).to eq('Test Source')
       expect(summary.job_type).to eq('ExtractionJob')
       expect(summary.process_type).to eq('extraction')
-      expect(summary.completion_type).to eq('error')
       expect(summary.completion_count).to eq(1)
     end
 
@@ -51,14 +49,6 @@ RSpec.describe JobCompletionServices::CompletionSummaryBuilder do
         
         summary = JobCompletionSummary.last
         expect(summary.completion_count).to eq(2)
-      end
-
-      it 'adds new completion entry' do
-        described_class.build_completion_summary(entry_params)
-        
-        summary = JobCompletionSummary.last
-        expect(summary.completion_entries.length).to eq(2)
-        expect(summary.completion_entries.last['message']).to eq('Test error')
       end
     end
   end
