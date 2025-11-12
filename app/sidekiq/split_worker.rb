@@ -29,12 +29,12 @@ class SplitWorker < FileExtractionWorker
 
   def handle_split_error(error)
     JobCompletionServices::ContextBuilder.create_job_completion({
-      error: error,
-      definition: @extraction_definition,
-      job: @extraction_job,
-      details: {},
-      origin: 'SplitWorker'
-    })
+                                                                  error: error,
+                                                                  definition: @extraction_definition,
+                                                                  job: @extraction_job,
+                                                                  details: {},
+                                                                  origin: 'SplitWorker'
+                                                                })
     raise
   end
 

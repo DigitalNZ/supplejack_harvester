@@ -4,22 +4,20 @@ module JobCompletionServices
   class ContextBuilder
     def self.create_job_completion(args)
       context = build_context(args)
-      
+
       return if handle_duplicate_completion(context)
 
       create_new_completion(context)
-    rescue StandardError => error
-      log_error(error)
+    rescue StandardError => e
+      log_error(e)
       raise
     end
-
-    private
 
     def self.build_context(args)
       details = args[:details] || {}
       error = args[:error]
       process_info = extract_process_info(args[:definition])
-      
+
       {
         origin: args[:origin],
         error: error,
@@ -37,10 +35,10 @@ module JobCompletionServices
 
     def self.handle_duplicate_completion(context)
       context[:message_prefix] = context[:message][0..49]
-      
+
       return false unless is_existing_job_completion?(context)
 
-      summary = find_existing_summary(context)
+      summary = find_or_create_summary(context)
       return false unless summary
 
       increment_summary_count(summary, context)
@@ -48,21 +46,11 @@ module JobCompletionServices
     end
 
     def self.is_existing_job_completion?(context)
-      JobCompletion.where(
-        source_id: context[:source_id],
-        process_type: context[:process_type],
-        job_type: context[:job_type],
-        origin: context[:origin],
-        message_prefix: context[:message_prefix]
-      ).exists?
-    end
-
-    def self.find_existing_summary(context)
-      JobCompletionSummary.find_by(
-        source_id: context[:source_id],
-        process_type: context[:process_type].to_s,
-        job_type: context[:job_type]
-      )
+      JobCompletion.exists?(source_id: context[:source_id],
+                            process_type: context[:process_type],
+                            job_type: context[:job_type],
+                            origin: context[:origin],
+                            message_prefix: context[:message_prefix])
     end
 
     def self.increment_summary_count(summary, context)
@@ -70,7 +58,7 @@ module JobCompletionServices
       logger.info "Existing job completion found for source_id: #{context[:source_id]}, " \
                   "process_type: #{context[:process_type]}, job_type: #{context[:job_type]}, " \
                   "origin: #{context[:origin]}, message_prefix: #{context[:message_prefix]}"
-      
+
       summary.increment_completion_count
       summary.touch
       summary.save!
@@ -101,8 +89,8 @@ module JobCompletionServices
     end
 
     def self.extract_stack_trace(error)
-      return [] unless error&.respond_to?(:backtrace)
-      
+      return [] unless error.respond_to?(:backtrace)
+
       backtrace = error.backtrace
       return [] unless backtrace
 
@@ -113,12 +101,12 @@ module JobCompletionServices
     def self.extract_pipeline_job_id(job)
       pipeline_job_id = job.pipeline_job_id if job.respond_to?(:pipeline_job_id)
       return pipeline_job_id if pipeline_job_id
-      
+
       harvest_job = job.harvest_job if job.respond_to?(:harvest_job)
-      return harvest_job.pipeline_job_id if harvest_job&.respond_to?(:pipeline_job_id)
-      
+      return harvest_job.pipeline_job_id if harvest_job.respond_to?(:pipeline_job_id)
+
       return job.id if job.is_a?(PipelineJob)
-      
+
       nil
     end
 
@@ -146,7 +134,7 @@ module JobCompletionServices
     def self.add_job_details(enhanced_details, job)
       enhanced_details[:job_id] = job.id
       enhanced_details[:job_class] = job.class.name
-      
+
       pipeline_job_id = extract_pipeline_job_id(job)
       enhanced_details[:pipeline_job_id] = pipeline_job_id if pipeline_job_id
     end
@@ -158,7 +146,7 @@ module JobCompletionServices
 
     def self.add_stop_condition_details(enhanced_details, details)
       stop_condition_name = details[:stop_condition_name]
-      return unless stop_condition_name.present?
+      return if stop_condition_name.blank?
 
       enhanced_details[:stop_condition_name] = stop_condition_name
       enhanced_details[:stop_condition_content] = details[:stop_condition_content] # information for user defined stop conditions

@@ -19,10 +19,8 @@ module Transformation
       rescue Exception => e
         harvest_definition = @field.transformation_definition.harvest_definitions.first
         harvest_job = nil
-        if harvest_definition.present?
-          harvest_job = harvest_definition.harvest_jobs.first
-        end
-        
+        harvest_job = harvest_definition.harvest_jobs.first if harvest_definition.present?
+
         log_field_error(e, harvest_job)
         @error = e
       end
@@ -44,14 +42,14 @@ module Transformation
       return unless harvest_job
 
       JobCompletionServices::ContextBuilder.create_job_completion({
-        origin: 'Transformation::FieldExecution',
-        error: error,
-        definition: @field.transformation_definition,
-        job: harvest_job,
-        details: build_field_error_details
-      })
+                                                                    origin: 'Transformation::FieldExecution',
+                                                                    error: error,
+                                                                    definition: @field.transformation_definition,
+                                                                    job: harvest_job,
+                                                                    details: build_field_error_details
+                                                                  })
     end
-    
+
     def build_field_error_details
       {
         field_name: @field.name,

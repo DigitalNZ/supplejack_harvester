@@ -33,12 +33,12 @@ module Load
 
     def handle_load_error(error)
       JobCompletionServices::ContextBuilder.create_job_completion({
-        error: error,
-        definition: @harvest_job&.extraction_definition,
-        job: @harvest_job&.extraction_job,
-        details: {},
-        origin: 'LoadWorker'
-      })
+                                                                    error: error,
+                                                                    definition: @harvest_job&.extraction_definition,
+                                                                    job: @harvest_job&.extraction_job,
+                                                                    details: {},
+                                                                    origin: 'LoadWorker'
+                                                                  })
       raise
     end
 

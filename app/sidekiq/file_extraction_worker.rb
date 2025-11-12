@@ -35,12 +35,12 @@ class FileExtractionWorker
 
   def handle_file_extraction_error(error)
     JobCompletionServices::ContextBuilder.create_job_completion({
-      error: error,
-      definition: @extraction_job.extraction_definition,
-      job: @extraction_job,
-      details: {},
-      origin: 'FileExtractionWorker'
-    })
+                                                                  error: error,
+                                                                  definition: @extraction_job.extraction_definition,
+                                                                  job: @extraction_job,
+                                                                  details: {},
+                                                                  origin: 'FileExtractionWorker'
+                                                                })
     raise
   end
 
