@@ -161,7 +161,7 @@ module JobCompletionServices
       return unless stop_condition_name.present?
 
       enhanced_details[:stop_condition_name] = stop_condition_name
-      enhanced_details[:stop_condition_content] = details[:stop_condition_content]
+      enhanced_details[:stop_condition_content] = details[:stop_condition_content] # information for user defined stop conditions
       enhanced_details[:stop_condition_type] = details[:stop_condition_type]
     end
 
