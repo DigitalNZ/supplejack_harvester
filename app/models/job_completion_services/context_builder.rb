@@ -5,7 +5,7 @@ module JobCompletionServices
     def self.create_job_completion_or_error(args)
       context = args[:error].present? ? build_job_error_context(args) : build_job_completion_context(args)
 
-      return if is_duplicate?(context)
+      return if duplicate?(context)
 
       summary = find_or_create_summary(context)
       create_record(context, summary)
@@ -42,7 +42,7 @@ module JobCompletionServices
       error = args[:error]
       process_info = extract_process_info(args[:definition])
       message = MessageBuilder.build_message(error, details)
-      stack_trace = extract_stack_trace(error) || []
+      stack_trace = extract_stack_trace(error)
 
       {
         origin: args[:origin],
@@ -56,11 +56,11 @@ module JobCompletionServices
       }
     end
 
-    def self.is_duplicate?(context)
+    def self.duplicate?(context)
       exists = if context[:error].blank?
-                 is_existing_job_completion?(context)
+                 existing_job_completion?(context)
                else
-                 is_existing_job_error?(context)
+                 existing_job_error?(context)
                end
 
       return false unless exists
@@ -69,13 +69,13 @@ module JobCompletionServices
       summary.present?
     end
 
-    def self.is_existing_job_completion?(context)
+    def self.existing_job_completion?(context)
       JobCompletion.exists?(job_id: context[:job_id],
                             origin: context[:origin],
                             stop_condition_name: context[:stop_condition_name])
     end
 
-    def self.is_existing_job_error?(context)
+    def self.existing_job_error?(context)
       # Truncate message to 255 chars to match MySQL index length
       # Use SQL LEFT function to compare truncated messages
       truncated_message = context[:message]&.slice(0, 255)
@@ -115,13 +115,13 @@ module JobCompletionServices
     end
 
     def self.extract_stack_trace(error)
-      return [] unless error.respond_to?(:backtrace)
+      return ['No backtrace available'] unless error.respond_to?(:backtrace)
 
       backtrace = error.backtrace
-      return [] unless backtrace
+      return ['No backtrace available'] unless backtrace
 
       # Only take the first line. Harvesters don't need the full stack trace
-      backtrace.first(1) || []
+      backtrace.first(1).presence || ['No backtrace available']
     end
 
     def self.find_or_create_summary(context)

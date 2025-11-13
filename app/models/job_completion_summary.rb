@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class JobCompletionSummary < ApplicationRecord
-  enum process_type: {
+  enum :process_type, {
     extraction: 0,
     transformation: 1
   }

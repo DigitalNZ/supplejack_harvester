@@ -8,7 +8,7 @@ class JobCompletionSummariesController < ApplicationController
 
     return if extraction_id.blank?
 
-    @job_completion_summaries = @job_completion_summaries.where(source_id: extraction_id)
+    @job_completion_summaries = @job_completion_summaries.where(job_id: extraction_id)
   end
 
   def show

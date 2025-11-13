@@ -36,7 +36,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         expect(job_error.job_type).to eq('ExtractionJob')
         expect(job_error.origin).to eq('TestWorker')
         expect(job_error.message).to eq('StandardError: Test error')
-        expect(job_error.stack_trace).to eq([])
+        expect(job_error.stack_trace).to eq(['No backtrace available'])
       end
 
       it 'creates job error with stack trace' do
@@ -67,7 +67,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         )
 
         job_error = JobError.last
-        expect(job_error.stack_trace).to eq([])
+        expect(job_error.stack_trace).to eq(['No backtrace available'])
       end
     end
 
