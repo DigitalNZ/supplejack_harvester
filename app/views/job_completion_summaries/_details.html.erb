@@ -66,7 +66,9 @@
                           <p><strong>Job:</strong> <%= @job_completion_summary.pipeline_name %></p>
                           <% if record.stack_trace.present? %>
                             <p><strong>Stack Trace:</strong></p>
-                            <pre class="bg-dark text-light p-2 rounded"><%= record.stack_trace.is_a?(Array) ? record.stack_trace.join("\n") : record.stack_trace %></pre>
+                            <pre class="bg-dark text-light p-2 rounded">
+                              <%= record.stack_trace.is_a?(Array) ? record.stack_trace.join("\n") : record.stack_trace %>
+                            </pre>
                           <% end %>
                         </div>
                       </div>

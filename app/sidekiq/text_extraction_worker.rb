@@ -27,11 +27,11 @@ class TextExtractionWorker < FileExtractionWorker
 
   def handle_text_extraction_error(error)
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
-                                                                  error: error,
-                                                                  definition: @extraction_definition,
-                                                                  job: @extraction_definition.extraction_jobs.first,
-                                                                  origin: 'TextExtractionWorker'
-                                                                })
+                                                                           error: error,
+                                                                           definition: @extraction_definition,
+                                                                           job: @extraction_definition.extraction_jobs.first,
+                                                                           origin: 'TextExtractionWorker'
+                                                                         })
     raise
   end
 

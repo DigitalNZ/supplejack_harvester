@@ -39,12 +39,13 @@ module Extraction
       end
     end
 
-    def handle_extraction_error(error)
+    def handle_extraction_error(_error)
       harvest_definition = @extraction_definition&.harvest_definitions&.first
       source_id = harvest_definition&.source_id
       return unless source_id
 
-      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Handle extraction error', stop_condition_content: nil)
+      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Handle extraction error',
+                             stop_condition_content: nil)
       raise
     end
 
@@ -71,14 +72,15 @@ module Extraction
     end
 
     def set_number_reached?
-      return false unless @harvest_job.present?
+      return false if @harvest_job.blank?
 
       pipeline_job = @harvest_job.pipeline_job
       return false unless pipeline_job.set_number?
 
       return false unless pipeline_job.pages == @extraction_definition.page
 
-      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Set number reached', stop_condition_content: nil)
+      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Set number reached',
+                             stop_condition_content: nil)
       true
     end
 
@@ -86,7 +88,8 @@ module Extraction
       document_status = @de.document.status
       return false unless document_status >= 400 || document_status < 200
 
-      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Extraction failed', stop_condition_content: nil)
+      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Extraction failed',
+                             stop_condition_content: nil)
       true
     end
 
@@ -105,7 +108,8 @@ module Extraction
     def check_for_duplicate_document(previous_document)
       return false unless previous_document.body == @de.document.body
 
-      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Duplicate document', stop_condition_content: nil)
+      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Duplicate document',
+                             stop_condition_content: nil)
       true
     end
 
@@ -115,19 +119,20 @@ module Extraction
 
       stop_conditions.any? do |condition|
         condition.evaluate(@de.document.body)
-        log_stop_condition_hit(stop_condition_type: 'user', stop_condition_name: 'Duplicate document', stop_condition_content: condition.content)
+        log_stop_condition_hit(stop_condition_type: 'user', stop_condition_name: 'Duplicate document',
+                               stop_condition_content: condition.content)
       end
     end
 
     def log_stop_condition_hit(stop_condition_type, stop_condition_name, stop_condition_content)
       JobCompletionServices::ContextBuilder.create_job_completion_or_error({
-                                                                    origin: 'Extraction::Execution',
-                                                                    definition: @extraction_definition,
-                                                                    job: @extraction_job,
-                                                                    stop_condition_type: stop_condition_type,
-                                                                    stop_condition_name: stop_condition_name,
-                                                                    stop_condition_content: stop_condition_content
-                                                                  })
+                                                                             origin: 'Extraction::Execution',
+                                                                             definition: @extraction_definition,
+                                                                             job: @extraction_job,
+                                                                             stop_condition_type: stop_condition_type,
+                                                                             stop_condition_name: stop_condition_name,
+                                                                             stop_condition_content: stop_condition_content
+                                                                           })
     end
 
     def throttle

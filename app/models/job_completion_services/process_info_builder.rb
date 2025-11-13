@@ -13,7 +13,7 @@ module JobCompletionServices
     end
 
     def self.build_extraction_process_info(definition)
-      harvest_definition = definition.harvest_definitions.first
+      definition.harvest_definitions.first
       {
         process_type: :extraction,
         job_type: 'ExtractionJob'
@@ -21,7 +21,7 @@ module JobCompletionServices
     end
 
     def self.build_transformation_process_info(definition)
-      harvest_definition = definition.harvest_definitions.first
+      definition.harvest_definitions.first
       {
         process_type: :transformation,
         job_type: 'TransformationJob'

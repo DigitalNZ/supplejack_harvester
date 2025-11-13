@@ -42,11 +42,11 @@ module Transformation
       return unless harvest_job
 
       JobCompletionServices::ContextBuilder.create_job_completion_or_error({
-                                                                    origin: 'Transformation::FieldExecution',
-                                                                    error: error,
-                                                                    definition: @field.transformation_definition,
-                                                                    job: harvest_job
-                                                                  })
+                                                                             origin: 'Transformation::FieldExecution',
+                                                                             error: error,
+                                                                             definition: @field.transformation_definition,
+                                                                             job: harvest_job
+                                                                           })
     end
 
     def find_harvest_job

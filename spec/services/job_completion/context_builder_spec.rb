@@ -10,46 +10,40 @@ RSpec.describe JobCompletionServices::ContextBuilder do
   let(:job) { create(:extraction_job) }
   let(:error) { StandardError.new('Test error') }
 
-  describe '.create_job_completion' do
+  describe '.create_job_completion_or_error' do
     context 'with error' do
-      it 'creates a new job completion and summary' do
+      it 'creates a new job error and summary' do
         expect {
-          described_class.create_job_completion(
+          described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: error,
             definition: extraction_definition,
             job: job,
-            details: { origin: 'TestWorker' }
+            details: {}
           )
         }.to change(JobCompletionSummary, :count).by(1)
-          .and change(JobCompletion, :count).by(1)
+          .and change(JobError, :count).by(1)
 
         summary = JobCompletionSummary.last
-        expect(summary.source_id).to eq('test_source')
-        expect(summary.source_name).to eq('Test Source')
+        expect(summary.job_id).to eq(job.id)
         expect(summary.process_type).to eq('extraction')
         expect(summary.job_type).to eq('ExtractionJob')
         expect(summary.completion_count).to eq(1)
 
-        completion = JobCompletion.last
-        expect(completion.source_id).to eq('test_source')
-        expect(completion.source_name).to eq('Test Source')
-        expect(completion.process_type).to eq('extraction')
-        expect(completion.job_type).to eq('ExtractionJob')
-        expect(completion.origin).to eq('TestWorker')
-        expect(completion.message).to include('Test error')
-        expect(completion.details['exception_class']).to eq('StandardError')
-        expect(completion.details['exception_message']).to eq('Test error')
-        expect(completion.details['origin']).to eq('TestWorker')
-        expect(completion.details['job_id']).to eq(job.id)
-        expect(completion.details['job_class']).to eq(job.class.name)
+        job_error = JobError.last
+        expect(job_error.job_id).to eq(job.id)
+        expect(job_error.process_type).to eq('extraction')
+        expect(job_error.job_type).to eq('ExtractionJob')
+        expect(job_error.origin).to eq('TestWorker')
+        expect(job_error.message).to eq('StandardError: Test error')
+        expect(job_error.stack_trace).to eq([])
       end
 
-      it 'creates job completion with stack trace' do
+      it 'creates job error with stack trace' do
         error_with_backtrace = StandardError.new('Test error')
-        error_with_backtrace.set_backtrace(['/app/test.rb:1:in `test_method'])
+        error_with_backtrace.set_backtrace(['/app/test.rb:1:in `test_method`'])
 
-        described_class.create_job_completion(
+        described_class.create_job_completion_or_error(
           origin: 'TestWorker',
           error: error_with_backtrace,
           definition: extraction_definition,
@@ -57,15 +51,14 @@ RSpec.describe JobCompletionServices::ContextBuilder do
           details: {}
         )
 
-        completion = JobCompletion.last
-        expect(completion.stack_trace).to eq(['/app/test.rb:1:in `test_method'])
-        expect(completion.details['stack_trace']).to eq(['/app/test.rb:1:in `test_method'])
+        job_error = JobError.last
+        expect(job_error.stack_trace).to eq(['/app/test.rb:1:in `test_method`'])
       end
 
       it 'handles error without backtrace' do
         error_no_backtrace = StandardError.new('Test error')
 
-        described_class.create_job_completion(
+        described_class.create_job_completion_or_error(
           origin: 'TestWorker',
           error: error_no_backtrace,
           definition: extraction_definition,
@@ -73,70 +66,75 @@ RSpec.describe JobCompletionServices::ContextBuilder do
           details: {}
         )
 
-        completion = JobCompletion.last
-        expect(completion.stack_trace).to eq([])
+        job_error = JobError.last
+        expect(job_error.stack_trace).to eq([])
       end
     end
 
     context 'with stop condition' do
       it 'creates stop condition completion' do
         expect {
-          described_class.create_job_completion(
+          described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: nil,
             definition: extraction_definition,
             job: job,
-            details: {
-              stop_condition_name: 'test_condition',
-              stop_condition_content: 'if count > 100',
-              stop_condition_type: 'user'
-            }
+            stop_condition_name: 'test_condition',
+            stop_condition_content: 'if count > 100',
+            stop_condition_type: 'user'
           )
         }.to change(JobCompletionSummary, :count).by(1)
           .and change(JobCompletion, :count).by(1)
 
         summary = JobCompletionSummary.last
+        expect(summary.job_id).to eq(job.id)
+        expect(summary.process_type).to eq('extraction')
+        expect(summary.job_type).to eq('ExtractionJob')
 
         completion = JobCompletion.last
-        expect(completion.details['stop_condition_name']).to eq('test_condition')
-        expect(completion.details['stop_condition_content']).to eq('if count > 100')
-        expect(completion.details['stop_condition_type']).to eq('user')
+        expect(completion.job_id).to eq(job.id)
+        expect(completion.process_type).to eq('extraction')
+        expect(completion.completion_type).to eq('stop_condition')
+        expect(completion.origin).to eq('TestWorker')
+        expect(completion.stop_condition_name).to eq('test_condition')
+        expect(completion.stop_condition_content).to eq('if count > 100')
+        expect(completion.stop_condition_type).to eq('user')
       end
     end
 
-    context 'with duplicate job completion' do
-      it 'increments summary count instead of creating duplicate completion' do
-        # Create first completion
-        described_class.create_job_completion(
+    context 'with duplicate job error' do
+      it 'does not create duplicate error when same error exists' do
+        # Create first error
+        described_class.create_job_completion_or_error(
           origin: 'TestWorker',
           error: error,
           definition: extraction_definition,
           job: job,
-          details: { origin: 'TestWorker' }
+          details: {}
         )
 
         summary = JobCompletionSummary.last
         initial_count = summary.completion_count
-        initial_completion_count = JobCompletion.count
+        initial_error_count = JobError.count
 
-        # Try to create duplicate (same source, process, job, origin, and message prefix)
-        described_class.create_job_completion(
+        # Try to create duplicate (same job_id, origin, and message)
+        described_class.create_job_completion_or_error(
           origin: 'TestWorker',
           error: error,
           definition: extraction_definition,
           job: job,
-          details: { origin: 'TestWorker' }
+          details: {}
         )
 
-        expect(JobCompletion.count).to eq(initial_completion_count)
-        expect(summary.reload.completion_count).to eq(initial_count + 1)
+        expect(JobError.count).to eq(initial_error_count)
+        expect(summary.reload.completion_count).to eq(initial_count)
       end
 
-      it 'creates new completion when message prefix differs' do
+      it 'creates new error when message differs' do
         error1 = StandardError.new('Error one')
         error2 = StandardError.new('Error two')
 
-        described_class.create_job_completion(
+        described_class.create_job_completion_or_error(
           origin: 'TestWorker',
           error: error1,
           definition: extraction_definition,
@@ -145,18 +143,18 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         )
 
         expect {
-          described_class.create_job_completion(
+          described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: error2,
             definition: extraction_definition,
             job: job,
             details: {}
           )
-        }.to change(JobCompletion, :count).by(1)
+        }.to change(JobError, :count).by(1)
       end
 
-      it 'creates new completion when origin differs' do
-        described_class.create_job_completion(
+      it 'creates new error when origin differs' do
+        described_class.create_job_completion_or_error(
           origin: 'Worker1',
           error: error,
           definition: extraction_definition,
@@ -165,12 +163,96 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         )
 
         expect {
-          described_class.create_job_completion(
+          described_class.create_job_completion_or_error(
             origin: 'Worker2',
             error: error,
             definition: extraction_definition,
             job: job,
             details: {}
+          )
+        }.to change(JobError, :count).by(1)
+      end
+
+      it 'handles duplicate check with truncated messages (255 chars)' do
+        long_message = 'A' * 300
+        error_long = StandardError.new(long_message)
+
+        described_class.create_job_completion_or_error(
+          origin: 'TestWorker',
+          error: error_long,
+          definition: extraction_definition,
+          job: job,
+          details: {}
+        )
+
+        initial_error_count = JobError.count
+
+        # Try to create duplicate with same first 255 chars
+        error_long2 = StandardError.new(long_message)
+        described_class.create_job_completion_or_error(
+          origin: 'TestWorker',
+          error: error_long2,
+          definition: extraction_definition,
+          job: job,
+          details: {}
+        )
+
+        expect(JobError.count).to eq(initial_error_count)
+      end
+    end
+
+    context 'with duplicate job completion' do
+      it 'does not create duplicate completion when same stop condition exists' do
+        # Create first completion
+        described_class.create_job_completion_or_error(
+          origin: 'TestWorker',
+          error: nil,
+          definition: extraction_definition,
+          job: job,
+          stop_condition_name: 'test_condition',
+          stop_condition_content: 'if count > 100',
+          stop_condition_type: 'user'
+        )
+
+        summary = JobCompletionSummary.last
+        initial_count = summary.completion_count
+        initial_completion_count = JobCompletion.count
+
+        # Try to create duplicate (same job_id, origin, and stop_condition_name)
+        described_class.create_job_completion_or_error(
+          origin: 'TestWorker',
+          error: nil,
+          definition: extraction_definition,
+          job: job,
+          stop_condition_name: 'test_condition',
+          stop_condition_content: 'if count > 100',
+          stop_condition_type: 'user'
+        )
+
+        expect(JobCompletion.count).to eq(initial_completion_count)
+        expect(summary.reload.completion_count).to eq(initial_count)
+      end
+
+      it 'creates new completion when stop condition name differs' do
+        described_class.create_job_completion_or_error(
+          origin: 'TestWorker',
+          error: nil,
+          definition: extraction_definition,
+          job: job,
+          stop_condition_name: 'condition1',
+          stop_condition_content: 'if count > 100',
+          stop_condition_type: 'user'
+        )
+
+        expect {
+          described_class.create_job_completion_or_error(
+            origin: 'TestWorker',
+            error: nil,
+            definition: extraction_definition,
+            job: job,
+            stop_condition_name: 'condition2',
+            stop_condition_content: 'if count > 100',
+            stop_condition_type: 'user'
           )
         }.to change(JobCompletion, :count).by(1)
       end
@@ -179,8 +261,8 @@ RSpec.describe JobCompletionServices::ContextBuilder do
     context 'with transformation definition' do
       let(:transformation_definition) { harvest_definition.transformation_definition }
 
-      it 'creates completion with transformation process type' do
-        described_class.create_job_completion(
+      it 'creates error with transformation process type' do
+        described_class.create_job_completion_or_error(
           origin: 'TestWorker',
           error: error,
           definition: transformation_definition,
@@ -192,18 +274,32 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         expect(summary.process_type).to eq('transformation')
         expect(summary.job_type).to eq('TransformationJob')
 
-        completion = JobCompletion.last
-        expect(completion.process_type).to eq('transformation')
-        expect(completion.job_type).to eq('TransformationJob')
+        job_error = JobError.last
+        expect(job_error.process_type).to eq('transformation')
+        expect(job_error.job_type).to eq('TransformationJob')
       end
     end
 
     context 'error handling' do
-      it 'raises error when creation fails' do
-        allow(JobCompletion).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(JobCompletion.new))
+      it 'handles race condition when duplicate check passes but insert fails' do
+        allow(JobError).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique.new('Duplicate entry', JobError.new))
 
         expect {
-          described_class.create_job_completion(
+          described_class.create_job_completion_or_error(
+            origin: 'TestWorker',
+            error: error,
+            definition: extraction_definition,
+            job: job,
+            details: {}
+          )
+        }.not_to raise_error
+      end
+
+      it 'raises error when creation fails with other errors' do
+        allow(JobError).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(JobError.new))
+
+        expect {
+          described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: error,
             definition: extraction_definition,

@@ -31,9 +31,9 @@ module JobCompletionServices
         job_id: args[:job].id,
         process_type: process_info[:process_type],
         job_type: process_info[:job_type],
-        stop_condition_type: details[:stop_condition_type],
-        stop_condition_name: details[:stop_condition_name],
-        stop_condition_content: details[:stop_condition_content]
+        stop_condition_type: stop_condition_type,
+        stop_condition_name: stop_condition_name,
+        stop_condition_content: stop_condition_content
       }
     end
 
@@ -57,12 +57,14 @@ module JobCompletionServices
     end
 
     def self.is_duplicate?(context)
-      exists = context[:error].blank? ? 
-                 is_existing_job_completion?(context) : 
+      exists = if context[:error].blank?
+                 is_existing_job_completion?(context)
+               else
                  is_existing_job_error?(context)
-      
+               end
+
       return false unless exists
-    
+
       summary = find_or_create_summary(context)
       summary.present?
     end
@@ -78,10 +80,9 @@ module JobCompletionServices
       # Use SQL LEFT function to compare truncated messages
       truncated_message = context[:message]&.slice(0, 255)
       return false unless truncated_message
-      
+
       JobError.where(job_id: context[:job_id], origin: context[:origin])
-              .where("LEFT(message, 255) = ?", truncated_message)
-              .exists?
+              .exists?(['LEFT(message, 255) = ?', truncated_message])
     end
 
     def self.create_job_completion_record(context, summary)
@@ -109,7 +110,7 @@ module JobCompletionServices
     rescue ActiveRecord::RecordNotUnique => e
       # Handle race condition where duplicate check passed but insert failed
       # This is fine - the record already exists, so we can silently return
-      Rails.logger.debug("JobError duplicate detected (race condition): #{e.message}")
+      Rails.logger.debug { "JobError duplicate detected (race condition): #{e.message}" }
       nil
     end
 

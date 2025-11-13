@@ -98,7 +98,8 @@ class TransformationWorker
       @transformation_definition.fields
     ).call
   rescue StandardError => e
-    JobCompletionServices::ContextBuilder.create_job_completion_or_error({ error: e, definition: @transformation_definition, job: @harvest_job, origin: 'TransformationWorker' })
+    JobCompletionServices::ContextBuilder.create_job_completion_or_error({ error: e,
+                                                                           definition: @transformation_definition, job: @harvest_job, origin: 'TransformationWorker' })
     []
   end
 
@@ -120,7 +121,8 @@ class TransformationWorker
       Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
     end
   rescue StandardError => e
-    JobCompletionServices::ContextBuilder.create_job_completion_or_error({ error: e, definition: @transformation_definition, job: @harvest_job, origin: 'TransformationWorker' })
+    JobCompletionServices::ContextBuilder.create_job_completion_or_error({ error: e,
+                                                                           definition: @transformation_definition, job: @harvest_job, origin: 'TransformationWorker' })
   end
 
   def queue_delete_worker(records)
