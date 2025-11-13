@@ -11,6 +11,18 @@
     </span>
   </td>
   <td>
+    <% if job_completion_summary.job_completions.any? && job_completion_summary.job_errors.any? %>
+      <span class="badge bg-primary me-1">Completions</span>
+      <span class="badge bg-danger">Errors</span>
+    <% elsif job_completion_summary.job_completions.any? %>
+      <span class="badge bg-primary">Completions</span>
+    <% elsif job_completion_summary.job_errors.any? %>
+      <span class="badge bg-danger">Errors</span>
+    <% else %>
+      <span class="badge bg-secondary">None</span>
+    <% end %>
+  </td>
+  <td>
     <small class="text-muted">
       <%= job_completion_summary.updated_at&.strftime('%Y-%m-%d %H:%M') || 'N/A' %>
     </small>
