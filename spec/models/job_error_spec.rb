@@ -50,7 +50,7 @@ RSpec.describe JobError, type: :model do
       expect(job_error.errors[:origin]).to include("can't be blank")
     end
 
-    it 'validates uniqueness of job_id scoped to origin and message (truncated to 255 chars)' do
+    it 'enforces uniqueness of job_id scoped to origin and message (truncated to 255 chars) at database level' do
       summary = create(:job_completion_summary)
       job = create(:extraction_job)
       message = 'Test error message'
@@ -59,16 +59,20 @@ RSpec.describe JobError, type: :model do
              job_completion_summary: summary,
              job_id: job.id,
              origin: 'TestWorker',
-             message: message)
+             message: message,
+             stack_trace: ['No backtrace available'])
       
       duplicate = build(:job_error,
                        job_completion_summary: summary,
                        job_id: job.id,
                        origin: 'TestWorker',
-                       message: message)
+                       message: message,
+                       stack_trace: ['No backtrace available'])
       
-      expect(duplicate).not_to be_valid
-      expect(duplicate.errors[:message]).to include("has already been taken")
+      expect(duplicate).to be_valid # Rails validation passes (no uniqueness validation in model)
+      
+      # But saving will fail due to database unique constraint
+      expect { duplicate.save! }.to raise_error(ActiveRecord::RecordNotUnique)
     end
 
     it 'allows duplicate message with different job_id' do
@@ -81,13 +85,15 @@ RSpec.describe JobError, type: :model do
              job_completion_summary: summary,
              job_id: job1.id,
              origin: 'TestWorker',
-             message: message)
+             message: message,
+             stack_trace: ['No backtrace available'])
       
       different_job = build(:job_error,
                            job_completion_summary: summary,
                            job_id: job2.id,
                            origin: 'TestWorker',
-                           message: message)
+                           message: message,
+                           stack_trace: ['No backtrace available'])
       
       expect(different_job).to be_valid
     end
@@ -101,13 +107,15 @@ RSpec.describe JobError, type: :model do
              job_completion_summary: summary,
              job_id: job.id,
              origin: 'Worker1',
-             message: message)
+             message: message,
+             stack_trace: ['No backtrace available'])
       
       different_origin = build(:job_error,
                              job_completion_summary: summary,
                              job_id: job.id,
                              origin: 'Worker2',
-                             message: message)
+                             message: message,
+                             stack_trace: ['No backtrace available'])
       
       expect(different_origin).to be_valid
     end
@@ -122,13 +130,15 @@ RSpec.describe JobError, type: :model do
              job_completion_summary: summary,
              job_id: job.id,
              origin: 'TestWorker',
-             message: long_message1)
+             message: long_message1,
+             stack_trace: ['No backtrace available'])
       
       different_message = build(:job_error,
                                job_completion_summary: summary,
                                job_id: job.id,
                                origin: 'TestWorker',
-                               message: long_message2)
+                               message: long_message2,
+                               stack_trace: ['No backtrace available'])
       
       expect(different_message).to be_valid
     end
@@ -160,10 +170,11 @@ RSpec.describe JobError, type: :model do
       expect(job_error.stack_trace).to eq(stack_trace)
     end
 
-    it 'accepts an empty array' do
-      job_error = create(:job_error, stack_trace: [])
+    it 'requires a non-empty array due to presence validation' do
+      job_error = build(:job_error, stack_trace: [])
       
-      expect(job_error.stack_trace).to eq([])
+      expect(job_error).not_to be_valid
+      expect(job_error.errors[:stack_trace]).to include("can't be blank")
     end
   end
 end
