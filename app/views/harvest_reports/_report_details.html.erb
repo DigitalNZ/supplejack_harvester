@@ -2,7 +2,7 @@
   <h2><%= report.harvest_job.name %></h2>
 
   <div>
-    <% job_completion_summary = JobCompletionSummary.find_by(source_id: report.harvest_definition.source_id) %>
+    <% job_completion_summary = JobCompletionSummary.find_by(job_id: report.harvest_job.id) %>
     <%= if job_completion_summary
           link_to 'View error details', job_completion_summary_path(job_completion_summary),
                   class: 'btn btn-outline-danger text-nowrap me-2'

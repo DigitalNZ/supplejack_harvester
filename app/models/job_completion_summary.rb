@@ -6,25 +6,19 @@ class JobCompletionSummary < ApplicationRecord
     transformation: 1
   }
 
-  validates: job_completion_summary_id, presence: true
-  validates :source_id, presence: true
-  validates :source_name, presence: true
-  validates :completion_count, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :job_id, presence: true
   validates :job_type, presence: true
 
-  validates :source_id, uniqueness: { scope: %i[process_type job_type] }
-
   has_many :job_completions, dependent: :destroy
-
-  after_initialize :set_defaults, if: :new_record?
+  has_many :job_errors, dependent: :destroy
 
   def pipeline_name
-    harvest_definition = HarvestDefinition.find_by(source_id: source_id)
-    harvest_definition&.pipeline&.name
+    pipeline = find_pipeline_from_job(job_id, job_type)
+    pipeline&.name
   end
 
   def definition_name
-    harvest_definition = HarvestDefinition.find_by(source_id: source_id)
+    harvest_definition = HarvestDefinition.find_by(job_id: job_id)
 
     case process_type
     when 'extraction'
@@ -40,13 +34,31 @@ class JobCompletionSummary < ApplicationRecord
     job_completions.order(updated_at: :desc).first&.updated_at
   end
 
-  def increment_completion_count
-    update(completion_count: completion_count + 1)
+  def completion_count
+    job_completions.count + job_errors.count
+  end
+
+  def all_records
+    (job_completions.to_a + job_errors.to_a).sort_by { |r| r.updated_at || r.created_at }.reverse
   end
 
   private
 
-  def set_defaults
-    self.completion_count ||= 0
+  def find_pipeline_from_job(job_id, job_type)
+    return nil unless job_id
+
+    case job_type
+    when 'PipelineJob'
+      PipelineJob.find(job_id).pipeline
+    when 'HarvestJob','TransformationJob'
+      HarvestJob.find(job_id).pipeline_job.pipeline
+    when 'ExtractionJob'
+      extraction_job = ExtractionJob.find(job_id)
+      # Try harvest_job first, then fall back to extraction_definition
+      extraction_job.harvest_job&.pipeline_job&.pipeline ||
+        extraction_job.extraction_definition.pipeline
+    else
+      nil
+    end
   end
 end

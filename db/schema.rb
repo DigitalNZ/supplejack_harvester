@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_12_023842) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_13_033753) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -239,34 +239,51 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_12_023842) do
   end
 
   create_table "job_completion_summaries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "source_id", null: false
-    t.string "source_name", null: false
     t.datetime "last_completed_at"
     t.integer "process_type", default: 0, null: false
     t.string "job_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "completion_count", default: 0, null: false
+    t.bigint "job_id"
+    t.index ["job_id", "process_type", "job_type"], name: "index_job_completion_summaries_on_job_process_type", unique: true
     t.index ["last_completed_at"], name: "index_job_completion_summaries_on_last_completed_at"
     t.index ["process_type"], name: "index_job_completion_summaries_on_process_type"
-    t.index ["source_id", "process_type", "job_type"], name: "index_job_completion_summaries_on_source_process_job", unique: true
   end
 
   create_table "job_completions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "source_id", null: false
-    t.string "source_name", null: false
     t.string "origin"
-    t.string "job_type", null: false
     t.integer "process_type", null: false
     t.integer "completion_type", null: false
-    t.text "message", null: false
-    t.string "message_prefix", limit: 50
-    t.json "stack_trace", null: false
-    t.json "details", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["source_id", "process_type", "job_type", "origin", "message_prefix"], name: "index_job_completions_on_source_process_origin_message", unique: true, length: { source_id: 100, job_type: 50, origin: 100 }
-    t.index ["source_id", "process_type", "job_type"], name: "index_job_completions_on_source_process_job"
+    t.bigint "job_completion_summary_id", null: false
+    t.bigint "job_id", null: false
+    t.string "stop_condition_type", null: false
+    t.string "stop_condition_name", null: false
+    t.text "stop_condition_content", null: false
+    t.index ["job_completion_summary_id"], name: "index_job_completions_on_job_completion_summary_id"
+    t.index ["job_id", "origin", "stop_condition_name"], name: "index_job_completions_on_job_origin_stop_condition", unique: true
+    t.index ["job_id"], name: "index_job_completions_on_job_id"
+    t.index ["process_type", "origin"], name: "index_job_completions_on_source_process_origin_message", unique: true, length: { origin: 100 }
+    t.index ["process_type"], name: "index_job_completions_on_source_process_job"
+  end
+
+  create_table "job_errors", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "job_id", null: false
+    t.text "message", null: false
+    t.json "stack_trace", null: false
+    t.integer "process_type", null: false
+    t.string "origin", null: false
+    t.bigint "job_completion_summary_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "job_type", null: false
+    t.index ["job_completion_summary_id"], name: "index_job_errors_on_job_completion_summary_id"
+    t.index ["job_id", "origin", "message"], name: "index_job_errors_on_job_origin_message", unique: true, length: { message: 255 }
+    t.index ["job_id"], name: "index_job_errors_on_job_id"
+    t.index ["job_type"], name: "index_job_errors_on_job_type"
+    t.index ["process_type"], name: "index_job_errors_on_process_type"
   end
 
   create_table "parameters", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -449,6 +466,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_12_023842) do
   add_foreign_key "extraction_definitions", "users", column: "last_edited_by_id"
   add_foreign_key "field_schema_field_values", "fields"
   add_foreign_key "field_schema_field_values", "schema_field_values"
+  add_foreign_key "job_completions", "job_completion_summaries", on_delete: :cascade
+  add_foreign_key "job_errors", "job_completion_summaries"
   add_foreign_key "pipeline_jobs", "automation_steps"
   add_foreign_key "pipelines", "users", column: "last_edited_by_id"
   add_foreign_key "schemas", "users", column: "last_edited_by_id"

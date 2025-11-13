@@ -16,9 +16,7 @@ module JobCompletionServices
       harvest_definition = definition.harvest_definitions.first
       {
         process_type: :extraction,
-        job_type: 'ExtractionJob',
-        source_id: harvest_definition&.source_id || 'unknown',
-        source_name: harvest_definition&.name || 'unknown'
+        job_type: 'ExtractionJob'
       }
     end
 
@@ -26,9 +24,7 @@ module JobCompletionServices
       harvest_definition = definition.harvest_definitions.first
       {
         process_type: :transformation,
-        job_type: 'TransformationJob',
-        source_id: harvest_definition&.source_id || 'unknown',
-        source_name: harvest_definition&.name || 'unknown'
+        job_type: 'TransformationJob'
       }
     end
   end

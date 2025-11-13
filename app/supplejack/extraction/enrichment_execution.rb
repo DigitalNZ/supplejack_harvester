@@ -28,11 +28,10 @@ module Extraction
     end
 
     def handle_enrichment_error(error)
-      JobCompletionServices::ContextBuilder.create_job_completion({
+      JobCompletionServices::ContextBuilder.create_job_completion_or_error({
                                                                     error: error,
                                                                     definition: @extraction_definition,
                                                                     job: @extraction_job,
-                                                                    details: {},
                                                                     origin: 'EnrichmentExecution'
                                                                   })
       raise
