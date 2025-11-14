@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe JobCompletion::MessageBuilder do
+RSpec.describe JobCompletionServices::MessageBuilder do
   describe '.build_message' do
     context 'with stop condition details' do
       let(:details) do

@@ -2,18 +2,13 @@
 
 class JobCompletionSummariesController < ApplicationController
   def index
-    @job_completion_summaries = JobCompletionSummary.recent_completions.page(params[:page])
+    @job_completion_summaries = JobCompletionSummary.order(updated_at: :desc).page(params[:page])
 
-    completion_type = params[:completion_type]
     extraction_id = params[:extraction_id]
-
-    if completion_type.present?
-      @job_completion_summaries = @job_completion_summaries.by_completion_type(completion_type)
-    end
 
     return if extraction_id.blank?
 
-    @job_completion_summaries = @job_completion_summaries.where(extraction_id: extraction_id)
+    @job_completion_summaries = @job_completion_summaries.where(job_id: extraction_id)
   end
 
   def show

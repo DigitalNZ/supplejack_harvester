@@ -2,26 +2,20 @@
 
 require 'rails_helper'
 
-RSpec.describe JobCompletion::ProcessInfoBuilder do
-  let(:harvest_definition) do
-    create(:harvest_definition, source_id: 'test_source', name: 'Test Source').tap do |hd|
-      hd.update!(name: 'Test Source')
-    end
-  end
+RSpec.describe JobCompletionServices::ProcessInfoBuilder do
+  let(:harvest_definition) { create(:harvest_definition, source_id: 'test_source', name: 'Test Source') }
   let(:extraction_definition) { harvest_definition.extraction_definition }
-  let(:transformation_definition) { create(:transformation_definition, harvest_definitions: [harvest_definition]) }
+  let(:transformation_definition) { harvest_definition.transformation_definition }
 
   describe '.determine_process_info' do
     context 'with extraction definition' do
       it 'returns extraction process info' do
         result = described_class.determine_process_info(extraction_definition)
         
-        expect(result).to include(
+        expect(result).to eq({
           process_type: :extraction,
-          job_type: 'ExtractionJob',
-          source_id: 'test_source',
-          source_name: 'Test Source'
-        )
+          job_type: 'ExtractionJob'
+        })
       end
     end
 
@@ -29,12 +23,10 @@ RSpec.describe JobCompletion::ProcessInfoBuilder do
       it 'returns transformation process info' do
         result = described_class.determine_process_info(transformation_definition)
         
-        expect(result).to include(
+        expect(result).to eq({
           process_type: :transformation,
-          job_type: 'TransformationJob',
-          source_id: 'test_source',
-          source_name: 'Test Source'
-        )
+          job_type: 'TransformationJob'
+        })
       end
     end
 
@@ -42,21 +34,6 @@ RSpec.describe JobCompletion::ProcessInfoBuilder do
       it 'raises an error' do
         expect { described_class.determine_process_info('invalid') }
           .to raise_error('Invalid definition type: String')
-      end
-    end
-
-    context 'with missing harvest definition' do
-      let(:empty_definition) { create(:extraction_definition) }
-      
-      before { empty_definition.harvest_definitions.clear }
-
-      it 'returns unknown values' do
-        result = described_class.determine_process_info(empty_definition)
-        
-        expect(result).to include(
-          source_id: 'unknown',
-          source_name: 'unknown'
-        )
       end
     end
   end
@@ -67,9 +44,7 @@ RSpec.describe JobCompletion::ProcessInfoBuilder do
       
       expect(result).to eq({
         process_type: :extraction,
-        job_type: 'ExtractionJob',
-        source_id: 'test_source',
-        source_name: 'Test Source'
+        job_type: 'ExtractionJob'
       })
     end
   end
@@ -80,9 +55,7 @@ RSpec.describe JobCompletion::ProcessInfoBuilder do
       
       expect(result).to eq({
         process_type: :transformation,
-        job_type: 'TransformationJob',
-        source_id: 'test_source',
-        source_name: 'Test Source'
+        job_type: 'TransformationJob'
       })
     end
   end

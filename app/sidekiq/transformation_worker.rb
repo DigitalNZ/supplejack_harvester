@@ -48,11 +48,23 @@ class TransformationWorker
   end
 
   def categorize_records(transformed_records)
-    valid_records = transformed_records.select do |record|
-      record['rejection_reasons'].blank? && record['deletion_reasons'].blank?
+    valid_records = []
+    rejected_records = []
+    deleted_records = []
+
+    transformed_records.each do |record|
+      rejection_reasons = record['rejection_reasons']
+      deletion_reasons = record['deletion_reasons']
+
+      if rejection_reasons.blank? && deletion_reasons.blank?
+        valid_records << record
+      elsif rejection_reasons.present?
+        rejected_records << record
+      elsif deletion_reasons.present?
+        deleted_records << record
+      end
     end
-    rejected_records = transformed_records.select { |record| record['rejection_reasons'].present? }
-    deleted_records = transformed_records.select { |record| record['deletion_reasons'].present? }
+
     [valid_records, rejected_records, deleted_records]
   end
 
@@ -66,16 +78,18 @@ class TransformationWorker
     @harvest_report.increment_transformation_workers_completed!
     @harvest_report.reload
 
-    return unless @harvest_report.transformation_workers_completed?
+    transformation_workers_completed = @harvest_report.transformation_workers_completed?
+    return unless transformation_workers_completed
 
     @harvest_report.transformation_completed!
     @harvest_report.load_completed! if @harvest_report.load_workers_completed?
     @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
 
-    return unless @harvest_report.delete_workers_queued.zero?
+    delete_workers_queued = @harvest_report.delete_workers_queued
+    return unless delete_workers_queued.zero?
 
     @harvest_report.delete_completed!
-    @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
+    @harvest_report.transformation_completed! if transformation_workers_completed
   end
 
   def transform_records
@@ -84,9 +98,8 @@ class TransformationWorker
       @transformation_definition.fields
     ).call
   rescue StandardError => e
-    Rails.logger.info "TransformationWorker: Transformation Excecution error: #{e}" if defined?(Sidekiq)
-    JobCompletion::Logger.log_completion(error: e, definition: @transformation_definition, job: @harvest_job,
-                                         details: {})
+    JobCompletionServices::ContextBuilder.create_job_completion_or_error({ error: e,
+                                                                           definition: @transformation_definition, job: @harvest_job, origin: 'TransformationWorker' })
     []
   end
 
@@ -108,9 +121,8 @@ class TransformationWorker
       Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
     end
   rescue StandardError => e
-    Rails.logger.info "TransformationWorker: API Utils NotifyHarvesting error: #{e}" if defined?(Sidekiq)
-    JobCompletion::Logger.log_completion(error: e, definition: @transformation_definition, job: @pipeline_job,
-                                         details: {})
+    JobCompletionServices::ContextBuilder.create_job_completion_or_error({ error: e,
+                                                                           definition: @transformation_definition, job: @harvest_job, origin: 'TransformationWorker' })
   end
 
   def queue_delete_worker(records)
@@ -137,8 +149,6 @@ class TransformationWorker
     proc do |exception, try, elapsed_time, next_interval|
       return unless defined?(Sidekiq)
 
-      JobCompletion::Logger.log_completion(error: exception, definition: @transformation_definition,
-                                           job: @pipeline_job, details: {})
       Rails.logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
                         "and #{next_interval} seconds until the next try.")
     end

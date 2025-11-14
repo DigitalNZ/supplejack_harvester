@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module JobCompletion
+module JobCompletionServices
   class ProcessInfoBuilder
     def self.determine_process_info(definition)
       if definition.is_a?(ExtractionDefinition)
@@ -13,22 +13,18 @@ module JobCompletion
     end
 
     def self.build_extraction_process_info(definition)
-      harvest_definition = definition.harvest_definitions.first
+      definition.harvest_definitions.first
       {
         process_type: :extraction,
-        job_type: 'ExtractionJob',
-        source_id: harvest_definition&.source_id || 'unknown',
-        source_name: harvest_definition&.name || 'unknown'
+        job_type: 'ExtractionJob'
       }
     end
 
     def self.build_transformation_process_info(definition)
-      harvest_definition = definition.harvest_definitions.first
+      definition.harvest_definitions.first
       {
         process_type: :transformation,
-        job_type: 'TransformationJob',
-        source_id: harvest_definition&.source_id || 'unknown',
-        source_name: harvest_definition&.name || 'unknown'
+        job_type: 'TransformationJob'
       }
     end
   end
