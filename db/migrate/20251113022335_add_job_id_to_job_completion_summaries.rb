@@ -1,6 +1,8 @@
 class AddJobIdToJobCompletionSummaries < ActiveRecord::Migration[7.2]
   def change
-    add_column :job_completion_summaries, :job_id, :bigint, null: false
+    unless column_exists?(:job_completion_summaries, :job_id)
+      add_column :job_completion_summaries, :job_id, :bigint, null: false
+    end
 
     remove_index :job_completion_summaries, 
                   [:source_id, :process_type, :job_type], 
