@@ -18,6 +18,7 @@
             <th scope="col" class="text-end">Load</th>
             <th scope="col" class="text-end">Reject</th>
             <th scope="col" class="text-end">Delete</th>
+            <th scope="col" class="text-end">Errors</th>
           </tr>
         </thead>
         <tbody>
@@ -29,11 +30,11 @@
                          report: report,
                          harvest_definition: HarvestDefinition.find(definition_id),
                          show_pipeline_col: show_pipeline_col,
-                         row_index: %>
+                         row_index: row_index %>
             <% end %>
             <% if job_idx != total_jobs %>
               <tr class='table__divider'>
-                <td colspan='<%= 11 + (show_pipeline_col ? 1 : 0) %>'><hr></td>
+                <td colspan='<%= 12 + (show_pipeline_col ? 1 : 0) %>'><hr></td>
               </tr>
             <% end %>
           <% end %>

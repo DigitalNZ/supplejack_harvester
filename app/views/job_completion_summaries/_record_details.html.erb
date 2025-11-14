@@ -1,0 +1,48 @@
+<% is_completion = record.is_a?(JobCompletion) %>
+<% if is_completion %>
+  <div class="row">
+    <div class="col-md-12">
+      <h6>Stop Condition Details:</h6>
+      <div class="bg-light p-3 rounded">
+        <p><strong>Name:</strong> <%= record.stop_condition_name %></p>
+        <p><strong>Content:</strong> <%= record.stop_condition_content %></p>
+        <p><strong>Type:</strong>
+          <% if record.stop_condition_type == 'system' %>
+            <span class="badge bg-secondary">System stop condition</span>
+          <% else %>
+            <span class="badge" style="background-color: #0d6efd;">User defined stop condition</span>
+          <% end %>
+        </p>
+        <p><strong>Process Type:</strong> <%= record.process_type %></p>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <div class="row">
+    <div class="col-md-12">
+      <h6>Error Details:</h6>
+      <div class="bg-light p-3 rounded">
+        <p><strong>Message:</strong> <%= record.message %></p>
+        <p><strong>Origin:</strong> <%= record.origin %></p>
+        <p><strong>Job:</strong> <%= job_completion_summary.pipeline_name %></p>
+        <% if record.stack_trace.present? %>
+          <p><strong>Stack Trace:</strong></p>
+          <% stack_trace_text = record.stack_trace.is_a?(Array) ? record.stack_trace.join("\n") : record.stack_trace.strip %>
+          <pre class="bg-dark text-light p-2 rounded"><%= stack_trace_text %></pre>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+<div class="row mt-3">
+  <div class="col-md-6">
+    <strong>Occurred At:</strong>
+    <% if record.updated_at.present? %>
+      <%= record.updated_at.strftime('%Y-%m-%d %H:%M:%S') %>
+    <% elsif record.created_at.present? %>
+      <%= record.created_at.strftime('%Y-%m-%d %H:%M:%S') %>
+    <% else %>
+      Unknown time
+    <% end %>
+  </div>
+</div>
