@@ -1,95 +1,144 @@
 <div class="col-md-7">
   <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="card-title mb-0">Details</h5>
-    </div>
     <div class="card-body">
+      <% 
+        extraction_records = @job_completion_summary.all_records.select { |r| r.process_type == 'extraction' }
+        transformation_records = @job_completion_summary.all_records.select { |r| r.process_type == 'transformation' }
+        load_records = [] # Placeholder for future load process_type
+      %>
+      
       <% if @job_completion_summary.all_records.any? %>
-        <div class="accordion" id="completionsAccordion">
-          <% @job_completion_summary.all_records.each_with_index do |record, index| %>
-            <% is_completion = record.is_a?(JobCompletion) %>
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="heading<%= index %>">
-                <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapse<%= index %>"
-                        aria-expanded="<%= index.zero? ? 'true' : 'false' %>"
-                        aria-controls="collapse<%= index %>">
-                  <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                    <div>
-                      <% if is_completion %>
-                        <%= record.stop_condition_name&.truncate(100) || 'Stop Condition' %>
-                        <% if record.stop_condition_type == 'system' %>
-                          <span class="badge bg-secondary ms-2">System stop condition</span>
+        <!-- Extraction Section -->
+        <% if extraction_records.any? %>
+          <h6 class="mb-3">Extraction</h6>
+          <div class="accordion mb-4" id="extractionAccordion">
+            <% extraction_records.each_with_index do |record, index| %>
+              <% is_completion = record.is_a?(JobCompletion) %>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="extractionHeading<%= index %>">
+                  <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#extractionCollapse<%= index %>"
+                          aria-expanded="<%= index.zero? ? 'true' : 'false' %>"
+                          aria-controls="extractionCollapse<%= index %>">
+                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                      <div>
+                        <% if is_completion %>
+                          <%= record.stop_condition_name&.truncate(100) || 'Stop Condition' %>
+                          <% if record.stop_condition_type == 'system' %>
+                            <span class="badge bg-secondary ms-2">System stop condition</span>
+                          <% else %>
+                            <span class="badge ms-2" style="background-color: #0d6efd;">User defined stop condition</span>
+                          <% end %>
                         <% else %>
-                          <span class="badge ms-2" style="background-color: #0d6efd;">User defined stop condition</span>
+                          <%= record.message&.truncate(100) || 'Error' %>
+                          <span class="badge bg-danger ms-2">Error</span>
                         <% end %>
-                      <% else %>
-                        <%= record.message&.truncate(100) || 'Error' %>
-                        <span class="badge bg-danger ms-2">Error</span>
-                      <% end %>
-                    </div>
-                  </div>
-                </button>
-              </h2>
-              <div id="collapse<%= index %>"
-                   class="accordion-collapse collapse <%= 'show' if index.zero? %>"
-                   aria-labelledby="heading<%= index %>"
-                   data-bs-parent="#completionsAccordion">
-                <div class="accordion-body">
-                  <% if is_completion %>
-                    <div class="row">
-                      <div class="col-md-12">
-                        <h6>Stop Condition Details:</h6>
-                        <div class="bg-light p-3 rounded">
-                          <p><strong>Name:</strong> <%= record.stop_condition_name %></p>
-                          <p><strong>Content:</strong> <%= record.stop_condition_content %></p>
-                          <p><strong>Type:</strong>
-                            <% if record.stop_condition_type == 'system' %>
-                              <span class="badge bg-secondary">System stop condition</span>
-                            <% else %>
-                              <span class="badge" style="background-color: #0d6efd;">User defined stop condition</span>
-                            <% end %>
-                          </p>
-                          <p><strong>Origin:</strong> <%= record.origin %></p>
-                        </div>
                       </div>
                     </div>
-                  <% else %>
-                    <div class="row">
-                      <div class="col-md-12">
-                        <h6>Error Details:</h6>
-                        <div class="bg-light p-3 rounded">
-                          <p><strong>Message:</strong> <%= record.message %></p>
-                          <p><strong>Origin:</strong> <%= record.origin %></p>
-                          <p><strong>Job:</strong> <%= @job_completion_summary.pipeline_name %></p>
-                          <% if record.stack_trace.present? %>
-                            <p><strong>Stack Trace:</strong></p>
-                            <% stack_trace_text = record.stack_trace.is_a?(Array) ? record.stack_trace.join("\n") : record.stack_trace.strip %>
-                            <pre class="bg-dark text-light p-2 rounded"><%= stack_trace_text %></pre>
-                        <% end %>
-                        </div>
-                      </div>
-                    </div>
-                  <% end %>
-                  <div class="row mt-3">
-                    <div class="col-md-6">
-                      <strong>Occurred At:</strong>
-                      <% if record.updated_at.present? %>
-                        <%= record.updated_at.strftime('%Y-%m-%d %H:%M:%S') %>
-                      <% elsif record.created_at.present? %>
-                        <%= record.created_at.strftime('%Y-%m-%d %H:%M:%S') %>
-                      <% else %>
-                        Unknown time
-                      <% end %>
-                    </div>
+                  </button>
+                </h2>
+                <div id="extractionCollapse<%= index %>"
+                     class="accordion-collapse collapse <%= 'show' if index.zero? %>"
+                     aria-labelledby="extractionHeading<%= index %>"
+                     data-bs-parent="#extractionAccordion">
+                  <div class="accordion-body">
+                    <%= render 'record_details', record: record, job_completion_summary: @job_completion_summary %>
                   </div>
                 </div>
               </div>
-            </div>
-          <% end %>
-        </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Transformation Section -->
+        <% if transformation_records.any? %>
+          <h6 class="mb-3">Transformation</h6>
+          <div class="accordion mb-4" id="transformationAccordion">
+            <% transformation_records.each_with_index do |record, index| %>
+              <% is_completion = record.is_a?(JobCompletion) %>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="transformationHeading<%= index %>">
+                  <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#transformationCollapse<%= index %>"
+                          aria-expanded="<%= index.zero? ? 'true' : 'false' %>"
+                          aria-controls="transformationCollapse<%= index %>">
+                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                      <div>
+                        <% if is_completion %>
+                          <%= record.stop_condition_name&.truncate(100) || 'Stop Condition' %>
+                          <% if record.stop_condition_type == 'system' %>
+                            <span class="badge bg-secondary ms-2">System stop condition</span>
+                          <% else %>
+                            <span class="badge ms-2" style="background-color: #0d6efd;">User defined stop condition</span>
+                          <% end %>
+                        <% else %>
+                          <%= record.message&.truncate(100) || 'Error' %>
+                          <span class="badge bg-danger ms-2">Error</span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </button>
+                </h2>
+                <div id="transformationCollapse<%= index %>"
+                     class="accordion-collapse collapse <%= 'show' if index.zero? %>"
+                     aria-labelledby="transformationHeading<%= index %>"
+                     data-bs-parent="#transformationAccordion">
+                  <div class="accordion-body">
+                    <%= render 'record_details', record: record, job_completion_summary: @job_completion_summary %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Load Section -->
+        <% if load_records.any? %>
+          <h6 class="mb-3">Load</h6>
+          <div class="accordion mb-4" id="loadAccordion">
+            <% load_records.each_with_index do |record, index| %>
+              <% is_completion = record.is_a?(JobCompletion) %>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="loadHeading<%= index %>">
+                  <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#loadCollapse<%= index %>"
+                          aria-expanded="<%= index.zero? ? 'true' : 'false' %>"
+                          aria-controls="loadCollapse<%= index %>">
+                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                      <div>
+                        <% if is_completion %>
+                          <%= record.stop_condition_name&.truncate(100) || 'Stop Condition' %>
+                          <% if record.stop_condition_type == 'system' %>
+                            <span class="badge bg-secondary ms-2">System stop condition</span>
+                          <% else %>
+                            <span class="badge ms-2" style="background-color: #0d6efd;">User defined stop condition</span>
+                          <% end %>
+                        <% else %>
+                          <%= record.message&.truncate(100) || 'Error' %>
+                          <span class="badge bg-danger ms-2">Error</span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </button>
+                </h2>
+                <div id="loadCollapse<%= index %>"
+                     class="accordion-collapse collapse <%= 'show' if index.zero? %>"
+                     aria-labelledby="loadHeading<%= index %>"
+                     data-bs-parent="#loadAccordion">
+                  <div class="accordion-body">
+                    <%= render 'record_details', record: record, job_completion_summary: @job_completion_summary %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
       <% else %>
         <div class="text-center py-4">
           <i class="bi bi-info-circle text-info" style="font-size: 2rem;"></i>

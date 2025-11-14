@@ -1,4 +1,5 @@
 <% extraction_job_id = report&.harvest_job&.extraction_job_id || job.extraction_job_id %>
+<% job_completion_summary = report&.harvest_job ? JobCompletionSummary.find_for_harvest_job(report.harvest_job.id) : nil %>
 
 <tr>
   <% if show_pipeline_col %>
@@ -16,8 +17,6 @@
   </td>
   <td class="d-inline-flex align-items-center gap-1">
     <%= job_status_badge(report, job) %>
-    <%# Add the link to errors here %>
-    <%# link_to '3', '/', class: 'badge text-bg-danger text-decoration-none' %>
   </td>
   <td><%= job_started_at_label(report, job) %></td>
   <td class="text-end"><%= job_duration(report, format: :short) %></td>
@@ -36,4 +35,14 @@
   <td class="text-end"><%= number_to_delimited(report&.records_loaded) %></td>
   <td class="text-end"><%= number_to_delimited(report&.records_rejected) %></td>
   <td class="text-end"><%= number_to_delimited(report&.records_deleted) %></td>
+  <td class="text-end">
+    <% 
+      error_count = job_completion_summary ? job_completion_summary.completion_count : 0
+      if error_count > 0
+    %>
+      <%= link_to error_count, job_completion_summary_path(job_completion_summary) %>
+    <% else %>
+      0
+    <% end %>
+  </td>
 </tr>
