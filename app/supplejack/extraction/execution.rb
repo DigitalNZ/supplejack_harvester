@@ -45,7 +45,7 @@ module Extraction
       return unless source_id
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Handle extraction error',
-                             stop_condition_content: nil)
+                             stop_condition_content: '')
       raise
     end
 
@@ -80,7 +80,7 @@ module Extraction
       return false unless pipeline_job.pages == @extraction_definition.page
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Set number reached',
-                             stop_condition_content: nil)
+                             stop_condition_content: '')
       true
     end
 
@@ -89,7 +89,7 @@ module Extraction
       return false unless document_status >= 400 || document_status < 200
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Extraction failed',
-                             stop_condition_content: nil)
+                             stop_condition_content: '')
       true
     end
 
@@ -109,7 +109,7 @@ module Extraction
       return false unless previous_document.body == @de.document.body
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Duplicate document',
-                             stop_condition_content: nil)
+                             stop_condition_content: '')
       true
     end
 
