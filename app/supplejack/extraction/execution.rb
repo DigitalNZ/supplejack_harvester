@@ -119,7 +119,7 @@ module Extraction
 
       stop_conditions.any? do |condition|
         condition.evaluate(@de.document.body)
-        log_stop_condition_hit(stop_condition_type: 'user', stop_condition_name: 'Duplicate document',
+        log_stop_condition_hit(stop_condition_type: 'user', stop_condition_name: condition.name,
                                stop_condition_content: condition.content)
       end
     end
