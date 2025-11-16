@@ -124,7 +124,7 @@ module Extraction
       end
     end
 
-    def log_stop_condition_hit(stop_condition_type, stop_condition_name, stop_condition_content)
+    def log_stop_condition_hit(stop_condition_type:, stop_condition_name:, stop_condition_content:)
       JobCompletionServices::ContextBuilder.create_job_completion_or_error({
                                                                              origin: 'Extraction::Execution',
                                                                              definition: @extraction_definition,
