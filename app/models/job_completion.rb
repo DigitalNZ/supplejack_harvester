@@ -14,7 +14,6 @@ class JobCompletion < ApplicationRecord
   validates :job_id, presence: true
   validates :stop_condition_type, presence: true
   validates :stop_condition_name, presence: true
-  validates :stop_condition_content, presence: true
   validates :process_type, presence: true
   validates :origin, presence: true
 end
