@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
 class JobCompletionSummary < ApplicationRecord
-  enum :process_type, {
-    extraction: 0,
-    transformation: 1
-  }
-
   validates :job_id, presence: true
   validates :job_type, presence: true
 
@@ -15,19 +10,6 @@ class JobCompletionSummary < ApplicationRecord
   def pipeline_name
     pipeline = find_pipeline_from_job(job_id, job_type)
     pipeline&.name
-  end
-
-  def definition_name
-    harvest_definition = HarvestDefinition.find_by(job_id: job_id)
-
-    case process_type
-    when 'extraction'
-      harvest_definition&.extraction_definition&.name
-    when 'transformation'
-      harvest_definition&.transformation_definition&.name
-    else
-      'Unknown Type'
-    end
   end
 
   def last_completed_at
