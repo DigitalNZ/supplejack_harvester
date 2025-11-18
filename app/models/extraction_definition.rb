@@ -36,6 +36,7 @@ class ExtractionDefinition < ApplicationRecord
 
   validates :name, uniqueness: true
   validates :split_selector, presence: true, if: :split?
+  validates :link_selector, presence: true, if: :link_extraction_enabled?
 
   validates :throttle, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 60_000 }
 
@@ -44,7 +45,8 @@ class ExtractionDefinition < ApplicationRecord
   # Harvest related validation
   with_options if: :harvest? do
     validates :format, presence: true, inclusion: { in: FORMATS }
-    validates :base_url, presence: true, format: { with: URI::DEFAULT_PARSER.make_regexp }
+    validates :base_url, presence: true, format: { with: URI::DEFAULT_PARSER.make_regexp }, unless: :link_extraction_enabled?
+    validates :link_extraction_format, inclusion: { in: %w[auto html xml json] }, allow_blank: true
   end
 
   with_options presence: true, if: :enrichment? do

@@ -61,6 +61,73 @@ class PipelineJob < ApplicationRecord
     harvest_reports.find_by(kind: 'harvest')
   end
 
+  # Find the source extraction job from a previous automation step for link extraction
+  # Returns the extraction job from the previous step, or nil if not found
+  def source_extraction_job_for_link_extraction(extraction_definition)
+    Rails.logger.info "[LinkExtraction] Finding source extraction job for pipeline_job #{id}"
+    
+    unless from_automation?
+      Rails.logger.warn "[LinkExtraction] Pipeline job #{id} is not from an automation"
+      return nil
+    end
+    
+    unless automation_step.present?
+      Rails.logger.warn "[LinkExtraction] Pipeline job #{id} has no automation_step"
+      return nil
+    end
+
+    Rails.logger.info "[LinkExtraction] Current automation step: #{automation_step.id}, position: #{automation_step.position}"
+    
+    # Determine which step to use as source
+    source_step_position = extraction_definition.source_automation_step_position
+    Rails.logger.info "[LinkExtraction] Source step position specified: #{source_step_position.inspect}"
+    
+    source_step = if source_step_position.present?
+                    # Use specified step position
+                    Rails.logger.info "[LinkExtraction] Looking for step at position #{source_step_position}"
+                    automation_step.automation.automation_steps.find_by(position: source_step_position)
+                  else
+                    # Default to previous step
+                    Rails.logger.info "[LinkExtraction] Looking for previous step (position < #{automation_step.position})"
+                    automation_step.automation.automation_steps
+                                   .where('position < ?', automation_step.position)
+                                   .order(position: :desc)
+                                   .first
+                  end
+
+    if source_step.blank?
+      Rails.logger.warn "[LinkExtraction] No source step found"
+      return nil
+    end
+    
+    Rails.logger.info "[LinkExtraction] Found source step: #{source_step.id}, position: #{source_step.position}"
+    
+    unless source_step.pipeline_job.present?
+      Rails.logger.warn "[LinkExtraction] Source step #{source_step.id} has no pipeline_job"
+      return nil
+    end
+
+    Rails.logger.info "[LinkExtraction] Source step pipeline_job: #{source_step.pipeline_job.id}"
+
+    # Get the first harvest job's extraction job from the source step
+    source_harvest_job = source_step.pipeline_job.harvest_jobs.first
+    if source_harvest_job.blank?
+      Rails.logger.warn "[LinkExtraction] Source step pipeline_job has no harvest_jobs"
+      return nil
+    end
+
+    Rails.logger.info "[LinkExtraction] Source harvest_job: #{source_harvest_job.id}"
+    
+    source_extraction_job = source_harvest_job.extraction_job
+    if source_extraction_job.blank?
+      Rails.logger.warn "[LinkExtraction] Source harvest_job has no extraction_job"
+      return nil
+    end
+
+    Rails.logger.info "[LinkExtraction] Found source extraction_job: #{source_extraction_job.id}, status: #{source_extraction_job.status}"
+    source_extraction_job
+  end
+
   private
 
   def should_queue_enrichments?

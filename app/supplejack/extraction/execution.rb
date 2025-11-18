@@ -46,6 +46,11 @@ module Extraction
       source_id = harvest_definition&.source_id
       return unless source_id
 
+      details = {
+        stop_condition_type: 'system',
+        stop_condition_name: 'Extraction error',
+        completion_type: :error
+      }
       log_stop_condition_hit(error, details)
       raise
     end
