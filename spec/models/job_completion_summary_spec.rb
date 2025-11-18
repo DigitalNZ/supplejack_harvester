@@ -3,135 +3,182 @@
 require 'rails_helper'
 
 RSpec.describe JobCompletionSummary, type: :model do
+  describe 'associations' do
+    it { should have_many(:job_completions).dependent(:destroy) }
+    it { should have_many(:job_errors).dependent(:destroy) }
+  end
+
   describe 'validations' do
-    it 'validates presence of required fields' do
-      summary = build(:job_completion_summary, source_id: nil, source_name: nil, job_type: nil)
+    it 'validates presence of job_id' do
+      summary = JobCompletionSummary.new(job_id: nil, job_type: 'ExtractionJob')
       
       expect(summary).not_to be_valid
-      expect(summary.errors[:source_id]).to include("can't be blank")
-      expect(summary.errors[:source_name]).to include("can't be blank")
+      expect(summary.errors[:job_id]).to include("can't be blank")
+    end
+
+    it 'validates presence of job_type' do
+      job = create(:extraction_job)
+      summary = JobCompletionSummary.new(job_id: job.id, job_type: nil)
+      
+      expect(summary).not_to be_valid
       expect(summary.errors[:job_type]).to include("can't be blank")
     end
 
-    it 'validates completion_entries presence' do
-      summary = build(:job_completion_summary, completion_entries: nil)
+    it 'enforces uniqueness of job_id scoped to process_type and job_type at database level' do
+      job = create(:extraction_job)
+      create(:job_completion_summary, job_id: job.id, process_type: 'extraction', job_type: 'ExtractionJob')
       
-      expect(summary).not_to be_valid
-      expect(summary.errors[:completion_entries]).to include("can't be blank")
-    end
-
-    it 'validates completion_count is present and non-negative' do
-      summary = build(:job_completion_summary, completion_count: nil)
-      expect(summary).not_to be_valid
-      expect(summary.errors[:completion_count]).to include("can't be blank")
-
-      summary = build(:job_completion_summary, completion_count: -1)
-      expect(summary).not_to be_valid
-      expect(summary.errors[:completion_count]).to include("must be greater than or equal to 0")
-    end
-
-    it 'validates uniqueness of source_id scoped to process_type and job_type' do
-      create(:job_completion_summary, source_id: 'test_id', process_type: 'extraction', job_type: 'ExtractionJob')
+      duplicate = JobCompletionSummary.new(job_id: job.id, process_type: 'extraction', job_type: 'ExtractionJob')
+      expect(duplicate).to be_valid # Rails validation passes (no uniqueness validation in model)
       
-      duplicate = build(:job_completion_summary, source_id: 'test_id', process_type: 'extraction', job_type: 'ExtractionJob')
-      expect(duplicate).not_to be_valid
-      expect(duplicate.errors[:source_id]).to include("has already been taken")
+      # But saving will fail due to database unique constraint
+      expect { duplicate.save! }.to raise_error(ActiveRecord::RecordNotUnique)
     end
   end
 
   describe 'enums' do
-    it 'defines completion_type enum' do
-      expect(JobCompletionSummary.completion_types).to eq({ 'error' => 0, 'stop_condition' => 1 })
-    end
-
     it 'defines process_type enum' do
       expect(JobCompletionSummary.process_types).to eq({ 'extraction' => 0, 'transformation' => 1 })
     end
-  end
 
-  describe 'scopes' do
-    it 'has recent_completions scope' do
-      create(:job_completion_summary, last_completed_at: 2.days.ago)
-      recent = create(:job_completion_summary, last_completed_at: 1.day.ago)
-      
-      expect(JobCompletionSummary.recent_completions.first).to eq(recent)
+    it 'can be created with extraction process_type' do
+      job = create(:extraction_job)
+      summary = create(:job_completion_summary, job_id: job.id, process_type: :extraction)
+      expect(summary.extraction?).to be true
+      expect(summary.transformation?).to be false
+    end
+
+    it 'can be created with transformation process_type' do
+      harvest_job = create(:harvest_job)
+      summary = create(:job_completion_summary, job_id: harvest_job.id, process_type: :transformation, job_type: 'TransformationJob')
+      expect(summary.transformation?).to be true
+      expect(summary.extraction?).to be false
     end
   end
 
-  describe 'defaults' do
-    it 'sets default values for new records' do
-      summary = JobCompletionSummary.new
+  describe '#completion_count' do
+    it 'returns the sum of job_completions and job_errors' do
+      job = create(:extraction_job)
+      summary = create(:job_completion_summary, job_id: job.id)
+      create(:job_completion, job_completion_summary: summary, job_id: job.id)
+      create(:job_completion, job_completion_summary: summary, job_id: job.id)
+      create(:job_error, job_completion_summary: summary, job_id: job.id)
+      create(:job_error, job_completion_summary: summary, job_id: job.id)
+      create(:job_error, job_completion_summary: summary, job_id: job.id)
       
-      expect(summary.completion_entries).to eq([])
+      expect(summary.completion_count).to eq(5)
+    end
+
+    it 'returns 0 when there are no completions or errors' do
+      job = create(:extraction_job)
+      summary = create(:job_completion_summary, job_id: job.id)
+      
       expect(summary.completion_count).to eq(0)
     end
   end
 
-  describe '.log_completion' do
-    let(:params) do
-      {
-        source_id: 'test_source',
-        source_name: 'Test Source',
-        message: 'Test error',
-        job_type: 'ExtractionJob',
-        process_type: :extraction,
-        completion_type: :error,
-        details: { origin: 'TestWorker' }
-      }
+  describe '#error_count' do
+    it 'returns the count of job_errors' do
+      job = create(:extraction_job)
+      summary = create(:job_completion_summary, job_id: job.id)
+      create(:job_error, job_completion_summary: summary, job_id: job.id)
+      create(:job_error, job_completion_summary: summary, job_id: job.id)
+      create(:job_error, job_completion_summary: summary, job_id: job.id)
+      
+      expect(summary.error_count).to eq(3)
     end
 
-    it 'creates a new completion summary' do
-      expect { JobCompletionSummary.log_completion(params) }.to change(JobCompletionSummary, :count).by(1)
-    end
-
-    it 'updates existing completion summary' do
-      JobCompletionSummary.log_completion(params)
+    it 'returns 0 when there are no errors' do
+      job = create(:extraction_job)
+      summary = create(:job_completion_summary, job_id: job.id)
       
-      expect { JobCompletionSummary.log_completion(params) }.not_to change(JobCompletionSummary, :count)
-      
-      summary = JobCompletionSummary.last
-      expect(summary.completion_count).to eq(2)
+      expect(summary.error_count).to eq(0)
     end
   end
 
-  describe 'instance methods' do
-    let(:pipeline) { create(:pipeline, name: 'Test Pipeline') }
-    let(:harvest_definition) { create(:harvest_definition, source_id: 'test_source', pipeline: pipeline) }
-    let(:extraction_definition) { create(:extraction_definition, name: 'Test Extraction', pipeline: pipeline) }
-    let(:transformation_definition) { create(:transformation_definition, name: 'Test Transformation', pipeline: pipeline) }
-    let(:summary) { create(:job_completion_summary, source_id: 'test_source') }
-
-    before do
-      harvest_definition.update!(extraction_definition: extraction_definition, transformation_definition: transformation_definition)
+  describe '#last_completed_at' do
+    it 'returns the updated_at of the most recent job completion' do
+      job = create(:extraction_job)
+      summary = create(:job_completion_summary, job_id: job.id)
+      old_completion = create(:job_completion, job_completion_summary: summary, job_id: job.id, updated_at: 2.days.ago)
+      recent_completion = create(:job_completion, job_completion_summary: summary, job_id: job.id, updated_at: 1.day.ago)
+      
+      expect(summary.last_completed_at).to eq(recent_completion.updated_at)
     end
 
-    describe '#pipeline_name' do
-      it 'returns the pipeline name' do
-        expect(summary.pipeline_name).to eq('Test Pipeline')
-      end
+    it 'returns nil when there are no job completions' do
+      job = create(:extraction_job)
+      summary = create(:job_completion_summary, job_id: job.id)
+      
+      expect(summary.last_completed_at).to be_nil
+    end
+  end
 
-      it 'returns nil when harvest definition not found' do
-        summary.update!(source_id: 'unknown_source')
-        expect(summary.pipeline_name).to be_nil
-      end
+
+
+  describe '#pipeline_name' do
+    it 'returns the pipeline name for ExtractionJob' do
+      pipeline = create(:pipeline, name: 'Test Pipeline')
+      extraction_definition = create(:extraction_definition, pipeline: pipeline)
+      extraction_job = create(:extraction_job, extraction_definition: extraction_definition)
+      summary = create(:job_completion_summary, job_id: extraction_job.id, job_type: 'ExtractionJob')
+      
+      expect(summary.pipeline_name).to eq('Test Pipeline')
     end
 
-    describe '#definition_name' do
-      it 'returns extraction definition name for extraction process' do
-        summary.update!(process_type: :extraction)
-        expect(summary.definition_name).to eq('Test Extraction')
-      end
+    it 'raises error when job not found' do
+      job = create(:extraction_job)
+      summary = create(:job_completion_summary, job_id: job.id)
+      summary.update!(job_id: 999999)
+      
+      expect { summary.pipeline_name }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
 
-      it 'returns transformation definition name for transformation process' do
-        summary.update!(process_type: :transformation)
-        expect(summary.definition_name).to eq('Test Transformation')
-      end
+  describe '.error_count_for_harvest_job' do
+    it 'returns 0 when harvest_job_id is blank' do
+      expect(JobCompletionSummary.error_count_for_harvest_job(nil)).to eq(0)
+      expect(JobCompletionSummary.error_count_for_harvest_job('')).to eq(0)
+    end
 
-      it 'returns "Unknown Type" for unknown process type' do
-        # Use a valid process_type but test the else case by mocking the method
-        allow(summary).to receive(:process_type).and_return('unknown')
-        expect(summary.definition_name).to eq('Unknown Type')
-      end
+    it 'returns 0 when harvest_job not found' do
+      expect(JobCompletionSummary.error_count_for_harvest_job(999999)).to eq(0)
+    end
+
+    it 'returns error count for extraction summaries' do
+      harvest_job = create(:harvest_job)
+      extraction_job = create(:extraction_job)
+      harvest_job.update!(extraction_job: extraction_job)
+      
+      extraction_summary = create(:job_completion_summary, job_id: extraction_job.id, job_type: 'ExtractionJob')
+      create(:job_error, job_completion_summary: extraction_summary, job_id: extraction_job.id)
+      create(:job_error, job_completion_summary: extraction_summary, job_id: extraction_job.id)
+      
+      expect(JobCompletionSummary.error_count_for_harvest_job(harvest_job.id)).to eq(2)
+    end
+  end
+
+  describe '.find_for_harvest_job' do
+    it 'returns nil when harvest_job_id is blank' do
+      expect(JobCompletionSummary.find_for_harvest_job(nil)).to be_nil
+      expect(JobCompletionSummary.find_for_harvest_job('')).to be_nil
+    end
+
+    it 'returns nil when harvest_job not found' do
+      expect(JobCompletionSummary.find_for_harvest_job(999999)).to be_nil
+    end
+
+    it 'returns extraction summary when only extraction summary exists' do
+      harvest_job = create(:harvest_job)
+      extraction_job = create(:extraction_job)
+      harvest_job.update!(extraction_job: extraction_job)
+      
+      extraction_summary = create(:job_completion_summary, job_id: extraction_job.id, job_type: 'ExtractionJob')
+      
+      result = JobCompletionSummary.find_for_harvest_job(harvest_job.id)
+      
+      expect(result).to eq(extraction_summary)
     end
   end
 end
+

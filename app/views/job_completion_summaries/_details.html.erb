@@ -4,9 +4,10 @@
       <h5 class="card-title mb-0">Details</h5>
     </div>
     <div class="card-body">
-      <% if @job_completion_summary.completion_entries.any? %>
+      <% if @job_completion_summary.all_records.any? %>
         <div class="accordion" id="completionsAccordion">
-          <% @job_completion_summary.completion_entries.each_with_index do |entry, index| %>
+          <% @job_completion_summary.all_records.each_with_index do |record, index| %>
+            <% is_completion = record.is_a?(JobCompletion) %>
             <div class="accordion-item">
               <h2 class="accordion-header" id="heading<%= index %>">
                 <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
@@ -17,16 +18,17 @@
                         aria-controls="collapse<%= index %>">
                   <div class="d-flex justify-content-between align-items-center w-100 me-3">
                     <div>
-                      <%= entry['message']&.truncate(100) || 'No message' %>
-                        <% if entry.dig('details', 'stop_condition_name').present? %>
-                          <% if entry.dig('details', 'stop_condition_type') == 'system' %>
-                            <span class="badge bg-secondary ms-2">System stop condition</span>
-                          <% else %>
-                            <span class="badge ms-2" style="background-color: #0d6efd;">User defined stop condition</span>
-                          <% end %>
+                      <% if is_completion %>
+                        <%= record.stop_condition_name&.truncate(100) || 'Stop Condition' %>
+                        <% if record.stop_condition_type == 'system' %>
+                          <span class="badge bg-secondary ms-2">System stop condition</span>
                         <% else %>
-                          <span class="badge bg-danger ms-2">Error</span>
+                          <span class="badge badge-stop-condition ms-2">User defined stop condition</span>
                         <% end %>
+                      <% else %>
+                        <%= record.message&.truncate(100) || 'Error' %>
+                        <span class="badge bg-danger ms-2">Error</span>
+                      <% end %>
                     </div>
                   </div>
                 </button>
@@ -36,20 +38,21 @@
                    aria-labelledby="heading<%= index %>"
                    data-bs-parent="#completionsAccordion">
                 <div class="accordion-body">
-                  <% if entry.dig('details', 'stop_condition_name').present? %>
+                  <% if is_completion %>
                     <div class="row">
                       <div class="col-md-12">
                         <h6>Stop Condition Details:</h6>
                         <div class="bg-light p-3 rounded">
-                          <p><strong>Name:</strong> <%= entry.dig('details', 'stop_condition_name') %></p>
-                          <p><strong>Content:</strong> <%= entry.dig('details', 'stop_condition_content') %></p>
-                            <p><strong>Type:</strong>
-                              <% if entry.dig('details', 'stop_condition_type') == 'system' %>
-                                <span class="badge bg-secondary">System stop condition</span>
-                              <% else %>
-                                <span class="badge" style="background-color: #0d6efd;">User defined stop condition</span>
-                              <% end %>
-                            </p>
+                          <p><strong>Name:</strong> <%= record.stop_condition_name %></p>
+                          <p><strong>Content:</strong> <%= record.stop_condition_content %></p>
+                          <p><strong>Type:</strong>
+                            <% if record.stop_condition_type == 'system' %>
+                              <span class="badge bg-secondary">System stop condition</span>
+                            <% else %>
+                              <span class="badge badge-stop-condition">User defined stop condition</span>
+                            <% end %>
+                          </p>
+                          <p><strong>Origin:</strong> <%= record.origin %></p>
                         </div>
                       </div>
                     </div>
@@ -58,39 +61,34 @@
                       <div class="col-md-12">
                         <h6>Error Details:</h6>
                         <div class="bg-light p-3 rounded">
-                          <p><strong>Origin:</strong> <%= entry['origin'] %></p>
-                          <p><strong>Job:</strong> <%= @job_completion_summary.source_name %></p>
-                          <% if entry.dig('details', 'stack_trace').present? %>
+                          <p><strong>Message:</strong> <%= record.message %></p>
+                          <p><strong>Origin:</strong> <%= record.origin %></p>
+                          <p><strong>Job:</strong> <%= @job_completion_summary.pipeline_name %></p>
+                          <% if record.stack_trace.present? %>
                             <p><strong>Stack Trace:</strong></p>
-                            <pre class="bg-dark text-light p-2 rounded"><%= entry.dig('details', 'stack_trace') %></pre>
-                          <% end %>
+                            <% stack_trace_text = if record.stack_trace.is_a?(Array)
+                                                    record.stack_trace.join("\n")
+                                                  else
+                                                    record.stack_trace.strip
+                                                  end %>
+                            <pre class="bg-dark text-light p-2 rounded"><%= stack_trace_text %></pre>
+                        <% end %>
                         </div>
-                      </div>
-                    </div>
-                  <% end %>
-                  <% if entry['details'].present? %>
-                    <div class="row mt-3">
-                      <div class="col-md-12">
-                        <h6>Additional Details:</h6>
-                        <pre class="bg-light p-3 rounded">
-                          <% begin %>
-                            <%= JSON.pretty_generate(entry['details']) %>
-                          <% rescue %>
-                            <%= entry['details'].to_s %>
-                          <% end %>
-                        </pre>
                       </div>
                     </div>
                   <% end %>
                   <div class="row mt-3">
                     <div class="col-md-6">
                       <strong>Occurred At:</strong>
-                      <% begin %>
-                        <%= Time.zone.parse(entry['timestamp']).strftime('%Y-%m-%d %H:%M:%S') %>
-                      <% rescue %>
+                      <% if record.updated_at.present? %>
+                        <%= record.updated_at.to_fs(:light) %>
+                      <% elsif record.created_at.present? %>
+                        <%= record.created_at.to_fs(:light) %>
+                      <% else %>
                         Unknown time
                       <% end %>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -99,7 +97,7 @@
         </div>
       <% else %>
         <div class="text-center py-4">
-          <i class="bi bi-info-circle text-info" style="font-size: 2rem;"></i>
+          <i class="bi bi-info-circle text-info fs-1"></i>
           <p class="mt-2 text-muted">No completion details available.</p>
         </div>
       <% end %>

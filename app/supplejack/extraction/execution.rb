@@ -19,8 +19,6 @@ module Extraction
       perform_paginated_extraction
     rescue StandardError => e
       handle_extraction_error(e)
-
-      log_stop_condition_hit(e, {})
     end
 
     def perform_initial_extraction
@@ -41,12 +39,13 @@ module Extraction
       end
     end
 
-    def handle_extraction_error(error)
+    def handle_extraction_error(_error)
       harvest_definition = @extraction_definition&.harvest_definitions&.first
       source_id = harvest_definition&.source_id
       return unless source_id
 
-      log_stop_condition_hit(error, details)
+      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Handle extraction error',
+                             stop_condition_content: '')
       raise
     end
 
@@ -73,34 +72,25 @@ module Extraction
     end
 
     def set_number_reached?
-      return false unless @harvest_job.present? && @harvest_job.pipeline_job.set_number?
+      return false if @harvest_job.blank?
 
-      if @harvest_job.pipeline_job.pages == @extraction_definition.page
-        details = {
-          stop_condition_type: 'system',
-          stop_condition_name: 'Set number limit reached',
-          completion_type: :stop_condition
-        }
-        log_stop_condition_hit(error, details)
-        return true
-      end
+      pipeline_job = @harvest_job.pipeline_job
+      return false unless pipeline_job.set_number?
 
-      false
+      return false unless pipeline_job.pages == @extraction_definition.page
+
+      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Set number reached',
+                             stop_condition_content: '')
+      true
     end
 
     def extraction_failed?
-      if @de.document.status >= 400 || @de.document.status < 200
-        details = {
-          stop_condition_type: 'system',
-          stop_condition_name: 'Extraction failed',
-          completion_type: :stop_condition
-        }
+      document_status = @de.document.status
+      return false unless document_status >= 400 || document_status < 200
 
-        log_stop_condition_hit(nil, details)
-        return true
-      end
-
-      false
+      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Extraction failed',
+                             stop_condition_content: '')
+      true
     end
 
     def duplicate_document_extracted?
@@ -118,13 +108,8 @@ module Extraction
     def check_for_duplicate_document(previous_document)
       return false unless previous_document.body == @de.document.body
 
-      details = {
-        top_condition_type: 'system',
-        stop_condition_name: 'Duplicate document detected',
-        completion_type: :stop_condition
-      }
-
-      log_duplicate_document_detected(nil, details)
+      log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Duplicate document',
+                             stop_condition_content: '')
       true
     end
 
@@ -134,24 +119,23 @@ module Extraction
 
       stop_conditions.any? do |condition|
         condition.evaluate(@de.document.body)
-        details = {
-          stop_condition_type: 'user',
-          stop_condition_name: condition.name,
-          stop_condition_content: condition.content,
-          completion_type: :stop_condition
-        }
-        log_stop_condition_hit(nil, details)
+        log_stop_condition_hit(stop_condition_type: 'user', stop_condition_name: condition.name,
+                               stop_condition_content: condition.content)
       end
     end
 
-    def log_stop_condition_hit(error, details)
-      JobCompletion::Logger.log_completion(
-        origin: 'Extraction::Execution',
-        error: error,
-        definition: @extraction_definition,
-        job: @extraction_job,
-        details: details
-      )
+    def log_stop_condition_hit(stop_condition_type:, stop_condition_name:, stop_condition_content:)
+      JobCompletionServices::ContextBuilder.create_job_completion_or_error({
+                                                                             origin: 'Extraction::Execution',
+                                                                             definition: @extraction_definition,
+                                                                             job: @extraction_job,
+                                                                             stop_condition_type:
+                                                                               stop_condition_type,
+                                                                             stop_condition_name:
+                                                                               stop_condition_name,
+                                                                             stop_condition_content:
+                                                                               stop_condition_content
+                                                                           })
     end
 
     def throttle
