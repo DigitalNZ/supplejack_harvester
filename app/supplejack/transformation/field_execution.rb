@@ -21,11 +21,14 @@ module Transformation
     private
 
     # rubocop:disable Security/Eval
+    # rubocop:disable Lint/UnusedBlockArgument
     def evaluate_field_block(extracted_record)
-      block = ->(_record) { eval(@field.block) }
+      # :brakeman:ignore Evaluation
+      block = ->(record) { eval(@field.block) }
       block.call(extracted_record)
     end
     # rubocop:enable Security/Eval
+    # rubocop:enable Lint/UnusedBlockArgument
 
     def validate_field_value
       type_checker = TypeChecker.new(@value)
