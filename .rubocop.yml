@@ -46,40 +46,17 @@ Style/DateTime:
 Metrics/AbcSize:
   Exclude:
     - "lib/tasks/reset_extractions.rake"
-    - "app/models/job_completion_summary.rb"
-    - "app/supplejack/transformation/field_execution.rb"
 
 Metrics/ClassLength:
   Exclude:
     - "app/models/job_completion_summary.rb"
     - "app/supplejack/extraction/execution.rb"
     - "app/supplejack/job_completion_summary_logger.rb"
-    - "app/models/job_completion_services/context_builder.rb"
 
 Metrics/MethodLength:
   Exclude:
     - "app/supplejack/extraction/execution.rb"
     - "lib/tasks/reset_extractions.rake"
-    - "app/models/job_completion_services/context_builder.rb"
-    - "app/models/job_completion_summary.rb"
-    - "app/sidekiq/transformation_worker.rb"
-    - "app/supplejack/transformation/field_execution.rb"
-
-Metrics/CyclomaticComplexity:
-  Exclude:
-    - "app/models/job_completion_summary.rb"
-
-Layout/LineLength:
-  Exclude:
-    - "app/sidekiq/delete_worker.rb"
-    - "app/sidekiq/enrichment_extraction_worker.rb"
-    - "app/sidekiq/file_extraction_worker.rb"
-    - "app/sidekiq/load_worker.rb"
-    - "app/sidekiq/text_extraction_worker.rb"
-    - "app/sidekiq/transformation_worker.rb"
-    - "app/supplejack/extraction/execution.rb"
-    - "app/supplejack/load/execution.rb"
-    - "app/supplejack/transformation/field_execution.rb"
 
 Lint/RescueException:
   Exclude:

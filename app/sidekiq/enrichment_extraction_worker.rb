@@ -10,7 +10,8 @@ class EnrichmentExtractionWorker
   rescue StandardError => e
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
                                                                            error: e,
-                                                                           definition: enrichment_params.extraction_definition,
+                                                                           definition:
+                                                                             enrichment_params.extraction_definition,
                                                                            job: enrichment_params.extraction_job,
                                                                            origin: 'EnrichmentExtractionWorker'
                                                                          })

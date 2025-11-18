@@ -129,9 +129,12 @@ module Extraction
                                                                              origin: 'Extraction::Execution',
                                                                              definition: @extraction_definition,
                                                                              job: @extraction_job,
-                                                                             stop_condition_type: stop_condition_type,
-                                                                             stop_condition_name: stop_condition_name,
-                                                                             stop_condition_content: stop_condition_content
+                                                                             stop_condition_type:
+                                                                               stop_condition_type,
+                                                                             stop_condition_name:
+                                                                               stop_condition_name,
+                                                                             stop_condition_content:
+                                                                               stop_condition_content
                                                                            })
     end
 

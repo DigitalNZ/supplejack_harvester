@@ -49,8 +49,11 @@ class DeleteWorker
 
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
                                                                            error: error,
-                                                                           definition: @harvest_report.extraction_definition,
-                                                                           job: @harvest_report.harvest_job&.extraction_job,
+                                                                           definition:
+                                                                             @harvest_report.extraction_definition,
+                                                                           job:
+                                                                             @harvest_report.harvest_job
+                                                                               &.extraction_job,
                                                                            origin: 'DeleteWorker'
                                                                          })
   end

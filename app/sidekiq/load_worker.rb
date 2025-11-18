@@ -53,7 +53,8 @@ class LoadWorker
 
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
                                                                            error: error,
-                                                                           definition: @harvest_job&.extraction_definition,
+                                                                           definition:
+                                                                             @harvest_job&.extraction_definition,
                                                                            job: @harvest_job&.extraction_job,
                                                                            origin: 'LoadWorker'
                                                                          })

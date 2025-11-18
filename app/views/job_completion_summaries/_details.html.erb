@@ -81,13 +81,14 @@
                     <div class="col-md-6">
                       <strong>Occurred At:</strong>
                       <% if record.updated_at.present? %>
-                        <%= record.updated_at.strftime('%Y-%m-%d %H:%M:%S') %>
+                        <%= record.updated_at.to_fs(:light) %>
                       <% elsif record.created_at.present? %>
-                        <%= record.created_at.strftime('%Y-%m-%d %H:%M:%S') %>
+                        <%= record.created_at.to_fs(:light) %>
                       <% else %>
                         Unknown time
                       <% end %>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>

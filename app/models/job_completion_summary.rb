@@ -17,19 +17,6 @@ class JobCompletionSummary < ApplicationRecord
     pipeline&.name
   end
 
-  def definition_name
-    harvest_definition = HarvestDefinition.find_by(job_id: job_id)
-
-    case process_type
-    when 'extraction'
-      harvest_definition&.extraction_definition&.name
-    when 'transformation'
-      harvest_definition&.transformation_definition&.name
-    else
-      'Unknown Type'
-    end
-  end
-
   def last_completed_at
     job_completions.order(updated_at: :desc).first&.updated_at
   end
@@ -52,19 +39,7 @@ class JobCompletionSummary < ApplicationRecord
     harvest_job = HarvestJob.find_by(id: harvest_job_id)
     return 0 unless harvest_job
 
-    # Find summaries for extraction (if extraction_job exists) and transformation
-    summary_ids = []
-
-    # Check for extraction summaries
-    if harvest_job.extraction_job_id.present?
-      extraction_summaries = where(job_id: harvest_job.extraction_job_id, job_type: 'ExtractionJob')
-      summary_ids += extraction_summaries.pluck(:id)
-    end
-
-    # Check for transformation summaries (using harvest_job_id)
-    transformation_summaries = where(job_id: harvest_job_id, job_type: 'TransformationJob')
-    summary_ids += transformation_summaries.pluck(:id)
-
+    summary_ids = collect_summary_ids(harvest_job, harvest_job_id)
     return 0 if summary_ids.empty?
 
     JobError.where(job_completion_summary_id: summary_ids).count
@@ -76,22 +51,34 @@ class JobCompletionSummary < ApplicationRecord
     harvest_job = HarvestJob.find_by(id: harvest_job_id)
     return nil unless harvest_job
 
-    summaries = []
+    summaries = collect_summaries(harvest_job, harvest_job_id)
+    return nil if summaries.empty?
 
-    # Check for extraction summaries
+    find_preferred_summary(summaries)
+  end
+
+  def self.collect_summary_ids(harvest_job, harvest_job_id)
+    summary_ids = []
+    if harvest_job.extraction_job_id.present?
+      extraction_summaries = where(job_id: harvest_job.extraction_job_id, job_type: 'ExtractionJob')
+      summary_ids += extraction_summaries.pluck(:id)
+    end
+    transformation_summaries = where(job_id: harvest_job_id, job_type: 'TransformationJob')
+    summary_ids + transformation_summaries.pluck(:id)
+  end
+
+  def self.collect_summaries(harvest_job, harvest_job_id)
+    summaries = []
     if harvest_job.extraction_job_id.present?
       extraction_summaries = where(job_id: harvest_job.extraction_job_id,
                                    job_type: 'ExtractionJob').includes(:job_errors)
       summaries += extraction_summaries.to_a
     end
-
-    # Check for transformation summaries
     transformation_summaries = where(job_id: harvest_job_id, job_type: 'TransformationJob').includes(:job_errors)
-    summaries += transformation_summaries.to_a
+    summaries + transformation_summaries.to_a
+  end
 
-    return nil if summaries.empty?
-
-    # Prefer a summary with errors, otherwise return the first one found
+  def self.find_preferred_summary(summaries)
     summary_with_errors = summaries.find { |s| s.job_errors.any? }
     summary_with_errors || summaries.first
   end
@@ -103,14 +90,25 @@ class JobCompletionSummary < ApplicationRecord
 
     case job_type
     when 'PipelineJob'
-      PipelineJob.find(job_id).pipeline
+      find_pipeline_from_pipeline_job(job_id)
     when 'HarvestJob', 'TransformationJob'
-      HarvestJob.find(job_id).pipeline_job.pipeline
+      find_pipeline_from_harvest_job(job_id)
     when 'ExtractionJob'
-      extraction_job = ExtractionJob.find(job_id)
-      # Try harvest_job first, then fall back to extraction_definition
-      extraction_job.harvest_job&.pipeline_job&.pipeline ||
-        extraction_job.extraction_definition.pipeline
+      find_pipeline_from_extraction_job(job_id)
     end
+  end
+
+  def find_pipeline_from_pipeline_job(job_id)
+    PipelineJob.find(job_id).pipeline
+  end
+
+  def find_pipeline_from_harvest_job(job_id)
+    HarvestJob.find(job_id).pipeline_job.pipeline
+  end
+
+  def find_pipeline_from_extraction_job(job_id)
+    extraction_job = ExtractionJob.find(job_id)
+    extraction_job.harvest_job&.pipeline_job&.pipeline ||
+      extraction_job.extraction_definition.pipeline
   end
 end

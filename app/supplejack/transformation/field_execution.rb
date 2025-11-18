@@ -7,30 +7,37 @@ module Transformation
       @field = field
     end
 
-    # rubocop:disable Lint/UnusedBlockArgument
-    # rubocop:disable Security/Eval
     def execute(extracted_record)
       begin
-        block = ->(record) { eval(@field.block) }
-
-        @value = block.call(extracted_record)
-        type_checker = TypeChecker.new(@value)
-        raise TypeError, type_checker.error unless type_checker.valid?
+        @value = evaluate_field_block(extracted_record)
+        validate_field_value
       rescue Exception => e
-        harvest_definition = @field.transformation_definition.harvest_definitions.first
-        harvest_job = nil
-        harvest_job = harvest_definition.harvest_jobs.first if harvest_definition.present?
-
-        log_field_error(e, harvest_job)
-        @error = e
+        handle_field_execution_error(e)
       end
 
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)
     end
-    # rubocop:enable Lint/UnusedBlockArgument
-    # rubocop:enable Security/Eval
 
     private
+
+    # rubocop:disable Security/Eval
+    def evaluate_field_block(extracted_record)
+      block = ->(_record) { eval(@field.block) }
+      block.call(extracted_record)
+    end
+    # rubocop:enable Security/Eval
+
+    def validate_field_value
+      type_checker = TypeChecker.new(@value)
+      raise TypeError, type_checker.error unless type_checker.valid?
+    end
+
+    def handle_field_execution_error(error)
+      harvest_definition = @field.transformation_definition.harvest_definitions.first
+      harvest_job = harvest_definition&.harvest_jobs&.first
+      log_field_error(error, harvest_job)
+      @error = error
+    end
 
     def handle_field_error(error)
       harvest_job = find_harvest_job
@@ -42,9 +49,11 @@ module Transformation
       return unless harvest_job
 
       JobCompletionServices::ContextBuilder.create_job_completion_or_error({
-                                                                             origin: 'Transformation::FieldExecution',
+                                                                             origin:
+                                                                               'Transformation::FieldExecution',
                                                                              error: error,
-                                                                             definition: @field.transformation_definition,
+                                                                             definition:
+                                                                               @field.transformation_definition,
                                                                              job: harvest_job
                                                                            })
     end
