@@ -22,8 +22,8 @@ module Transformation
 
     # rubocop:disable Security/Eval
     # rubocop:disable Lint/UnusedBlockArgument
+    # :brakeman:ignore Evaluation
     def evaluate_field_block(extracted_record)
-      # :brakeman:ignore Evaluation
       block = ->(record) { eval(@field.block) }
       block.call(extracted_record)
     end
