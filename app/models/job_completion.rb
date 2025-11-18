@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 # NOTE: This will be removed
-# We are planning on creating two new fields on the extraction_definition
-# We will store the stop condition name and type on the extraction_definition
+# We are planning on creating two new fields on the extraction_job
+# We will store the stop condition name and type on the extraction_job
 class JobCompletion < ApplicationRecord
   enum :process_type, {
     extraction: 0,
