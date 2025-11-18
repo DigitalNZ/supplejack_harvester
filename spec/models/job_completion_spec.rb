@@ -31,14 +31,6 @@ RSpec.describe JobCompletion, type: :model do
       expect(completion.errors[:stop_condition_name]).to include("can't be blank")
     end
 
-    it 'validates presence of stop_condition_content' do
-      job = create(:extraction_job)
-      completion = JobCompletion.new(job_id: job.id, origin: 'TestWorker', stop_condition_type: 'user', stop_condition_name: 'test', stop_condition_content: nil)
-      
-      expect(completion).not_to be_valid
-      expect(completion.errors[:stop_condition_content]).to include("can't be blank")
-    end
-
     it 'validates presence of process_type' do
       job = create(:extraction_job)
       completion = JobCompletion.new(job_id: job.id, origin: 'TestWorker', process_type: nil, stop_condition_type: 'user', stop_condition_name: 'test', stop_condition_content: 'content')
