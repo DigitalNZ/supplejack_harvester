@@ -66,6 +66,44 @@ class ExtractionWorker < ApplicationWorker
     @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
     @harvest_report.load_completed! if @harvest_report.load_workers_completed?
     @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
+    
+    # Check if all ExtractionJobs in this step are complete, then trigger MultiItemWorker
+    check_and_trigger_multi_item_worker if @harvest_report.extraction_completed?
+  end
+
+  def check_and_trigger_multi_item_worker
+    return unless @harvest_report.present?
+    
+    harvest_job = @harvest_report.harvest_job
+    return unless harvest_job.present?
+    
+    pipeline_job = harvest_job.pipeline_job
+    return unless pipeline_job.from_automation?
+    
+    # Check if ALL ExtractionJobs in this HarvestJob are complete
+    all_extraction_jobs = harvest_job.all_extraction_jobs
+    return unless all_extraction_jobs.any?  # Must have at least one extraction job
+    return unless all_extraction_jobs.all?(&:completed?)
+    
+    # Check if next step needs multi-item extraction
+    current_step = pipeline_job.automation_step
+    next_step = current_step.next_step
+    return unless next_step
+    
+    has_multi_item = next_step.harvest_definitions.any? do |harvest_def|
+      extraction_def = harvest_def.extraction_definition
+      # Check both new and old field names for backward compatibility
+      (extraction_def.respond_to?(:multi_item_extraction_enabled?) && extraction_def.multi_item_extraction_enabled?) ||
+      (extraction_def.respond_to?(:link_extraction_enabled?) && extraction_def.link_extraction_enabled?)
+    end
+    
+    return unless has_multi_item
+    
+    # Trigger MultiItemWorker for the entire step (pass the HarvestJob, not individual ExtractionJob)
+    MultiItemWorker.perform_async_with_priority(
+      pipeline_job.job_priority,
+      harvest_job.id  # Pass HarvestJob ID instead of ExtractionJob ID
+    )
   end
 
   def trigger_following_processes
