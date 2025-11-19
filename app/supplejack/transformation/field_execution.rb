@@ -7,42 +7,40 @@ module Transformation
       @field = field
     end
 
-    # rubocop:disable Lint/UnusedBlockArgument
-    # rubocop:disable Security/Eval
     def execute(extracted_record)
       begin
-        block = ->(record) { eval(@field.block) }
-
-        @value = block.call(extracted_record)
-        type_checker = TypeChecker.new(@value)
-        raise TypeError, type_checker.error unless type_checker.valid?
+        @value = evaluate_field_block(extracted_record)
+        validate_field_value
       rescue Exception => e
-        harvest_definition = @field.transformation_definition.harvest_definitions.first
-        harvest_job = nil
-        if harvest_definition.present?
-          harvest_job = harvest_definition.harvest_jobs.first
-        end
-
-        JobCompletion::Logger.log_completion(
-          error: e,
-          definition: @field.transformation_definition,
-          job: harvest_job,
-          details: {
-            field_name: @field.name,
-            field_id: @field.id,
-            stop_condition_name: @field.name,
-            stop_condition_type: 'field_error'
-          }
-        )
-        @error = e
+        handle_field_execution_error(e)
       end
 
       Transformation::TransformedField.new(@field.id, @field.name, @value, @error)
     end
-    # rubocop:enable Lint/UnusedBlockArgument
-    # rubocop:enable Security/Eval
 
     private
+
+    # rubocop:disable Security/Eval
+    # rubocop:disable Lint/UnusedBlockArgument
+    # :brakeman:ignore Evaluation
+    def evaluate_field_block(extracted_record)
+      block = ->(record) { eval(@field.block) }
+      block.call(extracted_record)
+    end
+    # rubocop:enable Security/Eval
+    # rubocop:enable Lint/UnusedBlockArgument
+
+    def validate_field_value
+      type_checker = TypeChecker.new(@value)
+      raise TypeError, type_checker.error unless type_checker.valid?
+    end
+
+    def handle_field_execution_error(error)
+      harvest_definition = @field.transformation_definition.harvest_definitions.first
+      harvest_job = harvest_definition&.harvest_jobs&.first
+      log_field_error(error, harvest_job)
+      @error = error
+    end
 
     def handle_field_error(error)
       harvest_job = find_harvest_job
@@ -50,28 +48,24 @@ module Transformation
       @error = error
     end
 
+    def log_field_error(error, harvest_job)
+      return unless harvest_job
+
+      JobCompletionServices::ContextBuilder.create_job_completion_or_error({
+                                                                             origin:
+                                                                               'Transformation::FieldExecution',
+                                                                             error: error,
+                                                                             definition:
+                                                                               @field.transformation_definition,
+                                                                             job: harvest_job
+                                                                           })
+    end
+
     def find_harvest_job
       harvest_definition = @field.transformation_definition.harvest_definitions.first
       return nil if harvest_definition.blank?
 
       harvest_definition.harvest_jobs.first
-    end
-
-    def log_field_error(error, harvest_job)
-      JobCompletion::Logger.log_completion(
-        origin: 'Transformation::FieldExecution',
-        error: error,
-        definition: @field.transformation_definition,
-        job: harvest_job,
-        details: build_field_error_details
-      )
-    end
-
-    def build_field_error_details
-      {
-        field_name: @field.name,
-        field_id: @field.id
-      }
     end
   end
 end
