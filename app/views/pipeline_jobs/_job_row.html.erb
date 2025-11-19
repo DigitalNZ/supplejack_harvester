@@ -1,4 +1,5 @@
-<% extraction_job_id = report&.harvest_job&.extraction_job_id || job.extraction_job_id %>
+<% first_extraction_job = report&.harvest_job&.all_extraction_jobs&.first || report&.harvest_job&.extraction_job || (job.extraction_job if job.respond_to?(:extraction_job)) %>
+<% extraction_job_id = first_extraction_job&.id || job.extraction_job_id %>
 
 <tr>
   <% if show_pipeline_col %>

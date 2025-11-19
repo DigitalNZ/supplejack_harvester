@@ -71,7 +71,7 @@ class FileExtractionWorker
 
   def create_transformation_job(page)
     TransformationWorker.perform_async_with_priority(harvest_report.pipeline_job.job_priority,
-                                                     @extraction_job.harvest_job.id, page, api_record_id(page))
+                                                     @extraction_job.harvest_job.id, page, api_record_id(page), @extraction_job.id)
     harvest_report.increment_transformation_workers_queued!
   end
 

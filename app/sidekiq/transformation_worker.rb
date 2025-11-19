@@ -7,9 +7,9 @@ class TransformationWorker
 
   sidekiq_options retry: 0
 
-  def perform(harvest_job_id, page = 1, api_record_id = nil)
+  def perform(harvest_job_id, page = 1, api_record_id = nil, extraction_job_id = nil)
     @harvest_job = HarvestJob.find(harvest_job_id)
-    @extraction_job = @harvest_job.extraction_job
+    @extraction_job = find_extraction_job(extraction_job_id)
     @transformation_definition = TransformationDefinition.find(@harvest_job.transformation_definition.id)
     @harvest_report = @harvest_job.harvest_report
     @page = page
@@ -129,6 +129,18 @@ class TransformationWorker
 
   def records
     Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
+  end
+
+  def find_extraction_job(extraction_job_id)
+    # If extraction_job_id is provided, use that specific extraction job
+    return ExtractionJob.find(extraction_job_id) if extraction_job_id.present?
+    
+    # Otherwise, get the first available extraction job (backward compatibility)
+    all_extraction_jobs = @harvest_job.all_extraction_jobs
+    return all_extraction_jobs.first if all_extraction_jobs.any?
+    
+    # Fallback to old relationship
+    @harvest_job.extraction_job
   end
 
   def log_retry_attempt

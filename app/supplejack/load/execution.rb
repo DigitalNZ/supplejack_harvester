@@ -32,11 +32,12 @@ module Load
     end
 
     def handle_load_error(error)
+      first_extraction_job = @harvest_job&.all_extraction_jobs&.first || @harvest_job&.extraction_job
       JobCompletion::Logger.log_completion(
         origin: 'LoadWorker',
         error: error,
         definition: @harvest_job&.extraction_definition,
-        job: @harvest_job&.extraction_job,
+        job: first_extraction_job,
         details: {}
       )
       raise

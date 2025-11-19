@@ -191,7 +191,7 @@ module Extraction
       return if requires_additional_processing?
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
-                                                       @extraction_definition.page)
+                                                       @extraction_definition.page, nil, @extraction_job.id)
       @harvest_report.increment_transformation_workers_queued!
     end
 

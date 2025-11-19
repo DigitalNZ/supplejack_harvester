@@ -55,7 +55,7 @@ class LoadWorker
       origin: 'LoadWorker',
       error: error,
       definition: @harvest_job&.extraction_definition,
-      job: @harvest_job&.extraction_job,
+      job: @harvest_job&.all_extraction_jobs&.first || @harvest_job&.extraction_job,
       details: {}
     )
     raise

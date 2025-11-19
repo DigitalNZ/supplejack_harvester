@@ -8,12 +8,13 @@
                   class: 'btn btn-outline-danger text-nowrap me-2'
         end %>
 
+    <% first_extraction_job = report.harvest_job.all_extraction_jobs.first || report.harvest_job.extraction_job %>
     <%= link_to 'View extracted data',
                 pipeline_harvest_definition_extraction_definition_extraction_job_path(
                   pipeline_job.pipeline.id,
                   report.harvest_definition.id,
                   report.harvest_definition.extraction_definition.id,
-                  report.harvest_job.extraction_job_id
+                  first_extraction_job&.id
                 ),
                 class: 'btn btn-outline-primary text-nowrap' %>
   </div>

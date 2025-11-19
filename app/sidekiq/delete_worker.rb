@@ -47,11 +47,12 @@ class DeleteWorker
   def handle_delete_error(error)
     Rails.logger.info "DeleteWorker: Delete Excecution error: #{error}" if defined?(Sidekiq)
 
+    first_extraction_job = @harvest_report.harvest_job&.all_extraction_jobs&.first || @harvest_report.harvest_job&.extraction_job
     JobCompletion::Logger.log_completion(
       origin: 'DeleteWorker',
       error: error,
       definition: @harvest_report.extraction_definition,
-      job: @harvest_report.harvest_job&.extraction_job,
+      job: first_extraction_job,
       details: {}
     )
   end

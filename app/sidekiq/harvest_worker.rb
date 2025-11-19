@@ -52,7 +52,7 @@ class HarvestWorker < ApplicationWorker
       (extraction_job.extraction_definition.page..extraction_job.documents.total_pages).each do |page|
         @harvest_report.increment_pages_extracted!
         TransformationWorker.perform_in_with_priority(@pipeline_job.job_priority, (page * 5).seconds, @harvest_job.id,
-                                                      page)
+                                                      page, nil, extraction_job.id)
         @harvest_report.increment_transformation_workers_queued!
 
         @pipeline_job.reload
