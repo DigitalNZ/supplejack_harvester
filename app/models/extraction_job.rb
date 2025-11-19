@@ -10,7 +10,8 @@ class ExtractionJob < ApplicationRecord
   enum :kind, { full: 0, sample: 1 }, prefix: :is
 
   belongs_to :extraction_definition
-  has_one :harvest_job, dependent: :destroy
+  belongs_to :harvest_job_new, class_name: 'HarvestJob', foreign_key: :harvest_job_id, optional: true  # New relationship (for multi-item)
+  has_one :harvest_job_legacy, class_name: 'HarvestJob', foreign_key: :extraction_job_id, dependent: :destroy  # Old relationship (backward compatibility)
 
   after_create :create_folder
   after_destroy :delete_folder
@@ -64,5 +65,10 @@ class ExtractionJob < ApplicationRecord
   # @return Integer
   def extraction_folder_size_in_bytes
     Dir.glob("#{extraction_folder}/**/*.*").sum { |f| File.size(f) }
+  end
+
+  # Returns harvest_job via either relationship (new or old)
+  def harvest_job
+    harvest_job_new || harvest_job_legacy
   end
 end

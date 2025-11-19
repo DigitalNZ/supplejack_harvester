@@ -43,7 +43,6 @@ module Extraction
       harvest_definition = @extraction_definition&.harvest_definitions&.first
       source_id = harvest_definition&.source_id
       return unless source_id
-
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Handle extraction error',
                              stop_condition_content: '')
       raise
@@ -170,7 +169,7 @@ module Extraction
       return if requires_additional_processing?
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
-                                                       @extraction_definition.page)
+                                                       @extraction_definition.page, nil, @extraction_job.id)
       @harvest_report.increment_transformation_workers_queued!
     end
 

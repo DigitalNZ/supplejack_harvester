@@ -6,7 +6,8 @@ class HarvestJob < ApplicationRecord
 
   belongs_to :pipeline_job
   belongs_to :harvest_definition
-  belongs_to :extraction_job, optional: true
+  belongs_to :extraction_job, optional: true  # Old relationship (backward compatibility)
+  has_many :extraction_jobs, dependent: :destroy, foreign_key: :harvest_job_id  # New relationship (for multi-item)
   has_one    :harvest_report, dependent: nil
 
   delegate :extraction_definition, to: :harvest_definition
@@ -24,9 +25,17 @@ class HarvestJob < ApplicationRecord
   end
 
   def cancel
-    extraction_job.cancelled! unless extraction_job.completed?
+    # Cancel all extraction jobs (both old and new relationships)
+    all_extraction_jobs.each { |ej| ej.cancelled! unless ej.completed? }
     cancel_sidekiq_workers
     cancelled!
+  end
+
+  # Returns all extraction jobs (combines old and new relationships)
+  def all_extraction_jobs
+    jobs = extraction_jobs.to_a  # New relationship (has_many)
+    jobs << extraction_job if extraction_job.present?  # Old relationship (belongs_to)
+    jobs.compact.uniq
   end
 
   def execute_delete_previous_records

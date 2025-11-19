@@ -33,6 +33,20 @@ if (updateExtractionDefinitionModal || createExtractionDefinitionModal) {
     });
   }
 
+  // Handle link extraction checkbox
+  const linkExtractionEnabled = document.getElementById(
+    "js-link-extraction-enabled"
+  );
+
+  if (linkExtractionEnabled != null) {
+    linkExtractionEnabled.addEventListener("change", (event) => {
+      toggleLinkExtractionElements(event.target.checked);
+    });
+
+    // Initialize visibility on page load
+    toggleLinkExtractionElements(linkExtractionEnabled.checked);
+  }
+
   function toggleEvaluateJavascriptElements(format) {
     const evaluateJavascriptElements =
       document.getElementsByClassName("js-evaluate-js");
@@ -84,6 +98,31 @@ if (updateExtractionDefinitionModal || createExtractionDefinitionModal) {
 
       splitDropdown.value = "false";
       splitSelector.value = "";
+    }
+  }
+
+  function toggleLinkExtractionElements(enabled) {
+    const linkExtractionFields = document.getElementsByClassName(
+      "js-link-extraction-fields"
+    );
+    const baseUrlField = document.getElementById("js-base-url");
+
+    if (enabled) {
+      each(linkExtractionFields, (element) => {
+        element.classList.remove("d-none");
+      });
+      // Make base_url optional when link extraction is enabled
+      if (baseUrlField != null) {
+        baseUrlField.removeAttribute("required");
+      }
+    } else {
+      each(linkExtractionFields, (element) => {
+        element.classList.add("d-none");
+      });
+      // Make base_url required when link extraction is disabled
+      if (baseUrlField != null) {
+        baseUrlField.setAttribute("required", "required");
+      }
     }
   }
 }

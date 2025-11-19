@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_19_025158) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -119,6 +119,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.text "fields"
     t.boolean "include_sub_documents", default: true, null: false
     t.boolean "follow_redirects", default: true
+    t.boolean "link_extraction_enabled", default: false, null: false
+    t.string "link_selector"
+    t.string "link_extraction_format", default: "auto", null: false
+    t.integer "source_automation_step_position"
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_extraction_definitions_on_name", unique: true, length: 255
@@ -135,7 +139,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.timestamp "end_time"
     t.text "error_message"
     t.text "name"
+    t.bigint "harvest_job_id"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
+    t.index ["harvest_job_id"], name: "index_extraction_jobs_on_harvest_job_id"
     t.index ["status"], name: "index_extraction_jobs_on_status"
   end
 

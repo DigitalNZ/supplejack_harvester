@@ -49,6 +49,7 @@
 
             <div class='col-8'>
               <%= form.text_field :base_url,
+                                  id: 'js-base-url',
                                   class: {
                                     'form-control': true,
                                     'is-invalid': @harvest_definition.errors[:base_url].any?
@@ -183,6 +184,82 @@
                                     'form-control': true,
                                     'is-invalid': @harvest_definition.errors[:split_selector].any?
                                   } %>
+            </div>
+
+            <div class="col-4">
+              <%= form.label :link_extraction_enabled, class: 'form-label' do %>
+                Link Extraction
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="Enable link extraction to extract links from a previous automation step's extraction results and create multiple extraction jobs in parallel."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="col-8">
+              <%= form.check_box :link_extraction_enabled, 
+                                 class: 'form-check-input', 
+                                 id: 'js-link-extraction-enabled',
+                                 checked: model.link_extraction_enabled %>
+              <%= form.label :link_extraction_enabled, 'Enable Link Extraction', class: 'form-check-label', for: 'js-link-extraction-enabled' %>
+            </div>
+
+            <div class="col-4 js-link-extraction-fields d-none">
+              <%= form.label :link_selector, class: 'form-label' do %>
+                Link Selector
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="CSS selector (e.g., 'a.link'), XPath (e.g., '/html/body//a'), or JSONPath (e.g., '$.links[*].url') to extract links from the source document."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class='col-8 js-link-extraction-fields d-none'>
+              <%= form.text_field :link_selector,
+                                  id: 'js-link-selector',
+                                  class: {
+                                    'form-control': true,
+                                    'is-invalid': @harvest_definition.errors[:link_selector].any?
+                                  },
+                                  placeholder: 'e.g., a.link or /html/body//a or $.links[*].url' %>
+            </div>
+
+            <div class="col-4 js-link-extraction-fields d-none">
+              <%= form.label :link_extraction_format, class: 'form-label' do %>
+                Link Extraction Format
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="Format of the source document for link extraction. 'Auto' will detect from the extraction definition format."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="col-8 js-link-extraction-fields d-none">
+              <%= form.select :link_extraction_format, 
+                              options_for_select(
+                                [['Auto', 'auto'], ['HTML', 'html'], ['XML', 'xml'], ['JSON', 'json']], 
+                                model.link_extraction_format || 'auto'
+                              ), 
+                              {}, 
+                              class: 'form-select', 
+                              id: 'js-link-extraction-format' %>
+            </div>
+
+            <div class="col-4 js-link-extraction-fields d-none">
+              <%= form.label :source_automation_step_position, class: 'form-label' do %>
+                Source Step Position
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="Optional: Specify which automation step to use as the source (0-based). If not specified, uses the previous step."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class='col-8 js-link-extraction-fields d-none'>
+              <%= form.number_field :source_automation_step_position,
+                                    id: 'js-source-automation-step-position',
+                                    class: 'form-control',
+                                    placeholder: 'Leave blank to use previous step' %>
             </div>
 
           </div>
