@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_17_032018) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_19_025158) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -139,7 +139,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_032018) do
     t.timestamp "end_time"
     t.text "error_message"
     t.text "name"
+    t.bigint "harvest_job_id"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
+    t.index ["harvest_job_id"], name: "index_extraction_jobs_on_harvest_job_id"
     t.index ["status"], name: "index_extraction_jobs_on_status"
   end
 
