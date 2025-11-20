@@ -14,7 +14,7 @@ module Extraction
 
     def call
       perform_initial_extraction
-      return if should_stop_early?
+      return if should_stop_early? || custom_stop_conditions_met?
 
       perform_paginated_extraction
     rescue StandardError => e
