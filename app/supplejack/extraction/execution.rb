@@ -14,7 +14,7 @@ module Extraction
 
     def call
       perform_initial_extraction
-      return if should_stop_early?
+      return if should_stop_early? || custom_stop_conditions_met?
 
       perform_paginated_extraction
     rescue StandardError => e
@@ -118,9 +118,15 @@ module Extraction
       return false if stop_conditions.empty?
 
       stop_conditions.any? do |condition|
-        condition.evaluate(@de.document.body)
-        log_stop_condition_hit(stop_condition_type: 'user', stop_condition_name: condition.name,
-                               stop_condition_content: condition.content)
+        condition.evaluate(@de.document.body).tap do |met|
+          if met
+            log_stop_condition_hit(
+              stop_condition_type: 'user',
+              stop_condition_name: condition.name,
+              stop_condition_content: condition.content
+            )
+          end
+        end
       end
     end
 

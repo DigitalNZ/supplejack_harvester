@@ -301,7 +301,7 @@ RSpec.describe Extraction::Execution do
     end
 
     it 'stops once a stop condition has been met' do
-      expect(Extraction::DocumentExtraction).to receive(:new).exactly(2).times.and_call_original
+      expect(Extraction::DocumentExtraction).to receive(:new).exactly(1).times.and_call_original
 
       subject.call
     end
