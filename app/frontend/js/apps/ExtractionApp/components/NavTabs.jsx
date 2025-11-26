@@ -7,6 +7,7 @@ import { selectRequestIds } from "~/js/features/ExtractionApp/RequestsSlice";
 import { selectAllParameters } from "~/js/features/ExtractionApp/ParametersSlice";
 import { selectAppDetails } from "~/js/features/TransformationApp/AppDetailsSlice";
 import { selectAllSharedDefinitions } from "~/js/features/SharedDefinitionsSlice";
+import { selectHarvestDefinition } from "/js/features/ExtractionApp/AppDetailsSlice";
 
 import { toggleDisplayParameters } from "~/js/features/ExtractionApp/UiParametersSlice";
 
@@ -19,10 +20,12 @@ import {
 
 const NavTabs = () => {
   const dispatch = useDispatch();
+  const harvestDefinition = useSelector(selectHarvestDefinition);
   const appDetails = useSelector(selectAppDetails);
   const uiAppDetails = useSelector(selectUiAppDetails);
   const requestIds = useSelector(selectRequestIds);
-  const initialRequestId = requestIds[0];
+  const initialRequestIndex = harvestDefinition.kind == "harvest" ? 0 : 1;
+  const initialRequestId = requestIds[initialRequestIndex];
   const mainRequestId = requestIds[1];
   const sharedDefinitions = useSelector(selectAllSharedDefinitions);
 
@@ -47,7 +50,7 @@ const NavTabs = () => {
     dispatch(updateActiveRequest(id));
   };
 
-  const pageOneTabText = () => {
+  const requestTabText = () => {
     if (appDetails.extractionDefinition.paginated) {
       return "First Request";
     }
@@ -55,7 +58,7 @@ const NavTabs = () => {
     return "Request";
   };
 
-  const pageOne = () => {
+  const requestTab = () => {
     return (
       <li className="nav-item" role="presentation">
         <button
@@ -66,13 +69,49 @@ const NavTabs = () => {
             handleTabClick(initialRequestId);
           }}
         >
-          {pageOneTabText()}
+          {requestTabText()}
         </button>
       </li>
     );
   };
 
-  const shared = () => {
+  const followingRequestsTab = () => {
+    if (!appDetails.extractionDefinition.paginated) return;
+
+    return (
+      <li
+        className="nav-item"
+        role="presentation"
+        onClick={() => {
+          handleTabClick(mainRequestId);
+        }}
+      >
+        <button className={mainRequestClasses} type="button" role="tab">
+          Following Requests
+        </button>
+      </li>
+    );
+  };
+
+  const stopConditionsTab = () => {
+    return (
+      <li
+        className="nav-item"
+        role="presentation"
+        onClick={() => {
+          dispatch(activateStopConditionsTab());
+        }}
+      >
+        <button className={stopConditionsClasses} type="button" role="tab">
+          Stop Conditions
+        </button>
+      </li>
+    );
+  };
+
+  const sharedTab = () => {
+    if (sharedDefinitions.length === 0) return;
+
     return (
       <li className="nav-item" role="presentation">
         <button
@@ -89,47 +128,13 @@ const NavTabs = () => {
     );
   };
 
-  const pageTwo = () => {
-    return (
-      <li
-        className="nav-item"
-        role="presentation"
-        onClick={() => {
-          handleTabClick(mainRequestId);
-        }}
-      >
-        <button className={mainRequestClasses} type="button" role="tab">
-          Following Requests
-        </button>
-      </li>
-    );
-  };
-
-  const stopConditions = () => {
-    return (
-      <li
-        className="nav-item"
-        role="presentation"
-        onClick={() => {
-          dispatch(activateStopConditionsTab());
-        }}
-      >
-        <button className={stopConditionsClasses} type="button" role="tab">
-          Stop Conditions
-        </button>
-      </li>
-    );
-  };
-
   return createPortal(
     <>
       <ul className="nav nav-tabs mt-4" role="tablist">
-        {(appDetails.extractionDefinition.paginated ||
-          sharedDefinitions.length > 1) &&
-          pageOne()}
-        {appDetails.extractionDefinition.paginated && pageTwo()}
-        {stopConditions()}
-        {sharedDefinitions.length > 1 && shared()}
+        {requestTab()}
+        {followingRequestsTab()}
+        {stopConditionsTab()}
+        {sharedTab()}
       </ul>
     </>,
     document.getElementById("react-nav-tabs")

@@ -50,6 +50,8 @@ const AppDetailsSlice = createSlice({
 });
 
 export const selectAppDetails = (state) => state.entities.appDetails;
+export const selectHarvestDefinition = (state) =>
+  state.entities.appDetails.harvestDefinition;
 
 const { actions, reducer } = AppDetailsSlice;
 
