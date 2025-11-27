@@ -75,11 +75,6 @@ class PipelinesController < ApplicationController
     render json: @harvest_definitions.map(&:to_h)
   end
 
-  def enrichment_definitions
-    @enrichment_definitions = @pipeline.enrichment
-    render json: @enrichment_definitions.map(&:to_h)
-  end
-
   private
 
   def assign_show_pipeline
