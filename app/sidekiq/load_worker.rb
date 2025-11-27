@@ -25,12 +25,11 @@ class LoadWorker
 
   def log_retry_attempt
     proc do |exception, try, elapsed_time, next_interval|
-      if defined?(Sidekiq)
-        Rails.logger.info("
-          #{exception.class}: '#{exception.message}':
-          #{try} tries in #{elapsed_time} seconds and
-          #{next_interval} seconds until the next try.")
-      end
+      logger.info(
+        "#{exception.class}: '#{exception.message}':" \
+        "#{try} tries in #{elapsed_time} seconds and" \
+        "#{next_interval} seconds until the next try."
+      )
     end
   end
 
@@ -49,7 +48,7 @@ class LoadWorker
   end
 
   def handle_load_error(error)
-    Rails.logger.info "Load Excecution error: #{error}" if defined?(Sidekiq)
+    logger.info "Load Excecution error: #{error}"
 
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
                                                                            error: error,
@@ -66,13 +65,18 @@ class LoadWorker
   end
 
   def job_end
+    pipeline_job = @harvest_job.pipeline_job
     @harvest_report.increment_load_workers_completed!
     @harvest_report.reload
 
     finish_load if @harvest_report.load_workers_completed?
 
-    @harvest_job.pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
+    pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
     @harvest_job.execute_delete_previous_records
+
+    return unless pipeline_job.reload.finished?
+
+    pipeline_job.completed!
   end
 
   def source_id
@@ -92,6 +96,6 @@ class LoadWorker
       Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
     end
   rescue StandardError => e
-    Rails.logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}" if defined?(Sidekiq)
+    logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}"
   end
 end

@@ -10,22 +10,26 @@ module Extraction
       @response = response
     end
 
-    # rubocop:disable Layout/LineLength
     def extract
       ::Retriable.retriable do
-        @document = if @extraction_definition.evaluate_javascript?
-                      Extraction::JavascriptRequest.new(url:, params:).get
-                    else
-                      Extraction::Request.new(url:, params:, headers:, method: http_method,
-                                              follow_redirects: @extraction_definition.follow_redirects).send(http_method)
-                    end
+        @document = fetch_document
       end
     rescue StandardError => e
-      ::Sidekiq.logger.info "Extraction error: #{e}" if defined?(Sidekiq)
+      Rails.logger.info "Extraction error: #{e}"
     end
-    # rubocop:enable Layout/LineLength
 
     private
+
+    def fetch_document
+      if @extraction_definition.evaluate_javascript?
+        Extraction::JavascriptRequest.new(url:, params:).get
+      else
+        Extraction::Request.new(
+          url:, params:, headers:, method: http_method,
+          follow_redirects: @extraction_definition.follow_redirects
+        ).send(http_method)
+      end
+    end
 
     def file_path
       page_str = format('%09d', @extraction_definition.page)[-9..]

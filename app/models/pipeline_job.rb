@@ -61,6 +61,10 @@ class PipelineJob < ApplicationRecord
     harvest_reports.find_by(kind: 'harvest')
   end
 
+  def finished?
+    harvest_reports.all?(&:finished?)
+  end
+
   private
 
   def should_queue_enrichments?
@@ -69,9 +73,10 @@ class PipelineJob < ApplicationRecord
   end
 
   def should_queue_enrichment?(enrichment)
-    should_run?(enrichment.id) &&
+    enrichment_id = enrichment.id
+    should_run?(enrichment_id) &&
       enrichment.ready_to_run? &&
-      HarvestJob.find_by(key: "#{harvest_key}__enrichment-#{enrichment.id}").blank?
+      HarvestJob.find_by(key: "#{harvest_key}__enrichment-#{enrichment_id}").blank?
   end
 
   def harvest_completed?
