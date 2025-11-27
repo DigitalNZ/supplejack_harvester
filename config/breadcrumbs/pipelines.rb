@@ -18,26 +18,26 @@ crumb :pipeline_job do |pipeline_job|
   parent :pipeline_jobs, pipeline_job.pipeline
 end
 
-crumb :extraction_definition do |harvest_definition, extraction_definition|
+crumb :extraction_definition do |pipeline, harvest_definition, extraction_definition|
   link extraction_definition.name_in_database, pipeline_harvest_definition_extraction_definition_path(
-    harvest_definition.pipeline, harvest_definition, extraction_definition
+    pipeline, harvest_definition, extraction_definition
   )
-  parent :pipeline, extraction_definition.pipeline
+  parent :pipeline, pipeline
 end
 
-crumb :transformation_definition do |transformation_definition|
+crumb :transformation_definition do |pipeline, transformation_definition|
   link transformation_definition.name_in_database
-  parent :pipeline, transformation_definition.pipeline
+  parent :pipeline, pipeline
 end
 
-crumb :extraction_jobs do |harvest_definition, extraction_definition|
+crumb :extraction_jobs do |pipeline, harvest_definition, extraction_definition|
   link 'Extraction Jobs', pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
-    extraction_definition.pipeline, harvest_definition, extraction_definition
+    pipeline, harvest_definition, extraction_definition
   )
-  parent :extraction_definition, harvest_definition, extraction_definition
+  parent :extraction_definition, pipeline, harvest_definition, extraction_definition
 end
 
-crumb :extraction_job do |harvest_definition, extraction_job|
+crumb :extraction_job do |pipeline, harvest_definition, extraction_job|
   link extraction_job.id
-  parent :extraction_jobs, harvest_definition, extraction_job.extraction_definition
+  parent :extraction_jobs, pipeline, harvest_definition, extraction_job.extraction_definition
 end

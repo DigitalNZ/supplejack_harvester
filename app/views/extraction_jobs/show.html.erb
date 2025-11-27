@@ -1,5 +1,5 @@
 <%= content_for(:title) { "#{@extraction_definition.name} job" } %>
-<% breadcrumb :extraction_job, @harvest_definition, @extraction_job %>
+<% breadcrumb :extraction_job, @pipeline, @harvest_definition, @extraction_job %>
 
 <%= content_for(:header) do %>
   <div class="float-start">

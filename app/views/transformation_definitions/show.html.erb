@@ -1,5 +1,5 @@
 <%= content_for(:title) { @transformation_definition.name_in_database } %>
-<% breadcrumb :transformation_definition, @transformation_definition %>
+<% breadcrumb :transformation_definition, @pipeline, @transformation_definition %>
 
 <%= content_for(:header) do %>
   <h1 class='header__title'><%= @transformation_definition.name %></h1>
