@@ -17,8 +17,6 @@ class PipelineJob < ApplicationRecord
 
   enum :page_type, { all_available_pages: 0, set_number: 1 }
 
-  validates :key, uniqueness: true
-
   with_options if: :set_number? do
     validates :pages, presence: true
   end
@@ -49,8 +47,7 @@ class PipelineJob < ApplicationRecord
       next unless should_queue_enrichment?(enrichment)
 
       enrichment_job = HarvestJob.create(
-        harvest_definition: enrichment, pipeline_job: self,
-        key: "#{harvest_key}__enrichment-#{enrichment.id}", target_job_id: job_id
+        harvest_definition: enrichment, pipeline_job: self, target_job_id: job_id
       )
 
       HarvestWorker.perform_async_with_priority(job_priority, enrichment_job.id)
@@ -71,7 +68,7 @@ class PipelineJob < ApplicationRecord
   def should_queue_enrichment?(enrichment)
     should_run?(enrichment.id) &&
       enrichment.ready_to_run? &&
-      HarvestJob.find_by(key: "#{harvest_key}__enrichment-#{enrichment.id}").blank?
+      !harvest_jobs.exists?(pipeline_job_id: id, harvest_definition_id: enrichment.id)
   end
 
   def harvest_completed?
@@ -82,11 +79,5 @@ class PipelineJob < ApplicationRecord
 
   def should_run?(id)
     harvest_definitions_to_run.map(&:to_i).include?(id)
-  end
-
-  def harvest_key
-    return key unless key.include?('__')
-
-    key.match(/(?<key>.+)__/)[:key]
   end
 end
