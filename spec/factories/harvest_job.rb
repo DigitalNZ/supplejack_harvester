@@ -6,7 +6,6 @@ FactoryBot.define do
     association :pipeline_job
     association :harvest_definition
     association :extraction_job
-    key { SecureRandom.hex }
 
     trait(:completed) do
       status { 'completed' }

@@ -51,11 +51,8 @@ class Automation < ApplicationRecord
   private
 
   def create_job_with_definitions(step, pipeline, harvest_definitions)
-    # Generate a unique key for this pipeline job
-    key = SecureRandom.hex(10)
-
     # Create the pipeline job
-    pipeline_job = build_pipeline_job(step, pipeline, key, harvest_definitions)
+    pipeline_job = build_pipeline_job(step, pipeline, harvest_definitions)
 
     # Queue the job
     queue_pipeline_job(pipeline_job)
@@ -63,10 +60,9 @@ class Automation < ApplicationRecord
     pipeline_job
   end
 
-  def build_pipeline_job(step, pipeline, key, harvest_definitions)
+  def build_pipeline_job(step, pipeline, harvest_definitions)
     PipelineJob.create!(
       pipeline:,
-      key:,
       destination_id: destination.id,
       harvest_definitions_to_run: harvest_definitions.pluck(:id).map(&:to_s),
       launched_by_id: step.launched_by_id,
