@@ -1,5 +1,5 @@
 <%= content_for(:title) { @extraction_definition.name_in_database } %>
-<% breadcrumb :extraction_definition, @harvest_definition, @extraction_definition %>
+<% breadcrumb :extraction_definition, @pipeline, @harvest_definition, @extraction_definition %>
 
 <%= content_for(:header) do %>
   <h1 class='header__title'><%= @extraction_definition.name %></h1>
