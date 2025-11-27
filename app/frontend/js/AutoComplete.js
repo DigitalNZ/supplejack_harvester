@@ -22,9 +22,6 @@ each(autoCompleteForms, (form) => {
     resultItem: {
       highlight: true,
     },
-    resultsList: {
-      maxResults: 20,
-    },
     submit: true,
   };
 
