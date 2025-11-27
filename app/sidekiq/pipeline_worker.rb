@@ -8,10 +8,7 @@ class PipelineWorker < ApplicationWorker
     @pipeline_job.harvest_definitions_to_run.each do |harvest_definition|
       definition = HarvestDefinition.find(harvest_definition)
 
-      key = @pipeline_job.key
-      key = "#{key}__enrichment-#{definition.id}" if definition.enrichment?
-
-      job = HarvestJob.create(pipeline_job: @pipeline_job, harvest_definition: definition, key:)
+      job = HarvestJob.create(pipeline_job: @pipeline_job, harvest_definition: definition)
 
       HarvestWorker.perform_async_with_priority(@pipeline_job.job_priority, job.id)
 

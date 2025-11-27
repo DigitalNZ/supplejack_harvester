@@ -6,17 +6,17 @@ RSpec.describe HarvestWorker, type: :job do
   let(:destination)            { create(:destination) }
   let!(:pipeline)              { create(:pipeline, :figshare) }
   let!(:harvest_definition)    { pipeline.harvest }
-  let!(:harvest_job)            { create(:harvest_job, harvest_definition:, pipeline_job:, key: 'test') }
-  
+  let!(:harvest_job)           { create(:harvest_job, harvest_definition:, pipeline_job:) }
+
   let!(:full_job)                      { create(:extraction_job, extraction_definition:) }
   let!(:extraction_definition)         { create(:extraction_definition, :figshare) }
   let!(:request_one)                   { create(:request, :figshare_initial_request, extraction_definition:) }
   let!(:request_two)                   { create(:request, :figshare_main_request, extraction_definition:) }
 
-  let!(:pipeline_job)           do
-    create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id], key: 'test')
+  let!(:pipeline_job) do
+    create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id])
   end
-  
+
   before do
     stub_figshare_harvest_requests(request_one)
     stub_figshare_harvest_requests(request_two)
@@ -64,7 +64,7 @@ RSpec.describe HarvestWorker, type: :job do
     context 'when the HarvestJob is for a Harvest using an existing Extraction' do
       let(:extraction_execution) { Extraction::Execution.new(full_job, extraction_definition) }
       let!(:pipeline_job)           do
-        create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id], key: 'test', extraction_job_id: full_job.id)
+        create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id], extraction_job_id: full_job.id)
       end
 
       before do
@@ -86,7 +86,7 @@ RSpec.describe HarvestWorker, type: :job do
 
       context 'when the PipelineJob is for a set number of pages' do
         let!(:pipeline_job)           do
-          create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id], key: 'test', extraction_job_id: full_job.id, pages: 2, page_type: 'set_number')
+          create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id], extraction_job_id: full_job.id, pages: 2, page_type: 'set_number')
         end
 
         it 'queues a number of TransformationWorkers based on the number specified in the PipelineJob' do

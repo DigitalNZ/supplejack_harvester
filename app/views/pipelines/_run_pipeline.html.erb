@@ -13,7 +13,6 @@
     <%= vertical_form_with(model: [@pipeline, PipelineJob.new]) do |form| %>
       <div class='row gy-3 align-items-center'>
         <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
-        <%= form.hidden_field :key, value: SecureRandom.hex %>
 
         <% if @pipeline.harvest_definitions.length == 1 %>
           <%- @pipeline.harvest_definitions.each do |harvest_definition| %>

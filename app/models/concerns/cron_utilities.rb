@@ -4,15 +4,15 @@ module CronUtilities
   extend ActiveSupport::Concern
 
   def create_sidekiq_cron_job
-    Sidekiq::Cron::Job.create(name:, cron: cron_syntax, class: 'ScheduleWorker', args: id)
+    Sidekiq::Cron::Job.create(name: cron_job_name, cron: cron_syntax, class: 'ScheduleWorker', args: id)
   end
 
-  def delete_sidekiq_cron_job(sidekiq_cron_name = name)
-    Sidekiq::Cron::Job.find(sidekiq_cron_name)&.destroy
+  def delete_sidekiq_cron_job
+    Sidekiq::Cron::Job.find(cron_job_name)&.destroy
   end
 
   def refresh_sidekiq_cron_job
-    delete_sidekiq_cron_job(name_previously_was)
+    delete_sidekiq_cron_job
     create_sidekiq_cron_job
   end
 
@@ -57,5 +57,11 @@ module CronUtilities
 
   def hour_and_minutes
     sanitized_time.split(':')
+  end
+
+  private
+
+  def cron_job_name
+    "schedule_#{id}"
   end
 end
