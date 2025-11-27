@@ -8,7 +8,7 @@ RSpec.describe LoadWorker, type: :job do
   let!(:enrichment_definition) { create(:harvest_definition, kind: 'enrichment', pipeline:) }
   let(:destination)            { create(:destination) }
   let(:pipeline_job)           do
-    create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [enrichment_definition.id], key: 'test')
+    create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [enrichment_definition.id])
   end
 
   def stub_notice_to_api
@@ -52,13 +52,12 @@ RSpec.describe LoadWorker, type: :job do
         expect(HarvestJob.last.target_job_id).to eq harvest_job.name
       end
 
-      it 'does not queue enrichments if there is already an existing enrichment with the same key' do
+      it 'does not queue enrichments if there is already an existing one for that pipeline job' do
         create(
           :harvest_job,
           :completed,
           harvest_definition: enrichment_definition,
-          pipeline_job:,
-          key: "test__enrichment-#{enrichment_definition.id}"
+          pipeline_job:
         )
         stub_notice_to_api
 
@@ -69,7 +68,7 @@ RSpec.describe LoadWorker, type: :job do
     end
 
     context 'when the harvest is not completed' do
-      let(:harvest_job) { create(:harvest_job, harvest_definition:, pipeline_job:, key: 'test') }
+      let(:harvest_job) { create(:harvest_job, harvest_definition:, pipeline_job:) }
       let!(:harvest_report) do
         create(:harvest_report, harvest_job:, pipeline_job:, extraction_status: 'running', transformation_status: 'running',
                                 delete_status: 'running', load_workers_queued: 1)
@@ -89,24 +88,24 @@ RSpec.describe LoadWorker, type: :job do
       let!(:cancelled_harvest_report) do
         create(:harvest_report, harvest_job: cancelled_harvest_job, pipeline_job:)
       end
-      
+
       it 'does not process any batches when harvest job is cancelled' do
         expect(Load::Execution).not_to receive(:new)
-        
+
         described_class.new.perform(cancelled_harvest_job.id, '[{"id": "1"}]')
       end
     end
-    
+
     context 'when the pipeline job is cancelled' do
       let(:cancelled_pipeline_job) { create(:pipeline_job, :cancelled, pipeline:, destination:) }
       let(:harvest_job_with_cancelled_pipeline) { create(:harvest_job, harvest_definition:, pipeline_job: cancelled_pipeline_job) }
       let!(:cancelled_pipeline_harvest_report) do
         create(:harvest_report, harvest_job: harvest_job_with_cancelled_pipeline, pipeline_job: cancelled_pipeline_job)
       end
-      
+
       it 'does not process any batches when pipeline job is cancelled' do
         expect(Load::Execution).not_to receive(:new)
-        
+
         described_class.new.perform(harvest_job_with_cancelled_pipeline.id, '[{"id": "1"}]')
       end
     end
