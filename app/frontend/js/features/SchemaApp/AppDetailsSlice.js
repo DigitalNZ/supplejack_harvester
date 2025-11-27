@@ -2,7 +2,9 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const AppDetailsSlice = createSlice({
   name: "appDetails",
-  initialState: {},
+  initialState: {
+    stopConditionsTabActive: false,
+  },
   reducers: {},
 });
 
