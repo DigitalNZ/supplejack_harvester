@@ -10,6 +10,7 @@ class ExtractionJob < ApplicationRecord
   enum :kind, { full: 0, sample: 1 }, prefix: :is
 
   belongs_to :extraction_definition
+  belongs_to :pre_extraction_job, class_name: 'ExtractionJob', optional: true
   has_one :harvest_job, dependent: :destroy
 
   after_create :create_folder
@@ -64,5 +65,28 @@ class ExtractionJob < ApplicationRecord
   # @return Integer
   def extraction_folder_size_in_bytes
     Dir.glob("#{extraction_folder}/**/*.*").sum { |f| File.size(f) }
+  end
+
+  # Returns documents from the pre-extraction job if linked
+  #
+  # @return Extraction::Documents or nil
+  def pre_extraction_documents
+    return nil unless pre_extraction_job_id.present?
+
+    pre_extraction_job.documents
+  end
+
+  # Determines if this extraction job is a pre-extraction job
+  # Uses explicit flag if set, otherwise falls back to checking if harvest_job is absent
+  # (pre-extraction jobs don't have harvest_jobs, regular extraction jobs do)
+  #
+  # @return [true, false]
+  def pre_extraction?
+    # If explicitly set, use that
+    return is_pre_extraction if !is_pre_extraction.nil?
+
+    # Fallback: pre-extraction jobs don't have harvest_jobs
+    # Regular extraction jobs are created with harvest_jobs
+    harvest_job.blank?
   end
 end

@@ -17,9 +17,14 @@ class HarvestWorker < ApplicationWorker
   end
 
   def create_extraction_job
+    # Check if previous step was a pre-extraction step
+    previous_pre_extraction_job_id = find_previous_pre_extraction_job_id
+
     extraction_job = ExtractionJob.create(
       extraction_definition: @harvest_job.extraction_definition,
-      harvest_job: @harvest_job
+      harvest_job: @harvest_job,
+      pre_extraction_job_id: previous_pre_extraction_job_id,
+      is_pre_extraction: false  # Pipeline steps are NOT pre-extraction
     )
 
     ExtractionWorker.perform_async_with_priority(@pipeline_job.job_priority, extraction_job.id, @harvest_report.id)
@@ -49,5 +54,20 @@ class HarvestWorker < ApplicationWorker
 
   def page_number_reached?(page)
     @pipeline_job.set_number? && page == @pipeline_job.pages
+  end
+
+  def find_previous_pre_extraction_job_id
+    return nil unless @harvest_job.pipeline_job.automation_step
+
+    automation = @harvest_job.pipeline_job.automation_step.automation
+    current_position = @harvest_job.pipeline_job.automation_step.position
+
+    previous_pre_extraction_step = automation.automation_steps
+                                             .where('position < ?', current_position)
+                                             .where(step_type: 'pre_extraction')
+                                             .order(position: :desc)
+                                             .first
+
+    previous_pre_extraction_step&.pre_extraction_job_id
   end
 end

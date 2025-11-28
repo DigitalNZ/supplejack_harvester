@@ -52,10 +52,20 @@ if (extractionResultViewer) {
   const format = extractionResultViewer.dataset.format;
   let results = extractionResultViewer.dataset.results;
 
-  if (format == "JSON" || format == "ARCHIVE_JSON") {
+  const isPreExtractionLink = results.includes('"pre_extraction_link"') || (results.startsWith('{') && results.includes('"url"'));
+
+  if (format == "JSON" || format == "ARCHIVE_JSON" || isPreExtractionLink) {
     results = JSON.stringify(JSON.parse(results), null, 2);
   } else if (format == "XML") {
-    results = xmlFormat(results, { indentation: "  ", lineSeparator: "\n" });
+    try {
+      results = xmlFormat(results, { indentation: "  ", lineSeparator: "\n" });
+    } catch (err) {
+      try {
+        results = JSON.stringify(JSON.parse(results), null, 2);
+      } catch (jsonErr) {
+        results = results;
+      }
+    }
   }
 
   editor("#extraction-result-viewer", format, true, results);
