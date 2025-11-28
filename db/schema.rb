@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_27_225925) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -35,8 +35,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.string "api_method"
     t.text "api_headers"
     t.text "api_body"
+    t.bigint "extraction_definition_id"
     t.index ["automation_template_id", "position"], name: "index_automation_step_templates_on_template_id_and_position"
     t.index ["automation_template_id"], name: "index_automation_step_templates_on_automation_template_id"
+    t.index ["extraction_definition_id"], name: "index_automation_step_templates_on_extraction_definition_id"
     t.index ["pipeline_id"], name: "index_automation_step_templates_on_pipeline_id"
   end
 
@@ -53,10 +55,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.string "api_method"
     t.text "api_headers"
     t.text "api_body"
+    t.bigint "extraction_definition_id"
+    t.bigint "pre_extraction_job_id"
     t.index ["automation_id", "position"], name: "index_automation_steps_on_automation_id_and_position", unique: true
     t.index ["automation_id"], name: "index_automation_steps_on_automation_id"
+    t.index ["extraction_definition_id"], name: "index_automation_steps_on_extraction_definition_id"
     t.index ["launched_by_id"], name: "index_automation_steps_on_launched_by_id"
     t.index ["pipeline_id"], name: "index_automation_steps_on_pipeline_id"
+    t.index ["pre_extraction_job_id"], name: "index_automation_steps_on_pre_extraction_job_id"
   end
 
   create_table "automation_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -119,6 +125,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.text "fields"
     t.boolean "include_sub_documents", default: true, null: false
     t.boolean "follow_redirects", default: true
+    t.boolean "pre_extraction", default: false, null: false
+    t.string "link_selector"
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_extraction_definitions_on_name", unique: true, length: 255
@@ -135,7 +143,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.timestamp "end_time"
     t.text "error_message"
     t.text "name"
+    t.bigint "pre_extraction_job_id"
+    t.boolean "is_pre_extraction"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
+    t.index ["pre_extraction_job_id"], name: "index_extraction_jobs_on_pre_extraction_job_id"
     t.index ["status"], name: "index_extraction_jobs_on_status"
   end
 
@@ -245,7 +256,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "completion_count", default: 0, null: false
-    t.bigint "job_id"
+    t.bigint "job_id", null: false
     t.index ["job_id", "process_type", "job_type"], name: "index_job_completion_summaries_on_job_process_type", unique: true
     t.index ["last_completed_at"], name: "index_job_completion_summaries_on_last_completed_at"
     t.index ["process_type"], name: "index_job_completion_summaries_on_process_type"

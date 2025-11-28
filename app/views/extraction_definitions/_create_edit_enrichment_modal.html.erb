@@ -193,6 +193,44 @@
                     [%w[No false], %w[Yes true]], model.include_sub_documents
                   ), {}, class: 'form-select' %>
             </div>
+
+            <div class="col-4">
+              <%= form.label :pre_extraction, class: 'form-label' do %>
+                Pre-Extraction
+
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="Enable this to extract links from a sitemap or list page. Each link will be saved as a separate document for processing by a subsequent extraction step."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="col-8">
+              <%= form.select :pre_extraction, options_for_select(
+                    [%w[No false], %w[Yes true]], model.pre_extraction
+                  ), {}, class: 'form-select', id: "js-pre-extraction-toggle-#{enrichment_definition.id}" %>
+            </div>
+
+            <div class="col-4 js-link-selector d-none">
+              <%= form.label :link_selector, class: 'form-label' do %>
+                Link Selector (JSON)
+
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="JsonPath selector to extract links from JSON responses (e.g., '$.urls[*]' or '$.links[*].url')"><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="col-8 js-link-selector d-none">
+              <%= form.text_field :link_selector,
+                                  id: "js-link-selector-#{enrichment_definition.id}",
+                                  class: 'form-control',
+                                  placeholder: '$.urls[*]' %>
+              <small class="form-text text-muted">
+                Only used for JSON format. Leave blank to use default paths (urls, links).
+              </small>
+            </div>
           </div>
 
           <div class='float-end mt-4'>

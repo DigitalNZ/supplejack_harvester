@@ -73,6 +73,7 @@ class AutomationTemplate < ApplicationRecord
       pipeline_id: step_template.pipeline_id,
       position: step_template.position,
       harvest_definition_ids: step_template.harvest_definition_ids,
+      extraction_definition_id: step_template.extraction_definition_id,
       launched_by: user
     )
 

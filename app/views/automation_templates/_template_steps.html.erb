@@ -78,6 +78,13 @@
                 </span>
               </small>
             </div>
+          <% elsif step.step_type == 'pre_extraction' %>
+            <small class='text-muted d-block mt-2'>Pre-Extraction Definition:</small>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <small class="text-break">
+                <%= step.extraction_definition.name %>
+              </small>
+            </div>
           <% end %>
         </div>
         <% if last_run_step %>
