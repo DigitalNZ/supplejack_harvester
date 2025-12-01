@@ -12,7 +12,6 @@ module HttpClient
 
   def connection_follow_no_redirects(url, params, headers)
     Faraday.new(url:, params:, headers:) do |f|
-      f.response :logger
       f.adapter Faraday.default_adapter
     end
   end
