@@ -163,10 +163,8 @@ class TransformationWorker
 
   def log_retry_attempt
     proc do |exception, try, elapsed_time, next_interval|
-      return unless defined?(Sidekiq)
-
-      Rails.logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
-                        "and #{next_interval} seconds until the next try.")
+      logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
+                  "and #{next_interval} seconds until the next try.")
     end
   end
 end
