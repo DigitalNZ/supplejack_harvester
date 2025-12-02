@@ -153,8 +153,19 @@ module Extraction
           request = build_request_for_url(url)
           @extraction_definition.page = page_number
           
+          Rails.logger.info "[EXTRACTION] About to fetch content from URL: #{url}, depth: #{depth}, max_depth: #{max_depth}"
+          
           @de = DocumentExtraction.new(request, @extraction_job.extraction_folder, @previous_request)
           @previous_request = @de.extract
+          
+          # Log extraction result
+          if @de.document.present?
+            Rails.logger.info "[EXTRACTION] Document extracted - Status: #{@de.document.status}, " \
+                              "URL: #{@de.document.url}, Body length: #{@de.document.body.to_s.length}, " \
+                              "Body starts with: #{@de.document.body.to_s[0..100]}"
+          else
+            Rails.logger.warn "[EXTRACTION] Document extraction returned nil for URL: #{url}"
+          end
           
           next if duplicate_document_extracted?
           next unless @de.document.present? && @de.document.successful?
@@ -162,17 +173,50 @@ module Extraction
           if depth == max_depth
             # Final depth: save the document content
             cumulative_page_counter += 1
+            
+            # Save the document using the cumulative page counter, not the pre-extraction page number
+            # Temporarily set the page to the cumulative counter for file path generation
+            original_page = @extraction_definition.page
+            @extraction_definition.page = cumulative_page_counter
+            
+            # Verify we're about to save actual HTML content, not a link blob
+            body_preview = @de.document.body.to_s[0..300]
+            is_link_doc = is_link_document_body?(@de.document.body)
+            
+            if is_link_doc
+              Rails.logger.error "[EXTRACTION] ERROR: About to save a link document at final depth! " \
+                                "URL: #{url}, Body: #{body_preview}"
+            end
+            
+            Rails.logger.info "[EXTRACTION] Saving final depth document - URL: #{url}, " \
+                              "Page: #{cumulative_page_counter}, Is link doc: #{is_link_doc}, " \
+                              "Body preview: #{body_preview}"
+            
             @de.save
             saved_content_count += 1
             
             Rails.logger.info "Depth #{depth} (FINAL): Saved content document #{saved_content_count} for URL: #{url}"
+            
+            # Log document details
+            document_body_preview = @de.document.body.to_s[0..200] rescue "Unable to preview body"
+            is_link_doc = is_link_document_body?(@de.document.body)
+            Rails.logger.info "[FINAL DEPTH] Document saved - Page: #{@extraction_definition.page}, " \
+                              "Cumulative page: #{cumulative_page_counter}, Is link document: #{is_link_doc}, " \
+                              "Body preview: #{document_body_preview}..."
             
             if @harvest_report.present?
               @harvest_report.increment_pages_extracted!
               @harvest_report.update(extraction_updated_time: Time.zone.now)
             end
             
+            Rails.logger.info "[FINAL DEPTH] About to check if transformation should be enqueued. " \
+                              "pre_extraction?: #{@extraction_job.pre_extraction?}, " \
+                              "page: #{@extraction_definition.page}"
+            
             enqueue_record_transformation unless @extraction_job.pre_extraction?
+            
+            # Restore original page number for next iteration
+            @extraction_definition.page = original_page
           else
             # Intermediate depth: extract links
             links = extract_links_from_document(@de.document)
@@ -339,6 +383,13 @@ module Extraction
 
       return if duplicate_document_extracted?
 
+      # Log document details before saving
+      document_body_preview = @de.document.body.to_s[0..200] rescue "Unable to preview body"
+      is_link_document = is_link_document_body?(@de.document.body)
+      
+      Rails.logger.info "[EXTRACTION] Saving document - Page: #{@extraction_definition.page}, URL: #{@de.document.url}, " \
+                        "Is link document: #{is_link_document}, Body preview: #{document_body_preview}..."
+      
       @de.save
 
       if @harvest_report.present?
@@ -346,28 +397,43 @@ module Extraction
         @harvest_report.update(extraction_updated_time: Time.zone.now)
       end
 
+      Rails.logger.info "[EXTRACTION] About to enqueue transformation for page #{@extraction_definition.page}"
       enqueue_record_transformation
     end
 
     def enqueue_record_transformation
 
       unless @harvest_job.present?
-        Rails.logger.warn "Cannot enqueue transformation: harvest_job is nil"
+        Rails.logger.warn "[TRANSFORMATION] Cannot enqueue transformation: harvest_job is nil"
         return
       end
       
       unless @de.document.successful?
-        Rails.logger.warn "Cannot enqueue transformation: document not successful (status: #{@de.document.status})"
+        Rails.logger.warn "[TRANSFORMATION] Cannot enqueue transformation: document not successful (status: #{@de.document.status})"
+        return
+      end
+      
+      # Check if this is a link document
+      is_link_doc = is_link_document_body?(@de.document.body)
+      if is_link_doc
+        Rails.logger.warn "[TRANSFORMATION] SKIPPING transformation for page #{@extraction_definition.page} - " \
+                          "This is a link document (pre_extraction_link: true). Body preview: #{@de.document.body.to_s[0..200]}"
         return
       end
       
       if requires_additional_processing?
+        Rails.logger.info "[TRANSFORMATION] Skipping immediate transformation - requires additional processing (split: #{@extraction_definition.split?}, extract_text: #{@extraction_definition.extract_text_from_file?})"
         return
       end
 
+      Rails.logger.info "[TRANSFORMATION] Enqueueing transformation for page #{@extraction_definition.page}, " \
+                        "harvest_job_id: #{@harvest_job.id}, priority: #{@harvest_job.pipeline_job.job_priority}"
+      
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
                                                        @extraction_definition.page)
       @harvest_report.increment_transformation_workers_queued!
+      
+      Rails.logger.info "[TRANSFORMATION] Successfully enqueued transformation for page #{@extraction_definition.page}"
     end
 
     def requires_additional_processing?
@@ -428,10 +494,14 @@ module Extraction
     def extract_html_links(body)
       doc = Nokogiri::HTML.parse(body)
       
-      # Extract all links, but exclude those inside <nav> elements
+      # Extract all links, but exclude those inside <nav> elements, navbar div, or nav navbar-nav ul
       all_links = doc.css('a[href]').reject do |a|
         # Check if this link is inside a <nav> element (any ancestor)
-        a.ancestors.any? { |ancestor| ancestor.name == 'nav' }
+        a.ancestors.any? do |ancestor|
+          ancestor.name == 'nav' ||
+            (ancestor.name == 'div' && ancestor['id'] == 'navbar' && ancestor['class']&.include?('navbar-collapse') && ancestor['class']&.include?('collapse')) ||
+            (ancestor.name == 'ul' && ancestor['class']&.include?('nav') && ancestor['class']&.include?('navbar-nav'))
+        end
       end.map { |a| a['href'] }.compact
       
       all_links
@@ -463,6 +533,17 @@ module Extraction
         body = JSON.parse(document.body)
         body['pre_extraction_link'] == true
       rescue JSON::ParserError
+        false
+      end
+    end
+
+    def is_link_document_body?(body)
+      return false if body.nil?
+      
+      begin
+        parsed_body = body.is_a?(String) ? JSON.parse(body) : body
+        parsed_body['pre_extraction_link'] == true
+      rescue JSON::ParserError, TypeError
         false
       end
     end

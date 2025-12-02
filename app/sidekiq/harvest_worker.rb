@@ -38,6 +38,13 @@ class HarvestWorker < ApplicationWorker
     @harvest_report.extraction_completed!
 
     (extraction_job.extraction_definition.page..extraction_job.documents.total_pages).each do |page|
+      # Skip link documents - only transform actual content documents
+      doc = extraction_job.documents[page]
+      if doc.present? && is_link_document?(doc)
+        Rails.logger.info "[HARVEST] Skipping transformation for page #{page} - this is a link document"
+        next
+      end
+      
       @harvest_report.increment_pages_extracted!
       TransformationWorker.perform_in_with_priority(@pipeline_job.job_priority, (page * 5).seconds, @harvest_job.id,
                                                     page)
@@ -74,6 +81,17 @@ class HarvestWorker < ApplicationWorker
       previous_pre_extraction_step.pre_extraction_job_id
     else
       nil
+    end
+  end
+
+  def is_link_document?(document)
+    return false if document.nil?
+    
+    begin
+      body = document.body.is_a?(String) ? JSON.parse(document.body) : document.body
+      body['pre_extraction_link'] == true
+    rescue JSON::ParserError, TypeError
+      false
     end
   end
 end
