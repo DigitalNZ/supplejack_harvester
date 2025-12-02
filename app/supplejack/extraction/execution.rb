@@ -115,7 +115,12 @@ module Extraction
 
     def perform_extraction_from_pre_extraction
       pre_extraction_job = ExtractionJob.find(@extraction_job.pre_extraction_job_id)
+      
+      # Reload extraction definition to ensure we have the latest pre_extraction_depth value
+      @extraction_definition.reload
       max_depth = @extraction_definition.pre_extraction_depth || 1
+      
+      Rails.logger.info "Pre-extraction depth: #{max_depth} (extraction_definition_id: #{@extraction_definition.id}, pre_extraction_depth: #{@extraction_definition.pre_extraction_depth.inspect})"
       
       # TEMPORARY: Limit to 10 pages for testing - REMOVE AFTER TESTING
       max_pages_for_testing = 10
@@ -124,7 +129,7 @@ module Extraction
       cumulative_page_counter = 0  # Track total pages across all depths
       
       (1..max_depth).each do |depth|
-
+        Rails.logger.info "Processing depth #{depth} of #{max_depth} - current_documents.total_pages: #{current_documents.total_pages}"
         
         total_pages = current_documents.total_pages || 0
         # TEMPORARY: Cap pages for testing - REMOVE AFTER TESTING
@@ -132,11 +137,16 @@ module Extraction
 
         link_counter = 0
         saved_links = []
+        saved_content_count = 0
         
         (1..pages_to_process).each do |page_number|
           break if execution_cancelled?
           
           doc = current_documents[page_number]
+          
+          # Skip documents that aren't pre-extraction link documents
+          next unless is_pre_extraction_link_document?(doc)
+          
           url = extract_url_from_pre_extraction_document(doc)
           next if url.blank?
           
@@ -153,6 +163,9 @@ module Extraction
             # Final depth: save the document content
             cumulative_page_counter += 1
             @de.save
+            saved_content_count += 1
+            
+            Rails.logger.info "Depth #{depth} (FINAL): Saved content document #{saved_content_count} for URL: #{url}"
             
             if @harvest_report.present?
               @harvest_report.increment_pages_extracted!
@@ -166,6 +179,8 @@ module Extraction
             
             next if links.empty?
             
+            Rails.logger.info "Depth #{depth} (INTERMEDIATE): Extracted #{links.count} links from URL: #{url}"
+            
             links.each do |link_url|
               link_counter += 1
               cumulative_page_counter += 1
@@ -177,16 +192,25 @@ module Extraction
           throttle
         end
         
+        Rails.logger.info "Depth #{depth} complete. Saved #{depth == max_depth ? saved_content_count : link_counter} items (#{depth == max_depth ? 'content' : 'links'})"
+        
+        # Only reload documents if we're not at the final depth
         if depth < max_depth
-          
           # Reload documents to get the newly saved links
           current_documents = @extraction_job.documents
           
+          Rails.logger.info "Depth #{depth} complete. Found #{current_documents.total_pages} documents for next depth"
+          
           if current_documents.total_pages == 0
+            Rails.logger.warn "No documents found after depth #{depth}, stopping extraction"
             break
           end
+        else
+          Rails.logger.info "Final depth #{depth} complete. No more depths to process."
         end
       end
+      
+      Rails.logger.info "Pre-extraction complete. Final document count: #{@extraction_job.documents.total_pages}"
       
       if @harvest_report.present? && @extraction_job.pre_extraction?
         @harvest_report.update(extraction_updated_time: Time.zone.now)
@@ -403,7 +427,14 @@ module Extraction
 
     def extract_html_links(body)
       doc = Nokogiri::HTML.parse(body)
-      doc.css('a[href]').map { |a| a['href'] }.compact
+      
+      # Extract all links, but exclude those inside <nav> elements
+      all_links = doc.css('a[href]').reject do |a|
+        # Check if this link is inside a <nav> element (any ancestor)
+        a.ancestors.any? { |ancestor| ancestor.name == 'nav' }
+      end.map { |a| a['href'] }.compact
+      
+      all_links
     rescue Nokogiri::HTML::SyntaxError
       []
     end
@@ -421,7 +452,19 @@ module Extraction
       body = JSON.parse(document.body)
       body['url'] || body['href'] || body['link']
     rescue JSON::ParserError
-      document.body.strip
+      # If it's not JSON, it's not a pre-extraction link document
+      nil
+    end
+
+    def is_pre_extraction_link_document?(document)
+      return false if document.nil?
+      
+      begin
+        body = JSON.parse(document.body)
+        body['pre_extraction_link'] == true
+      rescue JSON::ParserError
+        false
+      end
     end
 
     def build_request_for_url(url)
