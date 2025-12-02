@@ -45,8 +45,6 @@ class DeleteWorker
   end
 
   def handle_delete_error(error)
-    Rails.logger.info "DeleteWorker: Delete Excecution error: #{error}" if defined?(Sidekiq)
-
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
                                                                            error: error,
                                                                            definition:

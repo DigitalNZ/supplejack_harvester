@@ -46,29 +46,18 @@ module Extraction
     end
 
     def call
-      Rails.logger.info "=== Extraction::Execution#call ==="
-      Rails.logger.info "Extraction Job ID: #{@extraction_job.id}"
-      Rails.logger.info "Extraction Job pre_extraction_job_id: #{@extraction_job.pre_extraction_job_id}"
-      Rails.logger.info "Extraction Job pre_extraction? flag: #{@extraction_job.pre_extraction?}"
-      Rails.logger.info "Extraction Job has harvest_job: #{@extraction_job.harvest_job.present?}"
-      Rails.logger.info "Harvest job present: #{@harvest_job.present?}"
-      Rails.logger.info "Harvest report present: #{@harvest_report.present?}"
-      
       # Check for pre_extraction_job_id FIRST - if we have one, we're extracting from pre-extraction
       if @extraction_job.pre_extraction_job_id.present?
-        Rails.logger.info "Taking branch: perform_extraction_from_pre_extraction"
         perform_extraction_from_pre_extraction
         return
       end
 
       # Then check if this extraction job is for pre-extraction (based on step type, not definition)
       if @extraction_job.pre_extraction?
-        Rails.logger.info "Taking branch: perform_pre_extraction"
         perform_pre_extraction
         return
       end
 
-      Rails.logger.info "Taking branch: perform_initial_extraction + perform_paginated_extraction"
       perform_initial_extraction
       return if should_stop_early? || custom_stop_conditions_met?
 
@@ -130,8 +119,6 @@ module Extraction
       
       # TEMPORARY: Limit to 10 pages for testing - REMOVE AFTER TESTING
       max_pages_for_testing = 10
-      
-      Rails.logger.info "=== Starting recursive pre-extraction (max depth: #{max_depth}) ==="
       
       current_documents = pre_extraction_job.documents
       cumulative_page_counter = 0  # Track total pages across all depths
@@ -351,14 +338,12 @@ module Extraction
       end
       
       if requires_additional_processing?
-        Rails.logger.info "Skipping transformation enqueue: requires additional processing"
         return
       end
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
                                                        @extraction_definition.page)
       @harvest_report.increment_transformation_workers_queued!
-      Rails.logger.info "Transformation worker enqueued successfully"
     end
 
     def requires_additional_processing?
