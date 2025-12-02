@@ -114,6 +114,9 @@ class AutomationStep < ApplicationRecord
       is_pre_extraction: true  # Set flag based on step type
     )
 
+    # Ensure status is set to 'queued' if it's nil (shouldn't happen with default, but just in case)
+    extraction_job.update(status: 'queued') if extraction_job.status.blank?
+
     update(pre_extraction_job_id: extraction_job.id)
 
     ExtractionWorker.perform_async_with_priority(automation.job_priority, extraction_job.id)

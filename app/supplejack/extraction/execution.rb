@@ -46,23 +46,36 @@ module Extraction
     end
 
     def call
+      Rails.logger.info "=== Extraction::Execution#call ==="
+      Rails.logger.info "Extraction Job ID: #{@extraction_job.id}"
+      Rails.logger.info "Extraction Job pre_extraction_job_id: #{@extraction_job.pre_extraction_job_id}"
+      Rails.logger.info "Extraction Job pre_extraction? flag: #{@extraction_job.pre_extraction?}"
+      Rails.logger.info "Extraction Job has harvest_job: #{@extraction_job.harvest_job.present?}"
+      Rails.logger.info "Harvest job present: #{@harvest_job.present?}"
+      Rails.logger.info "Harvest report present: #{@harvest_report.present?}"
+      
       # Check for pre_extraction_job_id FIRST - if we have one, we're extracting from pre-extraction
       if @extraction_job.pre_extraction_job_id.present?
+        Rails.logger.info "Taking branch: perform_extraction_from_pre_extraction"
         perform_extraction_from_pre_extraction
         return
       end
 
       # Then check if this extraction job is for pre-extraction (based on step type, not definition)
       if @extraction_job.pre_extraction?
+        Rails.logger.info "Taking branch: perform_pre_extraction"
         perform_pre_extraction
         return
       end
 
+      Rails.logger.info "Taking branch: perform_initial_extraction + perform_paginated_extraction"
       perform_initial_extraction
       return if should_stop_early? || custom_stop_conditions_met?
 
       perform_paginated_extraction
     rescue StandardError => e
+      Rails.logger.error "Error in Extraction::Execution#call: #{e.class} - #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
       handle_extraction_error(e)
     end
 
@@ -114,56 +127,80 @@ module Extraction
 
     def perform_extraction_from_pre_extraction
       pre_extraction_job = ExtractionJob.find(@extraction_job.pre_extraction_job_id)
-      pre_extraction_documents = pre_extraction_job.documents
-      link_counter = 0
-    
-      (1..pre_extraction_documents.total_pages).each do |page_number|
-        break if execution_cancelled?
-    
-        pre_extraction_doc = pre_extraction_documents[page_number]
-        url = extract_url_from_pre_extraction_document(pre_extraction_doc)
-        next if url.blank?
-    
-        request = build_request_for_url(url)
+      # max_depth = @extraction_definition.pre_extraction_depth || 1
+      max_depth = 2 # REMOVE AFTER TESTING 
+      
+      # TEMPORARY: Limit to 10 pages for testing - REMOVE AFTER TESTING
+      max_pages_for_testing = 10
+      
+      Rails.logger.info "=== Starting recursive pre-extraction (max depth: #{max_depth}) ==="
+      
+      current_documents = pre_extraction_job.documents
+      cumulative_page_counter = 0  # Track total pages across all depths
+      
+      (1..max_depth).each do |depth|
+
         
-        # Fetch the document
-        @de = DocumentExtraction.new(request, @extraction_job.extraction_folder, @previous_request)
-        @previous_request = @de.extract
+        total_pages = current_documents.total_pages || 0
+        # TEMPORARY: Cap pages for testing - REMOVE AFTER TESTING
+        pages_to_process = [total_pages, max_pages_for_testing].min
+
+        link_counter = 0
+        saved_links = []
         
-        # Skip this document if duplicate, but continue processing others
-        next if duplicate_document_extracted?
-        
-        # Skip if document extraction failed
-        next unless @de.document.present? && @de.document.successful?
-        
-        # Use job flag instead of definition flag
-        if @extraction_job.pre_extraction?
-          links = extract_links_from_document(@de.document)
+        (1..pages_to_process).each do |page_number|
+          break if execution_cancelled?
           
-          # Skip if no links found
-          next if links.empty?
+          doc = current_documents[page_number]
+          url = extract_url_from_pre_extraction_document(doc)
+          next if url.blank?
           
-          links.each do |link_url|
-            link_counter += 1
-            save_link_as_document(link_url, link_counter)
+          request = build_request_for_url(url)
+          @extraction_definition.page = page_number
+          
+          @de = DocumentExtraction.new(request, @extraction_job.extraction_folder, @previous_request)
+          @previous_request = @de.extract
+          
+          next if duplicate_document_extracted?
+          next unless @de.document.present? && @de.document.successful?
+          
+          if depth == max_depth
+            # Final depth: save the document content
+            cumulative_page_counter += 1
+            @de.save
             
             if @harvest_report.present?
               @harvest_report.increment_pages_extracted!
+              @harvest_report.update(extraction_updated_time: Time.zone.now)
+            end
+            
+            enqueue_record_transformation unless @extraction_job.pre_extraction?
+          else
+            # Intermediate depth: extract links
+            links = extract_links_from_document(@de.document)
+            
+            next if links.empty?
+            
+            links.each do |link_url|
+              link_counter += 1
+              cumulative_page_counter += 1
+              save_link_as_document(link_url, cumulative_page_counter)  # Use cumulative counter
+              saved_links << link_url
             end
           end
-        else
-          # Normal extraction - save the fetched document
-          @de.save
           
-          if @harvest_report.present?
-            @harvest_report.increment_pages_extracted!
-            @harvest_report.update(extraction_updated_time: Time.zone.now)
-          end
-          
-          enqueue_record_transformation
+          throttle
         end
-    
-        throttle
+        
+        if depth < max_depth
+          
+          # Reload documents to get the newly saved links
+          current_documents = @extraction_job.documents
+          
+          if current_documents.total_pages == 0
+            break
+          end
+        end
       end
       
       if @harvest_report.present? && @extraction_job.pre_extraction?
@@ -304,12 +341,31 @@ module Extraction
     end
 
     def enqueue_record_transformation
-      return unless @harvest_job.present? && @de.document.successful?
-      return if requires_additional_processing?
+      Rails.logger.info "=== enqueue_record_transformation called ==="
+      Rails.logger.info "Harvest job present: #{@harvest_job.present?}"
+      Rails.logger.info "Document present: #{@de.document.present?}"
+      Rails.logger.info "Document successful: #{@de.document&.successful?}"
+      
+      unless @harvest_job.present?
+        Rails.logger.warn "Cannot enqueue transformation: harvest_job is nil"
+        return
+      end
+      
+      unless @de.document.successful?
+        Rails.logger.warn "Cannot enqueue transformation: document not successful (status: #{@de.document.status})"
+        return
+      end
+      
+      if requires_additional_processing?
+        Rails.logger.info "Skipping transformation enqueue: requires additional processing"
+        return
+      end
 
+      Rails.logger.info "Enqueuing TransformationWorker for harvest_job_id=#{@harvest_job.id}, page=#{@extraction_definition.page}"
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
                                                        @extraction_definition.page)
       @harvest_report.increment_transformation_workers_queued!
+      Rails.logger.info "Transformation worker enqueued successfully"
     end
 
     def requires_additional_processing?
@@ -317,16 +373,35 @@ module Extraction
     end
 
     def extract_links_from_document(document)
-      case @extraction_definition.format
+      body = document.body
+      format = @extraction_definition.format
+      
+      # Auto-detect format if it doesn't match the content
+      if format == 'JSON' && !(body.strip.start_with?('{') || body.strip.start_with?('['))
+        format = detect_format_from_content(body)
+      elsif format == 'XML' && !body.strip.start_with?('<?xml') && !body.strip.start_with?('<')
+        format = detect_format_from_content(body)
+      elsif format == 'HTML' && !body.include?('<html') && !body.include?('<!DOCTYPE') && !body.include?('<')
+        format = detect_format_from_content(body)
+      end
+      
+      case format
       when 'JSON'
-        extract_json_links(document.body)
+        extract_json_links(body)
       when 'XML'
-        extract_xml_links(document.body)
+        extract_xml_links(body)
       when 'HTML'
-        extract_html_links(document.body)
+        extract_html_links(body)
       else
         []
       end
+    end
+
+    def detect_format_from_content(body)
+      return 'XML' if body.strip.start_with?('<?xml') || (body.strip.start_with?('<') && body.include?('<?xml'))
+      return 'JSON' if body.strip.start_with?('{') || body.strip.start_with?('[')
+      return 'HTML' if body.include?('<html') || body.include?('<!DOCTYPE') || body.include?('<')
+      'HTML' # Default
     end
 
     def extract_json_links(body)

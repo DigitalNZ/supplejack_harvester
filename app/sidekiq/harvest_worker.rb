@@ -57,7 +57,10 @@ class HarvestWorker < ApplicationWorker
   end
 
   def find_previous_pre_extraction_job_id
-    return nil unless @harvest_job.pipeline_job.automation_step
+    unless @harvest_job.pipeline_job.automation_step
+      Rails.logger.info "No automation step found, returning nil"
+      return nil
+    end
 
     automation = @harvest_job.pipeline_job.automation_step.automation
     current_position = @harvest_job.pipeline_job.automation_step.position
@@ -68,6 +71,10 @@ class HarvestWorker < ApplicationWorker
                                              .order(position: :desc)
                                              .first
 
-    previous_pre_extraction_step&.pre_extraction_job_id
+    if previous_pre_extraction_step
+      previous_pre_extraction_step.pre_extraction_job_id
+    else
+      nil
+    end
   end
 end

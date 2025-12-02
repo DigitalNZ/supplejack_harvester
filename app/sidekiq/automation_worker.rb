@@ -80,18 +80,27 @@ class AutomationWorker
   end
 
   def process_pipeline_step(automation_id, step_id)
+    Rails.logger.info "=== Processing pipeline step ==="
+    Rails.logger.info "Step ID: #{step_id}, Position: #{@step.position}, Pipeline ID: #{@step.pipeline_id}"
+    Rails.logger.info "Step has pipeline_job: #{step_has_pipeline_job?}"
+    Rails.logger.info "Step pipeline completed: #{step_pipeline_completed?}"
+    
     if step_pipeline_completed?
+      Rails.logger.info "Pipeline step already completed, moving to next step"
       handle_next_step
       return
     end
 
     if step_has_pipeline_job?
+      Rails.logger.info "Pipeline job exists, scheduling check"
       schedule_job_check(automation_id, step_id)
       return
     end
 
     # Otherwise, create and start a new pipeline job for this step
+    Rails.logger.info "Creating new pipeline job for step #{step_id}"
     create_and_run_pipeline_job
+    Rails.logger.info "Pipeline job created, scheduling check"
     schedule_job_check(automation_id, step_id)
   end
 
