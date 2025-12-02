@@ -202,6 +202,21 @@
                   ), {}, class: 'form-select', id: 'js-pre-extraction-toggle' %>
             </div>
 
+            <div class="col-4">
+              <%= form.label :pre_extraction_depth, class: 'form-label' do %>
+                Pre-Extraction Depth
+
+                 <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="Enable this to determine the number of "levels" down to extract from the source><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="col-8">
+              <%= form.number_field :pre_extraction_depth, class: 'form-control', required: true, value: model.pre_extraction_depth %>
+            </div>
+
             <div class="col-4 js-link-selector d-none">
               <%= form.label :link_selector, class: 'form-label' do %>
                 Link Selector (JSON)

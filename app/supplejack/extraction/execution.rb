@@ -107,7 +107,6 @@ module Extraction
 
       # Add check for empty links
       if links.empty?
-        Rails.logger.warn "No links extracted from pre-extraction document"
         return
       end
 
@@ -127,8 +126,7 @@ module Extraction
 
     def perform_extraction_from_pre_extraction
       pre_extraction_job = ExtractionJob.find(@extraction_job.pre_extraction_job_id)
-      # max_depth = @extraction_definition.pre_extraction_depth || 1
-      max_depth = 2 # REMOVE AFTER TESTING 
+      max_depth = @extraction_definition.pre_extraction_depth || 1
       
       # TEMPORARY: Limit to 10 pages for testing - REMOVE AFTER TESTING
       max_pages_for_testing = 10
@@ -341,11 +339,7 @@ module Extraction
     end
 
     def enqueue_record_transformation
-      Rails.logger.info "=== enqueue_record_transformation called ==="
-      Rails.logger.info "Harvest job present: #{@harvest_job.present?}"
-      Rails.logger.info "Document present: #{@de.document.present?}"
-      Rails.logger.info "Document successful: #{@de.document&.successful?}"
-      
+
       unless @harvest_job.present?
         Rails.logger.warn "Cannot enqueue transformation: harvest_job is nil"
         return
@@ -361,7 +355,6 @@ module Extraction
         return
       end
 
-      Rails.logger.info "Enqueuing TransformationWorker for harvest_job_id=#{@harvest_job.id}, page=#{@extraction_definition.page}"
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
                                                        @extraction_definition.page)
       @harvest_report.increment_transformation_workers_queued!
