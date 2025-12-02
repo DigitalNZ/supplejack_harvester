@@ -24,7 +24,7 @@ class HarvestWorker < ApplicationWorker
       extraction_definition: @harvest_job.extraction_definition,
       harvest_job: @harvest_job,
       pre_extraction_job_id: previous_pre_extraction_job_id,
-      is_pre_extraction: false  # Pipeline steps are NOT pre-extraction
+      is_pre_extraction: false
     )
 
     ExtractionWorker.perform_async_with_priority(@pipeline_job.job_priority, extraction_job.id, @harvest_report.id)
@@ -58,7 +58,6 @@ class HarvestWorker < ApplicationWorker
 
   def find_previous_pre_extraction_job_id
     unless @harvest_job.pipeline_job.automation_step
-      Rails.logger.info "No automation step found, returning nil"
       return nil
     end
 
