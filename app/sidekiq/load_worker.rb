@@ -43,9 +43,20 @@ class LoadWorker
   end
 
   def execute_load(batch, api_record_id)
-    Load::Execution.new(batch, @harvest_job, api_record_id).call
+    Rails.logger.info "[LOAD] Executing load for batch of #{batch.count} records, " \
+                      "harvest_job_id: #{@harvest_job.id}"
+    
+    response = Load::Execution.new(batch, @harvest_job, api_record_id).call
+    
+    Rails.logger.info "[LOAD] Load completed successfully - Status: #{response.status}, " \
+                      "Records in batch: #{batch.count}"
+    
     @harvest_report.increment_records_loaded!(batch.count)
     @harvest_report.update(load_updated_time: Time.zone.now)
+  rescue StandardError => e
+    Rails.logger.error "[LOAD] Load failed - Error: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    raise
   end
 
   def handle_load_error(error)

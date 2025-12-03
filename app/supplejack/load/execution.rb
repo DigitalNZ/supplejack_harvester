@@ -26,9 +26,22 @@ module Load
     end
 
     def handle_response(response)
-      return response unless response.status == 500
+      Rails.logger.info "[LOAD] API Response - Status: #{response.status}, " \
+                        "Body: #{response.body.inspect[0..500]}"
 
-      raise StandardError, 'Destination API responded with status 500'
+      # Check for server errors
+      if response.status == 500
+        raise StandardError, 'Destination API responded with status 500'
+      end
+
+      # Check for other error statuses (4xx, etc.)
+      unless response.status >= 200 && response.status < 300
+        Rails.logger.error "[LOAD] API returned non-success status: #{response.status}, " \
+                           "Body: #{response.body.inspect[0..500]}"
+        raise StandardError, "Destination API responded with status #{response.status}"
+      end
+
+      response
     end
 
     def handle_load_error(error)
@@ -45,9 +58,16 @@ module Load
     private
 
     def harvest_request
-      Api::Harvester::Record.new(@destination).create_batch(
-        records: build_records
+      records_to_send = build_records
+      Rails.logger.info "[LOAD] Sending #{records_to_send.count} records to API " \
+                        "(destination: #{@destination.url}, source_id: #{@harvest_definition.source_id})"
+
+      response = Api::Harvester::Record.new(@destination).create_batch(
+        records: records_to_send
       )
+
+      Rails.logger.info "[LOAD] API request completed - Status: #{response.status}"
+      response
     end
 
     def enrichment_request
@@ -60,7 +80,9 @@ module Load
     end
 
     def build_records
-      @records.map { |record| { fields: build_record(record) } }
+      built = @records.map { |record| { fields: build_record(record) } }
+      Rails.logger.debug "[LOAD] Built #{built.count} records for API"
+      built
     end
 
     def build_record(record)
