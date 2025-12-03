@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_27_144948) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_03_150437) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -135,6 +135,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_27_144948) do
     t.timestamp "end_time"
     t.text "error_message"
     t.text "name"
+    t.string "stop_condition_type"
+    t.string "stop_condition_name"
+    t.text "stop_condition_content"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
     t.index ["status"], name: "index_extraction_jobs_on_status"
   end
@@ -247,22 +250,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_27_144948) do
     t.index ["job_id", "process_type", "job_type"], name: "index_job_completion_summaries_on_job_process_type", unique: true
     t.index ["last_completed_at"], name: "index_job_completion_summaries_on_last_completed_at"
     t.index ["process_type"], name: "index_job_completion_summaries_on_process_type"
-  end
-
-  create_table "job_completions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "origin"
-    t.integer "process_type", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "job_completion_summary_id", null: false
-    t.bigint "job_id", null: false
-    t.string "stop_condition_type", null: false
-    t.string "stop_condition_name", null: false
-    t.text "stop_condition_content", null: false
-    t.index ["job_completion_summary_id"], name: "index_job_completions_on_job_completion_summary_id"
-    t.index ["job_id", "origin", "stop_condition_name"], name: "index_job_completions_on_job_origin_stop_condition", unique: true
-    t.index ["job_id"], name: "index_job_completions_on_job_id"
-    t.index ["process_type"], name: "index_job_completions_on_source_process_job"
   end
 
   create_table "job_errors", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -458,7 +445,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_27_144948) do
   add_foreign_key "extraction_definitions", "users", column: "last_edited_by_id"
   add_foreign_key "field_schema_field_values", "fields"
   add_foreign_key "field_schema_field_values", "schema_field_values"
-  add_foreign_key "job_completions", "job_completion_summaries", on_delete: :cascade
   add_foreign_key "job_errors", "job_completion_summaries"
   add_foreign_key "pipeline_jobs", "automation_steps"
   add_foreign_key "pipelines", "users", column: "last_edited_by_id"

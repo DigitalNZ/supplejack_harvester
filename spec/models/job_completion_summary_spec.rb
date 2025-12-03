@@ -57,21 +57,21 @@ RSpec.describe JobCompletionSummary, type: :model do
   end
 
   describe '#completion_count' do
-    it 'returns the sum of job_completions and job_errors' do
-      job = create(:extraction_job)
-      summary = create(:job_completion_summary, job_id: job.id)
-      create(:job_completion, job_completion_summary: summary, job_id: job.id)
-      create(:job_completion, job_completion_summary: summary, job_id: job.id)
+    it 'returns the sum of stop condition records and job_errors' do
+      job = create(:extraction_job, stop_condition_name: 'limit reached',
+                                     stop_condition_content: 'count > 10',
+                                     stop_condition_type: 'system')
+      summary = create(:job_completion_summary, job_id: job.id, job_type: 'ExtractionJob')
       create(:job_error, job_completion_summary: summary, job_id: job.id)
       create(:job_error, job_completion_summary: summary, job_id: job.id)
       create(:job_error, job_completion_summary: summary, job_id: job.id)
       
-      expect(summary.completion_count).to eq(5)
+      expect(summary.completion_count).to eq(4)
     end
 
     it 'returns 0 when there are no completions or errors' do
-      job = create(:extraction_job)
-      summary = create(:job_completion_summary, job_id: job.id)
+      job = create(:extraction_job, stop_condition_name: nil)
+      summary = create(:job_completion_summary, job_id: job.id, job_type: 'ExtractionJob')
       
       expect(summary.completion_count).to eq(0)
     end
@@ -97,18 +97,20 @@ RSpec.describe JobCompletionSummary, type: :model do
   end
 
   describe '#last_completed_at' do
-    it 'returns the updated_at of the most recent job completion' do
-      job = create(:extraction_job)
-      summary = create(:job_completion_summary, job_id: job.id)
-      old_completion = create(:job_completion, job_completion_summary: summary, job_id: job.id, updated_at: 2.days.ago)
-      recent_completion = create(:job_completion, job_completion_summary: summary, job_id: job.id, updated_at: 1.day.ago)
+    it 'returns the updated_at of the extraction job stop condition' do
+      job = create(:extraction_job, stop_condition_name: 'limit reached',
+                                     stop_condition_content: 'count > 10',
+                                     stop_condition_type: 'system')
+      summary = create(:job_completion_summary, job_id: job.id, job_type: 'ExtractionJob')
+      two_days_ago = 2.days.ago
+      job.update_columns(updated_at: two_days_ago)
       
-      expect(summary.last_completed_at).to eq(recent_completion.updated_at)
+      expect(summary.last_completed_at.to_i).to eq(two_days_ago.to_i)
     end
 
-    it 'returns nil when there are no job completions' do
-      job = create(:extraction_job)
-      summary = create(:job_completion_summary, job_id: job.id)
+    it 'returns nil when there are no stop conditions' do
+      job = create(:extraction_job, stop_condition_name: nil)
+      summary = create(:job_completion_summary, job_id: job.id, job_type: 'ExtractionJob')
       
       expect(summary.last_completed_at).to be_nil
     end
@@ -181,4 +183,3 @@ RSpec.describe JobCompletionSummary, type: :model do
     end
   end
 end
-

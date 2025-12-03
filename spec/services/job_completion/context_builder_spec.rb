@@ -72,7 +72,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
     end
 
     context 'with stop condition' do
-      it 'creates stop condition completion' do
+      it 'records stop condition on the extraction job without creating JobCompletion' do
         expect {
           described_class.create_job_completion_or_error(
             origin: 'TestWorker',
@@ -84,20 +84,17 @@ RSpec.describe JobCompletionServices::ContextBuilder do
             stop_condition_type: 'user'
           )
         }.to change(JobCompletionSummary, :count).by(1)
-          .and change(JobCompletion, :count).by(1)
+          .and change(JobCompletion, :count).by(0)
 
         summary = JobCompletionSummary.last
         expect(summary.job_id).to eq(job.id)
         expect(summary.process_type).to eq('extraction')
         expect(summary.job_type).to eq('ExtractionJob')
 
-        completion = JobCompletion.last
-        expect(completion.job_id).to eq(job.id)
-        expect(completion.process_type).to eq('extraction')
-        expect(completion.origin).to eq('TestWorker')
-        expect(completion.stop_condition_name).to eq('test_condition')
-        expect(completion.stop_condition_content).to eq('if count > 100')
-        expect(completion.stop_condition_type).to eq('user')
+        job.reload
+        expect(job.stop_condition_name).to eq('test_condition')
+        expect(job.stop_condition_content).to eq('if count > 100')
+        expect(job.stop_condition_type).to eq('user')
       end
     end
 
@@ -193,7 +190,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
     end
 
     context 'with duplicate job completion' do
-      it 'does not create duplicate completion when same stop condition exists' do
+      it 'does not create duplicate summary when same stop condition exists' do
         # Create first completion
         described_class.create_job_completion_or_error(
           origin: 'TestWorker',
@@ -206,8 +203,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         )
 
         summary = JobCompletionSummary.last
-        initial_count = summary.completion_count
-        initial_completion_count = JobCompletion.count
+        initial_summary_count = JobCompletionSummary.count
 
         # Try to create duplicate (same job_id, origin, and stop_condition_name)
         described_class.create_job_completion_or_error(
@@ -220,11 +216,11 @@ RSpec.describe JobCompletionServices::ContextBuilder do
           stop_condition_type: 'user'
         )
 
-        expect(JobCompletion.count).to eq(initial_completion_count)
-        expect(summary.reload.completion_count).to eq(initial_count)
+        expect(JobCompletionSummary.count).to eq(initial_summary_count)
+        expect(summary.reload.completion_count).to eq(1)
       end
 
-      it 'creates new completion when stop condition name differs' do
+      it 'does not block new summary creation when stop condition name differs' do
         described_class.create_job_completion_or_error(
           origin: 'Worker1',
           error: nil,
@@ -245,7 +241,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
             stop_condition_content: 'if count > 100',
             stop_condition_type: 'user'
           )
-        }.to change(JobCompletion, :count).by(1)
+        }.not_to change(JobCompletion, :count)
       end
     end
 
