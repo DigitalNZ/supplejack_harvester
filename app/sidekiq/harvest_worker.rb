@@ -37,21 +37,31 @@ class HarvestWorker < ApplicationWorker
     @harvest_job.update(extraction_job_id: extraction_job.id)
     @harvest_report.extraction_completed!
 
-    (extraction_job.extraction_definition.page..extraction_job.documents.total_pages).each do |page|
-      # Skip link documents - only transform actual content documents
-      doc = extraction_job.documents[page]
-      if doc.present? && is_link_document?(doc)
-        Rails.logger.info "[HARVEST] Skipping transformation for page #{page} - this is a link document"
-        next
-      end
-      
-      @harvest_report.increment_pages_extracted!
-      TransformationWorker.perform_in_with_priority(@pipeline_job.job_priority, (page * 5).seconds, @harvest_job.id,
-                                                    page)
-      @harvest_report.increment_transformation_workers_queued!
+    # Only create transformation jobs if they weren't already enqueued during extraction
+    # This happens when extraction requires additional processing (split, extract_text_from_file)
+    # OR when extraction didn't enqueue transformations (like pre-extraction jobs)
+    if extraction_job.extraction_definition.split? || extraction_job.extraction_definition.extract_text_from_file?
+      # Transformations weren't enqueued during extraction, so enqueue them now
+      # Always start from page 1, not extraction_definition.page which might be wrong
+      (1..extraction_job.documents.total_pages).each do |page|
+        # Skip link documents - only transform actual content documents
+        doc = extraction_job.documents[page]
+        if doc.present? && is_link_document?(doc)
+          Rails.logger.info "[HARVEST] Skipping transformation for page #{page} - this is a link document"
+          next
+        end
+        
+        @harvest_report.increment_pages_extracted!
+        TransformationWorker.perform_in_with_priority(@pipeline_job.job_priority, (page * 5).seconds, @harvest_job.id,
+                                                      page)
+        @harvest_report.increment_transformation_workers_queued!
 
-      @pipeline_job.reload
-      break if @pipeline_job.cancelled? || page_number_reached?(page)
+        @pipeline_job.reload
+        break if @pipeline_job.cancelled? || page_number_reached?(page)
+      end
+    else
+      # Transformations were already enqueued during extraction (for pre-extraction or normal extraction)
+      Rails.logger.info "[HARVEST] Transformations were already enqueued during extraction, skipping create_transformation_jobs"
     end
   end
   # rubocop:enable Metrics/AbcSize
