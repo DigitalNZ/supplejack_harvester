@@ -7,7 +7,7 @@
       <% if @job_completion_summary.all_records.any? %>
         <div class="accordion" id="completionsAccordion">
           <% @job_completion_summary.all_records.each_with_index do |record, index| %>
-            <% is_completion = record.is_a?(JobCompletion) %>
+            <% is_completion = record.respond_to?(:stop_condition_name) %>
             <div class="accordion-item">
               <h2 class="accordion-header" id="heading<%= index %>">
                 <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
@@ -52,7 +52,9 @@
                               <span class="badge badge-stop-condition">User defined stop condition</span>
                             <% end %>
                           </p>
-                          <p><strong>Origin:</strong> <%= record.origin %></p>
+                          <% if record.respond_to?(:origin) && record.origin.present? %>
+                            <p><strong>Origin:</strong> <%= record.origin %></p>
+                          <% end %>
                         </div>
                       </div>
                     </div>
