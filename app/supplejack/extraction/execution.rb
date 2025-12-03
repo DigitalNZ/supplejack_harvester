@@ -540,12 +540,49 @@ module Extraction
     def is_link_document_body?(body)
       return false if body.nil?
       
-      begin
-        parsed_body = body.is_a?(String) ? JSON.parse(body) : body
-        parsed_body['pre_extraction_link'] == true
-      rescue JSON::ParserError, TypeError
-        false
+      # If it's already a hash/object, check directly
+      if body.is_a?(Hash)
+        return body['pre_extraction_link'] == true || body[:pre_extraction_link] == true
       end
+      
+      # Convert to string for pattern matching
+      body_str = body.to_s
+      
+      # Check if it contains the link blob pattern (works for any format)
+      return true if body_str.include?('"pre_extraction_link":true') || body_str.include?("'pre_extraction_link':true")
+      
+      # Try to parse as JSON
+      begin
+        parsed = JSON.parse(body_str)
+        return parsed['pre_extraction_link'] == true if parsed.is_a?(Hash)
+      rescue JSON::ParserError
+        # Not valid JSON, continue to HTML/XML check
+      end
+      
+      # Try to extract JSON from HTML/XML
+      begin
+        # Check if it's HTML/XML that might contain JSON
+        if body_str.strip.start_with?('<')
+          # Try to find JSON within HTML/XML tags
+          if body_str.match(/\{"url":.*"pre_extraction_link":\s*true\}/)
+            return true
+          end
+          
+          # Try parsing as HTML/XML and extracting text
+          doc = Nokogiri::HTML.parse(body_str) rescue Nokogiri::XML.parse(body_str)
+          text_content = doc.text.strip
+          
+          # Try parsing the extracted text as JSON
+          if text_content.start_with?('{')
+            parsed = JSON.parse(text_content)
+            return parsed['pre_extraction_link'] == true if parsed.is_a?(Hash)
+          end
+        end
+      rescue Nokogiri::SyntaxError, JSON::ParserError
+        # Not HTML/XML or JSON extraction failed
+      end
+      
+      false
     end
 
     def build_request_for_url(url)
