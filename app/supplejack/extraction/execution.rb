@@ -307,6 +307,8 @@ module Extraction
     end
 
     def extraction_failed?
+      return false if @de.document.nil?
+      
       document_status = @de.document.status
       return false unless document_status >= 400 || document_status < 200
 
@@ -328,6 +330,7 @@ module Extraction
     end
 
     def check_for_duplicate_document(previous_document)
+      return false if @de.document.nil? || previous_document.nil?
       return false unless previous_document.body == @de.document.body
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Duplicate document',
@@ -338,6 +341,7 @@ module Extraction
     def custom_stop_conditions_met?
       stop_conditions = @extraction_definition.stop_conditions
       return false if stop_conditions.empty?
+      return false if @de.document.nil?
 
       stop_conditions.any? do |condition|
         condition.evaluate(@de.document.body).tap do |met|
