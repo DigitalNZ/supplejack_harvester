@@ -47,10 +47,6 @@ class HarvestReport < ApplicationRecord
     [load_updated_time, extraction_updated_time, transformation_updated_time].compact.max
   end
 
-  def completed?
-    extraction_completed? && transformation_completed? && load_completed? && delete_completed?
-  end
-
   %i[extraction transformation load delete].each do |process|
     define_method(:"#{process}_running!") do
       super()
@@ -89,6 +85,16 @@ class HarvestReport < ApplicationRecord
     return 'errored' if statuses.any?('errored')
 
     'running' if considered_running?
+  end
+
+  def completed?
+    extraction_completed? && transformation_completed? && load_completed? && delete_completed?
+  end
+
+  def finished?
+    finished_statuses = %w[completed cancelled errored]
+    extraction_status.in?(finished_statuses) && transformation_status.in?(finished_statuses) &&
+      load_status.in?(finished_statuses) && delete_status.in?(finished_statuses)
   end
 
   def transformation_workers_completed?

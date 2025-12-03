@@ -20,4 +20,7 @@ class PipelineWorker < ApplicationWorker
       break if definition.harvest?
     end
   end
+
+  # avoids the ApplicationWorker job_end updating the job status to completed
+  def job_end; end
 end
