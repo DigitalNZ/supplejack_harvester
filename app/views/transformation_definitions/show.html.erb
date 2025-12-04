@@ -1,5 +1,5 @@
 <%= content_for(:title) { @transformation_definition.name_in_database } %>
-<% breadcrumb :transformation_definition, @transformation_definition %>
+<% breadcrumb :transformation_definition, @pipeline, @transformation_definition %>
 
 <%= content_for(:header) do %>
   <h1 class='header__title'><%= @transformation_definition.name %></h1>
@@ -52,7 +52,8 @@
              modal_subheading: 'Define the settings for your transformation definition',
              confirmation_button_text: 'Update transformation definition',
              extraction_jobs: @extraction_jobs,
-             harvest_definition: @harvest_definition
+             harvest_definition: @harvest_definition,
+             kind: @harvest_definition.kind
            } %>
 
 <%# Modals %>
