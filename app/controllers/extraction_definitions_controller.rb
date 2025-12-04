@@ -102,6 +102,24 @@ class ExtractionDefinitionsController < ApplicationController
       :extract_text_from_file, :fragment_source_id, :fragment_key, :evaluate_javascript, :fields, :include_sub_documents,
       :pre_extraction, :link_selector, :pre_extraction_depth
     )
+    
+    # Convert link_selector_N parameters to link_selectors array
+    if safe_params[:pre_extraction] == 'true' && params[:extraction_definition].present?
+      link_selectors_array = []
+      depth = safe_params[:pre_extraction_depth].to_i
+      depth = 1 if depth < 1
+      
+      (1..depth).each do |level|
+        selector_key = "link_selector_#{level}".to_sym
+        selector_value = params[:extraction_definition][selector_key]
+        if selector_value.present?
+          link_selectors_array << { 'depth' => level, 'selector' => selector_value }
+        end
+      end
+      
+      safe_params[:link_selectors] = link_selectors_array if link_selectors_array.any?
+    end
+    
     merge_last_edited_by(safe_params)
   end
 end

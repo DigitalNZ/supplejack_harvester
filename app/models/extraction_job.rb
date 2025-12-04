@@ -89,4 +89,14 @@ class ExtractionJob < ApplicationRecord
     # Regular extraction jobs are created with harvest_jobs
     harvest_job.blank?
   end
+
+  # Serialize extracted_links_by_depth as hash {depth => [links]}
+  serialize :extracted_links_by_depth, type: Hash
+
+  # Update extracted links for a specific depth
+  def update_extracted_links_for_depth(depth, links)
+    self.extracted_links_by_depth ||= {}
+    self.extracted_links_by_depth[depth.to_s] = links
+    save
+  end
 end

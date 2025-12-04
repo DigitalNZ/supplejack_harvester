@@ -92,11 +92,16 @@ module Extraction
       # Add guard clause
       return unless @de&.document&.present?
 
-      links = extract_links_from_document(@de.document)
+      links = extract_links_from_document(@de.document, 1)
 
       # Add check for empty links
       if links.empty?
         return
+      end
+
+      # Store extracted links for depth 1
+      if @extraction_job.present?
+        @extraction_job.update_extracted_links_for_depth(1, links)
       end
 
       links.each_with_index do |link_url, index|
@@ -219,11 +224,19 @@ module Extraction
             @extraction_definition.page = original_page
           else
             # Intermediate depth: extract links
-            links = extract_links_from_document(@de.document)
+            links = extract_links_from_document(@de.document, depth)
             
             next if links.empty?
             
             Rails.logger.info "Depth #{depth} (INTERMEDIATE): Extracted #{links.count} links from URL: #{url}"
+            
+            # Store extracted links for this depth
+            if @extraction_job.present?
+              current_links = @extraction_job.extracted_links_by_depth || {}
+              current_links[depth.to_s] ||= []
+              current_links[depth.to_s] += links
+              @extraction_job.update_extracted_links_for_depth(depth, current_links[depth.to_s].uniq)
+            end
             
             links.each do |link_url|
               link_counter += 1
@@ -444,7 +457,7 @@ module Extraction
       @extraction_definition.split? || @extraction_definition.extract_text_from_file?
     end
 
-    def extract_links_from_document(document)
+    def extract_links_from_document(document, depth = 1)
       body = document.body
       format = @extraction_definition.format
       
@@ -459,11 +472,11 @@ module Extraction
       
       case format
       when 'JSON'
-        extract_json_links(body)
+        extract_json_links(body, depth)
       when 'XML'
-        extract_xml_links(body)
+        extract_xml_links(body, depth)
       when 'HTML'
-        extract_html_links(body)
+        extract_html_links(body, depth)
       else
         []
       end
@@ -476,11 +489,14 @@ module Extraction
       'HTML' # Default
     end
 
-    def extract_json_links(body)
+    def extract_json_links(body, depth = 1)
       parsed = JSON.parse(body)
 
-      if @extraction_definition.link_selector.present?
-        JsonPath.new(@extraction_definition.link_selector).on(parsed)
+      # Get depth-specific selector, fallback to legacy link_selector
+      selector = @extraction_definition.link_selector_for_depth(depth)
+
+      if selector.present?
+        JsonPath.new(selector).on(parsed)
       else
         parsed['urls'] || parsed['links'] || []
       end
@@ -488,27 +504,62 @@ module Extraction
       []
     end
 
-    def extract_xml_links(body)
+    def extract_xml_links(body, depth = 1)
       doc = Nokogiri::XML.parse(body)
-      doc.css('loc').map(&:text)
+      
+      # Get depth-specific selector
+      selector = @extraction_definition.link_selector_for_depth(depth)
+      
+      if selector.present?
+        # Check if it's XPath (starts with / or //)
+        if selector.start_with?('/')
+          doc.xpath(selector).map do |node|
+            # Extract href attribute or text content
+            node['href'] || node['url'] || node.text
+          end.compact
+        else
+          # Fallback to CSS selector
+          doc.css(selector).map { |node| node['href'] || node['url'] || node.text }.compact
+        end
+      else
+        # Default: extract <loc> elements (sitemap format)
+        doc.css('loc').map(&:text)
+      end
     rescue Nokogiri::XML::SyntaxError
       []
     end
 
-    def extract_html_links(body)
+    def extract_html_links(body, depth = 1)
       doc = Nokogiri::HTML.parse(body)
       
-      # Extract all links, but exclude those inside <nav> elements, navbar div, or nav navbar-nav ul
-      all_links = doc.css('a[href]').reject do |a|
-        # Check if this link is inside a <nav> element (any ancestor)
-        a.ancestors.any? do |ancestor|
-          ancestor.name == 'nav' ||
-            (ancestor.name == 'div' && ancestor['id'] == 'navbar' && ancestor['class']&.include?('navbar-collapse') && ancestor['class']&.include?('collapse')) ||
-            (ancestor.name == 'ul' && ancestor['class']&.include?('nav') && ancestor['class']&.include?('navbar-nav'))
-        end
-      end.map { |a| a['href'] }.compact
+      # Get depth-specific selector
+      selector = @extraction_definition.link_selector_for_depth(depth)
       
-      all_links
+      if selector.present?
+        # Check if it's XPath (starts with / or //)
+        if selector.start_with?('/')
+          # Use XPath
+          doc.xpath(selector).map do |node|
+            # Extract href attribute or text content
+            node['href'] || node['url'] || node.text
+          end.compact
+        else
+          # Use CSS selector
+          doc.css(selector).map { |node| node['href'] || node['url'] || node.text }.compact
+        end
+      else
+        # Default behavior: Extract all links, but exclude those inside <nav> elements
+        all_links = doc.css('a[href]').reject do |a|
+          # Check if this link is inside a <nav> element (any ancestor)
+          a.ancestors.any? do |ancestor|
+            ancestor.name == 'nav' ||
+              (ancestor.name == 'div' && ancestor['id'] == 'navbar' && ancestor['class']&.include?('navbar-collapse') && ancestor['class']&.include?('collapse')) ||
+              (ancestor.name == 'ul' && ancestor['class']&.include?('nav') && ancestor['class']&.include?('navbar-nav'))
+          end
+        end.map { |a| a['href'] }.compact
+        
+        all_links
+      end
     rescue Nokogiri::HTML::SyntaxError
       []
     end

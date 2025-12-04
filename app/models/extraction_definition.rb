@@ -68,6 +68,44 @@ class ExtractionDefinition < ApplicationRecord
     @shared
   end
 
+  # Serialize link_selectors as array of {depth: integer, selector: string} objects
+  serialize :link_selectors, type: Array
+
+  # Get link selector for a specific depth level
+  # Falls back to legacy link_selector if link_selectors not set
+  def link_selector_for_depth(depth)
+    return nil unless pre_extraction?
+
+    # If link_selectors is set and has entries, use it
+    if link_selectors.present? && link_selectors.is_a?(Array)
+      selector_entry = link_selectors.find do |entry|
+        entry_depth = entry.is_a?(Hash) ? (entry['depth'] || entry[:depth]) : nil
+        entry_depth.to_i == depth.to_i if entry_depth.present?
+      end
+      if selector_entry.present? && selector_entry.is_a?(Hash)
+        return selector_entry['selector'] || selector_entry[:selector]
+      end
+    end
+
+    # Fallback to legacy link_selector for depth 1
+    return link_selector if depth == 1 && link_selector.present?
+
+    nil
+  end
+
+  # Convert link_selectors array to hash format for form helpers
+  def link_selectors_hash
+    return {} unless link_selectors.present? && link_selectors.is_a?(Array)
+
+    link_selectors.each_with_object({}) do |entry, hash|
+      next unless entry.is_a?(Hash)
+
+      depth = entry['depth'] || entry[:depth]
+      selector = entry['selector'] || entry[:selector]
+      hash[depth.to_s] = selector if depth.present? && selector.present?
+    end
+  end
+
   # rubocop:disable Metrics/AbcSize
   def clone(pipeline, name)
     cloned_extraction_definition = ExtractionDefinition.new(dup.attributes.merge(name:, pipeline:))

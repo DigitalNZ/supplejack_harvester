@@ -211,25 +211,47 @@
                   ), {}, class: 'form-select', id: "js-pre-extraction-toggle-#{enrichment_definition.id}" %>
             </div>
 
-            <div class="col-4 js-link-selector d-none">
-              <%= form.label :link_selector, class: 'form-label' do %>
-                Link Selector (JSON)
+            <div class="col-4">
+              <%= form.label :pre_extraction_depth, class: 'form-label' do %>
+                Pre-Extraction Depth
 
-                <span
+                 <span
                     data-bs-toggle="tooltip"
-                    data-bs-title="JsonPath selector to extract links from JSON responses (e.g., '$.urls[*]' or '$.links[*].url')"><i class="bi bi-question-circle" aria-label="helper text"></i>
+                    data-bs-title="Enable this to determine the number of \"levels\" down to extract from the source"><i class="bi bi-question-circle" aria-label="helper text"></i>
                 </span>
               <% end %>
             </div>
 
-            <div class="col-8 js-link-selector d-none">
-              <%= form.text_field :link_selector,
-                                  id: "js-link-selector-#{enrichment_definition.id}",
-                                  class: 'form-control',
-                                  placeholder: '$.urls[*]' %>
-              <small class="form-text text-muted">
-                Only used for JSON format. Leave blank to use default paths (urls, links).
-              </small>
+            <div class="col-8">
+              <%= form.number_field :pre_extraction_depth, class: 'form-control', required: true, value: model.pre_extraction_depth || 1 %>
+            </div>
+
+            <div id="js-link-selectors-container-<%= enrichment_definition.id %>" class="d-none">
+              <% depth = enrichment_definition.pre_extraction_depth.to_i > 0 ? enrichment_definition.pre_extraction_depth.to_i : 1 %>
+              <% link_selectors_hash = enrichment_definition.link_selectors_hash %>
+              <% (1..depth).each do |level| %>
+                <div class="col-4 js-link-selector-level js-link-selector-level-<%= level %>">
+                  <%= form.label "link_selector_#{level}".to_sym, class: 'form-label' do %>
+                    Link Selector Level <%= level %>
+
+                    <span
+                        data-bs-toggle="tooltip"
+                        data-bs-title="JSONPath (starts with $) or XPath (starts with / or //) selector to extract links. For JSON: '$.urls[*]'. For HTML/XML: '//body//a[contains(text(), \"published\")]'. Leave blank to use default behavior."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                    </span>
+                  <% end %>
+                </div>
+
+                <div class="col-8 js-link-selector-level js-link-selector-level-<%= level %>">
+                  <%= text_field_tag "extraction_definition[link_selector_#{level}]",
+                                      link_selectors_hash[level.to_s] || '',
+                                      id: "js-link-selector-#{level}-#{enrichment_definition.id}",
+                                      class: 'form-control',
+                                      placeholder: level == 1 ? '$.urls[*] or //body//a[href]' : "Level #{level} selector" %>
+                  <small class="form-text text-muted">
+                    JSONPath (JSON) or XPath (HTML/XML). Leave blank for default.
+                  </small>
+                </div>
+              <% end %>
             </div>
           </div>
 
