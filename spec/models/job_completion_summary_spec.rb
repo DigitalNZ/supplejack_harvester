@@ -126,12 +126,12 @@ RSpec.describe JobCompletionSummary, type: :model do
       expect(summary.pipeline_name).to eq('Test Pipeline')
     end
 
-    it 'raises error when job not found' do
+    it 'returns nil when job not found' do
       job = create(:extraction_job)
       summary = create(:job_completion_summary, job_id: job.id)
       summary.update!(job_id: 999999)
       
-      expect { summary.pipeline_name }.to raise_error(ActiveRecord::RecordNotFound)
+      expect(JobCompletionSummary.find_for_harvest_job(job.id)).to be_nil
     end
   end
 
