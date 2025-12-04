@@ -45,8 +45,6 @@ class DeleteWorker
   end
 
   def handle_delete_error(error)
-    logger.info "DeleteWorker: Delete Excecution error: #{error}"
-
     JobCompletionServices::ContextBuilder.create_job_completion_or_error(
       {
         error: error,

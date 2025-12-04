@@ -24,9 +24,34 @@ class AutomationWorker
     case @step.step_type
     when 'api_call'
       process_api_call_step(automation_id, step_id)
+    when 'pre_extraction'
+      process_pre_extraction_step(automation_id, step_id)
     else
       process_pipeline_step(automation_id, step_id)
     end
+  end
+
+  def process_pre_extraction_step(automation_id, step_id)
+    if step_pre_extraction_completed?
+      handle_next_step
+      return
+    end
+
+    handle_queued_or_new_pre_extraction(automation_id, step_id)
+  end
+
+  def step_pre_extraction_completed?
+    @step.pre_extraction_job.present? && @step.pre_extraction_job.completed?
+  end
+
+  def handle_queued_or_new_pre_extraction(automation_id, step_id)
+    if @step.pre_extraction_job.present? && @step.pre_extraction_job.running?
+      schedule_job_check(automation_id, step_id)
+      return
+    end
+
+    @step.execute_pre_extraction
+    schedule_job_check(automation_id, step_id)
   end
 
   def process_api_call_step(automation_id, step_id)

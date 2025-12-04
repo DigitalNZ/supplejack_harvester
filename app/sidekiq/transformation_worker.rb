@@ -10,7 +10,15 @@ class TransformationWorker
   def perform(harvest_job_id, page = 1, api_record_id = nil)
     @harvest_job = HarvestJob.find(harvest_job_id)
     @extraction_job = @harvest_job.extraction_job
-    @transformation_definition = TransformationDefinition.find(@harvest_job.transformation_definition.id)
+    
+    # Add nil check before accessing id
+    transformation_definition_id = @harvest_job.transformation_definition&.id
+    if transformation_definition_id.nil?
+      Rails.logger.error "[TRANSFORMATION] ERROR: transformation_definition is nil for harvest_job_id: #{harvest_job_id}"
+      return
+    end
+    
+    @transformation_definition = TransformationDefinition.find(transformation_definition_id)
     @harvest_report = @harvest_job.harvest_report
     @page = page
     @api_record_id = api_record_id

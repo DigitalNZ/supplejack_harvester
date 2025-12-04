@@ -86,8 +86,12 @@ class Automation < ApplicationRecord
   end
 
   def collect_status_for_step(step)
-    if step.step_type == 'api_call'
+    case step.step_type
+    when 'api_call'
       collect_api_call_status(step)
+    when 'pre_extraction'
+      status = step.pre_extraction_job&.status
+      status  # Return nil if no job exists yet, not 'queued'
     else
       collect_pipeline_status(step)
     end
@@ -101,7 +105,16 @@ class Automation < ApplicationRecord
     return unless step.pipeline_job
 
     reports = step.pipeline_job.harvest_reports
-    reports&.map(&:status)&.uniq
+    return reports.map(&:status).uniq if reports.any?
+
+    # If no reports yet, check if there's an extraction job running
+    extraction_job = step.pipeline_job.extraction_job
+    return [extraction_job.status] if extraction_job.present?
+
+    # Otherwise, check if pipeline job is queued/running
+    return [step.pipeline_job.status] if step.pipeline_job.present? && step.pipeline_job.status != 'not_started'
+
+    nil
   end
 
   def not_started?(statuses)
