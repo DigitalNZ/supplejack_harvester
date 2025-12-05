@@ -64,7 +64,7 @@ RSpec.describe "Schedules", type: :request do
         )
 
         post schedules_path, params: {
-          schedule: attributes_for(:schedule, harvest_definitions_to_run:, name: 'Pipeline Schedule', frequency: :daily, time: '12:30', pipeline_id: pipeline.id, destination_id: destination.id)
+          schedule: attributes_for(:schedule, harvest_definitions_to_run:, frequency: :daily, time: '12:30', pipeline_id: pipeline.id, destination_id: destination.id)
         }
       end
     end
@@ -115,7 +115,7 @@ RSpec.describe "Schedules", type: :request do
   describe 'GET /show' do
     let(:harvest_definition)         { create(:harvest_definition, pipeline:) }
     let(:harvest_definitions_to_run) { [harvest_definition.id] }
-    let(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
+    let(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:) }
 
     it 'returns a successful response' do
       get schedule_path(schedule)
@@ -127,26 +127,26 @@ RSpec.describe "Schedules", type: :request do
   describe 'PATCH /update' do
     let(:harvest_definition)         { create(:harvest_definition, pipeline:) }
     let(:harvest_definitions_to_run) { [harvest_definition.id] }
-    let(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
+    let(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:) }
 
     context 'with valid parameters' do
       it 'updates the schedule' do
         patch schedule_path(schedule), params: {
           schedule: {
-            name: 'Changed Name',
+            time: '12:00',
             harvest_definitions_to_run:
           }
         }
 
         schedule.reload
 
-        expect(schedule.name).to eq 'Changed Name'
+        expect(schedule.time).to eq '12:00'
       end
 
       it 'redirects to the schedules page' do
         patch schedule_path(schedule), params: {
           schedule: {
-            name: 'Changed Name',
+            time: '12:00',
             harvest_definitions_to_run:
           }
         }
@@ -157,7 +157,7 @@ RSpec.describe "Schedules", type: :request do
       it 'displays an appropriate message' do
         patch schedule_path(schedule), params: {
           schedule: {
-            name: 'Changed Name',
+            time: '12:00',
             harvest_definitions_to_run:
           }
         }
@@ -171,10 +171,10 @@ RSpec.describe "Schedules", type: :request do
         Sidekiq::Cron::Job.destroy_all!
 
         post schedules_path, params: {
-          schedule: attributes_for(:schedule, harvest_definitions_to_run:, name: 'Schedule', frequency: :daily, time: '12:30', pipeline_id: pipeline.id, destination_id: destination.id)
+          schedule: attributes_for(:schedule, harvest_definitions_to_run:, frequency: :daily, time: '12:30', pipeline_id: pipeline.id, destination_id: destination.id)
         }
 
-        sidekiq_cron  = Sidekiq::Cron::Job.all.first
+        sidekiq_cron = Sidekiq::Cron::Job.all.first
 
         expect(Sidekiq::Cron::Job.all.count).to eq 1
         expect(sidekiq_cron.cron).to eq '30 12 * * * Pacific/Auckland'
@@ -197,19 +197,19 @@ RSpec.describe "Schedules", type: :request do
       it 'does not update the schedule' do
         patch schedule_path(schedule), params: {
           schedule: {
-            name: ''
+            time: ''
           }
         }
 
         schedule.reload
 
-        expect(schedule.name).not_to eq ''
+        expect(schedule.time).not_to eq ''
       end
 
       it 're-renders the edit form' do
         patch schedule_path(schedule), params: {
           schedule: {
-            name: ''
+            time: ''
           }
         }
 
@@ -219,7 +219,7 @@ RSpec.describe "Schedules", type: :request do
       it 'displays an appropriate message' do
         patch schedule_path(schedule), params: {
           schedule: {
-            name: ''
+            time: ''
           }
         }
 
@@ -231,7 +231,7 @@ RSpec.describe "Schedules", type: :request do
   describe 'DELETE /destroy' do
     let(:harvest_definition)         { create(:harvest_definition, pipeline:) }
     let(:harvest_definitions_to_run) { [harvest_definition.id] }
-    let!(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:, name: 'Pipeline Schedule') }
+    let!(:schedule)                   { create(:schedule, frequency: 0, time: '12:30', pipeline:, destination:, harvest_definitions_to_run:) }
 
     context 'when the destroy is successful' do
       it 'deletes the schedule' do

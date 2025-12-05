@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_27_144948) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -189,12 +189,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.bigint "harvest_definition_id"
     t.bigint "extraction_job_id"
     t.text "name"
-    t.string "key"
     t.string "target_job_id"
     t.bigint "pipeline_job_id"
     t.index ["extraction_job_id"], name: "index_harvest_jobs_on_extraction_job_id"
     t.index ["harvest_definition_id"], name: "index_harvest_jobs_on_harvest_definition_id"
-    t.index ["key"], name: "index_harvest_jobs_on_key", unique: true
     t.index ["pipeline_job_id"], name: "index_harvest_jobs_on_pipeline_job_id"
     t.index ["status"], name: "index_harvest_jobs_on_status"
   end
@@ -245,7 +243,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "completion_count", default: 0, null: false
-    t.bigint "job_id"
+    t.bigint "job_id", null: false
     t.index ["job_id", "process_type", "job_type"], name: "index_job_completion_summaries_on_job_process_type", unique: true
     t.index ["last_completed_at"], name: "index_job_completion_summaries_on_last_completed_at"
     t.index ["process_type"], name: "index_job_completion_summaries_on_process_type"
@@ -302,7 +300,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "pipeline_id"
-    t.string "key"
     t.string "harvest_definitions_to_run"
     t.bigint "destination_id"
     t.bigint "extraction_job_id"
@@ -318,7 +315,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.index ["automation_step_id"], name: "index_pipeline_jobs_on_automation_step_id"
     t.index ["destination_id"], name: "index_pipeline_jobs_on_destination_id"
     t.index ["extraction_job_id"], name: "index_pipeline_jobs_on_extraction_job_id"
-    t.index ["key"], name: "index_pipeline_jobs_on_key", unique: true
     t.index ["launched_by_id"], name: "index_pipeline_jobs_on_launched_by_id"
     t.index ["pipeline_id"], name: "index_pipeline_jobs_on_pipeline_id"
     t.index ["schedule_id"], name: "index_pipeline_jobs_on_schedule_id"
@@ -343,7 +339,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
   end
 
   create_table "schedules", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "name"
     t.integer "frequency", default: 0
     t.string "time"
     t.integer "day"
@@ -361,7 +356,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_17_005826) do
     t.boolean "skip_previously_enriched", default: false
     t.index ["automation_template_id"], name: "index_schedules_on_automation_template_id"
     t.index ["destination_id"], name: "index_schedules_on_destination_id"
-    t.index ["name"], name: "index_schedules_on_name", unique: true
     t.index ["pipeline_id"], name: "index_schedules_on_pipeline_id"
   end
 

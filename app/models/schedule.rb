@@ -40,11 +40,6 @@ class Schedule < ApplicationRecord
     end
   end
 
-  after_create do
-    self.name = schedule_name
-    save!
-  end
-
   def self.schedules_within_range(start_date, end_date)
     schedule_map = Schedule.all.each_with_object({}) do |schedule, hash|
       add_schedule_times_to_schedule_map(schedule, hash, start_date, end_date)
@@ -83,14 +78,6 @@ class Schedule < ApplicationRecord
   end
 
   private
-
-  def schedule_name
-    name = subject.name.parameterize(separator: '_')
-    destination_name = destination.name.parameterize(separator: '_')
-    time_name = time.parameterize(separator: '_')
-
-    "#{name}__#{destination_name}__#{time_name}__#{SecureRandom.hex}"
-  end
 
   # This is for converting 12 hour times into 24 hour times
   # so if the user has a time of 7:45pm, it becomes 19:45
