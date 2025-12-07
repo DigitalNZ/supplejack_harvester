@@ -1,31 +1,63 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Handle harvest modal
   const preExtractionToggle = document.getElementById("js-pre-extraction-toggle");
   const preExtractionDepthField = document.querySelector('input[name="extraction_definition[pre_extraction_depth]"]');
   const linkSelectorsContainer = document.getElementById("js-link-selectors-container");
 
-  if (preExtractionToggle) {
+  if (preExtractionToggle && linkSelectorsContainer) {
+    function createLinkSelectorField(level, existingValue) {
+      const value = existingValue || '';
+      const placeholder = level === 1 ? '$.urls[*] or //body//a[href]' : `Level ${level} selector`;
+      
+      return `
+        <div class="col-4 js-link-selector-level js-link-selector-level-${level}">
+          <label class="form-label" for="js-link-selector-${level}">
+            Link Selector Level ${level}
+            <span data-bs-toggle="tooltip" data-bs-title="JSONPath (starts with $) or XPath (starts with / or //) selector to extract links.">
+              <i class="bi bi-question-circle" aria-label="helper text"></i>
+            </span>
+          </label>
+        </div>
+        <div class="col-8 js-link-selector-level js-link-selector-level-${level}">
+          <input type="text" 
+                 name="extraction_definition[link_selector_${level}]" 
+                 id="js-link-selector-${level}"
+                 class="form-control" 
+                 value="${value}"
+                 placeholder="${placeholder}">
+          <small class="form-text text-muted">
+            JSONPath (JSON) or XPath (HTML/XML). Leave blank for default.
+          </small>
+        </div>
+      `;
+    }
+
     function updateLinkSelectorFields() {
       const isPreExtraction = preExtractionToggle.value === "true";
       const depth = parseInt(preExtractionDepthField?.value || 1, 10) || 1;
 
-      if (linkSelectorsContainer) {
-        if (isPreExtraction) {
-          linkSelectorsContainer.classList.remove("d-none");
-          // Show/hide fields based on depth
-          for (let i = 1; i <= 10; i++) { // Support up to 10 levels
-            const levelFields = linkSelectorsContainer.querySelectorAll(`.js-link-selector-level-${i}`);
-            levelFields.forEach(function(field) {
-              if (i <= depth) {
-                field.classList.remove("d-none");
-              } else {
-                field.classList.add("d-none");
-              }
-            });
+      if (isPreExtraction) {
+        linkSelectorsContainer.classList.remove("d-none");
+        
+        // Store existing values before clearing
+        const existingValues = {};
+        for (let i = 1; i <= 10; i++) {
+          const input = document.getElementById(`js-link-selector-${i}`);
+          if (input) {
+            existingValues[i] = input.value;
           }
-        } else {
-          linkSelectorsContainer.classList.add("d-none");
         }
+        
+        // Clear and rebuild fields
+        linkSelectorsContainer.innerHTML = '';
+        for (let i = 1; i <= depth; i++) {
+          linkSelectorsContainer.innerHTML += createLinkSelectorField(i, existingValues[i]);
+        }
+        
+        // Re-initialize tooltips if using Bootstrap
+        const tooltips = linkSelectorsContainer.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(el => new bootstrap.Tooltip(el));
+      } else {
+        linkSelectorsContainer.classList.add("d-none");
       }
     }
 
@@ -34,47 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
       preExtractionDepthField.addEventListener("change", updateLinkSelectorFields);
       preExtractionDepthField.addEventListener("input", updateLinkSelectorFields);
     }
-    updateLinkSelectorFields(); // Run on page load
+    // Don't run on page load - let the server-rendered fields stay
   }
-
-  // Handle enrichment modals (multiple modals with IDs)
-  document.querySelectorAll('[id^="js-pre-extraction-toggle-"]').forEach(function(toggle) {
-    const enrichmentId = toggle.id.replace("js-pre-extraction-toggle-", "");
-    const container = document.getElementById(`js-link-selectors-container-${enrichmentId}`);
-    // Find depth field within the same form/modal
-    const form = toggle.closest('form');
-    const depthField = form ? form.querySelector('input[name="extraction_definition[pre_extraction_depth]"]') : null;
-
-    if (toggle && container) {
-      function updateEnrichmentLinkSelectorFields() {
-        const isPreExtraction = toggle.value === "true";
-        const depth = parseInt(depthField?.value || 1, 10) || 1;
-
-        if (isPreExtraction) {
-          container.classList.remove("d-none");
-          // Show/hide fields based on depth
-          for (let i = 1; i <= 10; i++) {
-            const levelFields = container.querySelectorAll(`.js-link-selector-level-${i}`);
-            levelFields.forEach(function(field) {
-              if (i <= depth) {
-                field.classList.remove("d-none");
-              } else {
-                field.classList.add("d-none");
-              }
-            });
-          }
-        } else {
-          container.classList.add("d-none");
-        }
-      }
-
-      toggle.addEventListener("change", updateEnrichmentLinkSelectorFields);
-      if (depthField) {
-        depthField.addEventListener("change", updateEnrichmentLinkSelectorFields);
-        depthField.addEventListener("input", updateEnrichmentLinkSelectorFields);
-      }
-      updateEnrichmentLinkSelectorFields();
-    }
-  });
 });
 

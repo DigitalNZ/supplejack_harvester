@@ -126,154 +126,147 @@ module Extraction
 
     def perform_extraction_from_pre_extraction
       pre_extraction_job = ExtractionJob.find(@extraction_job.pre_extraction_job_id)
-      max_depth = @extraction_definition.pre_extraction_depth || 1
+      max_depth = @extraction_definition.pre_extraction_depth
 
-      Rails.logger.info "Pre-extraction depth: #{max_depth} (extraction_definition_id: #{@extraction_definition.id}, pre_extraction_depth: #{@extraction_definition.pre_extraction_depth.inspect})"
-      
+      Rails.logger.info "Pre-extraction depth: #{max_depth} (extraction_definition_id: #{@extraction_definition.id})"
+
+      # Load initial documents from pre-extraction job
       current_documents = pre_extraction_job.documents
-      cumulative_page_counter = 0  # Track total pages across all depths
+      
+      # Track the page range for each depth
+      # Depth 1 processes pages 1 to initial_count (saved by perform_pre_extraction)
+      current_start_page = 1
+      current_end_page = current_documents.total_pages
+      
+      # Start numbering NEW pages AFTER existing ones (to avoid overwriting)
+      cumulative_page_counter = current_end_page
+      
+      # Separate counter for final content saved to main extraction job
+      main_job_page_counter = 0
+
+      Rails.logger.info "Initial state: pages 1 to #{current_end_page} available"
 
       (1..max_depth).each do |depth|
-        Rails.logger.info "Processing depth #{depth} of #{max_depth} - current_documents.total_pages: #{current_documents.total_pages}"
-        
-        total_pages = current_documents.total_pages || 0
+        Rails.logger.info "Processing depth #{depth} of #{max_depth} - pages #{current_start_page} to #{current_end_page}"
+
+        # No pages to process for this depth
+        if current_start_page > current_end_page || current_end_page == 0
+          Rails.logger.warn "No pages to process at depth #{depth}, stopping extraction"
+          break
+        end
 
         link_counter = 0
         saved_links = []
         saved_content_count = 0
-        
-        (1..total_pages).each do |page_number|
+
+        # Process ONLY pages in the current depth's range
+        (current_start_page..current_end_page).each do |page_number|
           break if execution_cancelled?
-          
+
           doc = current_documents[page_number]
-          
+
           # Skip documents that aren't pre-extraction link documents
           next unless is_pre_extraction_link_document?(doc)
-          
+
           url = extract_url_from_pre_extraction_document(doc)
           next if url.blank?
-          
+
           request = build_request_for_url(url)
           @extraction_definition.page = page_number
-          
-          Rails.logger.info "[EXTRACTION] About to fetch content from URL: #{url}, depth: #{depth}, max_depth: #{max_depth}"
-          
+
+          Rails.logger.info "[EXTRACTION] Fetching URL: #{url}, depth: #{depth}, max_depth: #{max_depth}"
+
           @de = DocumentExtraction.new(request, @extraction_job.extraction_folder, @previous_request)
           @previous_request = @de.extract
-          
-          # Log extraction result
+
           if @de.document.present?
-            Rails.logger.info "[EXTRACTION] Document extracted - Status: #{@de.document.status}, " \
-                              "URL: #{@de.document.url}, Body length: #{@de.document.body.to_s.length}, " \
-                              "Body starts with: #{@de.document.body.to_s[0..100]}"
+            Rails.logger.info "[EXTRACTION] Document extracted - Status: #{@de.document.status}, URL: #{@de.document.url}"
           else
             Rails.logger.warn "[EXTRACTION] Document extraction returned nil for URL: #{url}"
           end
-          
+
           next if duplicate_document_extracted?
           next unless @de.document.present? && @de.document.successful?
-          
+
           if depth == max_depth
-            # Final depth: save the document content
-            cumulative_page_counter += 1
-            
-            # Save the document using the cumulative page counter, not the pre-extraction page number
-            # Temporarily set the page to the cumulative counter for file path generation
+            # Final depth: save the document content to MAIN extraction job folder
+            main_job_page_counter += 1  # Changed from cumulative_page_counter
+
             original_page = @extraction_definition.page
-            @extraction_definition.page = cumulative_page_counter
-            
-            # Verify we're about to save actual HTML content, not a link blob
-            body_preview = @de.document.body.to_s[0..300]
-            is_link_doc = is_link_document_body?(@de.document.body)
-            
-            if is_link_doc
-              Rails.logger.error "[EXTRACTION] ERROR: About to save a link document at final depth! " \
-                                "URL: #{url}, Body: #{body_preview}"
-            end
-            
-            Rails.logger.info "[EXTRACTION] Saving final depth document - URL: #{url}, " \
-                              "Page: #{cumulative_page_counter}, Is link doc: #{is_link_doc}, " \
-                              "Body preview: #{body_preview}"
-            
+            @extraction_definition.page = main_job_page_counter  # Changed
+
+            Rails.logger.info "[EXTRACTION] Saving final content - URL: #{url}, Page: #{main_job_page_counter}"
+
             @de.save
             saved_content_count += 1
-            
-            Rails.logger.info "Depth #{depth} (FINAL): Saved content document #{saved_content_count} for URL: #{url}"
-            
+
             if @harvest_report.present?
               @harvest_report.increment_pages_extracted!
               @harvest_report.update(extraction_updated_time: Time.zone.now)
             end
-            
-            Rails.logger.info "[FINAL DEPTH] About to check if transformation should be enqueued. " \
-                              "pre_extraction?: #{@extraction_job.pre_extraction?}, " \
-                              "page: #{@extraction_definition.page}, " \
-                              "harvest_job present?: #{@harvest_job.present?}, " \
-                              "document present?: #{@de&.document&.present?}, " \
-                              "document successful?: #{@de&.document&.successful?}"
-            
-            # Enqueue transformation for final depth documents (not for pre-extraction jobs themselves)
-            # IMPORTANT: Do this BEFORE restoring the page number, as transformation uses the page number
+
             unless @extraction_job.pre_extraction?
-              # Make sure @de and document are available before enqueueing
               if @de.present? && @de.document.present? && @de.document.successful?
                 enqueue_record_transformation
-              else
-                Rails.logger.warn "[FINAL DEPTH] Cannot enqueue transformation - @de or document not available/successful"
               end
             end
-            
-            # Restore original page number for next iteration (after transformation is enqueued)
+
             @extraction_definition.page = original_page
           else
-            # Intermediate depth: extract links
-            # Use depth + 1 selector because we're extracting from pages fetched at current depth
+            # Intermediate depth: extract links using NEXT depth's selector
             next_depth = depth + 1
             links = extract_links_from_document(@de.document, next_depth)
-            
+
             next if links.empty?
-            
-            Rails.logger.info "Depth #{depth} (INTERMEDIATE): Extracted #{links.count} links from URL: #{url} using selector for depth #{next_depth}"
-            
-            # Store extracted links in the PRE-EXTRACTION JOB so they display in step 1
+
+            Rails.logger.info "Depth #{depth} (INTERMEDIATE): Extracted #{links.count} links from #{url}"
+
+            # Store extracted links for UI display
             if pre_extraction_job.present?
               current_links = pre_extraction_job.extracted_links_by_depth || {}
               current_links[next_depth.to_s] ||= []
               current_links[next_depth.to_s] += links
               pre_extraction_job.update_extracted_links_for_depth(next_depth, current_links[next_depth.to_s].uniq)
             end
-            
+
+            # Save links with page numbers AFTER current pages (no overwriting!)
             links.each do |link_url|
               link_counter += 1
               cumulative_page_counter += 1
-              save_link_as_document(link_url, cumulative_page_counter)  # Use cumulative counter
+              save_link_as_document_to_folder(link_url, cumulative_page_counter, pre_extraction_job.extraction_folder)
               saved_links << link_url
             end
           end
-          
+
           throttle
         end
-        
-        Rails.logger.info "Depth #{depth} complete. Saved #{depth == max_depth ? saved_content_count : link_counter} items (#{depth == max_depth ? 'content' : 'links'})"
-        
-        # Only reload documents if we're not at the final depth
+
+        Rails.logger.info "Depth #{depth} complete. Saved #{depth == max_depth ? saved_content_count : link_counter} items"
+
+        # Prepare for next depth (if not at final depth)
         if depth < max_depth
-          # Reload documents to get the newly saved links
-          current_documents = @extraction_job.documents
-          
-          Rails.logger.info "Depth #{depth} complete. Found #{current_documents.total_pages} documents for next depth"
-          
-          if current_documents.total_pages == 0
-            Rails.logger.warn "No documents found after depth #{depth}, stopping extraction"
+          # Next depth starts where we left off (after the pages we just processed)
+          # and goes to the new total (including pages we just saved)
+          current_start_page = current_end_page + 1
+
+          # Reload documents to see newly saved links
+          current_documents = Extraction::Documents.new(pre_extraction_job.extraction_folder)
+
+          current_end_page = current_documents.total_pages
+
+          Rails.logger.info "Depth #{depth} complete. Next depth will process pages #{current_start_page} to #{current_end_page}"
+
+          if current_start_page > current_end_page
+            Rails.logger.warn "No new documents found after depth #{depth}, stopping extraction"
             break
           end
         else
-          Rails.logger.info "Final depth #{depth} complete. No more depths to process."
+          Rails.logger.info "Final depth #{depth} complete."
         end
       end
-      
+
       Rails.logger.info "Pre-extraction complete. Final document count: #{@extraction_job.documents.total_pages}"
-      
+
       if @harvest_report.present? && @extraction_job.pre_extraction?
         @harvest_report.update(extraction_updated_time: Time.zone.now)
       end
@@ -731,10 +724,27 @@ module Extraction
       link_document.save(file_path_for_page(page_number))
     end
 
-    def file_path_for_page(page_number)
+    def save_link_as_document_to_folder(link_url, page_number, folder)
+      full_url = normalize_url(link_url)
+    
+      link_document = Extraction::Document.new(
+        url: full_url,
+        method: 'GET',
+        params: {},
+        request_headers: {},
+        status: 200,
+        response_headers: {},
+        body: { url: full_url, pre_extraction_link: true }.to_json
+      )
+    
+      link_document.save(file_path_for_page(page_number, folder))
+    end
+
+    def file_path_for_page(page_number, folder = nil)
       page_str = format('%09d', page_number)[-9..]
       name_str = @extraction_definition.name.parameterize(separator: '_')
-      "#{@extraction_job.extraction_folder}/#{folder_number(page_number)}/#{name_str}__-__#{page_str}.json"
+      target_folder = folder || @extraction_job.extraction_folder
+      "#{target_folder}/#{folder_number(page_number)}/#{name_str}__-__#{page_str}.json"
     end
     
     def folder_number(page = 1)
