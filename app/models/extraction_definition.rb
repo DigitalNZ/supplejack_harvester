@@ -71,8 +71,7 @@ class ExtractionDefinition < ApplicationRecord
   # Serialize link_selectors as array of {depth: integer, selector: string} objects
   serialize :link_selectors, type: Array
 
-  # Get link selector for a specific depth level
-  # Falls back to legacy link_selector if link_selectors not set
+  # Get link selector for a specific depth level from link_selectors array
   def link_selector_for_depth(depth)
     return nil unless pre_extraction?
 
@@ -86,9 +85,6 @@ class ExtractionDefinition < ApplicationRecord
         return selector_entry['selector'] || selector_entry[:selector]
       end
     end
-
-    # Fallback to legacy link_selector for depth 1
-    return link_selector if depth == 1 && link_selector.present?
 
     nil
   end

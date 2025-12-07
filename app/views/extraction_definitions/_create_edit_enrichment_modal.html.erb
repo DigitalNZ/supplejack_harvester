@@ -227,8 +227,9 @@
             </div>
 
             <div id="js-link-selectors-container-<%= enrichment_definition.id %>" class="d-none">
-              <% depth = enrichment_definition.pre_extraction_depth.to_i > 0 ? enrichment_definition.pre_extraction_depth.to_i : 1 %>
-              <% link_selectors_hash = enrichment_definition.link_selectors_hash %>
+              <% extraction_def = model.persisted? ? model : (enrichment_definition.extraction_definition || model) %>
+              <% depth = extraction_def.pre_extraction_depth.to_i > 0 ? extraction_def.pre_extraction_depth.to_i : 1 %>
+              <% link_selectors_hash = extraction_def.link_selectors_hash %>
               <% (1..depth).each do |level| %>
                 <div class="col-4 js-link-selector-level js-link-selector-level-<%= level %>">
                   <%= form.label "link_selector_#{level}".to_sym, class: 'form-label' do %>
