@@ -111,7 +111,6 @@ class AutomationStepTemplatesController < ApplicationController
       :step_type,
       :api_url,
       :api_method,
-      :api_headers,
       :api_body,
       :extraction_definition_id,
       harvest_definition_ids: []
