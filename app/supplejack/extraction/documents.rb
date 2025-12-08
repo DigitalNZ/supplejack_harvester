@@ -43,7 +43,8 @@ module Extraction
     def documents_filepath
       folder_number = folder_number(@current_page)
       page_number = format('%09d', @current_page)[-9..]
-      # Match both __-__ (pre-extraction links) and __ (regular documents)
+      # match documents that end with a page number
+      # name__-__page.json (standard) and name__recordId__page.json (enrichments)
       @documents_filepath = Dir.glob("#{@folder}/#{folder_number}/*__-__#{page_number}.json").first ||
                             Dir.glob("#{@folder}/#{folder_number}/*__#{page_number}.json").first
     end

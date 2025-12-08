@@ -157,7 +157,6 @@ class AutomationStep < ApplicationRecord
 
   def validate_pre_extraction_requirements
     errors.add(:extraction_definition_id, "can't be blank") if extraction_definition_id.blank?
-    # No longer need to check pre_extraction flag - behavior is determined by step type
   end
 
   def no_reports?

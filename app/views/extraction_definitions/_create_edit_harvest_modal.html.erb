@@ -217,30 +217,25 @@
               <%= form.number_field :pre_extraction_depth, class: 'form-control', required: true, value: model.pre_extraction_depth %>
             </div>
 
-            <div id="js-link-selectors-container" class="<%= model.pre_extraction ? '' : 'd-none' %>">
+            <div id="js-link-selectors-container" class="row gy-3 <%= model.pre_extraction ? '' : 'd-none' %>">
               <% depth = model.pre_extraction_depth.to_i > 0 ? model.pre_extraction_depth.to_i : 1 %>
               <% link_selectors_hash = model.link_selectors_hash %>
               <% (1..depth).each do |level| %>
                 <div class="col-4 js-link-selector-level js-link-selector-level-<%= level %>">
                   <%= form.label "link_selector_#{level}".to_sym, class: 'form-label' do %>
                     Link Selector Level <%= level %>
-
-                    <span
-                        data-bs-toggle="tooltip"
-                        data-bs-title="JSONPath (starts with $) or XPath (starts with / or //) selector to extract links. For JSON: '$.urls[*]'. For HTML/XML: '//loc' or '//body//a[href]'. Leave blank to use default behavior."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                    <span data-bs-toggle="tooltip" data-bs-title="JSONPath (starts with $) or XPath (starts with / or //) selector to extract links. For JSON: '$.urls[*]'. For HTML/XML: '//loc' or '//body//a[href]'. Leave blank to use default behavior.">
+                      <i class="bi bi-question-circle" aria-label="helper text"></i>
                     </span>
                   <% end %>
                 </div>
-
                 <div class="col-8 js-link-selector-level js-link-selector-level-<%= level %>">
                   <%= text_field_tag "extraction_definition[link_selector_#{level}]",
                                       link_selectors_hash[level.to_s] || '',
                                       id: "js-link-selector-#{level}",
                                       class: 'form-control',
                                       placeholder: level == 1 ? '$.urls[*] or //loc' : "Level #{level} selector" %>
-                  <small class="form-text text-muted">
-                    JSONPath (JSON) or XPath (HTML/XML). Leave blank for default.
-                  </small>
+                  <small class="form-text text-muted">JSONPath (JSON) or XPath (HTML/XML). Leave blank for default.</small>
                 </div>
               <% end %>
             </div>

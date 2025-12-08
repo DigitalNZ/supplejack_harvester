@@ -105,16 +105,7 @@ class Automation < ApplicationRecord
     return unless step.pipeline_job
 
     reports = step.pipeline_job.harvest_reports
-    return reports.map(&:status).uniq if reports.any?
-
-    # If no reports yet, check if there's an extraction job running
-    extraction_job = step.pipeline_job.extraction_job
-    return [extraction_job.status] if extraction_job.present?
-
-    # Otherwise, check if pipeline job is queued/running
-    return [step.pipeline_job.status] if step.pipeline_job.present? && step.pipeline_job.status != 'not_started'
-
-    nil
+    reports.map(&:status).uniq if reports.any?
   end
 
   def not_started?(statuses)

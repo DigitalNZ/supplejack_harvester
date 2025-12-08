@@ -82,11 +82,8 @@ class ExtractionJob < ApplicationRecord
   #
   # @return [true, false]
   def pre_extraction?
-    # If explicitly set, use that
     return is_pre_extraction if !is_pre_extraction.nil?
 
-    # Fallback: pre-extraction jobs don't have harvest_jobs
-    # Regular extraction jobs are created with harvest_jobs
     harvest_job.blank?
   end
 

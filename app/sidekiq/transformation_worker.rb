@@ -11,7 +11,6 @@ class TransformationWorker
     @harvest_job = HarvestJob.find(harvest_job_id)
     @extraction_job = @harvest_job.extraction_job
     
-    # Add nil check before accessing id
     transformation_definition_id = @harvest_job.transformation_definition&.id
     if transformation_definition_id.nil?
       Rails.logger.error "[TRANSFORMATION] ERROR: transformation_definition is nil for harvest_job_id: #{harvest_job_id}"
