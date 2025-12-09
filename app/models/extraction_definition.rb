@@ -74,33 +74,55 @@ class ExtractionDefinition < ApplicationRecord
   # Get link selector for a specific depth level from link_selectors array
   def link_selector_for_depth(depth)
     return nil unless pre_extraction?
+    return nil unless valid_link_selectors?
 
-    # If link_selectors is set and has entries, use it
-    if link_selectors.present? && link_selectors.is_a?(Array)
-      selector_entry = link_selectors.find do |entry|
-        entry_depth = entry.is_a?(Hash) ? (entry['depth'] || entry[:depth]) : nil
-        entry_depth.to_i == depth.to_i if entry_depth.present?
-      end
-      if selector_entry.present? && selector_entry.is_a?(Hash)
-        return selector_entry['selector'] || selector_entry[:selector]
-      end
-    end
-
-    nil
+    selector_entry = find_selector_entry_by_depth(depth)
+    extract_selector_from_entry(selector_entry)
   end
 
   # Convert link_selectors array to hash format for form helpers
   def link_selectors_hash
-    return {} unless link_selectors.present? && link_selectors.is_a?(Array)
+    return {} unless valid_link_selectors?
 
     link_selectors.each_with_object({}) do |entry, hash|
-      next unless entry.is_a?(Hash)
-
-      depth = entry['depth'] || entry[:depth]
-      selector = entry['selector'] || entry[:selector]
-      hash[depth.to_s] = selector if depth.present? && selector.present?
+      add_entry_to_hash(entry, hash)
     end
   end
+
+  private
+
+  def valid_link_selectors?
+    link_selectors.present? && link_selectors.is_a?(Array)
+  end
+
+  def find_selector_entry_by_depth(depth)
+    link_selectors.find do |entry|
+      entry_depth = extract_depth_from_entry(entry)
+      entry_depth&.to_i == depth.to_i
+    end
+  end
+
+  def extract_depth_from_entry(entry)
+    return nil unless entry.is_a?(Hash)
+
+    entry['depth'] || entry[:depth]
+  end
+
+  def extract_selector_from_entry(entry)
+    return nil unless entry.is_a?(Hash)
+
+    entry['selector'] || entry[:selector]
+  end
+
+  def add_entry_to_hash(entry, hash)
+    return unless entry.is_a?(Hash)
+
+    depth = extract_depth_from_entry(entry)
+    selector = extract_selector_from_entry(entry)
+    hash[depth.to_s] = selector if depth.present? && selector.present?
+  end
+
+  public
 
   # rubocop:disable Metrics/AbcSize
   def clone(pipeline, name)

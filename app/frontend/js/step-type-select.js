@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", function () {
   if (stepTypeSelect) {
     const pipelineFields = document.getElementById("pipeline-fields");
     const apiCallFields = document.getElementById("api-call-fields");
-    const preExtractionFields = document.getElementById("pre-extraction-fields");
+    const preExtractionFields = document.getElementById(
+      "pre-extraction-fields"
+    );
     const pipelineSelect = document.querySelector(
       'select[name="automation_step_template[pipeline_id]"]'
     );

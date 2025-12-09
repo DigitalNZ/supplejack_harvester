@@ -35,15 +35,25 @@ class HarvestWorker < ApplicationWorker
     @harvest_job.update(extraction_job_id: extraction_job.id)
     @harvest_report.extraction_completed!
 
-    (extraction_job.extraction_definition.page..extraction_job.documents.total_pages).each do |page|
+    enqueue_transformation_workers(extraction_job)
+  end
+
+  def enqueue_transformation_workers(extraction_job)
+    page_range = extraction_job.extraction_definition.page..extraction_job.documents.total_pages
+    page_range.each do |page|
       @harvest_report.increment_pages_extracted!
-      TransformationWorker.perform_in_with_priority(@pipeline_job.job_priority, (page * 5).seconds, @harvest_job.id,
-                                                    page)
-      @harvest_report.increment_transformation_workers_queued!
+      enqueue_transformation_worker(page)
 
       @pipeline_job.reload
       break if @pipeline_job.cancelled? || page_number_reached?(page)
     end
+  end
+
+  def enqueue_transformation_worker(page)
+    TransformationWorker.perform_in_with_priority(
+      @pipeline_job.job_priority, (page * 5).seconds, @harvest_job.id, page
+    )
+    @harvest_report.increment_transformation_workers_queued!
   end
 
   private

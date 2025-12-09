@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class AutomationStep < ApplicationRecord
   include StatusManagement
 
@@ -107,22 +108,20 @@ class AutomationStep < ApplicationRecord
   def execute_pre_extraction
     return if pre_extraction_job.present?
 
-    # If dealing with several levels of nesting, you can point to a previous pre-extraction job
-    previous_pre_extraction_job_id = find_previous_pre_extraction_job_id
-
-    extraction_job = ExtractionJob.create(
-      extraction_definition: extraction_definition,
-      kind: 'full',
-      pre_extraction_job_id: previous_pre_extraction_job_id,
-      is_pre_extraction: true # Set flag based on step type
-    )
-
-    # Ensure status is set to 'queued' if it's nil (shouldn't happen with default, but just in case)
+    extraction_job = create_pre_extraction_job
     extraction_job.update(status: 'queued') if extraction_job.status.blank?
 
-    job_id = extraction_job.id  # Cache the ID
-    update(pre_extraction_job_id: job_id)
-    ExtractionWorker.perform_async_with_priority(automation.job_priority, job_id)
+    update(pre_extraction_job_id: extraction_job.id)
+    ExtractionWorker.perform_async_with_priority(automation.job_priority, extraction_job.id)
+  end
+
+  def create_pre_extraction_job
+    ExtractionJob.create(
+      extraction_definition: extraction_definition,
+      kind: 'full',
+      pre_extraction_job_id: find_previous_pre_extraction_job_id,
+      is_pre_extraction: true
+    )
   end
 
   def find_previous_pre_extraction_job_id
@@ -180,3 +179,4 @@ class AutomationStep < ApplicationRecord
     reports&.map(&:status)&.uniq || []
   end
 end
+# rubocop:enable Metrics/ClassLength

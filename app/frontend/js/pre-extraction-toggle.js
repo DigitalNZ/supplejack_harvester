@@ -1,30 +1,47 @@
 document.addEventListener("DOMContentLoaded", () => {
   const toggle = document.getElementById("js-pre-extraction-toggle");
-  const depthField = document.querySelector('input[name="extraction_definition[pre_extraction_depth]"]');
+  const depthField = document.querySelector(
+    'input[name="extraction_definition[pre_extraction_depth]"]'
+  );
   const container = document.getElementById("js-link-selectors-container");
 
   if (!toggle || !container) return;
 
   const el = (tag, attrs = {}, children = []) => {
     const element = document.createElement(tag);
-    Object.entries(attrs).forEach(([k, v]) => k === "className" ? element.className = v : element.setAttribute(k, v));
-    children.forEach(c => element.append(c));
+    Object.entries(attrs).forEach(([k, v]) =>
+      k === "className" ? (element.className = v) : element.setAttribute(k, v)
+    );
+    children.forEach((c) => element.append(c));
     return element;
   };
 
-  const TOOLTIP = "JSONPath (starts with $) or XPath (starts with / or //) selector to extract links.";
+  const TOOLTIP =
+    "JSONPath (starts with $) or XPath (starts with / or //) selector to extract links.";
 
   const createField = (level, value = "") => {
     const levelClass = `js-link-selector-level js-link-selector-level-${level}`;
-    const placeholder = level === 1 ? "$.urls[*] or //loc" : `Level ${level} selector`;
+    const placeholder =
+      level === 1 ? "$.urls[*] or //loc" : `Level ${level} selector`;
 
     const labelCol = el("div", { className: `col-4 ${levelClass}` }, [
-      el("label", { className: "form-label", for: `js-link-selector-${level}` }, [
-        `Link Selector Level ${level} `,
-        el("span", { "data-bs-toggle": "tooltip", "data-bs-title": TOOLTIP }, [
-          el("i", { className: "bi bi-question-circle", "aria-label": "helper text" })
-        ])
-      ])
+      el(
+        "label",
+        { className: "form-label", for: `js-link-selector-${level}` },
+        [
+          `Link Selector Level ${level} `,
+          el(
+            "span",
+            { "data-bs-toggle": "tooltip", "data-bs-title": TOOLTIP },
+            [
+              el("i", {
+                className: "bi bi-question-circle",
+                "aria-label": "helper text",
+              }),
+            ]
+          ),
+        ]
+      ),
     ]);
 
     const inputCol = el("div", { className: `col-8 ${levelClass}` }, [
@@ -34,9 +51,11 @@ document.addEventListener("DOMContentLoaded", () => {
         id: `js-link-selector-${level}`,
         className: "form-control",
         value,
-        placeholder
+        placeholder,
       }),
-      el("small", { className: "form-text text-muted" }, ["JSONPath (JSON) or XPath (HTML/XML). Leave blank for default."])
+      el("small", { className: "form-text text-muted" }, [
+        "JSONPath (JSON) or XPath (HTML/XML). Leave blank for default.",
+      ]),
     ]);
 
     return [labelCol, inputCol];
@@ -62,11 +81,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     container.replaceChildren();
     for (let i = 1; i <= depth; i++) {
-      createField(i, existingValues[i]).forEach(node => container.appendChild(node));
+      createField(i, existingValues[i]).forEach((node) =>
+        container.appendChild(node)
+      );
     }
 
-    container.querySelectorAll('[data-bs-toggle="tooltip"]')
-      .forEach(el => new bootstrap.Tooltip(el));
+    container
+      .querySelectorAll('[data-bs-toggle="tooltip"]')
+      .forEach((el) => new bootstrap.Tooltip(el));
   };
 
   toggle.addEventListener("change", updateFields);

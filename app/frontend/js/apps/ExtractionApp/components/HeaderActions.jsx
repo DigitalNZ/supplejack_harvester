@@ -42,7 +42,8 @@ const HeaderActions = () => {
 
     if (
       (appDetails.extractionDefinition.paginated ||
-      appDetails.extractionDefinition.kind == "enrichment") && !appDetails.extractionDefinition.pre_extraction
+        appDetails.extractionDefinition.kind == "enrichment") &&
+      !appDetails.extractionDefinition.pre_extraction
     ) {
       dispatch(
         previewRequest({
