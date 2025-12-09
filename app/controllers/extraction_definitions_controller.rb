@@ -103,10 +103,13 @@ class ExtractionDefinitionsController < ApplicationController
       :pre_extraction, :pre_extraction_depth
     )
 
-    # Build link_selectors from link_selector_N form fields
-    permitted[:link_selectors] = build_link_selectors_from_params
+    # Force conversion to plain Ruby Hash (JSON round-trip ensures no Rails-specific objects)
+    result = JSON.parse(permitted.to_json)
 
-    permitted
+    # Build link_selectors from link_selector_N form fields
+    result['link_selectors'] = build_link_selectors_from_params
+
+    result
   end
 
   # Convert link_selector_1, link_selector_2, etc. form params into link_selectors array

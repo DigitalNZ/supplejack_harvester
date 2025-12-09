@@ -49,7 +49,11 @@ class ExtractionJobsController < ApplicationController
   private
 
   def html_create
-    @extraction_job = ExtractionJob.new(extraction_definition: @extraction_definition, kind: params[:kind])
+    @extraction_job = ExtractionJob.new(
+      extraction_definition: @extraction_definition,
+      kind: params[:kind],
+      is_pre_extraction: false
+    )
 
     if @extraction_job.save
       ExtractionWorker.perform_async(@extraction_job.id)
@@ -63,7 +67,11 @@ class ExtractionJobsController < ApplicationController
   end
 
   def json_create
-    @extraction_job = ExtractionJob.create(extraction_definition: @extraction_definition, kind: params[:kind])
+    @extraction_job = ExtractionJob.create(
+      extraction_definition: @extraction_definition,
+      kind: params[:kind],
+      is_pre_extraction: false
+    )
     ExtractionWorker.perform_async(@extraction_job.id)
 
     render json: {
