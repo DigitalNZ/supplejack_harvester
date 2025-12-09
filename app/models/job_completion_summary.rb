@@ -107,7 +107,10 @@ class JobCompletionSummary < ApplicationRecord
   end
 
   def find_pipeline_from_extraction_job(job_id)
-    extraction_job = ExtractionJob.find(job_id)
+    extraction_job = ExtractionJob.find_by(id: job_id)
+    # if job is deleted, handle safely
+    return nil unless extraction_job
+
     extraction_job.harvest_job&.pipeline_job&.pipeline ||
       extraction_job.extraction_definition.pipeline
   end
