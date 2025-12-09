@@ -38,6 +38,8 @@ module Extraction
 
   # Performs the work as defined in the document extraction
   class Execution
+    include PreExtractionHelpers
+
     def initialize(job, extraction_definition)
       @extraction_job = job
       @extraction_definition = extraction_definition
@@ -84,189 +86,6 @@ module Extraction
         throttle
         break if execution_cancelled? || stop_condition_met?
       end
-    end
-
-    def perform_pre_extraction
-      extract(@extraction_definition.requests.first)
-
-      return if @de&.document.blank?
-
-      links = extract_links_from_document(@de.document, 1)
-
-      if links.empty?
-        selector = @extraction_definition.link_selector_for_depth(1)
-        if selector.blank?
-          Rails.logger.warn '[PRE-EXTRACTION] No selector set for depth 1 and no links extracted. Please configure a link selector for level 1.'
-        else
-          Rails.logger.warn "[PRE-EXTRACTION] Selector configured but no links found. Selector: #{selector}"
-        end
-        return
-      end
-
-      @extraction_job.update_extracted_links_for_depth(1, links) if @extraction_job.present?
-
-      links.each_with_index do |link_url, index|
-        page_number = index + 1
-        save_link_as_document(link_url, page_number)
-
-        @harvest_report.increment_pages_extracted! if @harvest_report.present?
-      end
-
-      return if @harvest_report.blank?
-
-      @harvest_report.update(extraction_updated_time: Time.zone.now)
-    end
-
-    def perform_extraction_from_pre_extraction
-      context = initialize_extraction_context
-
-      (1..context[:max_depth]).each do |depth|
-        break if should_stop_depth_processing?(context)
-
-        if depth == context[:max_depth]
-          process_final_depth(context)
-        else
-          process_intermediate_depth(context, depth)
-        end
-
-        advance_to_next_depth(context) unless depth == context[:max_depth]
-      end
-
-      finalize_extraction
-    end
-
-    # Sets up all the tracking state for pre-extraction processing
-    def initialize_extraction_context
-      pre_extraction_job = ExtractionJob.find(@extraction_job.pre_extraction_job_id)
-      documents = pre_extraction_job.documents
-
-      {
-        pre_extraction_job: pre_extraction_job,
-        max_depth: @extraction_definition.pre_extraction_depth,
-        documents: documents,
-        # Window of documents to process at current depth
-        start_page: 1,
-        end_page: documents.total_pages,
-        # Tracks where to append new link documents (avoids overwriting)
-        cumulative_page: documents.total_pages,
-        # Counts final content pages saved to main job folder
-        record_page: 0
-      }
-    end
-
-    def should_stop_depth_processing?(context)
-      context[:start_page] > context[:end_page] || context[:end_page].zero?
-    end
-
-    # Intermediate depths: fetch pages, extract links, save as new link documents
-    def process_intermediate_depth(context, depth)
-      each_link_document_in_range(context) do |page_number, url|
-        document = fetch_document_for_page(page_number, url)
-        next unless document&.successful?
-
-        next_depth = depth + 1
-        links = extract_links_from_document(document, next_depth)
-        next if links.empty?
-
-        Rails.logger.info "Depth #{depth} (INTERMEDIATE): Extracted #{links.count} links from #{url}"
-
-        save_extracted_links(context, links, next_depth)
-        throttle
-      end
-    end
-
-    # Final depth: fetch actual content and save to main job folder
-    def process_final_depth(context)
-      each_link_document_in_range(context) do |page_number, url|
-        document = fetch_document_for_page(page_number, url)
-        next unless document&.successful?
-
-        context[:record_page] += 1
-        save_final_content(context)
-        throttle
-      end
-    end
-
-    # Iterates over link documents in the current page range
-    def each_link_document_in_range(context)
-      (context[:start_page]..context[:end_page]).each do |page_number|
-        break if execution_cancelled?
-
-        doc = context[:documents][page_number]
-        next unless is_pre_extraction_link_document?(doc)
-
-        url = extract_url_from_pre_extraction_document(doc)
-        next if url.blank?
-
-        yield page_number, url
-      end
-    end
-
-    # Fetches and extracts a document from the given URL
-    def fetch_document_for_page(page_number, url)
-      request = build_request_for_url(url)
-      @extraction_definition.page = page_number
-
-      @de = DocumentExtraction.new(request, @extraction_job.extraction_folder, @previous_request)
-      @previous_request = @de.extract
-
-      return nil if duplicate_document_extracted?
-      return nil if @de.document.blank?
-
-      @de.document
-    end
-
-    # Saves extracted links to the pre-extraction folder
-    def save_extracted_links(context, links, next_depth)
-      pre_extraction_job = context[:pre_extraction_job]
-
-      # Update tracking for UI display
-      if pre_extraction_job.present?
-        current_links = pre_extraction_job.extracted_links_by_depth || {}
-        current_links[next_depth.to_s] ||= []
-        current_links[next_depth.to_s] += links
-        pre_extraction_job.update_extracted_links_for_depth(next_depth, current_links[next_depth.to_s].uniq)
-      end
-
-      # Save each link as a document (appending after existing pages)
-      links.each do |link_url|
-        context[:cumulative_page] += 1
-        save_link_as_document_to_folder(link_url, context[:cumulative_page], pre_extraction_job.extraction_folder)
-      end
-    end
-
-    # Saves final content to the main extraction job folder
-    def save_final_content(context)
-      original_page = @extraction_definition.page
-      @extraction_definition.page = context[:record_page]
-
-      @de.save
-
-      if @harvest_report.present?
-        @harvest_report.increment_pages_extracted!
-        @harvest_report.update(extraction_updated_time: Time.zone.now)
-      end
-
-      if !@extraction_job.pre_extraction? && (@de.present? && @de.document.present? && @de.document.successful?)
-        enqueue_record_transformation
-      end
-
-      @extraction_definition.page = original_page
-    end
-
-    # Moves to the next depth level by updating page ranges
-    def advance_to_next_depth(context)
-      context[:start_page] = context[:end_page] + 1
-
-      # Reload documents to see newly saved links
-      context[:documents] = Extraction::Documents.new(context[:pre_extraction_job].extraction_folder)
-      context[:end_page] = context[:documents].total_pages
-    end
-
-    def finalize_extraction
-      return unless @harvest_report.present? && @extraction_job.pre_extraction?
-
-      @harvest_report.update(extraction_updated_time: Time.zone.now)
     end
 
     def handle_extraction_error(_error)
@@ -455,27 +274,49 @@ module Extraction
       @extraction_definition.split? || @extraction_definition.extract_text_from_file?
     end
 
+    # :reek:TooManyStatements - Complex format detection logic requires multiple checks
     def extract_links_from_document(document, depth = 1)
       body = document.body
-      format = @extraction_definition.format
-
-      # Auto-detect format if it doesn't match the content
-      # For HTML format, also check if it's actually XML (sitemap)
-      if format == 'JSON' && !body.strip.start_with?('{', '[')
-        format = detect_format_from_content(body)
-      elsif format == 'XML' && !body.strip.start_with?('<?xml') && !body.strip.start_with?('<')
-        format = detect_format_from_content(body)
-      elsif format == 'HTML'
-        # Check if it's actually XML (sitemap) - XML sitemaps start with <?xml or <urlset
-        if body.strip.start_with?('<?xml') || (body.strip.start_with?('<') && (body.include?('<urlset') || body.include?('<sitemap')))
-          format = 'XML'
-        elsif body.exclude?('<html') && body.exclude?('<!DOCTYPE') && body.exclude?('<')
-          format = detect_format_from_content(body)
-        end
-      end
+      stripped_body = body.strip
+      format = detect_actual_format(stripped_body, body)
 
       Rails.logger.info "[EXTRACTION] extract_links_from_document - original format: #{@extraction_definition.format}, detected format: #{format}, depth: #{depth}"
 
+      extract_links_by_format(body, format, depth)
+    end
+
+    def detect_actual_format(stripped_body, body)
+      original_format = @extraction_definition.format
+
+      case original_format
+      when 'JSON'
+        return original_format if stripped_body.start_with?('{', '[')
+
+        detect_format_from_content(stripped_body)
+      when 'XML'
+        return original_format if stripped_body.start_with?('<?xml', '<')
+
+        detect_format_from_content(stripped_body)
+      when 'HTML'
+        return 'XML' if xml_sitemap?(stripped_body, body)
+        return detect_format_from_content(stripped_body) if not_html_content?(body)
+
+        original_format
+      else
+        original_format
+      end
+    end
+
+    def xml_sitemap?(stripped_body, body)
+      stripped_body.start_with?('<?xml') ||
+        (stripped_body.start_with?('<') && (body.include?('<urlset') || body.include?('<sitemap')))
+    end
+
+    def not_html_content?(body)
+      body.exclude?('<html') && body.exclude?('<!DOCTYPE') && body.exclude?('<')
+    end
+
+    def extract_links_by_format(body, format, depth)
       case format
       when 'JSON'
         extract_json_links(body, depth)
@@ -488,10 +329,11 @@ module Extraction
       end
     end
 
-    def detect_format_from_content(body)
-      return 'XML' if body.strip.start_with?('<?xml') || (body.strip.start_with?('<') && body.include?('<?xml'))
-      return 'JSON' if body.strip.start_with?('{', '[')
-      return 'HTML' if body.include?('<html') || body.include?('<!DOCTYPE') || body.include?('<')
+    # :reek:UtilityFunction - Stateless format detection helper
+    def detect_format_from_content(stripped_body)
+      return 'XML' if stripped_body.start_with?('<?xml') || (stripped_body.start_with?('<') && stripped_body.include?('<?xml'))
+      return 'JSON' if stripped_body.start_with?('{', '[')
+      return 'HTML' if stripped_body.include?('<html') || stripped_body.include?('<!DOCTYPE') || stripped_body.include?('<')
 
       'HTML' # Default
     end
@@ -632,70 +474,70 @@ module Extraction
       url
     end
 
+    # :reek:UtilityFunction - Stateless document parsing helper
     def extract_url_from_pre_extraction_document(document)
       body = JSON.parse(document.body)
       body['url'] || body['href'] || body['link']
     rescue JSON::ParserError
-      # If it's not JSON, it's not a pre-extraction link document
       nil
     end
 
+    # :reek:UtilityFunction - Stateless document type check
     def is_pre_extraction_link_document?(document)
-      return false if document.nil?
+      return false unless document
 
-      begin
-        body = JSON.parse(document.body)
-        body['pre_extraction_link'] == true
-      rescue JSON::ParserError
-        false
-      end
+      body = JSON.parse(document.body)
+      body['pre_extraction_link'] == true
+    rescue JSON::ParserError
+      false
     end
 
+    # :reek:UtilityFunction - Stateless body content check
     def is_link_document_body?(body)
-      return false if body.nil?
+      return false unless body
 
-      # If it's already a hash/object, check directly
-      return body['pre_extraction_link'] == true || body[:pre_extraction_link] == true if body.is_a?(Hash)
+      return check_hash_for_link_flag(body) if body.is_a?(Hash)
 
-      # Convert to string for pattern matching
       body_str = body.to_s
+      check_string_for_link_flag(body_str)
+    end
 
-      # Check if it contains the link blob pattern (works for any format)
+    def check_hash_for_link_flag(hash)
+      hash['pre_extraction_link'] == true || hash[:pre_extraction_link] == true
+    end
+
+    def check_string_for_link_flag(body_str)
       return true if body_str.include?('"pre_extraction_link":true') || body_str.include?("'pre_extraction_link':true")
+      return true if check_json_for_link_flag(body_str)
+      return true if check_html_xml_for_link_flag(body_str)
 
-      # Try to parse as JSON
-      begin
-        parsed = JSON.parse(body_str)
-        return parsed['pre_extraction_link'] == true if parsed.is_a?(Hash)
-      rescue JSON::ParserError
-        # Not valid JSON, continue to HTML/XML check
-      end
+      false
+    end
 
-      # Try to extract JSON from HTML/XML
-      begin
-        # Check if it's HTML/XML that might contain JSON
-        if body_str.strip.start_with?('<')
-          # Try to find JSON within HTML/XML tags
-          return true if /\{"url":.*"pre_extraction_link":\s*true\}/.match?(body_str)
+    def check_json_for_link_flag(body_str)
+      parsed = JSON.parse(body_str)
+      parsed.is_a?(Hash) && parsed['pre_extraction_link'] == true
+    rescue JSON::ParserError
+      false
+    end
 
-          # Try parsing as HTML/XML and extracting text
-          doc = begin
-            Nokogiri::HTML.parse(body_str)
-          rescue StandardError
-            Nokogiri::XML.parse(body_str)
-          end
-          text_content = doc.text.strip
+    def check_html_xml_for_link_flag(body_str)
+      return false unless body_str.strip.start_with?('<')
+      return true if /\{"url":.*"pre_extraction_link":\s*true\}/.match?(body_str)
 
-          # Try parsing the extracted text as JSON
-          if text_content.start_with?('{')
-            parsed = JSON.parse(text_content)
-            return parsed['pre_extraction_link'] == true if parsed.is_a?(Hash)
-          end
-        end
-      rescue Nokogiri::SyntaxError, JSON::ParserError
-        # Not HTML/XML or JSON extraction failed
-      end
+      extract_and_check_json_from_html(body_str)
+    rescue Nokogiri::SyntaxError, JSON::ParserError
+      false
+    end
 
+    def extract_and_check_json_from_html(body_str)
+      doc = Nokogiri::HTML.parse(body_str)
+      text_content = doc.text.strip
+      return false unless text_content.start_with?('{')
+
+      parsed = JSON.parse(text_content)
+      parsed.is_a?(Hash) && parsed['pre_extraction_link'] == true
+    rescue StandardError
       false
     end
 
@@ -739,14 +581,16 @@ module Extraction
       link_document.save(file_path_for_page(page_number, folder))
     end
 
+    # :reek:ControlParameter - folder parameter intentionally controls output location
     def file_path_for_page(page_number, folder = nil)
       page_str = format('%09d', page_number)[-9..]
       name_str = @extraction_definition.name.parameterize(separator: '_')
       target_folder = folder || @extraction_job.extraction_folder
-      "#{target_folder}/#{folder_number(page_number)}/#{name_str}__-__#{page_str}.json"
+      "#{target_folder}/#{calculate_folder_number(page_number)}/#{name_str}__-__#{page_str}.json"
     end
 
-    def folder_number(page = 1)
+    # :reek:UtilityFunction - Pure calculation helper
+    def calculate_folder_number(page = 1)
       (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
     end
   end

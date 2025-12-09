@@ -15,6 +15,7 @@ class ExtractionDefinitionsController < ApplicationController
     @extraction_definition = ExtractionDefinition.new(extraction_definition_params)
 
     if @extraction_definition.save
+      update_last_edited_by([@extraction_definition])
       @harvest_definition.update(extraction_definition_id: @extraction_definition.id)
 
       2.times { Request.create(extraction_definition: @extraction_definition) }
@@ -114,6 +115,7 @@ class ExtractionDefinitionsController < ApplicationController
 
   # Convert link_selector_1, link_selector_2, etc. form params into link_selectors array
   # Returns plain Ruby hashes to avoid issues with HashWithIndifferentAccess
+  # :reek:FeatureEnvy - we need original_params 
   def build_link_selectors_from_params
     original_params = params[:extraction_definition]
     return [] if original_params.blank? || original_params[:pre_extraction] != 'true'

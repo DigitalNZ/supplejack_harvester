@@ -28,14 +28,17 @@ class AutomationStep < ApplicationRecord
     HarvestDefinition.where(id: harvest_definition_ids)
   end
 
+  # :reek:RepeatedConditional - step_type dispatch is intentional for clarity
   def display_name
+    display_position = position + 1
+
     case step_type
     when 'api_call'
-      "#{position + 1}. API Call: #{api_method} #{api_url}"
+      "#{display_position}. API Call: #{api_method} #{api_url}"
     when 'pre_extraction'
-      "#{position + 1}. Pre-Extraction: #{extraction_definition&.name || 'Unknown'}"
+      "#{display_position}. Pre-Extraction: #{extraction_definition&.name || 'Unknown'}"
     else
-      "#{position + 1}. #{pipeline&.name || 'Unknown Pipeline'}"
+      "#{display_position}. #{pipeline&.name || 'Unknown Pipeline'}"
     end
   end
 
@@ -117,9 +120,9 @@ class AutomationStep < ApplicationRecord
     # Ensure status is set to 'queued' if it's nil (shouldn't happen with default, but just in case)
     extraction_job.update(status: 'queued') if extraction_job.status.blank?
 
-    update(pre_extraction_job_id: extraction_job.id)
-
-    ExtractionWorker.perform_async_with_priority(automation.job_priority, extraction_job.id)
+    job_id = extraction_job.id  # Cache the ID
+    update(pre_extraction_job_id: job_id)
+    ExtractionWorker.perform_async_with_priority(automation.job_priority, job_id)
   end
 
   def find_previous_pre_extraction_job_id
