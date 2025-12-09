@@ -193,4 +193,87 @@ RSpec.describe AutomationStep do
       api_step.execute_api_call
     end
   end
-end 
+
+  describe 'pre-extraction step features' do
+    let(:extraction_definition) { create(:extraction_definition, pre_extraction: true) }
+
+    context 'when step_type is pre_extraction' do
+      subject { build(:automation_step, step_type: 'pre_extraction', extraction_definition:, pipeline: nil) }
+
+      it { is_expected.to validate_presence_of(:extraction_definition_id) }
+    end
+
+    describe '#display_name for pre_extraction step' do
+      it 'returns a formatted name with extraction definition name' do
+        step = create(:automation_step, :pre_extraction, extraction_definition:)
+        expect(step.display_name).to include('Pre-Extraction')
+        expect(step.display_name).to include(extraction_definition.name)
+      end
+    end
+
+    describe '#pre_extraction_status' do
+      subject { create(:automation_step, :pre_extraction, extraction_definition:) }
+
+      it 'returns not_started when no pre_extraction_job exists' do
+        expect(subject.pre_extraction_status).to eq('not_started')
+      end
+
+      it 'returns the job status when pre_extraction_job exists' do
+        job = create(:extraction_job, status: 'running')
+        subject.update(pre_extraction_job: job)
+
+        expect(subject.pre_extraction_status).to eq('running')
+      end
+    end
+
+    describe '#execute_pre_extraction' do
+      subject { create(:automation_step, :pre_extraction, extraction_definition:) }
+
+      it 'creates an extraction job' do
+        expect { subject.execute_pre_extraction }.to change { ExtractionJob.count }.by(1)
+      end
+
+      it 'sets is_pre_extraction flag on the job' do
+        subject.execute_pre_extraction
+        subject.reload
+
+        expect(subject.pre_extraction_job.is_pre_extraction).to be true
+      end
+
+      it 'links the extraction job to the step' do
+        subject.execute_pre_extraction
+        subject.reload
+
+        expect(subject.pre_extraction_job).to be_present
+        expect(subject.pre_extraction_job.extraction_definition).to eq extraction_definition
+      end
+
+      it 'does not create a new job if one already exists' do
+        subject.execute_pre_extraction
+        
+        expect { subject.execute_pre_extraction }.not_to change { ExtractionJob.count }
+      end
+    end
+
+    describe '#find_previous_pre_extraction_job_id' do
+      let(:automation) { create(:automation) }
+      let(:ed1) { create(:extraction_definition, pre_extraction: true) }
+      let(:ed2) { create(:extraction_definition, pre_extraction: true) }
+
+      it 'returns nil when no previous pre-extraction step exists' do
+        step = create(:automation_step, :pre_extraction, automation:, position: 0, extraction_definition: ed1)
+        expect(step.find_previous_pre_extraction_job_id).to be_nil
+      end
+
+      it 'returns the pre_extraction_job_id from the previous pre-extraction step' do
+        step1 = create(:automation_step, :pre_extraction, automation:, position: 0, extraction_definition: ed1)
+        step1.execute_pre_extraction
+        step1.reload
+
+        step2 = create(:automation_step, :pre_extraction, automation:, position: 1, extraction_definition: ed2)
+
+        expect(step2.find_previous_pre_extraction_job_id).to eq step1.pre_extraction_job_id
+      end
+    end
+  end
+end

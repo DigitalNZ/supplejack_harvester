@@ -71,7 +71,7 @@ class ExtractionJob < ApplicationRecord
   #
   # @return Extraction::Documents or nil
   def pre_extraction_documents
-    return nil unless pre_extraction_job_id.present?
+    return nil if pre_extraction_job_id.blank?
 
     pre_extraction_job.documents
   end
@@ -82,7 +82,7 @@ class ExtractionJob < ApplicationRecord
   #
   # @return [true, false]
   def pre_extraction?
-    return is_pre_extraction if !is_pre_extraction.nil?
+    return is_pre_extraction unless is_pre_extraction.nil?
 
     harvest_job.blank?
   end

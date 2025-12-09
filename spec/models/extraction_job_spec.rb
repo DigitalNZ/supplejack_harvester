@@ -184,4 +184,91 @@ RSpec.describe ExtractionJob do
       expect(unfinished_ej.finished?).to be false
     end
   end
+
+  describe 'pre-extraction features' do
+    describe '#pre_extraction_job association' do
+      it 'can belong to a pre-extraction job' do
+        pre_extraction_job = create(:extraction_job)
+        main_job = create(:extraction_job, pre_extraction_job:)
+
+        expect(main_job.pre_extraction_job).to eq pre_extraction_job
+      end
+
+      it 'returns nil when no pre-extraction job' do
+        job = create(:extraction_job)
+        expect(job.pre_extraction_job).to be_nil
+      end
+    end
+
+    describe '#pre_extraction_documents' do
+      it 'returns nil when no pre_extraction_job_id' do
+        job = create(:extraction_job)
+        expect(job.pre_extraction_documents).to be_nil
+      end
+
+      it 'returns documents from pre-extraction job when linked' do
+        pre_extraction_job = create(:extraction_job)
+        main_job = create(:extraction_job, pre_extraction_job:)
+
+        expect(main_job.pre_extraction_documents).to be_a(Extraction::Documents)
+      end
+    end
+
+    describe '#pre_extraction?' do
+      it 'returns value of is_pre_extraction when set to true' do
+        job = create(:extraction_job, is_pre_extraction: true)
+        expect(job.pre_extraction?).to be true
+      end
+
+      it 'returns value of is_pre_extraction when set to false' do
+        job = create(:extraction_job, is_pre_extraction: false)
+        # Note: falls back to harvest_job.blank? when is_pre_extraction is false
+        expect(job.pre_extraction?).to be false
+      end
+
+      it 'falls back to harvest_job.blank? when is_pre_extraction is nil' do
+        job = create(:extraction_job, is_pre_extraction: nil)
+        expect(job.pre_extraction?).to eq job.harvest_job.blank?
+      end
+    end
+
+    describe '#extracted_links_by_depth' do
+      it 'defaults to empty' do
+        job = create(:extraction_job)
+        expect(job.extracted_links_by_depth).to be_nil.or eq({})
+      end
+
+      it 'can store links by depth' do
+        job = create(:extraction_job)
+        job.extracted_links_by_depth = { '1' => ['http://example.com/1', 'http://example.com/2'] }
+        job.save
+
+        job.reload
+        expect(job.extracted_links_by_depth['1']).to eq ['http://example.com/1', 'http://example.com/2']
+      end
+    end
+
+    describe '#update_extracted_links_for_depth' do
+      it 'updates extracted links for a specific depth' do
+        job = create(:extraction_job)
+        links = ['http://example.com/a', 'http://example.com/b']
+
+        job.update_extracted_links_for_depth(1, links)
+
+        job.reload
+        expect(job.extracted_links_by_depth['1']).to eq links
+      end
+
+      it 'can store links for multiple depths' do
+        job = create(:extraction_job)
+
+        job.update_extracted_links_for_depth(1, ['http://level1.com'])
+        job.update_extracted_links_for_depth(2, ['http://level2.com'])
+
+        job.reload
+        expect(job.extracted_links_by_depth['1']).to eq ['http://level1.com']
+        expect(job.extracted_links_by_depth['2']).to eq ['http://level2.com']
+      end
+    end
+  end
 end

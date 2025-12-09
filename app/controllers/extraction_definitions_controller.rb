@@ -95,81 +95,33 @@ class ExtractionDefinitionsController < ApplicationController
     @destinations = Destination.all
   end
 
-  # Recursively convert HashWithIndifferentAccess to plain hash for YAML serialization
-  def to_plain_hash(obj)
-    case obj
-    when Hash, ActiveSupport::HashWithIndifferentAccess
-      obj.each_with_object({}) do |(key, value), result|
-        result[key.to_s] = to_plain_hash(value)
-      end
-    when Array
-      obj.map { |item| to_plain_hash(item) }
-    else
-      obj
-    end
-  end
-
   def extraction_definition_params
-    safe_params = params.require(:extraction_definition).permit(
+    permitted = params.require(:extraction_definition).permit(
       :pipeline_id, :name, :format, :base_url, :throttle, :page, :per_page, :follow_redirects,
       :total_selector, :kind, :destination_id, :source_id, :enrichment_url, :paginated, :split, :split_selector,
       :extract_text_from_file, :fragment_source_id, :fragment_key, :evaluate_javascript, :fields, :include_sub_documents,
-      :pre_extraction, :pre_extraction_depth,
-      link_selectors: [:depth, :selector]
+      :pre_extraction, :pre_extraction_depth
     )
-    
-    # Convert link_selector_N parameters to link_selectors array
-    # Extract raw params to avoid HashWithIndifferentAccess serialization issues
-    raw_params = params[:extraction_definition] || {}
-    
-    if safe_params[:pre_extraction] == 'true' && raw_params.present?
-      link_selectors_array = []
-      depth = safe_params[:pre_extraction_depth].to_i
-      depth = 1 if depth < 1
-      
-      (1..depth).each do |level|
-        selector_key = "link_selector_#{level}"
-        # Access raw params directly to get plain string values
-        selector_value = raw_params[selector_key] || raw_params[selector_key.to_sym]
-        if selector_value.present?
-          # Create plain Ruby hash with string keys for YAML serialization
-          # Must use plain Hash, not HashWithIndifferentAccess
-          plain_hash = { 'depth' => level.to_i, 'selector' => selector_value.to_s }
-          link_selectors_array << plain_hash
-        end
-      end
-      
-      # Assign plain array of plain hashes
-      safe_params[:link_selectors] = link_selectors_array
-    elsif safe_params[:pre_extraction] == 'false'
-      # Clear link_selectors if pre_extraction is disabled
-      safe_params[:link_selectors] = []
+
+    # Build link_selectors from link_selector_N form fields
+    permitted[:link_selectors] = build_link_selectors_from_params
+
+    permitted
+  end
+
+  # Convert link_selector_1, link_selector_2, etc. form params into link_selectors array
+  # Returns plain Ruby hashes to avoid issues with HashWithIndifferentAccess
+  def build_link_selectors_from_params
+    original_params = params[:extraction_definition]
+    return [] if original_params.blank? || original_params[:pre_extraction] != 'true'
+
+    depth = original_params[:pre_extraction_depth].to_i
+    depth = 1 if depth < 1
+
+    (1..depth).filter_map do |level|
+      selector = original_params["link_selector_#{level}"]
+      # Use plain Hash with string keys for clean YAML serialization
+      { 'depth' => level, 'selector' => selector.to_s } if selector.present?
     end
-    
-    # Convert to plain hash to avoid HashWithIndifferentAccess serialization issues
-    # This ensures all nested structures are plain Ruby objects
-    final_params = to_plain_hash(safe_params.to_h)
-    
-    # Remove link_selector if it exists (shouldn't, but just in case)
-    final_params.delete('link_selector')
-    
-    # Ensure link_selectors array contains only plain hashes
-    if final_params['link_selectors'].present?
-      final_params['link_selectors'] = final_params['link_selectors'].map do |entry|
-        if entry.is_a?(Hash)
-          # Create a new plain hash to avoid any HashWithIndifferentAccess contamination
-          { 'depth' => entry['depth']&.to_i, 'selector' => entry['selector']&.to_s }
-        else
-          entry
-        end
-      end.reject { |e| e.nil? || e['depth'].nil? || e['selector'].nil? }
-    end
-    
-    # Add last_edited_by_id directly to the hash (avoid Parameters conversion issues)
-    final_params['last_edited_by_id'] = current_user.id if current_user.present?
-    
-    # Return plain hash with string keys for serialization
-    # This ensures no HashWithIndifferentAccess objects remain
-    final_params
   end
 end

@@ -111,7 +111,7 @@ class AutomationStep < ApplicationRecord
       extraction_definition: extraction_definition,
       kind: 'full',
       pre_extraction_job_id: previous_pre_extraction_job_id,
-      is_pre_extraction: true  # Set flag based on step type
+      is_pre_extraction: true # Set flag based on step type
     )
 
     # Ensure status is set to 'queued' if it's nil (shouldn't happen with default, but just in case)

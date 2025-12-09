@@ -89,36 +89,32 @@ module Extraction
     def perform_pre_extraction
       extract(@extraction_definition.requests.first)
 
-      return unless @de&.document&.present?
+      return if @de&.document.blank?
 
       links = extract_links_from_document(@de.document, 1)
 
       if links.empty?
         selector = @extraction_definition.link_selector_for_depth(1)
         if selector.blank?
-          Rails.logger.warn "[PRE-EXTRACTION] No selector set for depth 1 and no links extracted. Please configure a link selector for level 1."
+          Rails.logger.warn '[PRE-EXTRACTION] No selector set for depth 1 and no links extracted. Please configure a link selector for level 1.'
         else
           Rails.logger.warn "[PRE-EXTRACTION] Selector configured but no links found. Selector: #{selector}"
         end
         return
       end
 
-      if @extraction_job.present?
-        @extraction_job.update_extracted_links_for_depth(1, links)
-      end
+      @extraction_job.update_extracted_links_for_depth(1, links) if @extraction_job.present?
 
       links.each_with_index do |link_url, index|
         page_number = index + 1
         save_link_as_document(link_url, page_number)
 
-        if @harvest_report.present?
-          @harvest_report.increment_pages_extracted!
-        end
+        @harvest_report.increment_pages_extracted! if @harvest_report.present?
       end
 
-      if @harvest_report.present?
-        @harvest_report.update(extraction_updated_time: Time.zone.now)
-      end
+      return if @harvest_report.blank?
+
+      @harvest_report.update(extraction_updated_time: Time.zone.now)
     end
 
     def perform_extraction_from_pre_extraction
@@ -159,7 +155,7 @@ module Extraction
     end
 
     def should_stop_depth_processing?(context)
-      context[:start_page] > context[:end_page] || context[:end_page] == 0
+      context[:start_page] > context[:end_page] || context[:end_page].zero?
     end
 
     # Intermediate depths: fetch pages, extract links, save as new link documents
@@ -215,7 +211,7 @@ module Extraction
       @previous_request = @de.extract
 
       return nil if duplicate_document_extracted?
-      return nil unless @de.document.present?
+      return nil if @de.document.blank?
 
       @de.document
     end
@@ -251,8 +247,8 @@ module Extraction
         @harvest_report.update(extraction_updated_time: Time.zone.now)
       end
 
-      unless @extraction_job.pre_extraction?
-        enqueue_record_transformation if @de.present? && @de.document.present? && @de.document.successful?
+      if !@extraction_job.pre_extraction? && (@de.present? && @de.document.present? && @de.document.successful?)
+        enqueue_record_transformation
       end
 
       @extraction_definition.page = original_page
@@ -268,9 +264,9 @@ module Extraction
     end
 
     def finalize_extraction
-      if @harvest_report.present? && @extraction_job.pre_extraction?
-        @harvest_report.update(extraction_updated_time: Time.zone.now)
-      end
+      return unless @harvest_report.present? && @extraction_job.pre_extraction?
+
+      @harvest_report.update(extraction_updated_time: Time.zone.now)
     end
 
     def handle_extraction_error(_error)
@@ -320,7 +316,7 @@ module Extraction
 
     def extraction_failed?
       return false if @de.document.nil?
-      
+
       document_status = @de.document.status
       return false unless document_status >= 400 || document_status < 200
 
@@ -400,12 +396,16 @@ module Extraction
       return if duplicate_document_extracted?
 
       # Log document details before saving
-      document_body_preview = @de.document.body.to_s[0..200] rescue "Unable to preview body"
+      document_body_preview = begin
+        @de.document.body.to_s[0..200]
+      rescue StandardError
+        'Unable to preview body'
+      end
       is_link_document = is_link_document_body?(@de.document.body)
-      
+
       Rails.logger.info "[EXTRACTION] Saving document - Page: #{@extraction_definition.page}, URL: #{@de.document.url}, " \
                         "Is link document: #{is_link_document}, Body preview: #{document_body_preview}..."
-      
+
       @de.save
 
       if @harvest_report.present?
@@ -418,17 +418,16 @@ module Extraction
     end
 
     def enqueue_record_transformation
-
-      unless @harvest_job.present?
-        Rails.logger.warn "[TRANSFORMATION] Cannot enqueue transformation: harvest_job is nil"
+      if @harvest_job.blank?
+        Rails.logger.warn '[TRANSFORMATION] Cannot enqueue transformation: harvest_job is nil'
         return
       end
-      
+
       unless @de.document.successful?
         Rails.logger.warn "[TRANSFORMATION] Cannot enqueue transformation: document not successful (status: #{@de.document.status})"
         return
       end
-      
+
       # Check if this is a link document
       is_link_doc = is_link_document_body?(@de.document.body)
       if is_link_doc
@@ -436,7 +435,7 @@ module Extraction
                           "This is a link document (pre_extraction_link: true). Body preview: #{@de.document.body.to_s[0..200]}"
         return
       end
-      
+
       if requires_additional_processing?
         Rails.logger.info "[TRANSFORMATION] Skipping immediate transformation - requires additional processing (split: #{@extraction_definition.split?}, extract_text: #{@extraction_definition.extract_text_from_file?})"
         return
@@ -444,11 +443,11 @@ module Extraction
 
       Rails.logger.info "[TRANSFORMATION] Enqueueing transformation for page #{@extraction_definition.page}, " \
                         "harvest_job_id: #{@harvest_job.id}, priority: #{@harvest_job.pipeline_job.job_priority}"
-      
+
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
                                                        @extraction_definition.page)
       @harvest_report.increment_transformation_workers_queued!
-      
+
       Rails.logger.info "[TRANSFORMATION] Successfully enqueued transformation for page #{@extraction_definition.page}"
     end
 
@@ -459,10 +458,10 @@ module Extraction
     def extract_links_from_document(document, depth = 1)
       body = document.body
       format = @extraction_definition.format
-      
+
       # Auto-detect format if it doesn't match the content
       # For HTML format, also check if it's actually XML (sitemap)
-      if format == 'JSON' && !(body.strip.start_with?('{') || body.strip.start_with?('['))
+      if format == 'JSON' && !body.strip.start_with?('{', '[')
         format = detect_format_from_content(body)
       elsif format == 'XML' && !body.strip.start_with?('<?xml') && !body.strip.start_with?('<')
         format = detect_format_from_content(body)
@@ -470,13 +469,13 @@ module Extraction
         # Check if it's actually XML (sitemap) - XML sitemaps start with <?xml or <urlset
         if body.strip.start_with?('<?xml') || (body.strip.start_with?('<') && (body.include?('<urlset') || body.include?('<sitemap')))
           format = 'XML'
-        elsif !body.include?('<html') && !body.include?('<!DOCTYPE') && !body.include?('<')
+        elsif body.exclude?('<html') && body.exclude?('<!DOCTYPE') && body.exclude?('<')
           format = detect_format_from_content(body)
         end
       end
-      
+
       Rails.logger.info "[EXTRACTION] extract_links_from_document - original format: #{@extraction_definition.format}, detected format: #{format}, depth: #{depth}"
-      
+
       case format
       when 'JSON'
         extract_json_links(body, depth)
@@ -491,8 +490,9 @@ module Extraction
 
     def detect_format_from_content(body)
       return 'XML' if body.strip.start_with?('<?xml') || (body.strip.start_with?('<') && body.include?('<?xml'))
-      return 'JSON' if body.strip.start_with?('{') || body.strip.start_with?('[')
+      return 'JSON' if body.strip.start_with?('{', '[')
       return 'HTML' if body.include?('<html') || body.include?('<!DOCTYPE') || body.include?('<')
+
       'HTML' # Default
     end
 
@@ -515,27 +515,26 @@ module Extraction
 
     def extract_xml_links(body, depth = 1)
       doc = Nokogiri::XML.parse(body)
-      
+
       # Get depth-specific selector
       selector = @extraction_definition.link_selector_for_depth(depth)
-      
+
       Rails.logger.info "[EXTRACTION] extract_xml_links - depth: #{depth}, selector: #{selector.inspect}, format: #{@extraction_definition.format}"
-      
+
       if selector.present?
         # Check if it's XPath (starts with / or //)
         if selector.start_with?('/')
-          links = doc.xpath(selector).map do |node|
+          links = doc.xpath(selector).filter_map do |node|
             # Extract href attribute or text content
             node['href'] || node['url'] || node.text
-          end.compact
+          end
           Rails.logger.info "[EXTRACTION] XPath selector returned #{links.count} links"
-          links
         else
           # Fallback to CSS selector
-          links = doc.css(selector).map { |node| node['href'] || node['url'] || node.text }.compact
+          links = doc.css(selector).filter_map { |node| node['href'] || node['url'] || node.text }
           Rails.logger.info "[EXTRACTION] CSS selector returned #{links.count} links"
-          links
         end
+        links
       else
         # Return empty array if no selector - don't use default behavior
         Rails.logger.info "[EXTRACTION] No selector for depth #{depth}, returning empty array"
@@ -548,32 +547,32 @@ module Extraction
 
     def extract_html_links(body, depth = 1)
       doc = Nokogiri::HTML.parse(body)
-      
+
       # Get depth-specific selector
       selector = @extraction_definition.link_selector_for_depth(depth)
-      
+
       Rails.logger.info "[EXTRACTION] extract_html_links - depth: #{depth}, selector: #{selector.inspect}"
-      
+
       if selector.present?
         # Check if it's XPath (starts with / or //)
         if selector.start_with?('/')
           # Use XPath
           matched_nodes = doc.xpath(selector)
           Rails.logger.info "[EXTRACTION] XPath matched #{matched_nodes.count} nodes"
-          
+
           # Debug: Log sample of all links in the document if no matches found
-          if matched_nodes.count == 0
+          if matched_nodes.count.zero?
             all_links = doc.xpath('//body//a[@href]')
             Rails.logger.info "[EXTRACTION] Debug: Found #{all_links.count} total <a> tags with href in document"
-            if all_links.count > 0
-              sample_texts = all_links.first(10).map { |a| a.text.strip }.reject(&:blank?)
+            if all_links.count.positive?
+              sample_texts = all_links.first(10).map { |a| a.text.strip }.compact_blank
               Rails.logger.info "[EXTRACTION] Debug: Sample link texts (first 10): #{sample_texts.inspect}"
-              sample_hrefs = all_links.first(5).map { |a| a['href'] }.compact
+              sample_hrefs = all_links.first(5).filter_map { |a| a['href'] }
               Rails.logger.info "[EXTRACTION] Debug: Sample hrefs (first 5): #{sample_hrefs.inspect}"
             end
           end
-          
-          links = matched_nodes.map do |node|
+
+          links = matched_nodes.filter_map do |node|
             # Handle different node types
             case node
             when Nokogiri::XML::Attr
@@ -601,16 +600,15 @@ module Extraction
               # Fallback: try to get href or text
               node.respond_to?(:[]) ? (node['href'] || node['url'] || node.text) : node.to_s
             end
-          end.compact.reject(&:blank?)
-          
+          end.compact_blank
+
           Rails.logger.info "[EXTRACTION] XPath selector returned #{links.count} links: #{links.first(5).inspect}"
-          links
         else
           # Use CSS selector
-          links = doc.css(selector).map { |node| node['href'] || node['url'] || node.text }.compact.reject(&:blank?)
+          links = doc.css(selector).filter_map { |node| node['href'] || node['url'] || node.text }.compact_blank
           Rails.logger.info "[EXTRACTION] CSS selector returned #{links.count} links"
-          links
         end
+        links
       else
         # Return empty array if no selector - don't use default behavior
         Rails.logger.info "[EXTRACTION] No selector for depth #{depth}, returning empty array"
@@ -644,7 +642,7 @@ module Extraction
 
     def is_pre_extraction_link_document?(document)
       return false if document.nil?
-      
+
       begin
         body = JSON.parse(document.body)
         body['pre_extraction_link'] == true
@@ -655,18 +653,16 @@ module Extraction
 
     def is_link_document_body?(body)
       return false if body.nil?
-      
+
       # If it's already a hash/object, check directly
-      if body.is_a?(Hash)
-        return body['pre_extraction_link'] == true || body[:pre_extraction_link] == true
-      end
-      
+      return body['pre_extraction_link'] == true || body[:pre_extraction_link] == true if body.is_a?(Hash)
+
       # Convert to string for pattern matching
       body_str = body.to_s
-      
+
       # Check if it contains the link blob pattern (works for any format)
       return true if body_str.include?('"pre_extraction_link":true') || body_str.include?("'pre_extraction_link':true")
-      
+
       # Try to parse as JSON
       begin
         parsed = JSON.parse(body_str)
@@ -674,20 +670,22 @@ module Extraction
       rescue JSON::ParserError
         # Not valid JSON, continue to HTML/XML check
       end
-      
+
       # Try to extract JSON from HTML/XML
       begin
         # Check if it's HTML/XML that might contain JSON
         if body_str.strip.start_with?('<')
           # Try to find JSON within HTML/XML tags
-          if body_str.match(/\{"url":.*"pre_extraction_link":\s*true\}/)
-            return true
-          end
-          
+          return true if /\{"url":.*"pre_extraction_link":\s*true\}/.match?(body_str)
+
           # Try parsing as HTML/XML and extracting text
-          doc = Nokogiri::HTML.parse(body_str) rescue Nokogiri::XML.parse(body_str)
+          doc = begin
+            Nokogiri::HTML.parse(body_str)
+          rescue StandardError
+            Nokogiri::XML.parse(body_str)
+          end
           text_content = doc.text.strip
-          
+
           # Try parsing the extracted text as JSON
           if text_content.start_with?('{')
             parsed = JSON.parse(text_content)
@@ -697,7 +695,7 @@ module Extraction
       rescue Nokogiri::SyntaxError, JSON::ParserError
         # Not HTML/XML or JSON extraction failed
       end
-      
+
       false
     end
 
@@ -711,7 +709,7 @@ module Extraction
 
     def save_link_as_document(link_url, page_number)
       full_url = normalize_url(link_url)
-    
+
       link_document = Extraction::Document.new(
         url: full_url,
         method: 'GET',
@@ -721,13 +719,13 @@ module Extraction
         response_headers: {},
         body: { url: full_url, pre_extraction_link: true }.to_json
       )
-    
+
       link_document.save(file_path_for_page(page_number))
     end
 
     def save_link_as_document_to_folder(link_url, page_number, folder)
       full_url = normalize_url(link_url)
-    
+
       link_document = Extraction::Document.new(
         url: full_url,
         method: 'GET',
@@ -737,7 +735,7 @@ module Extraction
         response_headers: {},
         body: { url: full_url, pre_extraction_link: true }.to_json
       )
-    
+
       link_document.save(file_path_for_page(page_number, folder))
     end
 
@@ -747,7 +745,7 @@ module Extraction
       target_folder = folder || @extraction_job.extraction_folder
       "#{target_folder}/#{folder_number(page_number)}/#{name_str}__-__#{page_str}.json"
     end
-    
+
     def folder_number(page = 1)
       (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
     end

@@ -22,5 +22,11 @@ FactoryBot.define do
       api_headers { '{"Content-Type": "application/json"}' }
       api_body { '{"test": "data"}' }
     end
+
+    trait :pre_extraction do
+      step_type { 'pre_extraction' }
+      pipeline { nil }
+      association :extraction_definition
+    end
   end
-end 
+end

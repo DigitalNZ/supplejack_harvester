@@ -90,8 +90,8 @@ class Automation < ApplicationRecord
     when 'api_call'
       collect_api_call_status(step)
     when 'pre_extraction'
-      status = step.pre_extraction_job&.status
-      status  # Return nil if no job exists yet, not 'queued'
+      step.pre_extraction_job&.status
+    # Return nil if no job exists yet, not 'queued'
     else
       collect_pipeline_status(step)
     end

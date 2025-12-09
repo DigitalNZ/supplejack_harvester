@@ -222,4 +222,67 @@ RSpec.describe ExtractionDefinition do
       end
     end
   end
+
+  describe 'pre-extraction features' do
+    let(:pipeline) { create(:pipeline) }
+
+    describe '#pre_extraction' do
+      it 'defaults to false' do
+        ed = create(:extraction_definition, pipeline:)
+        expect(ed.pre_extraction).to be false
+      end
+
+      it 'can be set to true' do
+        ed = create(:extraction_definition, pipeline:, pre_extraction: true)
+        expect(ed.pre_extraction).to be true
+      end
+    end
+
+    describe '#pre_extraction_depth' do
+      it 'defaults to 1' do
+        ed = create(:extraction_definition, pipeline:)
+        expect(ed.pre_extraction_depth).to eq 1
+      end
+
+      it 'can be set to a different value' do
+        ed = create(:extraction_definition, pipeline:, pre_extraction_depth: 3)
+        expect(ed.pre_extraction_depth).to eq 3
+      end
+    end
+
+    describe '#link_selector_for_depth' do
+      it 'returns nil when pre_extraction is false' do
+        ed = create(:extraction_definition, pipeline:, pre_extraction: false)
+        expect(ed.link_selector_for_depth(1)).to be_nil
+      end
+
+      it 'returns the selector for a given depth' do
+        ed = create(:extraction_definition, pipeline:, pre_extraction: true,
+                    link_selectors: [{ 'depth' => 1, 'selector' => '$.urls[*]' }])
+        expect(ed.link_selector_for_depth(1)).to eq '$.urls[*]'
+      end
+
+      it 'returns nil when no selector exists for the depth' do
+        ed = create(:extraction_definition, pipeline:, pre_extraction: true,
+                    link_selectors: [{ 'depth' => 1, 'selector' => '$.urls[*]' }])
+        expect(ed.link_selector_for_depth(2)).to be_nil
+      end
+    end
+
+    describe '#link_selectors_hash' do
+      it 'returns empty hash when link_selectors is empty' do
+        ed = create(:extraction_definition, pipeline:)
+        expect(ed.link_selectors_hash).to eq({})
+      end
+
+      it 'converts link_selectors array to hash format' do
+        ed = create(:extraction_definition, pipeline:, pre_extraction: true,
+                    link_selectors: [
+                      { 'depth' => 1, 'selector' => '$.urls[*]' },
+                      { 'depth' => 2, 'selector' => '//loc' }
+                    ])
+        expect(ed.link_selectors_hash).to eq({ '1' => '$.urls[*]', '2' => '//loc' })
+      end
+    end
+  end
 end
