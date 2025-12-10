@@ -29,7 +29,7 @@ class ApplicationController < ActionController::Base
   def filter_by_status(jobs)
     return jobs if params[:status].blank? || params[:status] == 'All'
 
-    jobs.where(status: params[:status])
+    jobs.where(status: params[:status].downcase)
   end
 
   def filter_by_destination(jobs)
