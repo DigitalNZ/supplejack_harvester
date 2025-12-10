@@ -68,10 +68,9 @@ class ExtractionDefinition < ApplicationRecord
     @shared
   end
 
-  # Serialize link_selectors as array of {depth: integer, selector: string} objects
   serialize :link_selectors, type: Array
 
-  # Get link selector for a specific depth level from link_selectors array
+  # Get link selector for a specific depth level
   def link_selector_for_depth(depth)
     return nil unless pre_extraction?
     return nil unless valid_link_selectors?
@@ -80,7 +79,6 @@ class ExtractionDefinition < ApplicationRecord
     extract_selector_from_entry(selector_entry)
   end
 
-  # Convert link_selectors array to hash format for form helpers
   def link_selectors_hash
     return {} unless valid_link_selectors?
 

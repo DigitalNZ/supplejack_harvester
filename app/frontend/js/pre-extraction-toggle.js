@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return element;
   };
 
-  const TOOLTIP =
+  const tooltipText =
     "JSONPath (starts with $) or XPath (starts with / or //) selector to extract links.";
 
   const createField = (level, value = "") => {
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
           `Link Selector Level ${level} `,
           el(
             "span",
-            { "data-bs-toggle": "tooltip", "data-bs-title": TOOLTIP },
+            { "data-bs-toggle": "tooltip", "data-bs-title": tooltipText },
             [
               el("i", {
                 className: "bi bi-question-circle",

@@ -34,10 +34,11 @@ class ApiCallWorker
   end
 
   def add_request_body(request)
-    return unless %w[POST PUT PATCH].include?(@automation_step.api_method) && @automation_step.api_body.present?
+    api_body = @automation_step.api_body
+    return unless %w[POST PUT PATCH].include?(@automation_step.api_method) && api_body.present?
 
     # Interpolate variables in the API body
-    request.body = interpolate_variables(@automation_step.api_body)
+    request.body = interpolate_variables(api_body)
   end
 
   def execute_request_and_handle_response(http, request)
@@ -98,8 +99,9 @@ class ApiCallWorker
   end
 
   def update_or_create_report(attributes)
-    if @automation_step.api_response_report.present?
-      @automation_step.api_response_report.update(attributes)
+    existing_report = @automation_step.api_response_report
+    if existing_report.present?
+      existing_report.update(attributes)
     else
       @automation_step.create_api_response_report(attributes)
     end

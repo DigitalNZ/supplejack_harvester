@@ -107,17 +107,16 @@ class ExtractionDefinitionsController < ApplicationController
       :pre_extraction, :pre_extraction_depth
     )
 
-    # Force conversion to plain Ruby Hash (JSON round-trip ensures no Rails-specific objects)
     result = JSON.parse(permitted.to_json)
 
-    # Build link_selectors from link_selector_N form fields
+    # Build link_selectors from form fields
     result['link_selectors'] = build_link_selectors_from_params
 
     result
   end
 
   # Convert link_selector_1, link_selector_2, etc. form params into link_selectors array
-  # Returns plain Ruby hashes to avoid issues with HashWithIndifferentAccess
+  # Returns plain Ruby hashes
   # :reek:FeatureEnvy - we need original_params
   def build_link_selectors_from_params
     original_params = params[:extraction_definition]
@@ -128,7 +127,7 @@ class ExtractionDefinitionsController < ApplicationController
 
     (1..depth).filter_map do |level|
       selector = original_params["link_selector_#{level}"]
-      # Use plain Hash with string keys for clean YAML serialization
+
       { 'depth' => level, 'selector' => selector.to_s } if selector.present?
     end
   end

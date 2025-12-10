@@ -7,7 +7,6 @@ require 'nokogiri'
 require 'uri'
 require 'json'
 require_relative 'link_extractor'
-require_relative 'link_document_checker'
 
 module Extraction
   # Simple wrapper for Request that uses a specific URL from pre-extraction
@@ -233,7 +232,7 @@ module Extraction
 
       document = @de&.document
       return unless document&.successful?
-      return if LinkDocumentChecker.new(document.body).link_document?
+      return if document.body.include?('"pre_extraction_link":true')
       return if requires_additional_processing?
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,

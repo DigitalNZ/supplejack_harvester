@@ -62,13 +62,15 @@ class AutomationWorker
       return
     end
 
-    return if @step.api_response_report.present? && @step.api_response_report.failed?
+    report = @step.api_response_report
+    return if report.present? && report.failed?
 
     handle_queued_or_new_api_call(automation_id, step_id)
   end
 
   def handle_queued_or_new_api_call(automation_id, step_id)
-    if @step.api_response_report.present? && @step.api_response_report.queued?
+    report = @step.api_response_report
+    if report.present? && report.queued?
       schedule_job_check(automation_id, step_id)
       return
     end
@@ -78,7 +80,8 @@ class AutomationWorker
   end
 
   def step_api_call_completed?
-    @step.api_response_report.present? && @step.api_response_report.successful?
+    report = @step.api_response_report
+    report.present? && report.successful?
   end
 
   def process_pipeline_step(automation_id, step_id)
