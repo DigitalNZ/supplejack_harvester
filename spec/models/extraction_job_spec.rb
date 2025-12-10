@@ -119,6 +119,7 @@ RSpec.describe ExtractionJob do
 
   describe '#extraction_folder_size_in_bytes' do
     let(:extraction_definition) { create(:extraction_definition, base_url: 'http://google.com', paginated: true, pre_extraction: false) }
+    let(:extraction_job) { create(:extraction_job, extraction_definition:, is_pre_extraction: false) }
 
     before do
       (1...5).each do |page|
@@ -135,9 +136,9 @@ RSpec.describe ExtractionJob do
     end
 
     it 'returns the size of the extraction folder in bytes' do
-      Extraction::Execution.new(subject, extraction_definition).call
+      Extraction::Execution.new(extraction_job, extraction_definition).call
 
-      expect(subject.extraction_folder_size_in_bytes).to eq 46334
+      expect(extraction_job.extraction_folder_size_in_bytes).to eq 46334
     end
   end
 
