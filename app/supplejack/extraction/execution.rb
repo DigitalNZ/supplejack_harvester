@@ -6,6 +6,7 @@ require 'jsonpath'
 require 'nokogiri'
 require 'uri'
 require 'json'
+require_relative 'content_format_detector'
 
 module Extraction
   # Simple wrapper for Request that uses a specific URL from pre-extraction
@@ -241,7 +242,6 @@ module Extraction
       @extraction_definition.split? || @extraction_definition.extract_text_from_file?
     end
 
-    # :reek:TooManyStatements - Complex format detection logic requires multiple checks
     def extract_links_from_document(document, depth = 1)
       body = document.body
       stripped_body = body.strip
@@ -256,16 +256,16 @@ module Extraction
 
       case original_format
       when 'JSON'
-        return original_format if stripped_body.start_with?('{', '[')
+        return original_format if ContentFormatDetector.json_format?(stripped_body)
 
-        detect_format_from_content(stripped_body)
+        ContentFormatDetector.detect_from_content(stripped_body)
       when 'XML'
         return original_format if stripped_body.start_with?('<?xml', '<')
 
-        detect_format_from_content(stripped_body)
+        ContentFormatDetector.detect_from_content(stripped_body)
       when 'HTML'
-        return 'XML' if xml_sitemap?(stripped_body, body)
-        return detect_format_from_content(stripped_body) if not_html_content?(body)
+        return 'XML' if ContentFormatDetector.xml_sitemap?(stripped_body, body)
+        return ContentFormatDetector.detect_from_content(stripped_body) unless ContentFormatDetector.html_content?(body)
 
         original_format
       else
@@ -273,17 +273,6 @@ module Extraction
       end
     end
     # rubocop:enable Metrics/CyclomaticComplexity
-
-    # :reek:UtilityFunction - Stateless format detection
-    def xml_sitemap?(stripped_body, body)
-      stripped_body.start_with?('<?xml') ||
-        (stripped_body.start_with?('<') && (body.include?('<urlset') || body.include?('<sitemap')))
-    end
-
-    # :reek:UtilityFunction - Stateless content check
-    def not_html_content?(body)
-      body.exclude?('<html') && body.exclude?('<!DOCTYPE') && body.exclude?('<')
-    end
 
     def extract_links_by_format(body, format, depth)
       case format
@@ -297,21 +286,6 @@ module Extraction
         []
       end
     end
-
-    # :reek:UtilityFunction - Stateless format detection helper
-    # rubocop:disable Metrics/CyclomaticComplexity
-    def detect_format_from_content(stripped_body)
-      if stripped_body.start_with?('<?xml') || (stripped_body.start_with?('<') && stripped_body.include?('<?xml'))
-        return 'XML'
-      end
-      return 'JSON' if stripped_body.start_with?('{', '[')
-      if stripped_body.include?('<html') || stripped_body.include?('<!DOCTYPE') || stripped_body.include?('<')
-        return 'HTML'
-      end
-
-      'HTML' # Default
-    end
-    # rubocop:enable Metrics/CyclomaticComplexity
 
     def extract_json_links(body, depth = 1)
       parsed = JSON.parse(body)
@@ -364,7 +338,6 @@ module Extraction
       matched_nodes.filter_map { |node| extract_link_from_node(node) }.compact_blank
     end
 
-    # :reek:UtilityFunction - Stateless CSS link extraction
     def extract_css_links(doc, selector)
       doc.css(selector).filter_map { |node| node['href'] || node['url'] || node.text }.compact_blank
     end
@@ -378,7 +351,6 @@ module Extraction
       end
     end
 
-    # :reek:UtilityFunction - Stateless element link extraction
     def extract_link_from_element(node)
       href = node['href'] || node['url']
       return href if href.present?
@@ -386,7 +358,6 @@ module Extraction
       node.text.strip.presence
     end
 
-    # :reek:UtilityFunction - Stateless node extraction helper
     def extract_link_from_text_node(node)
       node_text = node.text.strip
       parent = node.parent
@@ -395,7 +366,6 @@ module Extraction
       node_text
     end
 
-    # :reek:UtilityFunction - Stateless fallback extraction
     def extract_link_fallback(node)
       node.respond_to?(:[]) ? (node['href'] || node['url'] || node.text) : node.to_s
     end
@@ -409,7 +379,6 @@ module Extraction
       url
     end
 
-    # :reek:UtilityFunction - Stateless document parsing helper
     def extract_url_from_pre_extraction_document(document)
       body = JSON.parse(document.body)
       body['url'] || body['href'] || body['link']
@@ -417,7 +386,6 @@ module Extraction
       nil
     end
 
-    # :reek:UtilityFunction - Stateless document type check
     def pre_extraction_link_document?(document)
       return false unless document
 
@@ -427,7 +395,6 @@ module Extraction
       false
     end
 
-    # :reek:UtilityFunction - Stateless body content check
     def link_document_body?(body)
       return false unless body
 
@@ -437,7 +404,6 @@ module Extraction
       check_string_for_link_flag(body_str)
     end
 
-    # :reek:UtilityFunction - Stateless hash flag check
     def check_hash_for_link_flag(hash)
       hash['pre_extraction_link'] == true || hash[:pre_extraction_link] == true
     end
@@ -450,7 +416,6 @@ module Extraction
       false
     end
 
-    # :reek:UtilityFunction - Stateless JSON flag check
     def check_json_for_link_flag(body_str)
       parsed = JSON.parse(body_str)
       parsed.is_a?(Hash) && parsed['pre_extraction_link'] == true
@@ -467,7 +432,6 @@ module Extraction
       false
     end
 
-    # :reek:UtilityFunction - Stateless HTML/JSON extraction
     def extract_and_check_json_from_html(body_str)
       doc = Nokogiri::HTML.parse(body_str)
       text_content = doc.text.strip
@@ -503,7 +467,6 @@ module Extraction
       link_document.save(file_path_for_page(page_number, folder))
     end
 
-    # :reek:ControlParameter - folder parameter intentionally controls output location
     def file_path_for_page(page_number, folder = nil)
       page_str = format('%09d', page_number)[-9..]
       name_str = @extraction_definition.name.parameterize(separator: '_')
@@ -511,7 +474,6 @@ module Extraction
       "#{target_folder}/#{calculate_folder_number(page_number)}/#{name_str}__-__#{page_str}.json"
     end
 
-    # :reek:UtilityFunction - Pure calculation helper
     def calculate_folder_number(page = 1)
       (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
     end

@@ -2,7 +2,6 @@
 
 module Extraction
   # Helper methods for pre-extraction processing
-  # :reek:FeatureEnvy - These methods intentionally work with context hash and external objects
   # rubocop:disable Metrics/ModuleLength
   module PreExtractionHelpers
     def perform_pre_extraction
@@ -111,7 +110,6 @@ module Extraction
       @extraction_definition.page = original_page
     end
 
-    # :reek:UtilityFunction - Intentionally stateless context manipulation
     def advance_to_next_depth(context)
       context[:start_page] = context[:end_page] + 1
       pre_extraction_folder = context[:pre_extraction_job].extraction_folder
@@ -165,13 +163,11 @@ module Extraction
       @harvest_report&.update(extraction_updated_time: Time.zone.now)
     end
 
-    # :reek:UtilityFunction - Intentionally stateless context validation
     def should_stop_depth_processing?(context)
       end_page = context[:end_page]
       context[:start_page] > end_page || end_page.zero?
     end
 
-    # :reek:UtilityFunction - Intentionally stateless update to external object
     def update_extracted_links_tracking(pre_extraction_job, depth_key, links)
       return if pre_extraction_job.blank?
 
