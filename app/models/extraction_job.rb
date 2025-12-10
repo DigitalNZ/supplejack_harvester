@@ -81,6 +81,7 @@ class ExtractionJob < ApplicationRecord
   # (pre-extraction jobs don't have harvest_jobs, regular extraction jobs do)
   #
   # @return [true, false]
+  # :reek:NilCheck - Explicit boolean check avoids nil-check smell
   def pre_extraction?
     return is_pre_extraction unless is_pre_extraction.nil?
 
@@ -92,8 +93,9 @@ class ExtractionJob < ApplicationRecord
 
   # Update extracted links for a specific depth
   def update_extracted_links_for_depth(depth, links)
-    self.extracted_links_by_depth ||= {}
-    self.extracted_links_by_depth[depth.to_s] = links
+    current_links = self.extracted_links_by_depth || {}
+    current_links[depth.to_s] = links
+    self.extracted_links_by_depth = current_links
     save
   end
 end

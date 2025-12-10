@@ -41,11 +41,13 @@ class AutomationWorker
   end
 
   def step_pre_extraction_completed?
-    @step.pre_extraction_job.present? && @step.pre_extraction_job.completed?
+    job = @step.pre_extraction_job
+    job.present? && job.completed?
   end
 
   def handle_queued_or_new_pre_extraction(automation_id, step_id)
-    if @step.pre_extraction_job.present? && @step.pre_extraction_job.running?
+    job = @step.pre_extraction_job
+    if job.present? && job.running?
       schedule_job_check(automation_id, step_id)
       return
     end
