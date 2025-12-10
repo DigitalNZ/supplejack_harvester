@@ -3,6 +3,7 @@
 # rubocop:disable Metrics/ClassLength
 class AutomationStep < ApplicationRecord
   include StatusManagement
+  include HarvestDefinitionLookup
 
   belongs_to :automation
   belongs_to :pipeline, optional: true
@@ -21,13 +22,6 @@ class AutomationStep < ApplicationRecord
   serialize :harvest_definition_ids, type: Array
 
   API_METHODS = %w[GET POST PUT PATCH DELETE].freeze
-
-  def harvest_definitions
-    return [] unless pipeline
-    return Pipeline.find(pipeline_id).harvest_definitions if harvest_definition_ids.blank?
-
-    HarvestDefinition.where(id: harvest_definition_ids)
-  end
 
   # :reek:RepeatedConditional - step_type dispatch is intentional for clarity
   def display_name

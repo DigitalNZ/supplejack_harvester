@@ -469,23 +469,7 @@ module Extraction
       PreExtractionRequest.new(base_request, url)
     end
 
-    def save_link_as_document(link_url, page_number)
-      full_url = normalize_url(link_url)
-
-      link_document = Extraction::Document.new(
-        url: full_url,
-        method: 'GET',
-        params: {},
-        request_headers: {},
-        status: 200,
-        response_headers: {},
-        body: { url: full_url, pre_extraction_link: true }.to_json
-      )
-
-      link_document.save(file_path_for_page(page_number))
-    end
-
-    def save_link_as_document_to_folder(link_url, page_number, folder)
+    def save_link_as_document(link_url, page_number, folder = nil)
       full_url = normalize_url(link_url)
 
       link_document = Extraction::Document.new(

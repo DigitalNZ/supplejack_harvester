@@ -18,12 +18,13 @@ module Extraction
 
     def perform_extraction_from_pre_extraction
       context = initialize_extraction_context
+      max_depth = context[:max_depth]
 
-      (1..context[:max_depth]).each do |depth|
+      (1..max_depth).each do |depth|
         break if should_stop_depth_processing?(context)
 
         process_depth(context, depth)
-        advance_to_next_depth(context) unless depth == context[:max_depth]
+        advance_to_next_depth(context) unless depth == max_depth
       end
 
       finalize_extraction
@@ -45,14 +46,15 @@ module Extraction
     end
 
     def process_intermediate_depth(context, depth)
+      next_depth = depth + 1
       each_link_document_in_range(context) do |page_number, url|
         document = fetch_document_for_page(page_number, url)
         next unless document&.successful?
 
-        links = extract_links_from_document(document, depth + 1)
+        links = extract_links_from_document(document, next_depth)
         next if links.empty?
 
-        save_extracted_links(context, links, depth + 1)
+        save_extracted_links(context, links, next_depth)
         throttle
       end
     end
@@ -125,13 +127,14 @@ module Extraction
     private
 
     def build_context(pre_extraction_job, documents)
+      total_pages = documents.total_pages
       {
         pre_extraction_job: pre_extraction_job,
         max_depth: @extraction_definition.pre_extraction_depth,
         documents: documents,
         start_page: 1,
-        end_page: documents.total_pages,
-        cumulative_page: documents.total_pages,
+        end_page: total_pages,
+        cumulative_page: total_pages,
         record_page: 0
       }
     end
@@ -162,7 +165,8 @@ module Extraction
     end
 
     def should_stop_depth_processing?(context)
-      context[:start_page] > context[:end_page] || context[:end_page].zero?
+      end_page = context[:end_page]
+      context[:start_page] > end_page || end_page.zero?
     end
 
     def update_extracted_links_tracking(pre_extraction_job, depth_key, links)
@@ -176,7 +180,8 @@ module Extraction
     def save_links_to_folder(context, links, extraction_folder)
       links.each do |link_url|
         context[:cumulative_page] += 1
-        save_link_as_document_to_folder(link_url, context[:cumulative_page], extraction_folder)
+        current_page = context[:cumulative_page]
+        save_link_as_document(link_url, current_page, extraction_folder)
       end
     end
   end

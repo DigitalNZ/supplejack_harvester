@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class AutomationStepTemplate < ApplicationRecord
+  include HarvestDefinitionLookup
+
   belongs_to :automation_template, touch: true
   belongs_to :pipeline, optional: true
   belongs_to :extraction_definition, optional: true
@@ -13,13 +15,6 @@ class AutomationStepTemplate < ApplicationRecord
   serialize :harvest_definition_ids, type: Array
 
   API_METHODS = %w[GET POST PUT PATCH DELETE].freeze
-
-  def harvest_definitions
-    return [] unless pipeline
-    return Pipeline.find(pipeline_id).harvest_definitions if harvest_definition_ids.blank?
-
-    HarvestDefinition.where(id: harvest_definition_ids)
-  end
 
   def display_name
     case step_type
