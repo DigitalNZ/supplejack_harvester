@@ -121,8 +121,8 @@ class TransformationWorker
 
   def transform_records
     Transformation::Execution.new(records, @transformation_definition.fields).call
-  rescue StandardError => transform_error
-    handle_transform_error(transform_error)
+  rescue StandardError => e
+    handle_transform_error(e)
     []
   end
 
@@ -152,9 +152,9 @@ class TransformationWorker
     ::Retriable.retriable(on_retry: log_retry_attempt) do
       Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
     end
-  rescue StandardError => notify_error
+  rescue StandardError => e
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
-                                                                           error: notify_error,
+                                                                           error: e,
                                                                            definition: @transformation_definition,
                                                                            job: @harvest_job,
                                                                            origin: 'TransformationWorker'

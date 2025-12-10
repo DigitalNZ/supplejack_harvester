@@ -11,8 +11,8 @@ class FileExtractionWorker
     reset_harvest_report_if_needed
     process_file_extraction
     cleanup_and_finalize
-  rescue StandardError => extraction_error
-    handle_file_extraction_error(extraction_error)
+  rescue StandardError => e
+    handle_file_extraction_error(e)
   end
 
   def reset_harvest_report_if_needed
