@@ -132,9 +132,10 @@ module Extraction
     end
 
     def extraction_failed?
-      return false if @de.document.nil?
+      document = @de.document
+      return false if document.nil?
 
-      document_status = @de.document.status
+      document_status = document.status
       return false unless document_status >= 400 || document_status < 200
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Extraction failed',
@@ -155,8 +156,9 @@ module Extraction
     end
 
     def check_for_duplicate_document(previous_document)
-      return false if @de.document.nil? || previous_document.nil?
-      return false unless previous_document.body == @de.document.body
+      current_document = @de.document
+      return false if current_document.nil? || previous_document.nil?
+      return false unless previous_document.body == current_document.body
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Duplicate document',
                              stop_condition_content: '')
@@ -166,10 +168,13 @@ module Extraction
     def custom_stop_conditions_met?
       stop_conditions = @extraction_definition.stop_conditions
       return false if stop_conditions.empty?
-      return false if @de.document.nil?
 
+      document = @de.document
+      return false if document.nil?
+
+      document_body = document.body
       stop_conditions.any? do |condition|
-        condition.evaluate(@de.document.body).tap do |met|
+        condition.evaluate(document_body).tap do |met|
           if met
             log_stop_condition_hit(
               stop_condition_type: 'user',
@@ -221,8 +226,10 @@ module Extraction
 
     def enqueue_record_transformation
       return if @harvest_job.blank?
-      return unless @de.document.successful?
-      return if link_document_body?(@de.document.body)
+
+      document = @de.document
+      return unless document.successful?
+      return if link_document_body?(document.body)
       return if requires_additional_processing?
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
@@ -267,11 +274,13 @@ module Extraction
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
+    # :reek:UtilityFunction - Stateless format detection
     def xml_sitemap?(stripped_body, body)
       stripped_body.start_with?('<?xml') ||
         (stripped_body.start_with?('<') && (body.include?('<urlset') || body.include?('<sitemap')))
     end
 
+    # :reek:UtilityFunction - Stateless content check
     def not_html_content?(body)
       body.exclude?('<html') && body.exclude?('<!DOCTYPE') && body.exclude?('<')
     end
@@ -355,6 +364,7 @@ module Extraction
       matched_nodes.filter_map { |node| extract_link_from_node(node) }.compact_blank
     end
 
+    # :reek:UtilityFunction - Stateless CSS link extraction
     def extract_css_links(doc, selector)
       doc.css(selector).filter_map { |node| node['href'] || node['url'] || node.text }.compact_blank
     end
@@ -368,6 +378,7 @@ module Extraction
       end
     end
 
+    # :reek:UtilityFunction - Stateless element link extraction
     def extract_link_from_element(node)
       href = node['href'] || node['url']
       return href if href.present?
@@ -375,12 +386,16 @@ module Extraction
       node.text.strip.presence
     end
 
+    # :reek:UtilityFunction - Stateless node extraction helper
     def extract_link_from_text_node(node)
-      return node.parent['href'] || node.text.strip if node.parent&.name == 'a'
+      node_text = node.text.strip
+      parent = node.parent
+      return parent['href'] || node_text if parent&.name == 'a'
 
-      node.text.strip
+      node_text
     end
 
+    # :reek:UtilityFunction - Stateless fallback extraction
     def extract_link_fallback(node)
       node.respond_to?(:[]) ? (node['href'] || node['url'] || node.text) : node.to_s
     end
@@ -422,6 +437,7 @@ module Extraction
       check_string_for_link_flag(body_str)
     end
 
+    # :reek:UtilityFunction - Stateless hash flag check
     def check_hash_for_link_flag(hash)
       hash['pre_extraction_link'] == true || hash[:pre_extraction_link] == true
     end
@@ -434,6 +450,7 @@ module Extraction
       false
     end
 
+    # :reek:UtilityFunction - Stateless JSON flag check
     def check_json_for_link_flag(body_str)
       parsed = JSON.parse(body_str)
       parsed.is_a?(Hash) && parsed['pre_extraction_link'] == true
@@ -450,6 +467,7 @@ module Extraction
       false
     end
 
+    # :reek:UtilityFunction - Stateless HTML/JSON extraction
     def extract_and_check_json_from_html(body_str)
       doc = Nokogiri::HTML.parse(body_str)
       text_content = doc.text.strip

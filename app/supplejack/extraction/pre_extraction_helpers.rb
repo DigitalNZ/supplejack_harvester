@@ -111,6 +111,7 @@ module Extraction
       @extraction_definition.page = original_page
     end
 
+    # :reek:UtilityFunction - Intentionally stateless context manipulation
     def advance_to_next_depth(context)
       context[:start_page] = context[:end_page] + 1
       pre_extraction_folder = context[:pre_extraction_job].extraction_folder
@@ -164,11 +165,13 @@ module Extraction
       @harvest_report&.update(extraction_updated_time: Time.zone.now)
     end
 
+    # :reek:UtilityFunction - Intentionally stateless context validation
     def should_stop_depth_processing?(context)
       end_page = context[:end_page]
       context[:start_page] > end_page || end_page.zero?
     end
 
+    # :reek:UtilityFunction - Intentionally stateless update to external object
     def update_extracted_links_tracking(pre_extraction_job, depth_key, links)
       return if pre_extraction_job.blank?
 
@@ -179,9 +182,9 @@ module Extraction
 
     def save_links_to_folder(context, links, extraction_folder)
       links.each do |link_url|
-        context[:cumulative_page] += 1
-        current_page = context[:cumulative_page]
-        save_link_as_document(link_url, current_page, extraction_folder)
+        new_page = context[:cumulative_page] + 1
+        context[:cumulative_page] = new_page
+        save_link_as_document(link_url, new_page, extraction_folder)
       end
     end
   end

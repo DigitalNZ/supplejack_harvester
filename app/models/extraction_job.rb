@@ -93,7 +93,7 @@ class ExtractionJob < ApplicationRecord
 
   # Update extracted links for a specific depth
   def update_extracted_links_for_depth(depth, links)
-    current_links = self.extracted_links_by_depth || {}
+    current_links = extracted_links_by_depth || {}
     current_links[depth.to_s] = links
     self.extracted_links_by_depth = current_links
     save
