@@ -223,13 +223,16 @@
             </div>
 
             <div class="col-8">
-              <%= form.number_field :pre_extraction_depth, class: 'form-control',
-                                    required: true, value: model.pre_extraction_depth || 1 %>
+              <%= form.number_field :pre_extraction_depth,
+                                    class: 'form-control',
+                                    required: true,
+                                    value: model.pre_extraction_depth || 1 %>
             </div>
 
             <div id="js-link-selectors-container-<%= enrichment_definition.id %>" class="d-none">
               <% extraction_def = model.persisted? ? model : (enrichment_definition.extraction_definition || model) %>
-              <% depth = extraction_def.pre_extraction_depth.to_i.positive? ? extraction_def.pre_extraction_depth.to_i : 1 %>
+              <% pre_extraction_depth = extraction_def.pre_extraction_depth.to_i %>
+              <% depth = pre_extraction_depth.positive? ? pre_extraction_depth : 1 %>
               <% link_selectors_hash = extraction_def.link_selectors_hash %>
               <% (1..depth).each do |level| %>
                 <div class="col-4 js-link-selector-level js-link-selector-level-<%= level %>">

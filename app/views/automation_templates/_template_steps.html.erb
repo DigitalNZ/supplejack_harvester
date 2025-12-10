@@ -104,7 +104,10 @@
                             <% links.first(50).each do |link| %>
                               <li class="mb-1">
                                 <small class="text-break" style="word-break: break-all;">
-                                  <%= link_to link, link, target: '_blank', rel: 'noopener', class: 'text-decoration-none' %>
+                                  <%= link_to link, link,
+                                              target: '_blank',
+                                              rel: 'noopener',
+                                              class: 'text-decoration-none' %>
                                 </small>
                               </li>
                             <% end %>

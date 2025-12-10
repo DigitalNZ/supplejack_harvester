@@ -214,8 +214,10 @@
             </div>
 
             <div class="col-8">
-              <%= form.number_field :pre_extraction_depth, class: 'form-control',
-                                    required: true, value: model.pre_extraction_depth %>
+              <%= form.number_field :pre_extraction_depth,
+                                    class: 'form-control',
+                                    required: true,
+                                    value: model.pre_extraction_depth %>
             </div>
 
             <div id="js-link-selectors-container" class="row gy-3 <%= model.pre_extraction ? '' : 'd-none' %>">

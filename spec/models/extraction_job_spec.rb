@@ -118,7 +118,7 @@ RSpec.describe ExtractionJob do
   end
 
   describe '#extraction_folder_size_in_bytes' do
-    let(:extraction_definition) { create(:extraction_definition, base_url: 'http://google.com', paginated: true) }
+    let(:extraction_definition) { create(:extraction_definition, base_url: 'http://google.com', paginated: true, pre_extraction: false) }
 
     before do
       (1...5).each do |page|

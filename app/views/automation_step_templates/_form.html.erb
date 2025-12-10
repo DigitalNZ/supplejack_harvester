@@ -20,7 +20,9 @@
                     { class: 'form-select', required: true, data: { controller: 'step-type-select' } } %>
   </div>
 
-  <div id="pipeline-fields" class="<%= ['api_call', 'pre_extraction'].include?(automation_step_template.step_type.to_s) ? 'd-none' : '' %>">
+  <% hidden_step_types = %w[api_call pre_extraction] %>
+  <% step_type = automation_step_template.step_type.to_s %>
+  <div id="pipeline-fields" class="<%= hidden_step_types.include?(step_type) ? 'd-none' : '' %>">
     <div class="mb-3">
       <%= form.label :pipeline_id, 'Pipeline', class: 'form-label' %>
       <%= form.select :pipeline_id,

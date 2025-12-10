@@ -12,4 +12,3 @@ module HarvestDefinitionLookup
     HarvestDefinition.where(id: harvest_definition_ids)
   end
 end
-
