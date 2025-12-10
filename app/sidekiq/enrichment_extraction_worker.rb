@@ -7,9 +7,9 @@ class EnrichmentExtractionWorker
 
   def perform(enrichment_params)
     process_enrichment_extraction(enrichment_params)
-  rescue StandardError => e
+  rescue StandardError => enrichment_error
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
-                                                                           error: e,
+                                                                           error: enrichment_error,
                                                                            definition:
                                                                              enrichment_params.extraction_definition,
                                                                            job: enrichment_params.extraction_job,

@@ -11,8 +11,8 @@ class FileExtractionWorker
     reset_harvest_report_if_needed
     process_file_extraction
     cleanup_and_finalize
-  rescue StandardError => e
-    handle_file_extraction_error(e)
+  rescue StandardError => extraction_error
+    handle_file_extraction_error(extraction_error)
   end
 
   def reset_harvest_report_if_needed
@@ -95,7 +95,7 @@ class FileExtractionWorker
   end
 
   def move_extracted_documents_into_tmp_directory
-    Dir.children(@extraction_folder).reject { |f| f.ends_with?('tmp') }.each do |folder|
+    Dir.children(@extraction_folder).reject { |dir_name| dir_name.ends_with?('tmp') }.each do |folder|
       FileUtils.move("#{@extraction_folder}/#{folder}", @tmp_directory)
     end
   end

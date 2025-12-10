@@ -40,8 +40,8 @@ class DeleteWorker
     Delete::Execution.new(record, destination).call
     @harvest_report.increment_records_deleted!
     @harvest_report.update(delete_updated_time: Time.zone.now)
-  rescue StandardError => e
-    handle_delete_error(e)
+  rescue StandardError => delete_error
+    handle_delete_error(delete_error)
   end
 
   def handle_delete_error(error)

@@ -13,8 +13,8 @@ class TextExtractionWorker < FileExtractionWorker
     Dir.children("#{@tmp_directory}/#{folder}").each do |file|
       process_text_file(folder, file)
     end
-  rescue StandardError => e
-    handle_text_extraction_error(e)
+  rescue StandardError => text_error
+    handle_text_extraction_error(text_error)
   end
 
   def process_text_file(folder, file)

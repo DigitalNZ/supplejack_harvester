@@ -37,8 +37,8 @@ class LoadWorker
     ::Retriable.retriable(on_retry: log_retry_attempt) do
       execute_load(batch, api_record_id)
     end
-  rescue StandardError => e
-    handle_load_error(e)
+  rescue StandardError => batch_error
+    handle_load_error(batch_error)
   end
 
   def execute_load(batch, api_record_id)
@@ -95,7 +95,7 @@ class LoadWorker
     ::Retriable.retriable(on_retry: log_retry_attempt) do
       Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
     end
-  rescue StandardError => e
-    logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}"
+  rescue StandardError => notify_error
+    logger.info "LoadWorker: API Utils NotifyHarvesting error: #{notify_error.message}"
   end
 end

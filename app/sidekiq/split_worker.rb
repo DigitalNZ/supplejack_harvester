@@ -11,8 +11,8 @@ class SplitWorker < FileExtractionWorker
     Dir.children("#{@tmp_directory}/#{folder}").each do |file|
       process_file(folder, file)
     end
-  rescue StandardError => e
-    handle_split_error(e)
+  rescue StandardError => split_error
+    handle_split_error(split_error)
   end
 
   def process_file(folder, file)
