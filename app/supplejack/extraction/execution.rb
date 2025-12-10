@@ -259,8 +259,6 @@ module Extraction
     end
 
     def extract_url_from_pre_extraction_document(document)
-      # Reference instance state to satisfy Reek
-      _ = @extraction_definition
       body = JSON.parse(document.body)
       body['url'] || body['href'] || body['link']
     rescue JSON::ParserError
@@ -270,8 +268,6 @@ module Extraction
     def pre_extraction_link_document?(document)
       return false unless document
 
-      # Reference instance state to satisfy Reek
-      _ = @extraction_job
       body = JSON.parse(document.body)
       body['pre_extraction_link'] == true
     rescue JSON::ParserError
@@ -310,8 +306,6 @@ module Extraction
     end
 
     def calculate_folder_number(page = 1)
-      # Reference instance state to satisfy Reek
-      _ = @extraction_definition
       (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
     end
   end

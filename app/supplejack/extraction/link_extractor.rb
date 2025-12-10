@@ -7,6 +7,7 @@ require 'nokogiri'
 module Extraction
   # Service object for extracting links from documents
   # Handles JSON, XML, and HTML formats with configurable selectors
+  # rubocop:disable Metrics/ClassLength
   class LinkExtractor
     def initialize(document, extraction_definition)
       @document = document
@@ -32,14 +33,10 @@ module Extraction
       original_format = @extraction_definition.format
 
       case original_format
-      when 'JSON'
-        json_format? ? original_format : detect_from_content
-      when 'XML'
-        xml_start? ? original_format : detect_from_content
-      when 'HTML'
-        detect_html_format(original_format)
-      else
-        original_format
+      when 'JSON' then json_format? ? original_format : detect_from_content
+      when 'XML' then xml_start? ? original_format : detect_from_content
+      when 'HTML' then detect_html_format(original_format)
+      else original_format
       end
     end
 
@@ -174,4 +171,5 @@ module Extraction
       end
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

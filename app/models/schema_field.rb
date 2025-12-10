@@ -8,7 +8,7 @@ class SchemaField < ApplicationRecord
   enum :kind, { dynamic: 0, fixed: 1 }
 
   def referenced_pipelines
-    fields.map { |x| x.transformation_definition.pipeline }.uniq
+    fields.map { |field| field.transformation_definition.pipeline }.uniq
   end
 
   def to_h

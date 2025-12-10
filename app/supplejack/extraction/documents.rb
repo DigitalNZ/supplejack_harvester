@@ -33,7 +33,7 @@ module Extraction
     end
 
     def total_folders
-      Dir.children(@folder).count { |f| !f.ends_with?('tmp') }
+      Dir.children(@folder).count { |folder_name| !folder_name.ends_with?('tmp') }
     rescue Errno::ENOENT # folder does not exist
       0
     end

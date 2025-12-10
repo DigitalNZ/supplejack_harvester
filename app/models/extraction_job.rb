@@ -64,7 +64,7 @@ class ExtractionJob < ApplicationRecord
   #
   # @return Integer
   def extraction_folder_size_in_bytes
-    Dir.glob("#{extraction_folder}/**/*.*").sum { |f| File.size(f) }
+    Dir.glob("#{extraction_folder}/**/*.*").sum { |file| File.size(file) }
   end
 
   # Returns documents from the pre-extraction job if linked
