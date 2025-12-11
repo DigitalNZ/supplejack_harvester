@@ -122,7 +122,7 @@ class AutomationStep < ApplicationRecord
     previous_pre_extraction_step = automation.automation_steps
                                              .where('position < ?', position)
                                              .where(step_type: 'pre_extraction')
-                                             .order(position: :desc)
+                                             .reorder(position: :desc)
                                              .first
 
     previous_pre_extraction_step&.pre_extraction_job_id
