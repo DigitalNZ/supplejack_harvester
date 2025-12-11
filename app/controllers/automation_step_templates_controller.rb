@@ -113,6 +113,8 @@ class AutomationStepTemplatesController < ApplicationController
       :api_method,
       :api_body,
       :extraction_definition_id,
+      :extraction_selector,
+      :link_selector,
       harvest_definition_ids: []
     )
   end

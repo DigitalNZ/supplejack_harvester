@@ -104,31 +104,7 @@ class ExtractionDefinitionsController < ApplicationController
       :total_selector, :kind, :destination_id, :source_id, :enrichment_url, :paginated, :split, :split_selector,
       :extract_text_from_file, :fragment_source_id, :fragment_key, :evaluate_javascript, :fields,
       :include_sub_documents,
-      :pre_extraction, :pre_extraction_depth
+      :pre_extraction
     )
-
-    result = JSON.parse(permitted.to_json)
-
-    # Build link_selectors from form fields
-    result['link_selectors'] = build_link_selectors_from_params
-
-    result
-  end
-
-  # Convert link_selector_1, link_selector_2, etc. form params into link_selectors array
-  # Returns plain Ruby hashes
-  # :reek:FeatureEnvy - we need original_params
-  def build_link_selectors_from_params
-    original_params = params[:extraction_definition]
-    return [] if original_params.blank? || original_params[:pre_extraction] != 'true'
-
-    depth = original_params[:pre_extraction_depth].to_i
-    depth = 1 if depth < 1
-
-    (1..depth).filter_map do |level|
-      selector = original_params["link_selector_#{level}"]
-
-      { 'depth' => level, 'selector' => selector.to_s } if selector.present?
-    end
   end
 end

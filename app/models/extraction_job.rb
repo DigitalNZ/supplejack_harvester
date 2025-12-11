@@ -88,14 +88,28 @@ class ExtractionJob < ApplicationRecord
     harvest_job.blank?
   end
 
-  # Serialize extracted_links_by_depth as hash {depth => [links]}
-  serialize :extracted_links_by_depth, type: Hash
+  # Returns all extracted link URLs from this pre-extraction job
+  # Reads through all saved documents and extracts URLs from pre_extraction_link documents
+  #
+  # @return Array<String> list of URLs
+  def extracted_links
+    return [] unless pre_extraction?
 
-  # Update extracted links for a specific depth
-  def update_extracted_links_for_depth(depth, links)
-    current_links = extracted_links_by_depth || {}
-    current_links[depth.to_s] = links
-    self.extracted_links_by_depth = current_links
-    save
+    links = []
+    docs = documents
+
+    (1..docs.total_pages).each do |page_number|
+      doc = docs[page_number]
+      next unless doc
+
+      begin
+        body = JSON.parse(doc.body)
+        links << body['url'] if body['pre_extraction_link'] == true && body['url'].present?
+      rescue JSON::ParserError
+        next
+      end
+    end
+
+    links
   end
 end

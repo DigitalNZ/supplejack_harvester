@@ -76,6 +76,20 @@
         Select an extraction definition with pre-extraction enabled. This step will extract links from the response (sitemap, list page, etc.) and save them for the next step.
       </small>
     </div>
+
+    <div class="mb-3">
+      <%= form.label :link_selector, class: 'form-label' do %>
+        Link Selector
+        <span data-bs-toggle="tooltip"
+              data-bs-title="JSONPath or XPath selector to extract links">
+          <i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
+      <%= form.text_field :link_selector, class: 'form-control', placeholder: 'Enter a link selector' %>
+      <small class="form-text text-muted">
+        JSONPath or XPath selector to extract links from the pre-extraction response.
+      </small>
+    </div>
   </div>
 
   <div class="d-flex justify-content-between">

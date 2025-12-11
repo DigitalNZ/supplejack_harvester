@@ -232,44 +232,5 @@ RSpec.describe ExtractionJob do
         expect(job.pre_extraction?).to eq job.harvest_job.blank?
       end
     end
-
-    describe '#extracted_links_by_depth' do
-      it 'defaults to empty' do
-        job = create(:extraction_job)
-        expect(job.extracted_links_by_depth).to be_nil.or eq({})
-      end
-
-      it 'can store links by depth' do
-        job = create(:extraction_job)
-        job.extracted_links_by_depth = { '1' => ['http://example.com/1', 'http://example.com/2'] }
-        job.save
-
-        job.reload
-        expect(job.extracted_links_by_depth['1']).to eq ['http://example.com/1', 'http://example.com/2']
-      end
-    end
-
-    describe '#update_extracted_links_for_depth' do
-      it 'updates extracted links for a specific depth' do
-        job = create(:extraction_job)
-        links = ['http://example.com/a', 'http://example.com/b']
-
-        job.update_extracted_links_for_depth(1, links)
-
-        job.reload
-        expect(job.extracted_links_by_depth['1']).to eq links
-      end
-
-      it 'can store links for multiple depths' do
-        job = create(:extraction_job)
-
-        job.update_extracted_links_for_depth(1, ['http://level1.com'])
-        job.update_extracted_links_for_depth(2, ['http://level2.com'])
-
-        job.reload
-        expect(job.extracted_links_by_depth['1']).to eq ['http://level1.com']
-        expect(job.extracted_links_by_depth['2']).to eq ['http://level2.com']
-      end
-    end
   end
 end

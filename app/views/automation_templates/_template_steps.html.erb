@@ -85,44 +85,38 @@
                 <%= step.extraction_definition.name %>
               </small>
             </div>
-            <% if last_run_step && last_run_step.pre_extraction_job && last_run_step.pre_extraction_job.extracted_links_by_depth.present? %>
+            <% if last_run_step&.pre_extraction_job %>
+              <% links = last_run_step.pre_extraction_job.extracted_links %>
               <div class="mt-2">
-                <small class='text-muted d-block mb-1'>Extracted Links by Level:</small>
-                <% last_run_step.pre_extraction_job.extracted_links_by_depth.sort_by { |k, _| k.to_i }.each do |depth, links| %>
-                  <div class="mb-2">
-                    <small class="fw-bold">Level <%= depth %>:</small>
-                    <div class="ms-3">
-                      <% if links.present? && links.is_a?(Array) %>
-                        <small class="text-muted">
-                          <%= pluralize(links.count, 'link') %> extracted
-                        </small>
-                        <details class="mt-1">
-                          <summary class="text-primary" style="cursor: pointer; font-size: 0.85em;">
-                            View links (<%= links.count %>)
-                          </summary>
-                          <ul class="list-unstyled ms-2 mt-1" style="max-height: 200px; overflow-y: auto;">
-                            <% links.first(50).each do |link| %>
-                              <li class="mb-1">
-                                <small class="text-break" style="word-break: break-all;">
-                                  <%= link_to link, link,
-                                              target: '_blank',
-                                              rel: 'noopener',
-                                              class: 'text-decoration-none' %>
-                                </small>
-                              </li>
-                            <% end %>
-                            <% if links.count > 50 %>
-                              <li class="text-muted">
-                                <small>... and <%= links.count - 50 %> more</small>
-                              </li>
-                            <% end %>
-                          </ul>
-                        </details>
-                      <% else %>
-                        <small class="text-muted">No links extracted</small>
+                <small class='text-muted d-block mb-1'>Extracted Links:</small>
+                <% if links.present? %>
+                  <small class="text-muted">
+                    <%= pluralize(links.count, 'link') %> extracted
+                  </small>
+                  <details class="mt-1">
+                    <summary class="text-primary" style="cursor: pointer; font-size: 0.85em;">
+                      View links (<%= links.count %>)
+                    </summary>
+                    <ul class="list-unstyled ms-2 mt-1" style="max-height: 200px; overflow-y: auto;">
+                      <% links.first(50).each do |link| %>
+                        <li class="mb-1">
+                          <small class="text-break" style="word-break: break-all;">
+                            <%= link_to link, link,
+                                        target: '_blank',
+                                        rel: 'noopener',
+                                        class: 'text-decoration-none' %>
+                          </small>
+                        </li>
                       <% end %>
-                    </div>
-                  </div>
+                      <% if links.count > 50 %>
+                        <li class="text-muted">
+                          <small>... and <%= links.count - 50 %> more</small>
+                        </li>
+                      <% end %>
+                    </ul>
+                  </details>
+                <% else %>
+                  <small class="text-muted">No links extracted</small>
                 <% end %>
               </div>
             <% end %>

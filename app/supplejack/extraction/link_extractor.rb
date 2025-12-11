@@ -7,19 +7,18 @@ require 'nokogiri'
 module Extraction
   # Extracts links from documents using configurable selectors
   class LinkExtractor
-    def initialize(document, extraction_definition)
+    def initialize(document, selector)
       @body = document.body
-      @extraction_definition = extraction_definition
+      @selector = selector
     end
 
-    def extract(depth = 1)
-      selector = @extraction_definition.link_selector_for_depth(depth)
-      return [] if selector.blank?
+    def extract
+      return [] if @selector.blank?
 
-      if selector.start_with?('$')
-        extract_json_links(selector)
+      if @selector.start_with?('$')
+        extract_json_links(@selector)
       else
-        extract_document_links(selector)
+        extract_document_links(@selector)
       end
     end
 

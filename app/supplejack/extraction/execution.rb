@@ -244,8 +244,20 @@ module Extraction
       @extraction_definition.split? || @extraction_definition.extract_text_from_file?
     end
 
-    def extract_links_from_document(document, depth = 1)
-      LinkExtractor.new(document, @extraction_definition).extract(depth)
+    def extract_links_from_document(document)
+      selector = find_link_selector
+      LinkExtractor.new(document, selector).extract
+    end
+
+    def find_link_selector
+      # Find the automation step that created this extraction job
+      automation_step = find_automation_step_for_job
+      automation_step&.link_selector
+    end
+
+    def find_automation_step_for_job
+      # For pre-extraction jobs, find the automation step that references this job
+      AutomationStep.find_by(pre_extraction_job_id: @extraction_job.id)
     end
 
     def normalize_url(url)

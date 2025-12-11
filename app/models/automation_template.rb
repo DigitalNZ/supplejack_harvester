@@ -77,8 +77,13 @@ class AutomationTemplate < ApplicationRecord
       launched_by: user
     )
 
-    # Set API call specific attributes if this is an API call step
-    set_api_call_attributes(automation_step, step_template) if step_template.step_type == 'api_call'
+    # Set step type specific attributes
+    case step_template.step_type
+    when 'api_call'
+      set_api_call_attributes(automation_step, step_template)
+    when 'pre_extraction'
+      set_pre_extraction_attributes(automation_step, step_template)
+    end
 
     automation_step
   end
@@ -88,6 +93,10 @@ class AutomationTemplate < ApplicationRecord
     automation_step.api_method = step_template.api_method
     automation_step.api_headers = step_template.api_headers
     automation_step.api_body = step_template.api_body
+  end
+
+  def set_pre_extraction_attributes(automation_step, step_template)
+    automation_step.link_selector = step_template.link_selector
   end
 
   def automation_running?
