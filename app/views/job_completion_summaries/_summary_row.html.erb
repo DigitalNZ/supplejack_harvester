@@ -6,11 +6,6 @@
     <strong><%= job_completion_summary.process_type.humanize %></strong>
   </td>
   <td>
-    <span class="badge bg-warning text-dark">
-      <%= job_completion_summary.completion_count %>
-    </span>
-  </td>
-  <td>
     <% if job_completion_summary.job_completions.any? && job_completion_summary.job_errors.any? %>
       <span class="badge bg-primary me-1">Completions</span>
       <span class="badge bg-danger">Errors</span>
