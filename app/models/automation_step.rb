@@ -120,10 +120,10 @@ class AutomationStep < ApplicationRecord
 
   def find_previous_independent_extraction_job_id
     previous_independent_extraction_step = automation.automation_steps
-                                             .where('position < ?', position)
-                                             .where(step_type: 'independent_extraction')
-                                             .reorder(position: :desc)
-                                             .first
+                                                     .where('position < ?', position)
+                                                     .where(step_type: 'independent_extraction')
+                                                     .reorder(position: :desc)
+                                                     .first
 
     previous_independent_extraction_step&.independent_extraction_job_id
   end

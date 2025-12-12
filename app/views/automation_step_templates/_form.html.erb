@@ -14,8 +14,13 @@
 
   <div class="mb-3">
     <%= form.label :step_type, 'Step Type', class: 'form-label' %>
+    <% step_type_options = [
+      ['Pipeline', 'pipeline'],
+      ['API Call', 'api_call'],
+      ['Independent-Extraction', 'independent_extraction']
+    ] %>
     <%= form.select :step_type,
-                    [['Pipeline', 'pipeline'], ['API Call', 'api_call'], ['Independent-Extraction', 'independent_extraction']],
+                    step_type_options,
                     { include_blank: 'Select a step type' },
                     { class: 'form-select', required: true, data: { controller: 'step-type-select' } } %>
   </div>
@@ -65,15 +70,21 @@
     <%= render 'api_call_form', form: form, automation_step_template: automation_step_template %>
   </div>
 
-  <div id="independent-extraction-fields" class="<%= automation_step_template.step_type.to_s == 'independent_extraction' ? '' : 'd-none' %>">
+  <% is_independent = automation_step_template.step_type.to_s == 'independent_extraction' %>
+  <div id="independent-extraction-fields" class="<%= is_independent ? '' : 'd-none' %>">
     <div class="mb-3">
       <%= form.label :extraction_definition_id, 'Independent-Extraction Definition', class: 'form-label' %>
+      <% extraction_options = ExtractionDefinition.where(independent_extraction: true)
+                                                  .order(:name)
+                                                  .map { |ed| [ed.name, ed.id] } %>
       <%= form.select :extraction_definition_id,
-                      ExtractionDefinition.where(independent_extraction: true).order(:name).map { |ed| [ed.name, ed.id] },
+                      extraction_options,
                       { include_blank: 'Select an independent-extraction definition' },
-                      { class: 'form-select', required: automation_step_template.step_type.to_s == 'independent_extraction' } %>
+                      { class: 'form-select', required: is_independent } %>
       <small class="form-text text-muted">
-        Select an extraction definition with independent-extraction enabled. This step will extract links from the response (sitemap, list page, etc.) and save them for the next step.
+        Select an extraction definition with independent-extraction enabled.
+        This step will extract links from the response (sitemap, list page, etc.)
+        and save them for the next step.
       </small>
     </div>
 

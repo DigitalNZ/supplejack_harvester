@@ -91,7 +91,6 @@ class Automation < ApplicationRecord
       collect_api_call_status(step)
     when 'independent_extraction'
       step.independent_extraction_job&.status
-    # Return nil if no job exists yet, not 'queued'
     else
       collect_pipeline_status(step)
     end

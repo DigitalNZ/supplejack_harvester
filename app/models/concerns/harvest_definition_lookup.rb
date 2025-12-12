@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# Shared behavior for models that need to look up harvest definitions
-# based on pipeline and harvest_definition_ids
 module HarvestDefinitionLookup
   extend ActiveSupport::Concern
 

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 module Extraction
-  # Helper methods for independent-extraction processing
   module IndependentExtractionHelpers
     def perform_independent_extraction
       extract(@extraction_definition.requests.first)
@@ -18,10 +17,8 @@ module Extraction
       documents = independent_extraction_job.documents
 
       if @extraction_job.independent_extraction?
-        # Independent-extraction step: extract links from each fetched page
         perform_link_extraction_from_documents(documents)
       else
-        # Pipeline step: save content from each fetched page for transformation
         perform_content_extraction_from_documents(documents)
       end
     end
@@ -35,17 +32,19 @@ module Extraction
     end
 
     def collect_links_from_documents(documents)
-      [].tap do |links|
-        (1..documents.total_pages).each do |page_number|
-          break if execution_cancelled?
+      links = []
+      (1..documents.total_pages).each do |page_number|
+        break if execution_cancelled?
 
-          extracted = extract_links_from_page(documents[page_number])
-          links.concat(extracted) if extracted
-        end
+        extracted = extract_links_from_json(documents[page_number])
+        links.concat(extracted) if extracted
       end
+      links
     end
 
-    def extract_links_from_page(doc)
+    # this is used when one independent extraction is passed a "link" document
+    # instead of an HTML/XML document
+    def extract_links_from_json(doc)
       return nil unless independent_extraction_link_document?(doc)
 
       url = extract_url_from_independent_extraction_document(doc)
@@ -119,6 +118,93 @@ module Extraction
     def update_harvest_report_timestamp
       @harvest_report&.update(extraction_updated_time: Time.zone.now)
     end
+
+    # --- Link extraction helpers ---
+
+    def extract_links_from_document(document)
+      selector = find_link_selector
+      LinkExtractor.new(document, selector).extract
+    end
+
+    def find_link_selector
+      automation_step = find_automation_step_for_job
+      automation_step&.link_selector
+    end
+
+    def find_automation_step_for_job
+      AutomationStep.find_by(independent_extraction_job_id: @extraction_job.id)
+    end
+
+    # --- Document type detection ---
+
+    def independent_extraction_link_document?(document)
+      return false unless document
+
+      body = JSON.parse(document.body)
+      body.is_a?(Hash) && body.key?('url') && body.keys.size == 1
+    rescue JSON::ParserError
+      false
+    end
+
+    def extract_url_from_independent_extraction_document(document)
+      body = JSON.parse(document.body)
+      body['url'] || body['href'] || body['link']
+    rescue JSON::ParserError
+      nil
+    end
+
+    # --- Request building ---
+
+    def build_request_for_url(url)
+      base_request = @extraction_definition.requests.first
+
+      # Create a simple wrapper that mimics Request interface
+      # but returns the specific URL from independent-extraction
+      Struct.new(:base_request, :override_url) do
+        def url(_response = nil) = override_url
+        def query_parameters(response = nil) = base_request.query_parameters(response)
+        def headers(response = nil) = base_request.headers(response)
+        def extraction_definition = base_request.extraction_definition
+        def http_method = base_request.http_method
+      end.new(base_request, url)
+    end
+
+    # --- Document saving ---
+
+    def save_link_as_document(link_url, page_number, folder = nil)
+      full_url = normalize_url(link_url)
+
+      link_document = Extraction::Document.new(
+        url: full_url,
+        method: 'GET',
+        params: {},
+        request_headers: {},
+        status: 200,
+        response_headers: {},
+        body: { url: full_url }.to_json
+      )
+
+      link_document.save(file_path_for_page(page_number, folder))
+    end
+
+    def normalize_url(url)
+      return url if url.start_with?('http://', 'https://')
+
+      base_uri = URI.parse(@extraction_definition.base_url)
+      URI.join(base_uri, url).to_s
+    rescue URI::InvalidURIError
+      url
+    end
+
+    def file_path_for_page(page_number, folder = nil)
+      page_str = format('%09d', page_number)[-9..]
+      name_str = @extraction_definition.name.parameterize(separator: '_')
+      target_folder = folder || @extraction_job.extraction_folder
+      "#{target_folder}/#{calculate_folder_number(page_number)}/#{name_str}__-__#{page_str}.json"
+    end
+
+    def calculate_folder_number(page = 1)
+      (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
+    end
   end
 end
-
