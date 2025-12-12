@@ -54,19 +54,19 @@ RSpec.describe AutomationTemplate do
         expect(automation.automation_steps.count).to eq(2)
       end
 
-      it 'creates automation steps from pre-extraction templates' do
+      it 'creates automation steps from independent-extraction templates' do
         template = build(:automation_template)
-        template.name = "Pre-extraction Template #{SecureRandom.hex(8)}"
+        template.name = "Independent-extraction Template #{SecureRandom.hex(8)}"
         template.save!
         
-        extraction_definition = create(:extraction_definition, pre_extraction: true)
-        create(:automation_step_template, :pre_extraction, automation_template: template, position: 0, extraction_definition:)
+        extraction_definition = create(:extraction_definition, independent_extraction: true)
+        create(:automation_step_template, :independent_extraction, automation_template: template, position: 0, extraction_definition:)
         create(:automation_step_template, automation_template: template, position: 1, pipeline: pipeline)
 
         automation, _, _ = template.run_automation(user)
 
         expect(automation.automation_steps.count).to eq(2)
-        expect(automation.automation_steps.first.step_type).to eq('pre_extraction')
+        expect(automation.automation_steps.first.step_type).to eq('independent_extraction')
         expect(automation.automation_steps.first.extraction_definition).to eq(extraction_definition)
       end
 

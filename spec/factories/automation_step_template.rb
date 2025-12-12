@@ -22,8 +22,8 @@ FactoryBot.define do
       api_body { '{"test": "data"}' }
     end
 
-    trait :pre_extraction do
-      step_type { 'pre_extraction' }
+    trait :independent_extraction do
+      step_type { 'independent_extraction' }
       pipeline { nil }
       link_selector { '//a/@href' }
       association :extraction_definition

@@ -23,9 +23,9 @@ RSpec.describe AutomationStepTemplate do
     it { is_expected.to validate_presence_of(:api_method) }
   end
 
-  context 'when step_type is pre_extraction' do
-    let(:extraction_definition) { create(:extraction_definition, pre_extraction: true) }
-    subject { build(:automation_step_template, step_type: 'pre_extraction', extraction_definition:, pipeline: nil) }
+  context 'when step_type is independent_extraction' do
+    let(:extraction_definition) { create(:extraction_definition, independent_extraction: true) }
+    subject { build(:automation_step_template, step_type: 'independent_extraction', extraction_definition:, pipeline: nil) }
     
     it { is_expected.to validate_presence_of(:extraction_definition_id) }
   end
@@ -76,10 +76,10 @@ RSpec.describe AutomationStepTemplate do
       expect(template.display_name).to eq("#{template.position + 1}. API Call: GET https://example.com/api")
     end
 
-    it 'returns a formatted name with extraction definition name for pre_extraction step' do
-      extraction_definition = create(:extraction_definition, pre_extraction: true)
-      template = create(:automation_step_template, :pre_extraction, extraction_definition:)
-      expect(template.display_name).to include('Pre-Extraction')
+    it 'returns a formatted name with extraction definition name for independent_extraction step' do
+      extraction_definition = create(:extraction_definition, independent_extraction: true)
+      template = create(:automation_step_template, :independent_extraction, extraction_definition:)
+      expect(template.display_name).to include('Independent-Extraction')
       expect(template.display_name).to include(extraction_definition.name)
     end
   end

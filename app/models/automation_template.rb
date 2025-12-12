@@ -84,7 +84,7 @@ class AutomationTemplate < ApplicationRecord
   def apply_step_type_attributes(automation_step, step_template)
     case step_template.step_type
     when 'api_call' then set_api_call_attributes(automation_step, step_template)
-    when 'pre_extraction' then set_pre_extraction_attributes(automation_step, step_template)
+    when 'independent_extraction' then set_independent_extraction_attributes(automation_step, step_template)
     end
   end
 
@@ -95,7 +95,7 @@ class AutomationTemplate < ApplicationRecord
     automation_step.api_body = step_template.api_body
   end
 
-  def set_pre_extraction_attributes(automation_step, step_template)
+  def set_independent_extraction_attributes(automation_step, step_template)
     automation_step.link_selector = step_template.link_selector
   end
 

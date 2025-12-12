@@ -15,12 +15,12 @@
   <div class="mb-3">
     <%= form.label :step_type, 'Step Type', class: 'form-label' %>
     <%= form.select :step_type,
-                    [['Pipeline', 'pipeline'], ['API Call', 'api_call'], ['Pre-Extraction', 'pre_extraction']],
+                    [['Pipeline', 'pipeline'], ['API Call', 'api_call'], ['Independent-Extraction', 'independent_extraction']],
                     { include_blank: 'Select a step type' },
                     { class: 'form-select', required: true, data: { controller: 'step-type-select' } } %>
   </div>
 
-  <% hidden_step_types = %w[api_call pre_extraction] %>
+  <% hidden_step_types = %w[api_call independent_extraction] %>
   <% step_type = automation_step_template.step_type.to_s %>
   <div id="pipeline-fields" class="<%= hidden_step_types.include?(step_type) ? 'd-none' : '' %>">
     <div class="mb-3">
@@ -65,15 +65,15 @@
     <%= render 'api_call_form', form: form, automation_step_template: automation_step_template %>
   </div>
 
-  <div id="pre-extraction-fields" class="<%= automation_step_template.step_type.to_s == 'pre_extraction' ? '' : 'd-none' %>">
+  <div id="independent-extraction-fields" class="<%= automation_step_template.step_type.to_s == 'independent_extraction' ? '' : 'd-none' %>">
     <div class="mb-3">
-      <%= form.label :extraction_definition_id, 'Pre-Extraction Definition', class: 'form-label' %>
+      <%= form.label :extraction_definition_id, 'Independent-Extraction Definition', class: 'form-label' %>
       <%= form.select :extraction_definition_id,
-                      ExtractionDefinition.where(pre_extraction: true).order(:name).map { |ed| [ed.name, ed.id] },
-                      { include_blank: 'Select a pre-extraction definition' },
-                      { class: 'form-select', required: automation_step_template.step_type.to_s == 'pre_extraction' } %>
+                      ExtractionDefinition.where(independent_extraction: true).order(:name).map { |ed| [ed.name, ed.id] },
+                      { include_blank: 'Select an independent-extraction definition' },
+                      { class: 'form-select', required: automation_step_template.step_type.to_s == 'independent_extraction' } %>
       <small class="form-text text-muted">
-        Select an extraction definition with pre-extraction enabled. This step will extract links from the response (sitemap, list page, etc.) and save them for the next step.
+        Select an extraction definition with independent-extraction enabled. This step will extract links from the response (sitemap, list page, etc.) and save them for the next step.
       </small>
     </div>
 
@@ -87,7 +87,7 @@
       <% end %>
       <%= form.text_field :link_selector, class: 'form-control', placeholder: 'Enter a link selector' %>
       <small class="form-text text-muted">
-        JSONPath or XPath selector to extract links from the pre-extraction response.
+        JSONPath or XPath selector to extract links from the independent-extraction response.
       </small>
     </div>
   </div>

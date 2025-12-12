@@ -78,15 +78,15 @@
                 </span>
               </small>
             </div>
-          <% elsif step.step_type == 'pre_extraction' %>
-            <small class='text-muted d-block mt-2'>Pre-Extraction Definition:</small>
+          <% elsif step.step_type == 'independent_extraction' %>
+            <small class='text-muted d-block mt-2'>Independent-Extraction Definition:</small>
             <div class="d-flex align-items-center justify-content-between mb-1">
               <small class="text-break">
                 <%= step.extraction_definition.name %>
               </small>
             </div>
-            <% if last_run_step&.pre_extraction_job %>
-              <% links = last_run_step.pre_extraction_job.extracted_links %>
+            <% if last_run_step&.independent_extraction_job %>
+              <% links = last_run_step.independent_extraction_job.extracted_links %>
               <div class="mt-2">
                 <small class='text-muted d-block mb-1'>Extracted Links:</small>
                 <% if links.present? %>

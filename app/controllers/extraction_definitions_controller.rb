@@ -104,7 +104,7 @@ class ExtractionDefinitionsController < ApplicationController
       :total_selector, :kind, :destination_id, :source_id, :enrichment_url, :paginated, :split, :split_selector,
       :extract_text_from_file, :fragment_source_id, :fragment_key, :evaluate_javascript, :fields,
       :include_sub_documents,
-      :pre_extraction
+      :independent_extraction
     )
   end
 end

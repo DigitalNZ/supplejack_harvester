@@ -89,8 +89,8 @@ class Automation < ApplicationRecord
     case step.step_type
     when 'api_call'
       collect_api_call_status(step)
-    when 'pre_extraction'
-      step.pre_extraction_job&.status
+    when 'independent_extraction'
+      step.independent_extraction_job&.status
     # Return nil if no job exists yet, not 'queued'
     else
       collect_pipeline_status(step)

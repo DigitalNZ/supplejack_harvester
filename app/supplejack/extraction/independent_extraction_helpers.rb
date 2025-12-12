@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module Extraction
-  # Helper methods for pre-extraction processing
-  module PreExtractionHelpers
-    def perform_pre_extraction
+  # Helper methods for independent-extraction processing
+  module IndependentExtractionHelpers
+    def perform_independent_extraction
       extract(@extraction_definition.requests.first)
       return if @de&.document.blank?
 
@@ -13,12 +13,12 @@ module Extraction
       update_harvest_report_timestamp
     end
 
-    def perform_extraction_from_pre_extraction
-      pre_extraction_job = ExtractionJob.find(@extraction_job.pre_extraction_job_id)
-      documents = pre_extraction_job.documents
+    def perform_extraction_from_independent_extraction
+      independent_extraction_job = ExtractionJob.find(@extraction_job.independent_extraction_job_id)
+      documents = independent_extraction_job.documents
 
-      if @extraction_job.pre_extraction?
-        # Pre-extraction step: extract links from each fetched page
+      if @extraction_job.independent_extraction?
+        # Independent-extraction step: extract links from each fetched page
         perform_link_extraction_from_documents(documents)
       else
         # Pipeline step: save content from each fetched page for transformation
@@ -46,9 +46,9 @@ module Extraction
     end
 
     def extract_links_from_page(doc)
-      return nil unless pre_extraction_link_document?(doc)
+      return nil unless independent_extraction_link_document?(doc)
 
-      url = extract_url_from_pre_extraction_document(doc)
+      url = extract_url_from_independent_extraction_document(doc)
       return nil if url.blank?
 
       document = fetch_document_for_page(url)
@@ -82,9 +82,9 @@ module Extraction
     end
 
     def should_process_document?(doc)
-      return false unless pre_extraction_link_document?(doc)
+      return false unless independent_extraction_link_document?(doc)
 
-      url = extract_url_from_pre_extraction_document(doc)
+      url = extract_url_from_independent_extraction_document(doc)
       return false if url.blank?
 
       document = fetch_document_for_page(url)
@@ -121,3 +121,4 @@ module Extraction
     end
   end
 end
+

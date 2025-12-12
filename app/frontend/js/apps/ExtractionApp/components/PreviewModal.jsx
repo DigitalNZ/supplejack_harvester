@@ -19,10 +19,10 @@ const PreviewModal = ({
   const initialRequestClasses = classNames({
     "col-6":
       appDetails.extractionDefinition.paginated &&
-      !appDetails.extractionDefinition.pre_extraction,
+      !appDetails.extractionDefinition.independent_extraction,
     "col-12":
       !appDetails.extractionDefinition.paginated ||
-      appDetails.extractionDefinition.pre_extraction,
+      appDetails.extractionDefinition.independent_extraction,
   });
 
   return createPortal(
@@ -58,7 +58,7 @@ const PreviewModal = ({
           </div>
 
           {appDetails.extractionDefinition.paginated &&
-            !appDetails.extractionDefinition.pre_extraction && (
+            !appDetails.extractionDefinition.independent_extraction && (
               <div className="col-6">
                 <h5>Following Requests</h5>
 

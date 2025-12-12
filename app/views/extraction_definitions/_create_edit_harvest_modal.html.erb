@@ -186,8 +186,8 @@
             </div>
 
             <div class="col-4">
-              <%= form.label :pre_extraction, class: 'form-label' do %>
-                Pre-Extraction
+              <%= form.label :independent_extraction, class: 'form-label' do %>
+                Independent-Extraction
 
                 <span
                     data-bs-toggle="tooltip"
@@ -197,9 +197,9 @@
             </div>
 
             <div class="col-8">
-              <%= form.select :pre_extraction, options_for_select(
-                    [%w[No false], %w[Yes true]], model.pre_extraction
-                  ), {}, class: 'form-select', id: 'js-pre-extraction-toggle' %>
+              <%= form.select :independent_extraction, options_for_select(
+                    [%w[No false], %w[Yes true]], model.independent_extraction
+                  ), {}, class: 'form-select', id: 'js-independent-extraction-toggle' %>
             </div>
           </div>
 

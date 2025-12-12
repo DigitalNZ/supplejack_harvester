@@ -9,14 +9,14 @@ class AutomationStep < ApplicationRecord
   belongs_to :pipeline, optional: true
   belongs_to :launched_by, class_name: 'User', optional: true
   belongs_to :extraction_definition, optional: true
-  belongs_to :pre_extraction_job, class_name: 'ExtractionJob', optional: true
+  belongs_to :independent_extraction_job, class_name: 'ExtractionJob', optional: true
   has_one :pipeline_job, dependent: :destroy
   has_one :api_response_report, class_name: 'ApiResponseReport', dependent: :destroy
 
   validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :pipeline_id, presence: true, if: -> { step_type == 'pipeline' }
   validates :api_url, :api_method, presence: true, if: -> { step_type == 'api_call' }
-  validates :extraction_definition_id, presence: true, if: -> { step_type == 'pre_extraction' }
+  validates :extraction_definition_id, presence: true, if: -> { step_type == 'independent_extraction' }
   validate :validate_step_type_requirements
 
   serialize :harvest_definition_ids, type: Array
@@ -30,8 +30,8 @@ class AutomationStep < ApplicationRecord
     case step_type
     when 'api_call'
       "#{display_position}. API Call: #{api_method} #{api_url}"
-    when 'pre_extraction'
-      "#{display_position}. Pre-Extraction: #{extraction_definition&.name || 'Unknown'}"
+    when 'independent_extraction'
+      "#{display_position}. Independent-Extraction: #{extraction_definition&.name || 'Unknown'}"
     else
       "#{display_position}. #{pipeline&.name || 'Unknown Pipeline'}"
     end
@@ -43,8 +43,8 @@ class AutomationStep < ApplicationRecord
     case step_type
     when 'api_call'
       api_call_status
-    when 'pre_extraction'
-      pre_extraction_status
+    when 'independent_extraction'
+      independent_extraction_status
     else
       pipeline_status
     end
@@ -56,10 +56,10 @@ class AutomationStep < ApplicationRecord
     api_response_report.status
   end
 
-  def pre_extraction_status
-    return 'not_started' unless pre_extraction_job
+  def independent_extraction_status
+    return 'not_started' unless independent_extraction_job
 
-    pre_extraction_job.status
+    independent_extraction_job.status
   end
 
   def pipeline_status
@@ -98,34 +98,34 @@ class AutomationStep < ApplicationRecord
     ApiCallWorker.perform_in_with_priority(automation.job_priority, 5.seconds, id)
   end
 
-  # Execute pre-extraction by creating and queuing extraction job
-  def execute_pre_extraction
-    return if pre_extraction_job.present?
+  # Execute independent-extraction by creating and queuing extraction job
+  def execute_independent_extraction
+    return if independent_extraction_job.present?
 
-    extraction_job = create_pre_extraction_job
+    extraction_job = create_independent_extraction_job
     extraction_job.update(status: 'queued') if extraction_job.status.blank?
 
-    update(pre_extraction_job_id: extraction_job.id)
+    update(independent_extraction_job_id: extraction_job.id)
     ExtractionWorker.perform_async_with_priority(automation.job_priority, extraction_job.id)
   end
 
-  def create_pre_extraction_job
+  def create_independent_extraction_job
     ExtractionJob.create(
       extraction_definition: extraction_definition,
       kind: 'full',
-      pre_extraction_job_id: find_previous_pre_extraction_job_id,
-      is_pre_extraction: true
+      independent_extraction_job_id: find_previous_independent_extraction_job_id,
+      is_independent_extraction: true
     )
   end
 
-  def find_previous_pre_extraction_job_id
-    previous_pre_extraction_step = automation.automation_steps
+  def find_previous_independent_extraction_job_id
+    previous_independent_extraction_step = automation.automation_steps
                                              .where('position < ?', position)
-                                             .where(step_type: 'pre_extraction')
+                                             .where(step_type: 'independent_extraction')
                                              .reorder(position: :desc)
                                              .first
 
-    previous_pre_extraction_step&.pre_extraction_job_id
+    previous_independent_extraction_step&.independent_extraction_job_id
   end
 
   private
@@ -136,8 +136,8 @@ class AutomationStep < ApplicationRecord
       validate_pipeline_requirements
     when 'api_call'
       validate_api_call_requirements
-    when 'pre_extraction'
-      validate_pre_extraction_requirements
+    when 'independent_extraction'
+      validate_independent_extraction_requirements
     end
   end
 
@@ -151,7 +151,7 @@ class AutomationStep < ApplicationRecord
     errors.add(:pipeline_id, 'must be blank for API calls') if pipeline_id.present?
   end
 
-  def validate_pre_extraction_requirements
+  def validate_independent_extraction_requirements
     errors.add(:extraction_definition_id, "can't be blank") if extraction_definition_id.blank?
   end
 
@@ -159,8 +159,8 @@ class AutomationStep < ApplicationRecord
     case step_type
     when 'api_call'
       api_response_report.blank?
-    when 'pre_extraction'
-      pre_extraction_job.blank?
+    when 'independent_extraction'
+      independent_extraction_job.blank?
     else
       pipeline_job&.harvest_reports&.blank?
     end

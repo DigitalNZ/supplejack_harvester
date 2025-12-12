@@ -17,14 +17,14 @@ class HarvestWorker < ApplicationWorker
   end
 
   def create_extraction_job
-    # Check if previous step was a pre-extraction step
-    previous_pre_extraction_job_id = find_previous_pre_extraction_job_id
+    # Check if previous step was an independent-extraction step
+    previous_independent_extraction_job_id = find_previous_independent_extraction_job_id
 
     extraction_job = ExtractionJob.create(
       extraction_definition: @harvest_job.extraction_definition,
       harvest_job: @harvest_job,
-      pre_extraction_job_id: previous_pre_extraction_job_id,
-      is_pre_extraction: false
+      independent_extraction_job_id: previous_independent_extraction_job_id,
+      is_independent_extraction: false
     )
 
     ExtractionWorker.perform_async_with_priority(@pipeline_job.job_priority, extraction_job.id, @harvest_report.id)
@@ -62,7 +62,7 @@ class HarvestWorker < ApplicationWorker
     @pipeline_job.set_number? && page == @pipeline_job.pages
   end
 
-  def find_previous_pre_extraction_job_id
-    @harvest_job.pipeline_job.automation_step&.find_previous_pre_extraction_job_id
+  def find_previous_independent_extraction_job_id
+    @harvest_job.pipeline_job.automation_step&.find_previous_independent_extraction_job_id
   end
 end

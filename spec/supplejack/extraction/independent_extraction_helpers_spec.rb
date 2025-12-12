@@ -2,15 +2,15 @@
 
 require 'rails_helper'
 
-RSpec.describe Extraction::PreExtractionHelpers do
+RSpec.describe Extraction::IndependentExtractionHelpers do
   let(:pipeline) { create(:pipeline) }
-  let(:extraction_definition) { create(:extraction_definition, pipeline:, base_url: 'https://example.com', pre_extraction: true) }
+  let(:extraction_definition) { create(:extraction_definition, pipeline:, base_url: 'https://example.com', independent_extraction: true) }
   let(:request) { create(:request, extraction_definition:) }
 
   # Create a test class that includes the module and the parent module methods
   let(:test_class) do
     Class.new do
-      include Extraction::PreExtractionHelpers
+      include Extraction::IndependentExtractionHelpers
 
       attr_accessor :extraction_job, :extraction_definition, :harvest_job, :harvest_report, :de, :previous_request
 
@@ -43,7 +43,7 @@ RSpec.describe Extraction::PreExtractionHelpers do
         false
       end
 
-      def pre_extraction_link_document?(doc)
+      def independent_extraction_link_document?(doc)
         return false unless doc
 
         body = JSON.parse(doc.body)
@@ -52,7 +52,7 @@ RSpec.describe Extraction::PreExtractionHelpers do
         false
       end
 
-      def extract_url_from_pre_extraction_document(document)
+      def extract_url_from_independent_extraction_document(document)
         body = JSON.parse(document.body)
         body['url']
       rescue JSON::ParserError
@@ -73,8 +73,8 @@ RSpec.describe Extraction::PreExtractionHelpers do
     end
   end
 
-  describe '#perform_pre_extraction' do
-    let(:extraction_job) { create(:extraction_job, extraction_definition:, is_pre_extraction: true) }
+  describe '#perform_independent_extraction' do
+    let(:extraction_job) { create(:extraction_job, extraction_definition:, is_independent_extraction: true) }
     let(:subject) { test_class.new(extraction_job, extraction_definition) }
 
     it 'extracts links from the document and saves them' do
@@ -86,7 +86,7 @@ RSpec.describe Extraction::PreExtractionHelpers do
       expect(subject).to receive(:save_link_as_document).with('https://example.com/page1', 1)
       expect(subject).to receive(:save_link_as_document).with('https://example.com/page2', 2)
 
-      subject.perform_pre_extraction
+      subject.perform_independent_extraction
     end
 
     it 'does nothing when document is blank' do
@@ -96,21 +96,21 @@ RSpec.describe Extraction::PreExtractionHelpers do
       expect(subject).not_to receive(:extract_links_from_document)
       expect(subject).not_to receive(:save_link_as_document)
 
-      subject.perform_pre_extraction
+      subject.perform_independent_extraction
     end
   end
 
-  describe '#perform_extraction_from_pre_extraction' do
-    let(:pre_extraction_job) { create(:extraction_job, extraction_definition:, is_pre_extraction: true) }
+  describe '#perform_extraction_from_independent_extraction' do
+    let(:independent_extraction_job) { create(:extraction_job, extraction_definition:, is_independent_extraction: true) }
 
-    context 'when extraction job is a pre-extraction step' do
+    context 'when extraction job is an independent-extraction step' do
       let(:extraction_job) do
-        create(:extraction_job, extraction_definition:, pre_extraction_job:, is_pre_extraction: true)
+        create(:extraction_job, extraction_definition:, independent_extraction_job:, is_independent_extraction: true)
       end
       let(:subject) { test_class.new(extraction_job, extraction_definition) }
 
       it 'extracts links from each fetched page and saves them' do
-        # Create mock documents representing pre-extraction links
+        # Create mock documents representing independent-extraction links
         link_doc = double('Document',
                           body: '{"url": "https://example.com/page1"}',
                           successful?: true)
@@ -118,8 +118,8 @@ RSpec.describe Extraction::PreExtractionHelpers do
         allow(documents).to receive(:[]).with(1).and_return(link_doc)
 
         # Stub ExtractionJob.find to return a mock that returns our mock documents
-        mock_pre_extraction_job = double('ExtractionJob', documents:)
-        allow(ExtractionJob).to receive(:find).with(pre_extraction_job.id).and_return(mock_pre_extraction_job)
+        mock_independent_extraction_job = double('ExtractionJob', documents:)
+        allow(ExtractionJob).to receive(:find).with(independent_extraction_job.id).and_return(mock_independent_extraction_job)
 
         # Mock the DocumentExtraction that gets created in fetch_document_for_page
         fetched_doc = double('FetchedDocument', successful?: true, body: '<html>...</html>')
@@ -134,23 +134,23 @@ RSpec.describe Extraction::PreExtractionHelpers do
         # Expect save_link_as_document to be called with extracted links
         expect(subject).to receive(:save_link_as_document).with('https://example.com/link1', 1)
 
-        subject.perform_extraction_from_pre_extraction
+        subject.perform_extraction_from_independent_extraction
       end
     end
 
-    context 'when extraction job is a pipeline step (not pre-extraction)' do
+    context 'when extraction job is a pipeline step (not independent-extraction)' do
       let(:destination) { create(:destination) }
       let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }
       let(:harvest_definition) { create(:harvest_definition, pipeline:, extraction_definition:) }
       let(:harvest_job) { create(:harvest_job, pipeline_job:, harvest_definition:) }
       let(:extraction_job) do
-        create(:extraction_job, extraction_definition:, pre_extraction_job:, is_pre_extraction: false, harvest_job:)
+        create(:extraction_job, extraction_definition:, independent_extraction_job:, is_independent_extraction: false, harvest_job:)
       end
       let!(:harvest_report) { create(:harvest_report, pipeline_job:, harvest_job:) }
       let(:subject) { test_class.new(extraction_job, extraction_definition) }
 
       it 'saves content from each fetched page and enqueues transformation' do
-        # Create mock documents representing pre-extraction links
+        # Create mock documents representing independent-extraction links
         link_doc = double('Document',
                           body: '{"url": "https://example.com/page1"}',
                           successful?: true)
@@ -158,8 +158,8 @@ RSpec.describe Extraction::PreExtractionHelpers do
         allow(documents).to receive(:[]).with(1).and_return(link_doc)
 
         # Stub ExtractionJob.find to return a mock that returns our mock documents
-        mock_pre_extraction_job = double('ExtractionJob', documents:)
-        allow(ExtractionJob).to receive(:find).with(pre_extraction_job.id).and_return(mock_pre_extraction_job)
+        mock_independent_extraction_job = double('ExtractionJob', documents:)
+        allow(ExtractionJob).to receive(:find).with(independent_extraction_job.id).and_return(mock_independent_extraction_job)
 
         # Mock the DocumentExtraction that gets created in fetch_document_for_page
         fetched_doc = double('FetchedDocument', successful?: true, body: '<html>content</html>')
@@ -171,13 +171,13 @@ RSpec.describe Extraction::PreExtractionHelpers do
 
         expect(subject).to receive(:enqueue_record_transformation)
 
-        subject.perform_extraction_from_pre_extraction
+        subject.perform_extraction_from_independent_extraction
       end
     end
   end
 
   describe 'private methods' do
-    let(:extraction_job) { create(:extraction_job, extraction_definition:, is_pre_extraction: true) }
+    let(:extraction_job) { create(:extraction_job, extraction_definition:, is_independent_extraction: true) }
     let(:subject) { test_class.new(extraction_job, extraction_definition) }
 
     describe '#save_links_as_documents' do
@@ -193,3 +193,4 @@ RSpec.describe Extraction::PreExtractionHelpers do
     end
   end
 end
+

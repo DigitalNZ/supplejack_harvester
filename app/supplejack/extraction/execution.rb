@@ -7,12 +7,12 @@ require 'nokogiri'
 require 'uri'
 require 'json'
 require_relative 'link_extractor'
-require_relative 'pre_extraction_request'
+require_relative 'independent_extraction_request'
 
 module Extraction
   # Performs the work as defined in the document extraction
   class Execution
-    include PreExtractionHelpers
+    include IndependentExtractionHelpers
 
     def initialize(job, extraction_definition)
       @extraction_job = job
@@ -24,15 +24,15 @@ module Extraction
     end
 
     def call
-      # Check for pre_extraction_job_id FIRST - if we have one, we're extracting from pre-extraction
-      if @extraction_job.pre_extraction_job_id.present?
-        perform_extraction_from_pre_extraction
+      # Check for independent_extraction_job_id FIRST - if we have one, we're extracting from independent-extraction
+      if @extraction_job.independent_extraction_job_id.present?
+        perform_extraction_from_independent_extraction
         return
       end
 
-      # Then check if this extraction job is for pre-extraction (based on step type, not definition)
-      if @extraction_job.pre_extraction?
-        perform_pre_extraction
+      # Then check if this extraction job is for independent-extraction (based on step type, not definition)
+      if @extraction_job.independent_extraction?
+        perform_independent_extraction
         return
       end
 
@@ -205,7 +205,7 @@ module Extraction
 
       document = @de&.document
       return unless document&.successful?
-      return if pre_extraction_link_document?(document)
+      return if independent_extraction_link_document?(document)
       return if requires_additional_processing?
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
@@ -229,8 +229,8 @@ module Extraction
     end
 
     def find_automation_step_for_job
-      # For pre-extraction jobs, find the automation step that references this job
-      AutomationStep.find_by(pre_extraction_job_id: @extraction_job.id)
+      # For independent-extraction jobs, find the automation step that references this job
+      AutomationStep.find_by(independent_extraction_job_id: @extraction_job.id)
     end
 
     def normalize_url(url)
@@ -242,14 +242,14 @@ module Extraction
       url
     end
 
-    def extract_url_from_pre_extraction_document(document)
+    def extract_url_from_independent_extraction_document(document)
       body = JSON.parse(document.body)
       body['url'] || body['href'] || body['link']
     rescue JSON::ParserError
       nil
     end
 
-    def pre_extraction_link_document?(document)
+    def independent_extraction_link_document?(document)
       return false unless document
 
       body = JSON.parse(document.body)
@@ -262,8 +262,8 @@ module Extraction
       base_request = @extraction_definition.requests.first
 
       # Create a simple wrapper object that mimics Request interface
-      # but returns the specific URL from pre-extraction
-      PreExtractionRequest.new(base_request, url)
+      # but returns the specific URL from independent-extraction
+      IndependentExtractionRequest.new(base_request, url)
     end
 
     def save_link_as_document(link_url, page_number, folder = nil)

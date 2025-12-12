@@ -65,7 +65,7 @@ class ExtractionJobsController < ApplicationController
     @extraction_job = ExtractionJob.create(
       extraction_definition: @extraction_definition,
       kind: params[:kind],
-      is_pre_extraction: false
+      is_independent_extraction: false
     )
     ExtractionWorker.perform_async(@extraction_job.id)
 
@@ -110,7 +110,7 @@ class ExtractionJobsController < ApplicationController
     ExtractionJob.new(
       extraction_definition: @extraction_definition,
       kind: params[:kind],
-      is_pre_extraction: false
+      is_independent_extraction: false
     )
   end
 

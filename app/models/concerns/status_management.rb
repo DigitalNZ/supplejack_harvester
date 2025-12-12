@@ -61,8 +61,8 @@ module StatusManagement
     case step.step_type
     when 'api_call'
       step.api_response_report.present?
-    when 'pre_extraction'
-      step.pre_extraction_job.present?
+    when 'independent_extraction'
+      step.independent_extraction_job.present?
     else
       step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
     end

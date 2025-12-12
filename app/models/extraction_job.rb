@@ -10,7 +10,7 @@ class ExtractionJob < ApplicationRecord
   enum :kind, { full: 0, sample: 1 }, prefix: :is
 
   belongs_to :extraction_definition
-  belongs_to :pre_extraction_job, class_name: 'ExtractionJob', optional: true
+  belongs_to :independent_extraction_job, class_name: 'ExtractionJob', optional: true
   has_one :harvest_job, dependent: :destroy
 
   after_create :create_folder
@@ -67,33 +67,33 @@ class ExtractionJob < ApplicationRecord
     Dir.glob("#{extraction_folder}/**/*.*").sum { |file| File.size(file) }
   end
 
-  # Returns documents from the pre-extraction job if linked
+  # Returns documents from the independent-extraction job if linked
   #
   # @return Extraction::Documents or nil
-  def pre_extraction_documents
-    return nil if pre_extraction_job_id.blank?
+  def independent_extraction_documents
+    return nil if independent_extraction_job_id.blank?
 
-    pre_extraction_job.documents
+    independent_extraction_job.documents
   end
 
-  # Determines if this extraction job is a pre-extraction job
+  # Determines if this extraction job is an independent-extraction job
   # Uses explicit flag if set, otherwise falls back to checking if harvest_job is absent
-  # (pre-extraction jobs don't have harvest_jobs, regular extraction jobs do)
+  # (independent-extraction jobs don't have harvest_jobs, regular extraction jobs do)
   #
   # @return [true, false]
   # :reek:NilCheck - Explicit boolean check avoids nil-check smell
-  def pre_extraction?
-    return is_pre_extraction unless is_pre_extraction.nil?
+  def independent_extraction?
+    return is_independent_extraction unless is_independent_extraction.nil?
 
     harvest_job.blank?
   end
 
-  # Returns all extracted link URLs from this pre-extraction job
+  # Returns all extracted link URLs from this independent-extraction job
   # Reads through all saved documents and extracts URLs from link documents
   #
   # @return [Array<String>] list of URLs
   def extracted_links
-    return [] unless pre_extraction?
+    return [] unless independent_extraction?
 
     docs = documents
     (1..docs.total_pages).filter_map { |page_number| extract_link_url(docs[page_number]) }

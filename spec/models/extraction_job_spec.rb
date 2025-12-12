@@ -118,8 +118,8 @@ RSpec.describe ExtractionJob do
   end
 
   describe '#extraction_folder_size_in_bytes' do
-    let(:extraction_definition) { create(:extraction_definition, base_url: 'http://google.com', paginated: true, pre_extraction: false) }
-    let(:extraction_job) { create(:extraction_job, extraction_definition:, is_pre_extraction: false) }
+    let(:extraction_definition) { create(:extraction_definition, base_url: 'http://google.com', paginated: true, independent_extraction: false) }
+    let(:extraction_job) { create(:extraction_job, extraction_definition:, is_independent_extraction: false) }
 
     before do
       (1...5).each do |page|
@@ -186,50 +186,50 @@ RSpec.describe ExtractionJob do
     end
   end
 
-  describe 'pre-extraction features' do
-    describe '#pre_extraction_job association' do
-      it 'can belong to a pre-extraction job' do
-        pre_extraction_job = create(:extraction_job)
-        main_job = create(:extraction_job, pre_extraction_job:)
+  describe 'independent-extraction features' do
+    describe '#independent_extraction_job association' do
+      it 'can belong to an independent-extraction job' do
+        independent_extraction_job = create(:extraction_job)
+        main_job = create(:extraction_job, independent_extraction_job:)
 
-        expect(main_job.pre_extraction_job).to eq pre_extraction_job
+        expect(main_job.independent_extraction_job).to eq independent_extraction_job
       end
 
-      it 'returns nil when no pre-extraction job' do
+      it 'returns nil when no independent-extraction job' do
         job = create(:extraction_job)
-        expect(job.pre_extraction_job).to be_nil
+        expect(job.independent_extraction_job).to be_nil
       end
     end
 
-    describe '#pre_extraction_documents' do
-      it 'returns nil when no pre_extraction_job_id' do
+    describe '#independent_extraction_documents' do
+      it 'returns nil when no independent_extraction_job_id' do
         job = create(:extraction_job)
-        expect(job.pre_extraction_documents).to be_nil
+        expect(job.independent_extraction_documents).to be_nil
       end
 
-      it 'returns documents from pre-extraction job when linked' do
-        pre_extraction_job = create(:extraction_job)
-        main_job = create(:extraction_job, pre_extraction_job:)
+      it 'returns documents from independent-extraction job when linked' do
+        independent_extraction_job = create(:extraction_job)
+        main_job = create(:extraction_job, independent_extraction_job:)
 
-        expect(main_job.pre_extraction_documents).to be_a(Extraction::Documents)
+        expect(main_job.independent_extraction_documents).to be_a(Extraction::Documents)
       end
     end
 
-    describe '#pre_extraction?' do
-      it 'returns value of is_pre_extraction when set to true' do
-        job = create(:extraction_job, is_pre_extraction: true)
-        expect(job.pre_extraction?).to be true
+    describe '#independent_extraction?' do
+      it 'returns value of is_independent_extraction when set to true' do
+        job = create(:extraction_job, is_independent_extraction: true)
+        expect(job.independent_extraction?).to be true
       end
 
-      it 'returns value of is_pre_extraction when set to false' do
-        job = create(:extraction_job, is_pre_extraction: false)
-        # Note: falls back to harvest_job.blank? when is_pre_extraction is false
-        expect(job.pre_extraction?).to be false
+      it 'returns value of is_independent_extraction when set to false' do
+        job = create(:extraction_job, is_independent_extraction: false)
+        # Note: falls back to harvest_job.blank? when is_independent_extraction is false
+        expect(job.independent_extraction?).to be false
       end
 
-      it 'falls back to harvest_job.blank? when is_pre_extraction is nil' do
-        job = create(:extraction_job, is_pre_extraction: nil)
-        expect(job.pre_extraction?).to eq job.harvest_job.blank?
+      it 'falls back to harvest_job.blank? when is_independent_extraction is nil' do
+        job = create(:extraction_job, is_independent_extraction: nil)
+        expect(job.independent_extraction?).to eq job.harvest_job.blank?
       end
     end
   end

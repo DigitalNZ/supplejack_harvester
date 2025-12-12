@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Extraction
-  # Simple wrapper for Request that uses a specific URL from pre-extraction
-  class PreExtractionRequest
+  # Simple wrapper for Request that uses a specific URL from independent-extraction
+  class IndependentExtractionRequest
     def initialize(base_request, url)
       @base_request = base_request
       @url = url
@@ -29,4 +29,5 @@ module Extraction
     end
   end
 end
+
 

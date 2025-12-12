@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (stepTypeSelect) {
     const pipelineFields = document.getElementById("pipeline-fields");
     const apiCallFields = document.getElementById("api-call-fields");
-    const preExtractionFields = document.getElementById(
-      "pre-extraction-fields"
+    const independentExtractionFields = document.getElementById(
+      "independent-extraction-fields"
     );
     const pipelineSelect = document.querySelector(
       'select[name="automation_step_template[pipeline_id]"]'
@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Hide all fields first
       pipelineFields.classList.add("d-none");
       apiCallFields.classList.add("d-none");
-      preExtractionFields.classList.add("d-none");
+      independentExtractionFields.classList.add("d-none");
       pipelineSelect.required = false;
 
       if (this.value === "pipeline") {
@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", function () {
         pipelineSelect.required = true;
       } else if (this.value === "api_call") {
         apiCallFields.classList.remove("d-none");
-      } else if (this.value === "pre_extraction") {
-        preExtractionFields.classList.remove("d-none");
+      } else if (this.value === "independent_extraction") {
+        independentExtractionFields.classList.remove("d-none");
       }
     });
   }
