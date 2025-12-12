@@ -95,7 +95,8 @@ class Schedule < ApplicationRecord
   # This is for converting 12 hour times into 24 hour times
   # so if the user has a time of 7:45pm, it becomes 19:45
   def sanitized_time
-    return Time.zone.parse(time).strftime('%H:%M') if time.downcase.include?('am') || time.downcase.include?('pm')
+    time_lower = time.downcase
+    return Time.zone.parse(time).strftime('%H:%M') if time_lower.include?('am') || time_lower.include?('pm')
 
     time
   end

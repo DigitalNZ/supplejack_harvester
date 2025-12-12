@@ -8,18 +8,38 @@ class TransformationWorker
   sidekiq_options retry: 0
 
   def perform(harvest_job_id, page = 1, api_record_id = nil)
+    return unless initialize_job_context(harvest_job_id, page, api_record_id)
+
+    job_start
+    child_perform
+    job_end
+  end
+
+  def initialize_job_context(harvest_job_id, page, api_record_id)
     @harvest_job = HarvestJob.find(harvest_job_id)
     @extraction_job = @harvest_job.extraction_job
-    @transformation_definition = TransformationDefinition.find(@harvest_job.transformation_definition.id)
+    @transformation_definition = find_transformation_definition(harvest_job_id)
+    return false if @transformation_definition.nil?
+
     @harvest_report = @harvest_job.harvest_report
     @page = page
     @api_record_id = api_record_id
     @pipeline_job = @harvest_job.pipeline_job
+    true
+  end
 
-    job_start
+  def find_transformation_definition(harvest_job_id)
+    transformation_definition_id = @harvest_job.transformation_definition&.id
+    if transformation_definition_id.nil?
+      log_missing_transformation_definition(harvest_job_id)
+      return nil
+    end
+    TransformationDefinition.find(transformation_definition_id)
+  end
 
-    child_perform
-    job_end
+  def log_missing_transformation_definition(harvest_job_id)
+    Rails.logger.error '[TRANSFORMATION] ERROR: transformation_definition is nil for ' \
+                       "harvest_job_id: #{harvest_job_id}"
   end
 
   def job_start

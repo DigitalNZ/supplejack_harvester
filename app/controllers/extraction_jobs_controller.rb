@@ -49,7 +49,7 @@ class ExtractionJobsController < ApplicationController
   private
 
   def html_create
-    @extraction_job = ExtractionJob.new(extraction_definition: @extraction_definition, kind: params[:kind])
+    @extraction_job = build_extraction_job
 
     if @extraction_job.save
       ExtractionWorker.perform_async(@extraction_job.id)
@@ -58,12 +58,15 @@ class ExtractionJobsController < ApplicationController
       flash.alert = t('.failure')
     end
 
-    redirect_to pipeline_harvest_definition_extraction_definition_extraction_jobs_path(@pipeline, @harvest_definition,
-                                                                                       @extraction_definition)
+    redirect_to extraction_jobs_index_path
   end
 
   def json_create
-    @extraction_job = ExtractionJob.create(extraction_definition: @extraction_definition, kind: params[:kind])
+    @extraction_job = ExtractionJob.create(
+      extraction_definition: @extraction_definition,
+      kind: params[:kind],
+      is_independent_extraction: false
+    )
     ExtractionWorker.perform_async(@extraction_job.id)
 
     render json: {
@@ -101,5 +104,19 @@ class ExtractionJobsController < ApplicationController
 
   def find_extraction_job
     @extraction_job = @extraction_definition.extraction_jobs.find(params[:id])
+  end
+
+  def build_extraction_job
+    ExtractionJob.new(
+      extraction_definition: @extraction_definition,
+      kind: params[:kind],
+      is_independent_extraction: false
+    )
+  end
+
+  def extraction_jobs_index_path
+    pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+      @pipeline, @harvest_definition, @extraction_definition
+    )
   end
 end

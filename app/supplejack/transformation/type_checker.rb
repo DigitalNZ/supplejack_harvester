@@ -28,8 +28,8 @@ module Transformation
     def valid_hash_value?(key, value)
       return true if !key.instance_of?(Hash) || !value.nil?
 
-      key.none? do |k, v|
-        !allowed_raw_type?(k) || allowed_raw_type?(v)
+      key.none? do |hash_key, hash_value|
+        !allowed_raw_type?(hash_key) || allowed_raw_type?(hash_value)
       end
     end
 

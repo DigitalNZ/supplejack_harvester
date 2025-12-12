@@ -12,9 +12,10 @@ class Request < ApplicationRecord
   enum :http_method, { GET: 0, POST: 1 }
 
   def url(response = nil)
-    return base_url if slug(response).empty?
+    slug_value = slug(response)
+    return base_url if slug_value.empty?
 
-    "#{base_url}/#{slug(response)}"
+    "#{base_url}/#{slug_value}"
   end
 
   def query_parameters(response = nil)

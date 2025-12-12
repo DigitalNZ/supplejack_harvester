@@ -24,9 +24,36 @@ class AutomationWorker
     case @step.step_type
     when 'api_call'
       process_api_call_step(automation_id, step_id)
+    when 'independent_extraction'
+      process_independent_extraction_step(automation_id, step_id)
     else
       process_pipeline_step(automation_id, step_id)
     end
+  end
+
+  def process_independent_extraction_step(automation_id, step_id)
+    if step_independent_extraction_completed?
+      handle_next_step
+      return
+    end
+
+    handle_queued_or_new_independent_extraction(automation_id, step_id)
+  end
+
+  def step_independent_extraction_completed?
+    job = @step.independent_extraction_job
+    job.present? && job.completed?
+  end
+
+  def handle_queued_or_new_independent_extraction(automation_id, step_id)
+    job = @step.independent_extraction_job
+    if job.present? && job.running?
+      schedule_job_check(automation_id, step_id)
+      return
+    end
+
+    @step.execute_independent_extraction
+    schedule_job_check(automation_id, step_id)
   end
 
   def process_api_call_step(automation_id, step_id)
@@ -35,13 +62,15 @@ class AutomationWorker
       return
     end
 
-    return if @step.api_response_report.present? && @step.api_response_report.failed?
+    report = @step.api_response_report
+    return if report.present? && report.failed?
 
     handle_queued_or_new_api_call(automation_id, step_id)
   end
 
   def handle_queued_or_new_api_call(automation_id, step_id)
-    if @step.api_response_report.present? && @step.api_response_report.queued?
+    report = @step.api_response_report
+    if report.present? && report.queued?
       schedule_job_check(automation_id, step_id)
       return
     end
@@ -51,7 +80,8 @@ class AutomationWorker
   end
 
   def step_api_call_completed?
-    @step.api_response_report.present? && @step.api_response_report.successful?
+    report = @step.api_response_report
+    report.present? && report.successful?
   end
 
   def process_pipeline_step(automation_id, step_id)

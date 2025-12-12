@@ -33,7 +33,7 @@ module Extraction
     end
 
     def total_folders
-      Dir.children(@folder).count { |f| !f.ends_with?('tmp') }
+      Dir.children(@folder).count { |folder_name| !folder_name.ends_with?('tmp') }
     rescue Errno::ENOENT # folder does not exist
       0
     end
@@ -43,7 +43,10 @@ module Extraction
     def documents_filepath
       folder_number = folder_number(@current_page)
       page_number = format('%09d', @current_page)[-9..]
-      @documents_filepath = Dir.glob("#{@folder}/#{folder_number}/*__#{page_number}.json").first
+      # match documents that end with a page number
+      # name__-__page.json (standard) and name__recordId__page.json (enrichments)
+      @documents_filepath = Dir.glob("#{@folder}/#{folder_number}/*__-__#{page_number}.json").first ||
+                            Dir.glob("#{@folder}/#{folder_number}/*__#{page_number}.json").first
     end
 
     def folder_number(page = 1)

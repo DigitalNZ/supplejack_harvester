@@ -62,9 +62,9 @@ module ApiUtilities
   def traverse_and_replace(obj)
     case obj
     when Hash
-      obj.each { |k, v| obj[k] = traverse_and_replace(v) }
+      obj.each { |key, value| obj[key] = traverse_and_replace(value) }
     when Array
-      obj.map! { |v| traverse_and_replace(v) }
+      obj.map! { |item| traverse_and_replace(item) }
     when String
       replace_placeholders(obj)
     else

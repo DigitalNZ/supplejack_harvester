@@ -2,23 +2,45 @@
 
 require 'zlib'
 require 'archive/tar/minitar'
+require 'jsonpath'
+require 'nokogiri'
+require 'uri'
+require 'json'
+require_relative 'link_extractor'
+
 module Extraction
   # Performs the work as defined in the document extraction
   class Execution
+    include IndependentExtractionHelpers
+
     def initialize(job, extraction_definition)
       @extraction_job = job
       @extraction_definition = extraction_definition
       @harvest_job = @extraction_job.harvest_job
       @harvest_report = @harvest_job.harvest_report if @harvest_job.present?
+      @de = nil
+      @previous_request = nil
     end
 
     def call
+      # Check for independent_extraction_job_id FIRST - if we have one, we're extracting from independent-extraction
+      if @extraction_job.independent_extraction_job_id.present?
+        perform_extraction_from_independent_extraction
+        return
+      end
+
+      # Then check if this extraction job is for independent-extraction (based on step type, not definition)
+      if @extraction_job.independent_extraction?
+        perform_independent_extraction
+        return
+      end
+
       perform_initial_extraction
       return if should_stop_early? || custom_stop_conditions_met?
 
       perform_paginated_extraction
-    rescue StandardError => e
-      handle_extraction_error(e)
+    rescue StandardError
+      handle_extraction_error
     end
 
     def perform_initial_extraction
@@ -39,7 +61,7 @@ module Extraction
       end
     end
 
-    def handle_extraction_error(_error)
+    def handle_extraction_error
       harvest_definition = @extraction_definition&.harvest_definitions&.first
       source_id = harvest_definition&.source_id
       return unless source_id
@@ -85,7 +107,10 @@ module Extraction
     end
 
     def extraction_failed?
-      document_status = @de.document.status
+      document = @de&.document
+      return false if document.nil?
+
+      document_status = document.status
       return false unless document_status >= 400 || document_status < 200
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Extraction failed',
@@ -106,7 +131,9 @@ module Extraction
     end
 
     def check_for_duplicate_document(previous_document)
-      return false unless previous_document.body == @de.document.body
+      current_document = @de&.document
+      return false if current_document.nil? || previous_document.nil?
+      return false unless previous_document.body == current_document.body
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Duplicate document',
                              stop_condition_content: '')
@@ -117,8 +144,12 @@ module Extraction
       stop_conditions = @extraction_definition.stop_conditions
       return false if stop_conditions.empty?
 
+      document = @de&.document
+      return false if document.nil?
+
+      document_body = document.body
       stop_conditions.any? do |condition|
-        condition.evaluate(@de.document.body).tap do |met|
+        condition.evaluate(document_body).tap do |met|
           if met
             log_stop_condition_hit(
               stop_condition_type: 'user',
@@ -135,12 +166,9 @@ module Extraction
                                                                              origin: 'Extraction::Execution',
                                                                              definition: @extraction_definition,
                                                                              job: @extraction_job,
-                                                                             stop_condition_type:
-                                                                               stop_condition_type,
-                                                                             stop_condition_name:
-                                                                               stop_condition_name,
+                                                                             stop_condition_type:,
+                                                                             stop_condition_name:,
                                                                              stop_condition_content:
-                                                                               stop_condition_content
                                                                            })
     end
 
@@ -172,7 +200,11 @@ module Extraction
     end
 
     def enqueue_record_transformation
-      return unless @harvest_job.present? && @de.document.successful?
+      return if @harvest_job.blank?
+
+      document = @de&.document
+      return unless document&.successful?
+      return if independent_extraction_link_document?(document)
       return if requires_additional_processing?
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,

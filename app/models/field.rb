@@ -25,9 +25,10 @@ class Field < ApplicationRecord
   def block
     return super unless schema_field.present? && schema_field.fixed?
 
-    if schema_field_values.count > 1
+    values_count = schema_field_values.count
+    if values_count > 1
       schema_field_values.map(&:value).to_s
-    elsif schema_field_values.count == 1
+    elsif values_count == 1
       "\"#{schema_field_values.first.value}\""
     else
       ''

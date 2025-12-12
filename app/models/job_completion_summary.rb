@@ -26,7 +26,7 @@ class JobCompletionSummary < ApplicationRecord
   end
 
   def all_records
-    (job_completions.to_a + job_errors.to_a).sort_by { |r| r.updated_at || r.created_at }.reverse
+    (job_completions.to_a + job_errors.to_a).sort_by { |record| record.updated_at || record.created_at }.reverse
   end
 
   def error_count
@@ -79,7 +79,7 @@ class JobCompletionSummary < ApplicationRecord
   end
 
   def self.find_preferred_summary(summaries)
-    summary_with_errors = summaries.find { |s| s.job_errors.any? }
+    summary_with_errors = summaries.find { |summary| summary.job_errors.any? }
     summary_with_errors || summaries.first
   end
 
@@ -98,17 +98,16 @@ class JobCompletionSummary < ApplicationRecord
     end
   end
 
-  def find_pipeline_from_pipeline_job(job_id)
-    PipelineJob.find(job_id).pipeline
+  def find_pipeline_from_pipeline_job(pipeline_job_id)
+    PipelineJob.find(pipeline_job_id).pipeline
   end
 
-  def find_pipeline_from_harvest_job(job_id)
-    HarvestJob.find(job_id).pipeline_job.pipeline
+  def find_pipeline_from_harvest_job(harvest_job_id)
+    HarvestJob.find(harvest_job_id).pipeline_job.pipeline
   end
 
-  def find_pipeline_from_extraction_job(job_id)
-    extraction_job = ExtractionJob.find_by(id: job_id)
-    # if job is deleted, handle safely
+  def find_pipeline_from_extraction_job(extraction_job_id)
+    extraction_job = ExtractionJob.find_by(id: extraction_job_id)
     return nil unless extraction_job
 
     extraction_job.harvest_job&.pipeline_job&.pipeline ||

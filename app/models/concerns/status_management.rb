@@ -58,8 +58,11 @@ module StatusManagement
   # Report checking functionality
 
   def step_has_report?(step)
-    if step.step_type == 'api_call'
+    case step.step_type
+    when 'api_call'
       step.api_response_report.present?
+    when 'independent_extraction'
+      step.independent_extraction_job.present?
     else
       step.pipeline_job.present? && step.pipeline_job.harvest_reports.exists?
     end
