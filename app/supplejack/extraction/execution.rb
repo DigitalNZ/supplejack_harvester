@@ -7,36 +7,9 @@ require 'nokogiri'
 require 'uri'
 require 'json'
 require_relative 'link_extractor'
+require_relative 'pre_extraction_request'
 
 module Extraction
-  # Simple wrapper for Request that uses a specific URL from pre-extraction
-  class PreExtractionRequest
-    def initialize(base_request, url)
-      @base_request = base_request
-      @url = url
-    end
-
-    def url(_response = nil)
-      @url
-    end
-
-    def query_parameters(response = nil)
-      @base_request.query_parameters(response)
-    end
-
-    def headers(response = nil)
-      @base_request.headers(response)
-    end
-
-    def extraction_definition
-      @base_request.extraction_definition
-    end
-
-    def http_method
-      @base_request.http_method
-    end
-  end
-
   # Performs the work as defined in the document extraction
   class Execution
     include PreExtractionHelpers
@@ -232,7 +205,7 @@ module Extraction
 
       document = @de&.document
       return unless document&.successful?
-      return if document.body.include?('"pre_extraction_link":true')
+      return if pre_extraction_link_document?(document)
       return if requires_additional_processing?
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
@@ -280,7 +253,7 @@ module Extraction
       return false unless document
 
       body = JSON.parse(document.body)
-      body['pre_extraction_link'] == true
+      body.is_a?(Hash) && body.key?('url') && body.keys.size == 1
     rescue JSON::ParserError
       false
     end
@@ -303,7 +276,7 @@ module Extraction
         request_headers: {},
         status: 200,
         response_headers: {},
-        body: { url: full_url, pre_extraction_link: true }.to_json
+        body: { url: full_url }.to_json
       )
 
       link_document.save(file_path_for_page(page_number, folder))

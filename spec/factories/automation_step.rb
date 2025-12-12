@@ -26,6 +26,7 @@ FactoryBot.define do
     trait :pre_extraction do
       step_type { 'pre_extraction' }
       pipeline { nil }
+      link_selector { '//a/@href' }
       association :extraction_definition
     end
   end

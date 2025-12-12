@@ -89,27 +89,22 @@ class ExtractionJob < ApplicationRecord
   end
 
   # Returns all extracted link URLs from this pre-extraction job
-  # Reads through all saved documents and extracts URLs from pre_extraction_link documents
+  # Reads through all saved documents and extracts URLs from link documents
   #
-  # @return Array<String> list of URLs
+  # @return [Array<String>] list of URLs
   def extracted_links
     return [] unless pre_extraction?
 
-    links = []
     docs = documents
+    (1..docs.total_pages).filter_map { |page_number| extract_link_url(docs[page_number]) }
+  end
 
-    (1..docs.total_pages).each do |page_number|
-      doc = docs[page_number]
-      next unless doc
+  def extract_link_url(doc)
+    return nil unless doc
 
-      begin
-        body = JSON.parse(doc.body)
-        links << body['url'] if body['pre_extraction_link'] == true && body['url'].present?
-      rescue JSON::ParserError
-        next
-      end
-    end
-
-    links
+    body = JSON.parse(doc.body)
+    body['url'] if body.is_a?(Hash) && body.keys == ['url'] && body['url'].present?
+  rescue JSON::ParserError
+    nil
   end
 end

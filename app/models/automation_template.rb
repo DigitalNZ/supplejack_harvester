@@ -68,24 +68,24 @@ class AutomationTemplate < ApplicationRecord
   end
 
   def build_automation_step(automation, step_template, user)
-    automation_step = automation.automation_steps.build(
-      step_type: step_template.step_type,
-      pipeline_id: step_template.pipeline_id,
-      position: step_template.position,
-      harvest_definition_ids: step_template.harvest_definition_ids,
-      extraction_definition_id: step_template.extraction_definition_id,
-      launched_by: user
-    )
-
-    # Set step type specific attributes
-    case step_template.step_type
-    when 'api_call'
-      set_api_call_attributes(automation_step, step_template)
-    when 'pre_extraction'
-      set_pre_extraction_attributes(automation_step, step_template)
-    end
-
+    automation_step = automation.automation_steps.build(base_step_attributes(step_template, user))
+    apply_step_type_attributes(automation_step, step_template)
     automation_step
+  end
+
+  def base_step_attributes(step_template, user)
+    {
+      step_type: step_template.step_type, pipeline_id: step_template.pipeline_id,
+      position: step_template.position, harvest_definition_ids: step_template.harvest_definition_ids,
+      extraction_definition_id: step_template.extraction_definition_id, launched_by: user
+    }
+  end
+
+  def apply_step_type_attributes(automation_step, step_template)
+    case step_template.step_type
+    when 'api_call' then set_api_call_attributes(automation_step, step_template)
+    when 'pre_extraction' then set_pre_extraction_attributes(automation_step, step_template)
+    end
   end
 
   def set_api_call_attributes(automation_step, step_template)

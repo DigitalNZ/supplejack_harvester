@@ -68,8 +68,6 @@ class ExtractionDefinition < ApplicationRecord
     @shared
   end
 
-  public
-
   # rubocop:disable Metrics/AbcSize
   def clone(pipeline, name)
     cloned_extraction_definition = ExtractionDefinition.new(dup.attributes.merge(name:, pipeline:))

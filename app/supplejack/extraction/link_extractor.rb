@@ -5,7 +5,6 @@ require 'jsonpath'
 require 'nokogiri'
 
 module Extraction
-  # Extracts links from documents using configurable selectors
   class LinkExtractor
     def initialize(document, selector)
       @body = document.body

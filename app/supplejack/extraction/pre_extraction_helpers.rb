@@ -29,28 +29,33 @@ module Extraction
     private
 
     def perform_link_extraction_from_documents(documents)
-      all_extracted_links = []
-
-      (1..documents.total_pages).each do |page_number|
-        break if execution_cancelled?
-
-        doc = documents[page_number]
-        next unless pre_extraction_link_document?(doc)
-
-        url = extract_url_from_pre_extraction_document(doc)
-        next if url.blank?
-
-        document = fetch_document_for_page(url)
-        next unless document&.successful?
-
-        links = extract_links_from_document(document)
-        all_extracted_links.concat(links)
-
-        throttle
-      end
-
+      all_extracted_links = collect_links_from_documents(documents)
       save_links_as_documents(all_extracted_links)
       update_harvest_report_timestamp
+    end
+
+    def collect_links_from_documents(documents)
+      [].tap do |links|
+        (1..documents.total_pages).each do |page_number|
+          break if execution_cancelled?
+
+          extracted = extract_links_from_page(documents[page_number])
+          links.concat(extracted) if extracted
+        end
+      end
+    end
+
+    def extract_links_from_page(doc)
+      return nil unless pre_extraction_link_document?(doc)
+
+      url = extract_url_from_pre_extraction_document(doc)
+      return nil if url.blank?
+
+      document = fetch_document_for_page(url)
+      return nil unless document&.successful?
+
+      throttle
+      extract_links_from_document(document)
     end
 
     def perform_content_extraction_from_documents(documents)
@@ -59,24 +64,31 @@ module Extraction
       (1..documents.total_pages).each do |page_number|
         break if execution_cancelled?
 
-        doc = documents[page_number]
-        next unless pre_extraction_link_document?(doc)
-
-        url = extract_url_from_pre_extraction_document(doc)
-        next if url.blank?
-
-        document = fetch_document_for_page(url)
-        next unless document&.successful?
-
-        record_page += 1
-        @extraction_definition.page = record_page
-        @de.save
-
-        update_harvest_report_on_extract
-        enqueue_record_transformation
-
-        throttle
+        record_page = process_content_page(documents[page_number], record_page)
       end
+    end
+
+    def process_content_page(doc, record_page)
+      return record_page unless should_process_document?(doc)
+
+      record_page += 1
+      @extraction_definition.page = record_page
+      @de.save
+
+      update_harvest_report_on_extract
+      enqueue_record_transformation
+      throttle
+      record_page
+    end
+
+    def should_process_document?(doc)
+      return false unless pre_extraction_link_document?(doc)
+
+      url = extract_url_from_pre_extraction_document(doc)
+      return false if url.blank?
+
+      document = fetch_document_for_page(url)
+      document&.successful?
     end
 
     def fetch_document_for_page(url)
