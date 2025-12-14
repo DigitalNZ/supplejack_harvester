@@ -37,15 +37,15 @@ module Extraction
       (1..documents.total_pages).each do |page_number|
         break if execution_cancelled?
 
-        extracted = extract_links_from_json(documents[page_number])
+        extracted = extract_links_from_link_document(documents[page_number])
         links.concat(extracted) if extracted
       end
       links
     end
 
-    # this is used when one independent extraction is passed a "link" document
-    # instead of an HTML/XML document
-    def extract_links_from_json(doc)
+    # This is used when one independent extraction is passed a "link" document
+    # processing output from a previous independent extraction, not a webpage
+    def extract_links_from_link_document(doc)
       return nil unless independent_extraction_link_document?(doc)
 
       url = extract_url_from_independent_extraction_document(doc)
@@ -120,11 +120,42 @@ module Extraction
       @harvest_report&.update(extraction_updated_time: Time.zone.now)
     end
 
-    # --- Link extraction helpers ---
+    # --- Link extraction ---
 
+    # this is used to extract links from an HTML/XML document (a page)
     def extract_links_from_document(document)
       selector = find_link_selector
-      LinkExtractor.new(document, selector).extract
+      return [] if selector.blank?
+
+      if selector.start_with?('$')
+        extract_json_links(document.body, selector)
+      else
+        extract_html_links(document.body, selector)
+      end
+    end
+
+    def extract_json_links(body, selector)
+      parsed = JSON.parse(body)
+      JsonPath.new(selector).on(parsed)
+    rescue JSON::ParserError
+      []
+    end
+
+    def extract_html_links(body, selector)
+      doc = body.strip.start_with?('<?xml') ? Nokogiri::XML(body) : Nokogiri::HTML(body)
+      nodes = selector.start_with?('/') ? doc.xpath(selector) : doc.css(selector)
+      nodes.filter_map { |node| extract_link_from_node(node) }.compact_blank
+    rescue Nokogiri::SyntaxError
+      []
+    end
+
+    def extract_link_from_node(node)
+      case node
+      when Nokogiri::XML::Attr then node.value
+      when Nokogiri::XML::Element then node['href'] || node['url'] || node.text.strip.presence
+      when Nokogiri::XML::Text then node.text.strip
+      else node.to_s
+      end
     end
 
     def find_link_selector

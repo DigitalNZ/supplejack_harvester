@@ -6,7 +6,6 @@ require 'jsonpath'
 require 'nokogiri'
 require 'uri'
 require 'json'
-require_relative 'link_extractor'
 
 module Extraction
   # Performs the work as defined in the document extraction
