@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Extraction
+  # rubocop:disable Metrics/ModuleLength
   module IndependentExtractionHelpers
     def perform_independent_extraction
       extract(@extraction_definition.requests.first)
@@ -155,11 +156,10 @@ module Extraction
 
     # --- Request building ---
 
+    # rubocop:disable Rails/Delegate
     def build_request_for_url(url)
       base_request = @extraction_definition.requests.first
 
-      # Create a simple wrapper that mimics Request interface
-      # but returns the specific URL from independent-extraction
       Struct.new(:base_request, :override_url) do
         def url(_response = nil) = override_url
         def query_parameters(response = nil) = base_request.query_parameters(response)
@@ -168,23 +168,21 @@ module Extraction
         def http_method = base_request.http_method
       end.new(base_request, url)
     end
+    # rubocop:enable Rails/Delegate
 
     # --- Document saving ---
 
     def save_link_as_document(link_url, page_number, folder = nil)
       full_url = normalize_url(link_url)
-
-      link_document = Extraction::Document.new(
-        url: full_url,
-        method: 'GET',
-        params: {},
-        request_headers: {},
-        status: 200,
-        response_headers: {},
-        body: { url: full_url }.to_json
-      )
-
+      link_document = build_link_document(full_url)
       link_document.save(file_path_for_page(page_number, folder))
+    end
+
+    def build_link_document(url)
+      Extraction::Document.new(
+        url:, method: 'GET', params: {}, request_headers: {},
+        status: 200, response_headers: {}, body: { url: }.to_json
+      )
     end
 
     def normalize_url(url)
@@ -207,4 +205,5 @@ module Extraction
       (page / Extraction::Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
     end
   end
+  # rubocop:enable Metrics/ModuleLength
 end
