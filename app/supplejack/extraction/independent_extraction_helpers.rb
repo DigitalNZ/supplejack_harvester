@@ -3,6 +3,11 @@
 module Extraction
   # rubocop:disable Metrics/ModuleLength
   module IndependentExtractionHelpers
+    # This file contains all the helpers for each step of the independent extraction
+    # - extracting links from a webpage
+    # - extracting links from a previous independent extraction
+    # - extracting content
+
     def perform_independent_extraction
       extract(@extraction_definition.requests.first)
       return if @de&.document.blank?

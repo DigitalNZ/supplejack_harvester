@@ -98,7 +98,6 @@ class AutomationStep < ApplicationRecord
     ApiCallWorker.perform_in_with_priority(automation.job_priority, 5.seconds, id)
   end
 
-  # Execute independent-extraction by creating and queuing extraction job
   def execute_independent_extraction
     return if independent_extraction_job.present?
 
