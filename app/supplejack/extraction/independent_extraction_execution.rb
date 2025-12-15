@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
+require 'nokogiri'
+require 'jsonpath'
+
 module Extraction
   class IndependentExtractionExecution
     def initialize(extraction_job)
       @job = extraction_job
       @definition = extraction_job.extraction_definition
       @harvest_report = extraction_job.harvest_job&.harvest_report
+      @link_selector = AutomationStep.find_by(independent_extraction_job_id: extraction_job.id)&.link_selector
     end
 
     def call
@@ -24,66 +28,55 @@ module Extraction
       extraction.extract
       return if extraction.document.blank?
 
-      save_extracted_links(extraction)
+      extract_links(extraction.document.body).each_with_index do |url, i|
+        save_link_document(url, i + 1)
+        @harvest_report&.increment_pages_extracted!
+      end
+      @harvest_report&.update(extraction_updated_time: Time.zone.now)
     end
 
     def process_from_previous
       previous_docs = ExtractionJob.find(@job.independent_extraction_job_id).documents
-
-      if @job.independent_extraction?
-        process_links_from_documents(previous_docs)
-      else
-        process_content_from_documents(previous_docs)
-      end
+      @job.independent_extraction? ? extract_links_from_docs(previous_docs) : extract_content_from_docs(previous_docs)
     end
 
-    def process_links_from_documents(documents)
+    def extract_links_from_docs(documents)
       page = 0
-      each_link_url(documents) do |url|
-        extraction = fetch_url(url)
-        next unless extraction.document&.successful?
+      each_url(documents) do |url|
+        doc = fetch(url)
+        next unless doc&.successful?
 
-        page = save_links_from_extraction(extraction, page)
+        extract_links(doc.body).each do |link|
+          page += 1
+          save_link_document(link, page)
+          @harvest_report&.increment_pages_extracted!
+        end
       end
-      update_harvest_report_timestamp
-    end
-
-    def process_content_from_documents(documents)
-      page = 0
-      each_link_url(documents) { |url| page = save_content_from_url(url, page) }
-      update_harvest_report_timestamp
-    end
-
-    def save_links_from_extraction(extraction, page)
-      extraction.extract_links(link_selector).each do |link|
-        page += 1
-        extraction.save_link(link, page, @definition.base_url)
-        @harvest_report&.increment_pages_extracted!
-      end
-      page
-    end
-
-    def save_content_from_url(url, page)
-      extraction = fetch_url(url)
-      return page unless extraction.document&.successful?
-
-      page += 1
-      @definition.page = page
-      extraction.save
-      @harvest_report&.increment_pages_extracted!
-      enqueue_transformation
-      page
-    end
-
-    def update_harvest_report_timestamp
       @harvest_report&.update(extraction_updated_time: Time.zone.now)
     end
 
-    def each_link_url(documents)
+    def extract_content_from_docs(documents)
+      page = 0
+      each_url(documents) do |url|
+        page += 1
+        extraction = IndependentExtraction.new(@definition.requests.first, @job.extraction_folder, page, url)
+        extraction.extract
+        next unless extraction.document&.successful?
+
+        @definition.page = page
+        extraction.save
+        @harvest_report&.increment_pages_extracted!
+        enqueue_transformation
+      end
+      @harvest_report&.update(extraction_updated_time: Time.zone.now)
+    end
+
+    def each_url(documents)
       (1..documents.total_pages).each do |n|
         break if @job.reload.cancelled?
 
-        url = extract_url_from_document(documents[n])
+        doc = documents[n]
+        url = (JSON.parse(doc.body)['url'] rescue nil) if doc
         next if url.blank?
 
         yield url
@@ -91,39 +84,50 @@ module Extraction
       end
     end
 
-    def extract_url_from_document(doc)
-      return nil unless doc
-
-      body = JSON.parse(doc.body)
-      body['url'] if body.is_a?(Hash) && body.keys == ['url']
-    rescue JSON::ParserError
-      nil
-    end
-
-    def fetch_url(url)
-      extraction = IndependentExtraction.new(@definition.requests.first, @job.extraction_folder, @definition.page, url)
+    def fetch(url)
+      extraction = IndependentExtraction.new(@definition.requests.first, @job.extraction_folder, 1, url)
       extraction.extract
-      extraction
+      extraction.document
     end
 
-    def save_extracted_links(extraction)
-      extraction.extract_links(link_selector).each_with_index do |link, i|
-        extraction.save_link(link, i + 1, @definition.base_url)
-        @harvest_report&.increment_pages_extracted!
+    def extract_links(body)
+      return [] if @link_selector.blank? || body.blank?
+
+      case @link_selector
+      when /^\$/ then JsonPath.new(@link_selector).on(JSON.parse(body))
+      when /^\// then parse_html(body).xpath(@link_selector).filter_map { |n| link_value(n) }
+      else parse_html(body).css(@link_selector).filter_map { |n| link_value(n) }
+      end.compact_blank
+    rescue JSON::ParserError, Nokogiri::SyntaxError
+      []
+    end
+
+    def parse_html(body)
+      body.strip.start_with?('<?xml') ? Nokogiri::XML(body) : Nokogiri::HTML(body)
+    end
+
+    def link_value(node)
+      case node
+      when Nokogiri::XML::Attr then node.value
+      when Nokogiri::XML::Element then node['href'] || node['url'] || node.text.strip.presence
+      when Nokogiri::XML::Text then node.text.strip
       end
-
-      update_harvest_report_timestamp
     end
 
-    def link_selector
-      AutomationStep.find_by(independent_extraction_job_id: @job.id)&.link_selector
+    def save_link_document(url, page_number)
+      full_url = url.start_with?('http') ? url : (URI.join(@definition.base_url, url).to_s rescue url)
+      folder = (page_number / Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
+      name = @definition.name.parameterize(separator: '_')
+      path = "#{@job.extraction_folder}/#{folder}/#{name}__-__#{format('%09d', page_number)[-9..]}.json"
+
+      Document.new(url: full_url, method: 'GET', params: {}, request_headers: {},
+                   status: 200, response_headers: {}, body: { url: full_url }.to_json).save(path)
     end
 
     def enqueue_transformation
       return unless (harvest_job = @job.harvest_job)
 
-      TransformationWorker.perform_async_with_priority(harvest_job.pipeline_job.job_priority, harvest_job.id,
-                                                       @definition.page)
+      TransformationWorker.perform_async_with_priority(harvest_job.pipeline_job.job_priority, harvest_job.id, @definition.page)
       @harvest_report&.increment_transformation_workers_queued!
     end
   end

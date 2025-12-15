@@ -15,7 +15,7 @@ class ExtractionDefinitionsController < ApplicationController
     @extraction_definition = ExtractionDefinition.new(extraction_definition_params)
 
     if @extraction_definition.save
-      setup_new_extraction_definition
+      setup_new_extraction_definition!
       redirect_to pipeline_harvest_definition_extraction_definition_path(
         @pipeline, @harvest_definition, @extraction_definition
       ), notice: t('.success')
@@ -62,7 +62,7 @@ class ExtractionDefinitionsController < ApplicationController
 
   private
 
-  def setup_new_extraction_definition
+  def setup_new_extraction_definition!
     update_last_edited_by([@extraction_definition])
     @harvest_definition.update(extraction_definition_id: @extraction_definition.id)
     2.times { Request.create(extraction_definition: @extraction_definition) }
