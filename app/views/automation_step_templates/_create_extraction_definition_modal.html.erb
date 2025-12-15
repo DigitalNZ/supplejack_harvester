@@ -1,0 +1,120 @@
+<div class="modal fade" id="create-extraction-definition-modal" tabindex="-1" aria-labelledby="Create Extraction Definition" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create Extraction Definition</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <%= form_with url: create_extraction_definition_automation_template_automation_step_templates_path(@automation_template),
+                      method: :post,
+                      local: true,
+                      scope: :extraction_definition,
+                      id: 'create-extraction-definition-form' do |form| %>
+          <div class="row gy-3">
+            <div class="col-md-6">
+              <label class="form-label">Name</label>
+              <%= form.text_field :name, class: 'form-control', placeholder: 'Leave blank for auto-generated name' %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Pipeline <span class="text-danger">*</span></label>
+              <%= form.select :pipeline_id,
+                              @pipelines&.map { |p| [p.name, p.id] } || [],
+                              { include_blank: 'Select a pipeline' },
+                              { class: 'form-select', required: true } %>
+              <small class="form-text text-muted">
+                The extraction definition will be associated with this pipeline.
+              </small>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Base URL <span class="text-danger">*</span></label>
+              <%= form.text_field :base_url, class: 'form-control', required: true, placeholder: 'https://example.com/api' %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Format <span class="text-danger">*</span></label>
+              <%= form.select :format,
+                              ExtractionDefinition::FORMATS.map { |f| [f, f] },
+                              {},
+                              { class: 'form-select', required: true } %>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Throttle (ms)</label>
+              <%= form.number_field :throttle, class: 'form-control', value: 0, min: 0, max: 60000 %>
+              <small class="form-text text-muted">Delay between requests in milliseconds.</small>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Paginated</label>
+              <%= form.select :paginated,
+                              [['No', false], ['Yes', true]],
+                              {},
+                              { class: 'form-select' } %>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Follow Redirects</label>
+              <%= form.select :follow_redirects,
+                              [['Yes', true], ['No', false]],
+                              {},
+                              { class: 'form-select' } %>
+            </div>
+
+            <div class="col-12">
+              <hr>
+              <h6>Split Settings (for extracting multiple links from one page)</h6>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Split Document</label>
+              <%= form.select :split,
+                              [['No', false], ['Yes', true]],
+                              {},
+                              { class: 'form-select', id: 'extraction-split-select' } %>
+              <small class="form-text text-muted">
+                Enable to split a document into multiple records.
+              </small>
+            </div>
+
+            <div class="col-md-6" id="split-selector-field">
+              <label class="form-label">Split Selector</label>
+              <%= form.text_field :split_selector, class: 'form-control', placeholder: '$.items[*] or //item' %>
+              <small class="form-text text-muted">
+                JSONPath ($.items[*]) or XPath (//item) to split records.
+              </small>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex justify-content-end">
+            <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Extraction Definition</button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const splitSelect = document.getElementById('extraction-split-select');
+    const splitSelectorField = document.getElementById('split-selector-field');
+    
+    if (splitSelect && splitSelectorField) {
+      function toggleSplitSelector() {
+        if (splitSelect.value === 'true') {
+          splitSelectorField.classList.remove('d-none');
+        } else {
+          splitSelectorField.classList.add('d-none');
+        }
+      }
+      
+      splitSelect.addEventListener('change', toggleSplitSelector);
+      toggleSplitSelector();
+    }
+  });
+</script>
+
