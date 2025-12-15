@@ -43,28 +43,39 @@ module Extraction
         extraction = fetch_url(url)
         next unless extraction.document&.successful?
 
-        extraction.extract_links(link_selector).each do |link|
-          page += 1
-          extraction.save_link(link, page, @definition.base_url)
-          @harvest_report&.increment_pages_extracted!
-        end
+        page = save_links_from_extraction(extraction, page)
       end
-
-      @harvest_report&.update(extraction_updated_time: Time.zone.now)
+      update_harvest_report_timestamp
     end
 
     def process_content_from_documents(documents)
       page = 0
-      each_link_url(documents) do |url|
-        extraction = fetch_url(url)
-        next unless extraction.document&.successful?
+      each_link_url(documents) { |url| page = save_content_from_url(url, page) }
+      update_harvest_report_timestamp
+    end
 
+    def save_links_from_extraction(extraction, page)
+      extraction.extract_links(link_selector).each do |link|
         page += 1
-        @definition.page = page
-        extraction.save
+        extraction.save_link(link, page, @definition.base_url)
         @harvest_report&.increment_pages_extracted!
-        enqueue_transformation
       end
+      page
+    end
+
+    def save_content_from_url(url, page)
+      extraction = fetch_url(url)
+      return page unless extraction.document&.successful?
+
+      page += 1
+      @definition.page = page
+      extraction.save
+      @harvest_report&.increment_pages_extracted!
+      enqueue_transformation
+      page
+    end
+
+    def update_harvest_report_timestamp
       @harvest_report&.update(extraction_updated_time: Time.zone.now)
     end
 
@@ -76,7 +87,7 @@ module Extraction
         next if url.blank?
 
         yield url
-        throttle
+        sleep @definition.throttle / 1000.0
       end
     end
 
@@ -100,7 +111,8 @@ module Extraction
         extraction.save_link(link, i + 1, @definition.base_url)
         @harvest_report&.increment_pages_extracted!
       end
-      @harvest_report&.update(extraction_updated_time: Time.zone.now)
+
+      update_harvest_report_timestamp
     end
 
     def link_selector
@@ -110,14 +122,9 @@ module Extraction
     def enqueue_transformation
       return unless (harvest_job = @job.harvest_job)
 
-      TransformationWorker.perform_async_with_priority(
-        harvest_job.pipeline_job.job_priority, harvest_job.id, @definition.page
-      )
+      TransformationWorker.perform_async_with_priority(harvest_job.pipeline_job.job_priority, harvest_job.id,
+                                                       @definition.page)
       @harvest_report&.increment_transformation_workers_queued!
-    end
-
-    def throttle
-      sleep @definition.throttle / 1000.0
     end
   end
 end

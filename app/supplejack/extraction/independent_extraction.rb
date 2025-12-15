@@ -54,9 +54,21 @@ module Extraction
       end
     end
 
-    def url = @url_override || @request.url(nil)
-    def params = @url_override.present? ? {} : @request.query_parameters(nil)
-    def headers = @request.headers.blank? ? super : super.merge(@request.headers(nil))
+    def url
+      @url_override || @request.url(nil)
+    end
+
+    def params
+      return {} if @url_override.present?
+
+      @request.query_parameters(nil)
+    end
+
+    def headers
+      return super if @request.headers.blank?
+
+      super.merge(@request.headers(nil))
+    end
 
     def file_path
       "#{@extraction_folder}/#{folder_number(@page)}/#{name_str}__-__#{page_str}.json"
@@ -67,8 +79,13 @@ module Extraction
       "#{@extraction_folder}/#{folder}/#{name_str}__-__#{format('%09d', page_number)[-9..]}.json"
     end
 
-    def name_str = @extraction_definition.name.parameterize(separator: '_')
-    def page_str = format('%09d', @page)[-9..]
+    def name_str
+      @extraction_definition.name.parameterize(separator: '_')
+    end
+
+    def page_str
+      format('%09d', @page)[-9..]
+    end
 
     def normalize_link_url(url, base_url)
       return url if url.start_with?('http://', 'https://')
