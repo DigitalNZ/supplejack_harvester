@@ -194,7 +194,7 @@ RSpec.describe AutomationStep do
     end
   end
 
-  describe 'independent-extraction step features' do
+  describe 'independent extraction step features' do
     let(:extraction_definition) { create(:extraction_definition, independent_extraction: true) }
 
     context 'when step_type is independent_extraction' do
@@ -206,7 +206,7 @@ RSpec.describe AutomationStep do
     describe '#display_name for independent_extraction step' do
       it 'returns a formatted name with extraction definition name' do
         step = create(:automation_step, :independent_extraction, extraction_definition:)
-        expect(step.display_name).to include('Independent-Extraction')
+        expect(step.display_name).to include('Independent Extraction')
         expect(step.display_name).to include(extraction_definition.name)
       end
     end
@@ -260,12 +260,12 @@ RSpec.describe AutomationStep do
       let(:ed1) { create(:extraction_definition, independent_extraction: true) }
       let(:ed2) { create(:extraction_definition, independent_extraction: true) }
 
-      it 'returns nil when no previous independent-extraction step exists' do
+      it 'returns nil when no previous independent extraction step exists' do
         step = create(:automation_step, :independent_extraction, automation:, position: 0, extraction_definition: ed1)
         expect(step.find_previous_independent_extraction_job_id).to be_nil
       end
 
-      it 'returns the independent_extraction_job_id from the previous independent-extraction step' do
+      it 'returns the independent_extraction_job_id from the previous independent extraction step' do
         step1 = create(:automation_step, :independent_extraction, automation:, position: 0, extraction_definition: ed1)
         step1.execute_independent_extraction
         step1.reload

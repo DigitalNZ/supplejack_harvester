@@ -17,12 +17,11 @@ RSpec.describe Extraction::IndependentExtractionExecution do
       it 'extracts links and saves them as documents' do
         mock_document = instance_double(Extraction::Document,
                                         body: '<html><a href="/page1">Link</a></html>',
-                                        successful?: true)
+                                        successful?: true,
+                                        blank?: false)
 
         mock_extraction = instance_double(Extraction::IndependentExtraction,
-                                          document: mock_document,
-                                          extract_links: ['/page1'],
-                                          save_link: true)
+                                          document: mock_document)
         allow(mock_extraction).to receive(:extract)
         allow(Extraction::IndependentExtraction).to receive(:new).and_return(mock_extraction)
 
@@ -32,7 +31,13 @@ RSpec.describe Extraction::IndependentExtractionExecution do
                independent_extraction_job: extraction_job,
                link_selector: 'a')
 
-        expect(mock_extraction).to receive(:save_link).with('/page1', 1, 'https://example.com')
+        saved_document = instance_double(Extraction::Document)
+        allow(saved_document).to receive(:save)
+        allow(Extraction::Document).to receive(:new).and_return(saved_document)
+
+        expect(Extraction::Document).to receive(:new).with(
+          hash_including(url: 'https://example.com/page1')
+        )
 
         execution.call
       end
@@ -43,7 +48,7 @@ RSpec.describe Extraction::IndependentExtractionExecution do
         create(:extraction_job, extraction_definition:, is_independent_extraction: true)
       end
 
-      context 'when this is another independent-extraction step' do
+      context 'when this is another independent extraction step' do
         let(:extraction_job) do
           create(:extraction_job,
                  extraction_definition:,
@@ -61,10 +66,11 @@ RSpec.describe Extraction::IndependentExtractionExecution do
             .with(independent_extraction_job.id)
             .and_return(double('ExtractionJob', documents:))
 
+          fetched_document = double('FetchedDocument',
+                                    successful?: true,
+                                    body: '<html><a href="/link1">Link</a></html>')
           mock_extraction = instance_double(Extraction::IndependentExtraction,
-                                            document: double(successful?: true),
-                                            extract_links: ['/link1'],
-                                            save_link: true)
+                                            document: fetched_document)
           allow(mock_extraction).to receive(:extract)
           allow(Extraction::IndependentExtraction).to receive(:new).and_return(mock_extraction)
 
@@ -74,7 +80,13 @@ RSpec.describe Extraction::IndependentExtractionExecution do
                  independent_extraction_job: extraction_job,
                  link_selector: 'a')
 
-          expect(mock_extraction).to receive(:save_link)
+          saved_document = instance_double(Extraction::Document)
+          allow(saved_document).to receive(:save)
+          allow(Extraction::Document).to receive(:new).and_return(saved_document)
+
+          expect(Extraction::Document).to receive(:new).with(
+            hash_including(url: 'https://example.com/link1')
+          )
 
           execution.call
         end
@@ -106,7 +118,7 @@ RSpec.describe Extraction::IndependentExtractionExecution do
 
           mock_extraction = instance_double(Extraction::IndependentExtraction,
                                             document: double(successful?: true))
-          allow(mock_extraction).to receive(:extract)
+          allow(mock_extraction).to receive(:extract).and_return(true)
           allow(mock_extraction).to receive(:save)
           allow(Extraction::IndependentExtraction).to receive(:new).and_return(mock_extraction)
 

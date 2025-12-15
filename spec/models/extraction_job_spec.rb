@@ -186,16 +186,16 @@ RSpec.describe ExtractionJob do
     end
   end
 
-  describe 'independent-extraction features' do
+  describe 'independent extraction features' do
     describe '#independent_extraction_job association' do
-      it 'can belong to an independent-extraction job' do
+      it 'can belong to an independent extraction job' do
         independent_extraction_job = create(:extraction_job)
         main_job = create(:extraction_job, independent_extraction_job:)
 
         expect(main_job.independent_extraction_job).to eq independent_extraction_job
       end
 
-      it 'returns nil when no independent-extraction job' do
+      it 'returns nil when no independent extraction job' do
         job = create(:extraction_job)
         expect(job.independent_extraction_job).to be_nil
       end
@@ -207,7 +207,7 @@ RSpec.describe ExtractionJob do
         expect(job.independent_extraction_documents).to be_nil
       end
 
-      it 'returns documents from independent-extraction job when linked' do
+      it 'returns documents from independent extraction job when linked' do
         independent_extraction_job = create(:extraction_job)
         main_job = create(:extraction_job, independent_extraction_job:)
 

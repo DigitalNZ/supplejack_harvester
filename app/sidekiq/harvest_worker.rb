@@ -17,7 +17,7 @@ class HarvestWorker < ApplicationWorker
   end
 
   def create_extraction_job
-    # Check if previous step was an independent-extraction step
+    # Check if previous step was an independent extraction step
     previous_independent_extraction_job_id = find_previous_independent_extraction_job_id
 
     extraction_job = ExtractionJob.create(

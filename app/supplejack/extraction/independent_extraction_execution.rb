@@ -4,6 +4,7 @@ require 'nokogiri'
 require 'jsonpath'
 
 module Extraction
+  # rubocop:disable Metrics/ClassLength
   class IndependentExtractionExecution
     def initialize(extraction_job)
       @job = extraction_job
@@ -13,7 +14,7 @@ module Extraction
     end
 
     def call
-      @job.independent_extraction_job_id.present? ? process_from_previous : process_initial
+      @job.independent_extraction_job_id.present? ? process_from_previous_job : process_from_page
     rescue StandardError => e
       JobCompletionServices::ContextBuilder.create_job_completion_or_error(
         error: e, definition: @definition, job: @job, origin: 'IndependentExtractionExecution'
@@ -23,7 +24,7 @@ module Extraction
 
     private
 
-    def process_initial
+    def process_from_page
       extraction = IndependentExtraction.new(@definition.requests.first, @job.extraction_folder)
       extraction.extract
       return if extraction.document.blank?
@@ -32,10 +33,10 @@ module Extraction
         save_link_document(url, i + 1)
         @harvest_report&.increment_pages_extracted!
       end
-      @harvest_report&.update(extraction_updated_time: Time.zone.now)
+      update_extraction_time
     end
 
-    def process_from_previous
+    def process_from_previous_job
       previous_docs = ExtractionJob.find(@job.independent_extraction_job_id).documents
       @job.independent_extraction? ? extract_links_from_docs(previous_docs) : extract_content_from_docs(previous_docs)
     end
@@ -44,15 +45,15 @@ module Extraction
       page = 0
       each_url(documents) do |url|
         doc = fetch(url)
-        next unless doc&.successful?
-
-        extract_links(doc.body).each do |link|
-          page += 1
-          save_link_document(link, page)
-          @harvest_report&.increment_pages_extracted!
-        end
+        extract_links(doc.body).each { |link| page = save_and_track_link(link, page) } if doc&.successful?
       end
-      @harvest_report&.update(extraction_updated_time: Time.zone.now)
+      update_extraction_time
+    end
+
+    def save_and_track_link(link, page)
+      save_link_document(link, page + 1)
+      @harvest_report&.increment_pages_extracted!
+      page + 1
     end
 
     def extract_content_from_docs(documents)
@@ -60,28 +61,34 @@ module Extraction
       each_url(documents) do |url|
         page += 1
         extraction = IndependentExtraction.new(@definition.requests.first, @job.extraction_folder, page, url)
-        extraction.extract
-        next unless extraction.document&.successful?
-
-        @definition.page = page
-        extraction.save
-        @harvest_report&.increment_pages_extracted!
-        enqueue_transformation
+        save_and_transform(extraction, page) if extraction.extract && extraction.document&.successful?
       end
-      @harvest_report&.update(extraction_updated_time: Time.zone.now)
+      update_extraction_time
+    end
+
+    def save_and_transform(extraction, page)
+      @definition.page = page
+      extraction.save
+      @harvest_report&.increment_pages_extracted!
+      enqueue_transformation
     end
 
     def each_url(documents)
       (1..documents.total_pages).each do |n|
         break if @job.reload.cancelled?
 
-        doc = documents[n]
-        url = (JSON.parse(doc.body)['url'] rescue nil) if doc
+        url = parse_url_from_doc(documents[n])
         next if url.blank?
 
         yield url
         sleep @definition.throttle / 1000.0
       end
+    end
+
+    def parse_url_from_doc(doc)
+      JSON.parse(doc&.body)['url']
+    rescue StandardError
+      nil
     end
 
     def fetch(url)
@@ -93,17 +100,20 @@ module Extraction
     def extract_links(body)
       return [] if @link_selector.blank? || body.blank?
 
-      case @link_selector
-      when /^\$/ then JsonPath.new(@link_selector).on(JSON.parse(body))
-      when /^\// then parse_html(body).xpath(@link_selector).filter_map { |n| link_value(n) }
-      else parse_html(body).css(@link_selector).filter_map { |n| link_value(n) }
+      if @link_selector.start_with?('$')
+        JsonPath.new(@link_selector).on(JSON.parse(body))
+      else
+        extract_from_html(body)
       end.compact_blank
     rescue JSON::ParserError, Nokogiri::SyntaxError
       []
     end
 
-    def parse_html(body)
-      body.strip.start_with?('<?xml') ? Nokogiri::XML(body) : Nokogiri::HTML(body)
+    def extract_from_html(body)
+      doc = body.strip.start_with?('<?xml') ? Nokogiri::XML(body) : Nokogiri::HTML(body)
+      nodes = @link_selector.start_with?('/') ? doc.xpath(@link_selector) : doc.css(@link_selector)
+
+      nodes.filter_map { |n| link_value(n) }
     end
 
     def link_value(node)
@@ -115,7 +125,8 @@ module Extraction
     end
 
     def save_link_document(url, page_number)
-      full_url = url.start_with?('http') ? url : (URI.join(@definition.base_url, url).to_s rescue url)
+      full_url = url.start_with?('http') ? url : URI.join(@definition.base_url, url).to_s
+
       folder = (page_number / Documents::DOCUMENTS_PER_FOLDER.to_f).ceil
       name = @definition.name.parameterize(separator: '_')
       path = "#{@job.extraction_folder}/#{folder}/#{name}__-__#{format('%09d', page_number)[-9..]}.json"
@@ -127,8 +138,14 @@ module Extraction
     def enqueue_transformation
       return unless (harvest_job = @job.harvest_job)
 
-      TransformationWorker.perform_async_with_priority(harvest_job.pipeline_job.job_priority, harvest_job.id, @definition.page)
+      TransformationWorker.perform_async_with_priority(harvest_job.pipeline_job.job_priority, harvest_job.id,
+                                                       @definition.page)
       @harvest_report&.increment_transformation_workers_queued!
     end
+
+    def update_extraction_time
+      @harvest_report&.update(extraction_updated_time: Time.zone.now)
+    end
   end
+  # rubocop:enable Metrics/ClassLength
 end

@@ -67,7 +67,7 @@ class ExtractionJob < ApplicationRecord
     Dir.glob("#{extraction_folder}/**/*.*").sum { |file| File.size(file) }
   end
 
-  # Returns documents from the independent-extraction job if linked
+  # Returns documents from the independent extraction job if linked
   #
   # @return Extraction::Documents or nil
   def independent_extraction_documents
@@ -76,9 +76,9 @@ class ExtractionJob < ApplicationRecord
     independent_extraction_job.documents
   end
 
-  # Determines if this extraction job is an independent-extraction job
+  # Determines if this extraction job is an independent extraction job
   # Uses explicit flag if set, otherwise falls back to checking if harvest_job is absent
-  # (independent-extraction jobs don't have harvest_jobs, regular extraction jobs do)
+  # (independent extraction jobs don't have harvest_jobs, regular extraction jobs do)
   #
   # @return [true, false]
   # :reek:NilCheck - Explicit boolean check avoids nil-check smell
@@ -88,7 +88,7 @@ class ExtractionJob < ApplicationRecord
     harvest_job.blank?
   end
 
-  # Returns all extracted link URLs from this independent-extraction job
+  # Returns all extracted link URLs from this independent extraction job
   # Reads through all saved documents and extracts URLs from link documents
   #
   # @return [Array<String>] list of URLs

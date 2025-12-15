@@ -79,7 +79,7 @@ RSpec.describe AutomationStepTemplate do
     it 'returns a formatted name with extraction definition name for independent_extraction step' do
       extraction_definition = create(:extraction_definition, independent_extraction: true)
       template = create(:automation_step_template, :independent_extraction, extraction_definition:)
-      expect(template.display_name).to include('Independent-Extraction')
+      expect(template.display_name).to include('Independent Extraction')
       expect(template.display_name).to include(extraction_definition.name)
     end
   end

@@ -223,7 +223,7 @@ RSpec.describe ExtractionDefinition do
     end
   end
 
-  describe 'independent-extraction features' do
+  describe 'independent extraction features' do
     let(:pipeline) { create(:pipeline) }
 
     describe '#independent_extraction' do

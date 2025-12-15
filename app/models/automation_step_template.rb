@@ -21,7 +21,7 @@ class AutomationStepTemplate < ApplicationRecord
     when 'api_call'
       "#{position + 1}. API Call: #{api_method} #{api_url}"
     when 'independent_extraction'
-      "#{position + 1}. Independent-Extraction: #{extraction_definition&.name || 'Unknown'}"
+      "#{position + 1}. Independent Extraction: #{extraction_definition&.name || 'Unknown'}"
     else
       "#{position + 1}. #{pipeline&.name || 'Unknown Pipeline'}"
     end
