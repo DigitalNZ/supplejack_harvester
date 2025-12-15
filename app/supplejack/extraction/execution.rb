@@ -2,16 +2,10 @@
 
 require 'zlib'
 require 'archive/tar/minitar'
-require 'jsonpath'
-require 'nokogiri'
-require 'uri'
-require 'json'
 
 module Extraction
   # Performs the work as defined in the document extraction
   class Execution
-    include IndependentExtractionHelpers
-
     def initialize(job, extraction_definition)
       @extraction_job = job
       @extraction_definition = extraction_definition
@@ -22,15 +16,8 @@ module Extraction
     end
 
     def call
-      # Check for independent_extraction_job_id FIRST - if we have one, we're extracting from independent-extraction
-      if @extraction_job.independent_extraction_job_id.present?
-        perform_extraction_from_independent_extraction
-        return
-      end
-
-      # Then check if this extraction job is for independent-extraction (based on step type, not definition)
-      if @extraction_job.independent_extraction?
-        perform_independent_extraction
+      if independent_extraction_job?
+        IndependentExtractionExecution.new(@extraction_job).call
         return
       end
 
@@ -40,6 +27,10 @@ module Extraction
       perform_paginated_extraction
     rescue StandardError
       handle_extraction_error
+    end
+
+    def independent_extraction_job?
+      @extraction_job.independent_extraction_job_id.present? || @extraction_job.independent_extraction?
     end
 
     def perform_initial_extraction
@@ -203,7 +194,6 @@ module Extraction
 
       document = @de&.document
       return unless document&.successful?
-      return if independent_extraction_link_document?(document)
       return if requires_additional_processing?
 
       TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id,
