@@ -22,5 +22,12 @@ FactoryBot.define do
       api_headers { '{"Content-Type": "application/json"}' }
       api_body { '{"test": "data"}' }
     end
+
+    trait :independent_extraction do
+      step_type { 'independent_extraction' }
+      pipeline { nil }
+      link_selector { '//a/@href' }
+      association :extraction_definition
+    end
   end
-end 
+end

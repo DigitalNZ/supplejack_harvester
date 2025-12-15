@@ -78,6 +78,48 @@
                 </span>
               </small>
             </div>
+          <% elsif step.step_type == 'independent_extraction' %>
+            <small class='text-muted d-block mt-2'>Independent Extraction Definition:</small>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <small class="text-break">
+                <%= step.extraction_definition.name %>
+              </small>
+            </div>
+            <% if last_run_step&.independent_extraction_job %>
+              <% links = last_run_step.independent_extraction_job.extracted_links %>
+              <div class="mt-2">
+                <small class='text-muted d-block mb-1'>Extracted Links:</small>
+                <% if links.present? %>
+                  <small class="text-muted">
+                    <%= pluralize(links.count, 'link') %> extracted
+                  </small>
+                  <details class="mt-1">
+                    <summary class="text-primary" style="cursor: pointer; font-size: 0.85em;">
+                      View links (<%= links.count %>)
+                    </summary>
+                    <ul class="list-unstyled ms-2 mt-1" style="max-height: 200px; overflow-y: auto;">
+                      <% links.first(50).each do |link| %>
+                        <li class="mb-1">
+                          <small class="text-break" style="word-break: break-all;">
+                            <%= link_to link, link,
+                                        target: '_blank',
+                                        rel: 'noopener',
+                                        class: 'text-decoration-none' %>
+                          </small>
+                        </li>
+                      <% end %>
+                      <% if links.count > 50 %>
+                        <li class="text-muted">
+                          <small>... and <%= links.count - 50 %> more</small>
+                        </li>
+                      <% end %>
+                    </ul>
+                  </details>
+                <% else %>
+                  <small class="text-muted">No links extracted</small>
+                <% end %>
+              </div>
+            <% end %>
           <% end %>
         </div>
         <% if last_run_step %>

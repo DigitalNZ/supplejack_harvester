@@ -95,7 +95,7 @@ class FileExtractionWorker
   end
 
   def move_extracted_documents_into_tmp_directory
-    Dir.children(@extraction_folder).reject { |f| f.ends_with?('tmp') }.each do |folder|
+    Dir.children(@extraction_folder).reject { |dir_name| dir_name.ends_with?('tmp') }.each do |folder|
       FileUtils.move("#{@extraction_folder}/#{folder}", @tmp_directory)
     end
   end

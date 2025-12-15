@@ -104,6 +104,7 @@ class AutomationStepTemplatesController < ApplicationController
     @automation_step_template = @automation_template.automation_step_templates.find(params[:id])
   end
 
+  # rubocop:disable Metrics/MethodLength
   def automation_step_template_params
     params.require(:automation_step_template).permit(
       :pipeline_id,
@@ -112,7 +113,10 @@ class AutomationStepTemplatesController < ApplicationController
       :api_url,
       :api_method,
       :api_body,
+      :extraction_definition_id,
+      :link_selector,
       harvest_definition_ids: []
     )
   end
+  # rubocop:enable Metrics/MethodLength
 end

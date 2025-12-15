@@ -193,4 +193,87 @@ RSpec.describe AutomationStep do
       api_step.execute_api_call
     end
   end
-end 
+
+  describe 'independent extraction step features' do
+    let(:extraction_definition) { create(:extraction_definition, independent_extraction: true) }
+
+    context 'when step_type is independent_extraction' do
+      subject { build(:automation_step, step_type: 'independent_extraction', extraction_definition:, pipeline: nil) }
+
+      it { is_expected.to validate_presence_of(:extraction_definition_id) }
+    end
+
+    describe '#display_name for independent_extraction step' do
+      it 'returns a formatted name with extraction definition name' do
+        step = create(:automation_step, :independent_extraction, extraction_definition:)
+        expect(step.display_name).to include('Independent Extraction')
+        expect(step.display_name).to include(extraction_definition.name)
+      end
+    end
+
+    describe '#independent_extraction_status' do
+      subject { create(:automation_step, :independent_extraction, extraction_definition:) }
+
+      it 'returns not_started when no independent_extraction_job exists' do
+        expect(subject.independent_extraction_status).to eq('not_started')
+      end
+
+      it 'returns the job status when independent_extraction_job exists' do
+        job = create(:extraction_job, status: 'running')
+        subject.update(independent_extraction_job: job)
+
+        expect(subject.independent_extraction_status).to eq('running')
+      end
+    end
+
+    describe '#execute_independent_extraction' do
+      subject { create(:automation_step, :independent_extraction, extraction_definition:) }
+
+      it 'creates an extraction job' do
+        expect { subject.execute_independent_extraction }.to change { ExtractionJob.count }.by(1)
+      end
+
+      it 'sets is_independent_extraction flag on the job' do
+        subject.execute_independent_extraction
+        subject.reload
+
+        expect(subject.independent_extraction_job.is_independent_extraction).to be true
+      end
+
+      it 'links the extraction job to the step' do
+        subject.execute_independent_extraction
+        subject.reload
+
+        expect(subject.independent_extraction_job).to be_present
+        expect(subject.independent_extraction_job.extraction_definition).to eq extraction_definition
+      end
+
+      it 'does not create a new job if one already exists' do
+        subject.execute_independent_extraction
+        
+        expect { subject.execute_independent_extraction }.not_to change { ExtractionJob.count }
+      end
+    end
+
+    describe '#find_previous_independent_extraction_job_id' do
+      let(:automation) { create(:automation) }
+      let(:ed1) { create(:extraction_definition, independent_extraction: true) }
+      let(:ed2) { create(:extraction_definition, independent_extraction: true) }
+
+      it 'returns nil when no previous independent extraction step exists' do
+        step = create(:automation_step, :independent_extraction, automation:, position: 0, extraction_definition: ed1)
+        expect(step.find_previous_independent_extraction_job_id).to be_nil
+      end
+
+      it 'returns the independent_extraction_job_id from the previous independent extraction step' do
+        step1 = create(:automation_step, :independent_extraction, automation:, position: 0, extraction_definition: ed1)
+        step1.execute_independent_extraction
+        step1.reload
+
+        step2 = create(:automation_step, :independent_extraction, automation:, position: 1, extraction_definition: ed2)
+
+        expect(step2.find_previous_independent_extraction_job_id).to eq step1.independent_extraction_job_id
+      end
+    end
+  end
+end

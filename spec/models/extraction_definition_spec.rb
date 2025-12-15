@@ -222,4 +222,20 @@ RSpec.describe ExtractionDefinition do
       end
     end
   end
+
+  describe 'independent extraction features' do
+    let(:pipeline) { create(:pipeline) }
+
+    describe '#independent_extraction' do
+      it 'defaults to false' do
+        ed = create(:extraction_definition, pipeline:)
+        expect(ed.independent_extraction).to be false
+      end
+
+      it 'can be set to true' do
+        ed = create(:extraction_definition, pipeline:, independent_extraction: true)
+        expect(ed.independent_extraction).to be true
+      end
+    end
+  end
 end

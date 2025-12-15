@@ -86,8 +86,11 @@ class Automation < ApplicationRecord
   end
 
   def collect_status_for_step(step)
-    if step.step_type == 'api_call'
+    case step.step_type
+    when 'api_call'
       collect_api_call_status(step)
+    when 'independent_extraction'
+      step.independent_extraction_job&.status
     else
       collect_pipeline_status(step)
     end
@@ -101,7 +104,7 @@ class Automation < ApplicationRecord
     return unless step.pipeline_job
 
     reports = step.pipeline_job.harvest_reports
-    reports&.map(&:status)&.uniq
+    reports.map(&:status).uniq if reports.any?
   end
 
   def not_started?(statuses)

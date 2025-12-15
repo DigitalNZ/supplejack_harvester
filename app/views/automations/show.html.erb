@@ -98,6 +98,8 @@
                           <%= step.pipeline.name %>
                         <% elsif step.step_type == 'api_call' %>
                           <%= step.api_method %> <%= step.api_url.truncate(30) %>
+                        <% elsif step.step_type == 'independent_extraction' %>
+                          <%= step.extraction_definition&.name || 'Unknown' %>
                         <% end %>
                       </td>
                       <td>

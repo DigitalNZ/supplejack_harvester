@@ -17,8 +17,12 @@ const PreviewModal = ({
   const appDetails = useSelector(selectAppDetails);
 
   const initialRequestClasses = classNames({
-    "col-6": appDetails.extractionDefinition.paginated,
-    "col-12": !appDetails.extractionDefinition.paginated,
+    "col-6":
+      appDetails.extractionDefinition.paginated &&
+      !appDetails.extractionDefinition.independent_extraction,
+    "col-12":
+      !appDetails.extractionDefinition.paginated ||
+      appDetails.extractionDefinition.independent_extraction,
   });
 
   return createPortal(
@@ -53,13 +57,14 @@ const PreviewModal = ({
             <Preview id={initialRequestId} />
           </div>
 
-          {appDetails.extractionDefinition.paginated && (
-            <div className="col-6">
-              <h5>Following Requests</h5>
+          {appDetails.extractionDefinition.paginated &&
+            !appDetails.extractionDefinition.independent_extraction && (
+              <div className="col-6">
+                <h5>Following Requests</h5>
 
-              <Preview id={mainRequestId} />
-            </div>
-          )}
+                <Preview id={mainRequestId} />
+              </div>
+            )}
         </div>
       </Modal.Body>
     </Modal>,

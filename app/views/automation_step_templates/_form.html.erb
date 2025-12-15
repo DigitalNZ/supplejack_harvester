@@ -14,19 +14,23 @@
 
   <div class="mb-3">
     <%= form.label :step_type, 'Step Type', class: 'form-label' %>
+    <% step_type_options = [['Pipeline', 'pipeline'], ['API Call', 'api_call'],
+                            ['Independent Extraction', 'independent_extraction']] %>
     <%= form.select :step_type,
-                    [['Pipeline', 'pipeline'], ['API Call', 'api_call']],
+                    step_type_options,
                     { include_blank: 'Select a step type' },
                     { class: 'form-select', required: true, data: { controller: 'step-type-select' } } %>
   </div>
 
-  <div id="pipeline-fields" class="<%= automation_step_template.step_type.to_s == 'api_call' ? 'd-none' : '' %>">
+  <% hidden_step_types = %w[api_call independent_extraction] %>
+  <% step_type = automation_step_template.step_type.to_s %>
+  <div id="pipeline-fields" class="<%= hidden_step_types.include?(step_type) ? 'd-none' : '' %>">
     <div class="mb-3">
       <%= form.label :pipeline_id, 'Pipeline', class: 'form-label' %>
       <%= form.select :pipeline_id,
                       @pipelines.map { |p| [p.name, p.id] },
                       { include_blank: 'Select a pipeline' },
-                      { class: 'form-select', required: automation_step_template.step_type.to_s != 'api_call',
+                      { class: 'form-select', required: automation_step_template.step_type.to_s == 'pipeline',
                         data: { controller: 'pipeline-select' } } %>
       <small class="form-text text-muted">
         Select a pipeline to view and choose its associated harvest definitions.
@@ -61,6 +65,39 @@
 
   <div id="api-call-fields" class="<%= automation_step_template.step_type.to_s == 'api_call' ? '' : 'd-none' %>">
     <%= render 'api_call_form', form: form, automation_step_template: automation_step_template %>
+  </div>
+
+  <% is_independent = automation_step_template.step_type.to_s == 'independent_extraction' %>
+  <div id="independent-extraction-fields" class="<%= is_independent ? '' : 'd-none' %>">
+    <div class="mb-3">
+      <%= form.label :extraction_definition_id, 'Independent Extraction Definition', class: 'form-label' %>
+      <% extraction_options = ExtractionDefinition.where(independent_extraction: true)
+                                                  .order(:name)
+                                                  .map { |ed| [ed.name, ed.id] } %>
+      <%= form.select :extraction_definition_id,
+                      extraction_options,
+                      { include_blank: 'Select an independent extraction definition' },
+                      { class: 'form-select', required: is_independent } %>
+      <small class="form-text text-muted">
+        Select an extraction definition with independent extraction enabled.
+        This step will extract links from the response (sitemap, list page, etc.)
+        and save them for the next step.
+      </small>
+    </div>
+
+    <div class="mb-3">
+      <%= form.label :link_selector, class: 'form-label' do %>
+        Link Selector
+        <span data-bs-toggle="tooltip"
+              data-bs-title="JSONPath or XPath selector to extract links">
+          <i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
+      <%= form.text_field :link_selector, class: 'form-control', placeholder: 'Enter a link selector' %>
+      <small class="form-text text-muted">
+        JSONPath or XPath selector to extract links from the independent-extraction response.
+      </small>
+    </div>
   </div>
 
   <div class="d-flex justify-content-between">
