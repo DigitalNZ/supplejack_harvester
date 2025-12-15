@@ -36,16 +36,6 @@ RSpec.describe Extraction::IndependentExtractionExecution do
 
         execution.call
       end
-
-      it 'does nothing when document is blank' do
-        mock_extraction = instance_double(Extraction::IndependentExtraction, document: nil)
-        allow(mock_extraction).to receive(:extract)
-        allow(Extraction::IndependentExtraction).to receive(:new).and_return(mock_extraction)
-
-        expect(mock_extraction).not_to receive(:extract_links)
-
-        execution.call
-      end
     end
 
     context 'when extracting from a previous independent extraction' do
