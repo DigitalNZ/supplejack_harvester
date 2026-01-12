@@ -5,6 +5,8 @@ class StopCondition < ApplicationRecord
 
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
+  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Style/OpenStructUse
   def evaluate(response_object)
     block = ->(response) { eval(content) }
 
@@ -30,6 +32,8 @@ class StopCondition < ApplicationRecord
   end
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
+  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Style/OpenStructUse
 
   def to_h
     {
