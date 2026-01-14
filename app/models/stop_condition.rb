@@ -7,20 +7,20 @@ class StopCondition < ApplicationRecord
   # rubocop:disable Security/Eval
   # rubocop:disable Metrics/MethodLength
   # rubocop:disable Style/OpenStructUse
-  def evaluate(response_object)
+  def evaluate(document)
     block = ->(response) { eval(content) }
 
     context =
       if content.include?('headers')
         OpenStruct.new(
-          body: response_object&.body,
-          headers: response_object&.response_headers,
-          status: response_object&.status
+          body: document&.body,
+          headers: document&.response_headers,
+          status: document&.status
         )
       else
         OpenStruct.new(
-          body: response_object&.body,
-          status: response_object&.status
+          body: document&.body,
+          status: document&.status
         )
       end
 
