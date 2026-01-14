@@ -10,23 +10,21 @@ class StopCondition < ApplicationRecord
   def evaluate(response_object)
     block = ->(response) { eval(content) }
 
-    if content.include?('headers')
-      StopCondition.new(
-        name:,
-        content: block.call(OpenStruct.new(
-                              {
-                                body: response_object&.body,
-                                headers: response_object&.response_headers,
-                                status: response_object&.status
-                              }
-                            ))
-      )
-    else
-      StopCondition.new(
-        name:,
-        content: block.call(response_object&.body)
-      )
-    end
+    context =
+      if content.include?('headers')
+        OpenStruct.new(
+          body: response_object&.body,
+          headers: response_object&.response_headers,
+          status: response_object&.status
+        )
+      else
+        OpenStruct.new(
+          body: response_object&.body,
+          status: response_object&.status
+        )
+      end
+
+    block.call(context)
   rescue StandardError => e
     e
   end
