@@ -1,38 +1,37 @@
 # frozen_string_literal: true
 
+require 'delegate'
+
 class StopCondition < ApplicationRecord
   belongs_to :extraction_definition
 
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
   # rubocop:disable Metrics/MethodLength
-  # rubocop:disable Style/OpenStructUse
   def evaluate(document)
     block = ->(response) { eval(content) }
 
     context =
-      if content.include?('headers')
-        OpenStruct.new(
-          body: document&.body,
-          headers: document&.response_headers,
-          status: document&.status
-        )
+      if content.include?('headers') || content.include?('status')
+        Class.new(SimpleDelegator) do
+          def headers
+            response_headers
+          end
+
+          delegate :status, to: :__getobj__
+        end.new(document)
       else
-        OpenStruct.new(
-          body: document&.body,
-          status: document&.status
-        )
+        document
       end
 
     block.call(context)
   rescue StandardError => e
     e
   end
+
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
   # rubocop:enable Metrics/MethodLength
-  # rubocop:enable Style/OpenStructUse
-
   def to_h
     {
       id:,
