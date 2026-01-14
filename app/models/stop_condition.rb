@@ -1,20 +1,37 @@
 # frozen_string_literal: true
 
+require 'delegate'
+
 class StopCondition < ApplicationRecord
   belongs_to :extraction_definition
 
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
+  # rubocop:disable Metrics/MethodLength
   def evaluate(document)
     block = ->(response) { eval(content) }
 
-    block.call(document)
+    context =
+      if content.include?('headers') || content.include?('status')
+        Class.new(SimpleDelegator) do
+          def headers
+            response_headers
+          end
+
+          delegate :status, to: :__getobj__
+        end.new(document)
+      else
+        document
+      end
+
+    block.call(context)
   rescue StandardError => e
     e
   end
+
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
-
+  # rubocop:enable Metrics/MethodLength
   def to_h
     {
       id:,
