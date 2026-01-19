@@ -1,26 +1,25 @@
 # frozen_string_literal: true
 
-require 'ostruct'
-
 class StopCondition < ApplicationRecord
   belongs_to :extraction_definition
 
   # rubocop:disable Security/Eval
-  def evaluate(response_object)
-    Airbrake.notify("Response: #{response_object}")
+  def evaluate(document_extraction)
+    Airbrake.notify("Response: #{document_extraction.document.response}")
+    Airbrake.notify("Response: #{document_extraction.document.status}")
 
-    context = OpenStruct.new(
-      body: response_object.body,
-      headers: response_object.response_headers,
-      status: response_object.status
-    )
+    # Set local variables for eval to use, mimicking the old behavior
+    body = document_extraction.document.body
+    headers = document_extraction.document.response.response_headers
+    status = document_extraction.document.status
 
-    eval(content, context.instance_eval { binding })
+    # Evaluate the stop condition content in the context of these locals
+    eval(content)
   rescue StandardError => e
     e
   end
-
   # rubocop:enable Security/Eval
+
   def to_h
     {
       id:,
