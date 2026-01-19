@@ -11,6 +11,14 @@ class StopCondition < ApplicationRecord
   def evaluate(document)
     block = ->(response) { eval(content) }
 
+    Rails.logger.error { "Body: #{content.body}" } if content.include?('body')
+    Rails.logger.error { "Headers: #{content.headers}" } if content.include?('headers')
+    Rails.logger.error { "Status: #{content.status}" } if content.include?('status')
+
+    if content.exclude?('body') && content.exclude?('headers') && content.exclude?('status')
+      Rails.logger.error { 'No body, headers or status found' }
+    end
+
     context =
       if content.include?('headers') || content.include?('status')
         OpenStruct.new(
