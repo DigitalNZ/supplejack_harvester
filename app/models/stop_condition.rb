@@ -9,14 +9,16 @@ class StopCondition < ApplicationRecord
   # rubocop:disable Security/Eval
   # rubocop:disable Metrics/MethodLength
   def evaluate(document)
+    Airbrake.notify("Document: #{document}")
+
     block = ->(response) { eval(content) }
 
-    Rails.logger.error { "Body: #{content.body}" } if content.include?('body')
-    Rails.logger.error { "Headers: #{content.headers}" } if content.include?('headers')
-    Rails.logger.error { "Status: #{content.status}" } if content.include?('status')
+    Airbrake.notify("Body: #{content.body}") if content.include?('body')
+    Airbrake.notify("Headers: #{content.headers}") if content.include?('headers')
+    Airbrake.notify("Status: #{content.status}") if content.include?('status')
 
     if content.exclude?('body') && content.exclude?('headers') && content.exclude?('status')
-      Rails.logger.error { 'No body, headers or status found' }
+      Airbrake.notify('No body, headers or status found')
     end
 
     context =
