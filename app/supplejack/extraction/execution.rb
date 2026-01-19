@@ -118,7 +118,7 @@ module Extraction
       return false if stop_conditions.empty?
 
       stop_conditions.any? do |condition|
-        condition.evaluate(@de.document.body).tap do |met|
+        condition.evaluate(condition.evaluate(@de.document)).tap do |met|
           if met
             log_stop_condition_hit(
               stop_condition_type: 'user',

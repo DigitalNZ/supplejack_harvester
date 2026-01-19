@@ -5,41 +5,22 @@ require 'ostruct'
 class StopCondition < ApplicationRecord
   belongs_to :extraction_definition
 
-  # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
-  # rubocop:disable Metrics/MethodLength
-  def evaluate(document)
-    Airbrake.notify("Document: #{document}")
+  def evaluate(response_object)
+    Airbrake.notify("Response: #{response_object}")
 
-    block = ->(response) { eval(content) }
+    context = OpenStruct.new(
+      body: response_object.body,
+      headers: response_object.response_headers,
+      status: response_object.status
+    )
 
-    Airbrake.notify("Body: #{content.body}") if content.include?('body')
-    Airbrake.notify("Headers: #{content.headers}") if content.include?('headers')
-    Airbrake.notify("Status: #{content.status}") if content.include?('status')
-
-    if content.exclude?('body') && content.exclude?('headers') && content.exclude?('status')
-      Airbrake.notify('No body, headers or status found')
-    end
-
-    context =
-      if content.include?('headers') || content.include?('status')
-        OpenStruct.new(
-          body: document.body,
-          headers: document.response_headers,
-          status: document.status
-        )
-      else
-        document
-      end
-
-    block.call(context)
+    eval(content, context.instance_eval { binding })
   rescue StandardError => e
     e
   end
 
-  # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
-  # rubocop:enable Metrics/MethodLength
   def to_h
     {
       id:,
