@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'delegate'
+require 'ostruct'
 
 class StopCondition < ApplicationRecord
   belongs_to :extraction_definition
@@ -13,13 +13,11 @@ class StopCondition < ApplicationRecord
 
     context =
       if content.include?('headers') || content.include?('status')
-        Class.new(SimpleDelegator) do
-          def headers
-            response_headers
-          end
-
-          delegate :status, to: :__getobj__
-        end.new(document)
+        OpenStruct.new(
+          body: document.body,
+          headers: document.response_headers,
+          status: document.status
+        )
       else
         document
       end
