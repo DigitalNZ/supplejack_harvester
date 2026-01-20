@@ -11,8 +11,6 @@ class StopCondition < ApplicationRecord
     body = document.body
     status = document.status
 
-    Airbrake.notify("Status: #{document.status}")
-
     # Optional headers support (only if present)
     headers =
       if document.respond_to?(:headers)
