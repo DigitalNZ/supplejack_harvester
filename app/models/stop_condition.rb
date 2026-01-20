@@ -24,7 +24,7 @@ class StopCondition < ApplicationRecord
         {}
       end
 
-    block.call(OpenStruct.new({ document: document, body: body, status: status, headers: headers }))
+    block.call(OpenStruct.new({ document: body, status: status, headers: headers }))
   rescue StandardError => e
     Airbrake.notify(e)
     false
