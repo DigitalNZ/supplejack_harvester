@@ -6,6 +6,7 @@ class StopCondition < ApplicationRecord
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
   # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Lint/UselessAssignment
   def evaluate(document_extraction)
     # Preserve historical lambda binding behavior
     block = ->(response) { eval(content) }
@@ -14,15 +15,16 @@ class StopCondition < ApplicationRecord
 
     # Locals historically visible inside eval
     body = document.body
-    document.status
+    status = document.status
 
-    if document.respond_to?(:headers)
-      document.headers
-    elsif document.respond_to?(:response_headers)
-      document.response_headers
-    else
-      {}
-    end
+    headers =
+      if document.respond_to?(:headers)
+        document.headers
+      elsif document.respond_to?(:response_headers)
+        document.response_headers
+      else
+        {}
+      end
 
     response = body
 
@@ -38,6 +40,7 @@ class StopCondition < ApplicationRecord
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
   # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Lint/UselessAssignment
 
   def to_h
     {
