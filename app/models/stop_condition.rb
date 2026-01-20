@@ -1,20 +1,21 @@
 # frozen_string_literal: true
 
-require 'ostruct'
-
 class StopCondition < ApplicationRecord
   belongs_to :extraction_definition
 
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
   # rubocop:disable Metrics/MethodLength
-  # rubocop:disable Style/OpenStructUse
   def evaluate(document_extraction)
+    # Preserve historical lambda binding behavior
     block = ->(response) { eval(content) }
 
     document = document_extraction.document
+
+    # Locals historically visible inside eval
     body = document.body
     status = document.status
+
     headers =
       if document.respond_to?(:headers)
         document.headers
@@ -24,16 +25,17 @@ class StopCondition < ApplicationRecord
         {}
       end
 
-    block.call(OpenStruct.new({ document: body, status: status, headers: headers }))
+    response = body
+
+    !!block.call(response)
   rescue StandardError => e
     Airbrake.notify(e)
     false
   end
-
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
   # rubocop:enable Metrics/MethodLength
-  # rubocop:enable Style/OpenStructUse
+
   def to_h
     {
       id:,
