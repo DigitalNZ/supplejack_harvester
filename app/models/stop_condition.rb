@@ -14,18 +14,21 @@ class StopCondition < ApplicationRecord
 
     # Locals historically visible inside eval
     body = document.body
-    status = document.status
+    document.status
 
-    headers =
-      if document.respond_to?(:headers)
-        document.headers
-      elsif document.respond_to?(:response_headers)
-        document.response_headers
-      else
-        {}
-      end
+    if document.respond_to?(:headers)
+      document.headers
+    elsif document.respond_to?(:response_headers)
+      document.response_headers
+    else
+      {}
+    end
 
     response = body
+
+    # status and headers are still accessible
+    # block = ->(response) { eval(content) }
+    # creates a closure. That closure captures all local variables in scope at the time it is defined.
 
     !!block.call(response)
   rescue StandardError => e
