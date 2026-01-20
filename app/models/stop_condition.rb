@@ -5,15 +5,42 @@ class StopCondition < ApplicationRecord
 
   # rubocop:disable Lint/UnusedBlockArgument
   # rubocop:disable Security/Eval
-  def evaluate(document)
+  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Lint/UselessAssignment
+  def evaluate(document_extraction)
+    # Preserve historical lambda binding behavior
     block = ->(response) { eval(content) }
 
-    block.call(document)
+    document = document_extraction.document
+
+    # Locals historically visible inside eval
+    body = document.body
+    status = document.status
+
+    headers =
+      if document.respond_to?(:headers)
+        document.headers
+      elsif document.respond_to?(:response_headers)
+        document.response_headers
+      else
+        {}
+      end
+
+    response = body
+
+    # status and headers are still accessible
+    # block = ->(response) { eval(content) }
+    # creates a closure. That closure captures all local variables in scope at the time it is defined.
+
+    !!block.call(response)
   rescue StandardError => e
-    e
+    Airbrake.notify(e)
+    false
   end
   # rubocop:enable Lint/UnusedBlockArgument
   # rubocop:enable Security/Eval
+  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Lint/UselessAssignment
 
   def to_h
     {

@@ -34,7 +34,8 @@ class Parameter < ApplicationRecord
         content: block.call(OpenStruct.new(
                               {
                                 body: response_object&.body,
-                                headers: response_object&.response_headers
+                                headers: response_object&.response_headers,
+                                status: response_object&.status
                               }
                             ))
       )
