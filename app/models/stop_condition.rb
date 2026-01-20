@@ -5,14 +5,23 @@ class StopCondition < ApplicationRecord
 
   # rubocop:disable Security/Eval
   def evaluate(document_extraction)
-    response = document_extraction.document
+    document = document_extraction.document
 
-    Airbrake.notify("Response: #{response}")
+    # Expose locals exactly like before, plus status
+    body = document.body
+    status = document.status
 
-    # Locals exposed to eval (THIS is the key)
-    body = response.body
-    status = response.status
-    headers = response.respond_to?(:response_headers) ? response.response_headers : {}
+    Airbrake.notify("Status: #{document.status}")
+
+    # Optional headers support (only if present)
+    headers =
+      if document.respond_to?(:headers)
+        document.headers
+      elsif document.respond_to?(:response_headers)
+        document.response_headers
+      else
+        {}
+      end
 
     eval(content)
   rescue StandardError => e
