@@ -122,7 +122,7 @@ class TransformationWorker
 
     return if @harvest_job.cancelled? || @pipeline_job.cancelled?
 
-    LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records.to_json, @api_record_id)
+    LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records, @api_record_id)
 
     notify_harvesting_api
     @harvest_report.increment_load_workers_queued!
@@ -144,7 +144,7 @@ class TransformationWorker
   def queue_delete_worker(records)
     return if records.empty?
 
-    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
+    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records, destination.id,
                                              @harvest_report.id)
     @harvest_report.increment_delete_workers_queued!
   end
