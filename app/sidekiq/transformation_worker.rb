@@ -1,171 +1,68 @@
-# frozen_string_literal: true
-
-# rubocop:disable Metrics/ClassLength
-class TransformationWorker
-  include PerformWithPriority
-  include Sidekiq::Job
-
-  sidekiq_options retry: 0
-
-  def perform(harvest_job_id, page = 1, api_record_id = nil)
-    @harvest_job = HarvestJob.find(harvest_job_id)
-    @extraction_job = @harvest_job.extraction_job
-    @transformation_definition = TransformationDefinition.find(@harvest_job.transformation_definition.id)
-    @harvest_report = @harvest_job.harvest_report
-    @page = page
-    @api_record_id = api_record_id
-    @pipeline_job = @harvest_job.pipeline_job
-
-    job_start
-
-    child_perform
-    job_end
-  end
-
-  def job_start
-    @harvest_report.transformation_running!
-  end
-
-  def child_perform
-    transformed_records = transform_records.map(&:to_hash)
-
-    @harvest_job.reload
-
-    return if @harvest_job.cancelled? || @pipeline_job.cancelled?
-
-    process_transformed_records(transformed_records)
-  end
-
-  private
-
-  def process_transformed_records(transformed_records)
-    valid_records, rejected_records, deleted_records = categorize_records(transformed_records)
-
-    update_harvest_report(transformed_records.count, rejected_records.count)
-
-    queue_load_worker(valid_records)
-    queue_delete_worker(deleted_records)
-  end
-
-  def categorize_records(transformed_records)
-    valid_records = []
-    rejected_records = []
-    deleted_records = []
-
-    transformed_records.each do |record|
-      categorize_single_record(record, valid_records, rejected_records, deleted_records)
+# Sanitizes any object into JSON-safe data
+def sanitize_record(record)
+  case record
+  when Hash
+    record.each_with_object({}) do |(k, v), safe_hash|
+      key = k.to_s
+      safe_hash[key] = sanitize_record(v)
     end
-
-    [valid_records, rejected_records, deleted_records]
-  end
-
-  def categorize_single_record(record, valid_records, rejected_records, deleted_records)
-    rejection_reasons = record['rejection_reasons']
-    deletion_reasons = record['deletion_reasons']
-
-    if rejection_reasons.blank? && deletion_reasons.blank?
-      valid_records << record
-    elsif rejection_reasons.present?
-      rejected_records << record
-    elsif deletion_reasons.present?
-      deleted_records << record
-    end
-  end
-
-  def update_harvest_report(transformed_records_count, rejected_records_count)
-    @harvest_report.increment_records_transformed!(transformed_records_count)
-    @harvest_report.increment_records_rejected!(rejected_records_count)
-    @harvest_report.update(transformation_updated_time: Time.zone.now)
-  end
-
-  def job_end
-    @harvest_report.increment_transformation_workers_completed!
-    @harvest_report.reload
-
-    transformation_workers_completed = @harvest_report.transformation_workers_completed?
-    return unless transformation_workers_completed
-
-    handle_transformation_completion
-  end
-
-  def handle_transformation_completion
-    @harvest_report.transformation_completed!
-    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
-    @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
-
-    return unless @harvest_report.delete_workers_queued.zero?
-
-    @harvest_report.delete_completed!
-    @harvest_report.transformation_completed!
-  end
-
-  def transform_records
-    Transformation::Execution.new(records, @transformation_definition.fields).call
-  rescue StandardError => e
-    handle_transform_error(e)
-    []
-  end
-
-  def handle_transform_error(error)
-    JobCompletionServices::ContextBuilder.create_job_completion_or_error({
-                                                                           error: error,
-                                                                           definition: @transformation_definition,
-                                                                           job: @harvest_job,
-                                                                           origin: 'TransformationWorker'
-                                                                         })
-  end
-
-  def queue_load_worker(records)
-    return if records.empty?
-
-    @harvest_job.reload
-
-    return if @harvest_job.cancelled? || @pipeline_job.cancelled?
-
-    LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records, @api_record_id)
-
-    notify_harvesting_api
-    @harvest_report.increment_load_workers_queued!
-  end
-
-  def notify_harvesting_api
-    ::Retriable.retriable(on_retry: log_retry_attempt) do
-      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
-    end
-  rescue StandardError => e
-    JobCompletionServices::ContextBuilder.create_job_completion_or_error({
-                                                                           error: e,
-                                                                           definition: @transformation_definition,
-                                                                           job: @harvest_job,
-                                                                           origin: 'TransformationWorker'
-                                                                         })
-  end
-
-  def queue_delete_worker(records)
-    return if records.empty?
-
-    DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records, destination.id,
-                                             @harvest_report.id)
-    @harvest_report.increment_delete_workers_queued!
-  end
-
-  def source_id
-    @pipeline_job.pipeline.harvest_definitions.first.source_id
-  end
-
-  def destination
-    @pipeline_job.destination
-  end
-
-  def records
-    Transformation::RawRecordsExtractor.new(@transformation_definition, @extraction_job).records(@page)
-  end
-
-  def log_retry_attempt
-    proc do |exception, try, elapsed_time, next_interval|
-      logger.info("#{exception.class}: '#{exception.message}': #{try} tries in #{elapsed_time} seconds " \
-                  "and #{next_interval} seconds until the next try.")
-    end
+  when Array
+    record.map { |v| sanitize_record(v) }
+  when Symbol
+    record.to_s
+  when Numeric, TrueClass, FalseClass, NilClass
+    record
+  when String
+    record.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
+  else
+    # Fallback for unexpected objects
+    record.to_s
   end
 end
-# rubocop:enable Metrics/ClassLength
+
+def queue_load_worker(records)
+  return if records.empty?
+
+  @harvest_job.reload
+  return if @harvest_job.cancelled? || @pipeline_job.cancelled?
+
+  # Sanitize all records
+  records_to_enqueue = records.map { |r| sanitize_record(r) }
+
+  # Debugging: log any record that fails JSON serialization
+  records_to_enqueue.each do |r|
+    begin
+      MultiJson.dump(r)
+    rescue StandardError => e
+      Airbrake.notify("Problematic record for LoadWorker: #{r.inspect}")
+      Airbrake.notify("Error: #{e.message}")
+    end
+  end
+
+  # Enqueue sanitized records
+  LoadWorker.perform_async_with_priority(@pipeline_job.job_priority, @harvest_job.id, records_to_enqueue, @api_record_id)
+
+  notify_harvesting_api
+  @harvest_report.increment_load_workers_queued!
+end
+
+def queue_delete_worker(records)
+  return if records.empty?
+
+  # Sanitize all records
+  records_to_enqueue = records.map { |r| sanitize_record(r) }
+
+  # Debugging: log any record that fails JSON serialization
+  records_to_enqueue.each do |r|
+    begin
+      MultiJson.dump(r)
+    rescue StandardError => e
+      Airbrake.notify("Problematic record for DeleteWorker: #{r.inspect}")
+      Airbrake.notify("Error: #{e.message}")
+    end
+  end
+
+  DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records_to_enqueue, destination.id, @harvest_report.id)
+  @harvest_report.increment_delete_workers_queued!
+end
+
