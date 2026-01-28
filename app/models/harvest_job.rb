@@ -14,10 +14,6 @@ class HarvestJob < ApplicationRecord
 
   PROCESSES = %w[TransformationWorker LoadWorker DeleteWorker].freeze
 
-  # This is to ensure that there is only ever one version of a HarvestJob running.
-  # It is used when enqueing enrichments at the end of a harvest.
-  validates :key, uniqueness: true
-
   after_create do
     self.name = "#{id}_#{harvest_definition.kind}"
     save!

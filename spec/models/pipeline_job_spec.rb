@@ -15,8 +15,6 @@ RSpec.describe PipelineJob do
     let(:pipeline)           { create(:pipeline, name: 'NLNZCat') }
     let(:harvest_definition) { create(:harvest_definition, pipeline:) }
 
-    it { is_expected.to validate_uniqueness_of(:key).case_insensitive.with_message('has already been taken') }
-
     it 'requires pages if the page_type is set_number' do
       job = build(:pipeline_job, pipeline:, destination:, page_type: 'set_number')
 
