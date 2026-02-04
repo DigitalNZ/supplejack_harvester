@@ -79,11 +79,8 @@ module JobCompletionServices
 
       return unless job.is_a?(ExtractionJob)
 
-      job.record_stop_condition(
-        type: args[:stop_condition_type],
-        name: args[:stop_condition_name],
-        content: args[:stop_condition_content]
-      )
+      job.record_stop_condition(type: args[:stop_condition_type], name: args[:stop_condition_name],
+                                content: args[:stop_condition_content])
     end
   end
 end
