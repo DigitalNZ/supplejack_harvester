@@ -128,15 +128,13 @@ class JobCompletionSummary < ApplicationRecord
     return [] unless job_type == 'ExtractionJob'
 
     extraction_job = ExtractionJob.find_by(id: job_id)
-    return [] unless extraction_job&.stop_condition_name.present?
+    return [] if extraction_job&.stop_condition_name.blank?
 
     [
-      StopConditionRecord.new(
-        stop_condition_name: extraction_job.stop_condition_name,
-        stop_condition_content: extraction_job.stop_condition_content,
-        stop_condition_type: extraction_job.stop_condition_type,
-        occurred_at: extraction_job.updated_at
-      )
+      StopConditionRecord.new(stop_condition_name: extraction_job.stop_condition_name,
+                              stop_condition_content: extraction_job.stop_condition_content,
+                              stop_condition_type: extraction_job.stop_condition_type,
+                              occurred_at: extraction_job.updated_at)
     ]
   end
 end
