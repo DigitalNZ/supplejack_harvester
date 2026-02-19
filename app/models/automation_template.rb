@@ -40,6 +40,31 @@ class AutomationTemplate < ApplicationRecord
     [automation, 'Automation was successfully created and started', true]
   end
 
+  def automation_running?
+    running_pipeline_job_steps = Automation.where(automation_template_id: id)
+      .joins(automation_steps: { pipeline_job: :harvest_reports })
+      .where(automation_steps: { step_type: 'pipeline' })
+      .where.not(
+        harvest_reports: { 
+          extraction_status: [:completed, :errored, :cancelled],
+          transformation_status: [:completed, :errored, :cancelled],
+          load_status: [:completed, :errored, :cancelled],
+          delete_status: [:completed, :errored, :cancelled]
+        }
+      )
+
+    return true if running_pipeline_job_steps.any?
+
+    running_api_call_steps = Automation.where(automation_template_id: id)
+      .joins(automation_steps: :api_response_report)
+      .where(automation_steps: { step_type: 'api_call' })
+      .where.not(api_response_reports: { status: ['completed', 'errored', 'cancelled'] })
+
+    return true if running_api_call_steps.any?
+
+    false
+  end
+
   private
 
   def handle_automation_not_persisted
@@ -87,11 +112,5 @@ class AutomationTemplate < ApplicationRecord
     automation_step.api_method = step_template.api_method
     automation_step.api_headers = step_template.api_headers
     automation_step.api_body = step_template.api_body
-  end
-
-  def automation_running?
-    automations.any? do |a|
-      a.status != 'completed' && a.status != 'errored' && a.status != 'cancelled'
-    end
   end
 end
