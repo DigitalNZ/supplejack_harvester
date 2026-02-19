@@ -159,6 +159,24 @@ RSpec.describe AutomationTemplate do
         end
       end
 
+      context "when the pipline job has been cancelled" do
+        it 'returns false' do
+          automation = create(:automation, automation_template: template)
+          step = create(:automation_step, :pipeline, automation: automation, pipeline: pipeline)
+          pipeline_job = create(:pipeline_job, automation_step: step, pipeline: pipeline, status: "cancelled")
+          harvest_job = create(:harvest_job, pipeline_job: pipeline_job, harvest_definition: harvest_definition)
+          create(:harvest_report,
+                 pipeline_job: pipeline_job,
+                 harvest_job: harvest_job,
+                 extraction_status: :completed,
+                 transformation_status: :running,
+                 load_status: :running,
+                 delete_status: :running)
+          
+          expect(template.automation_running?).to be false 
+        end
+      end
+
       context 'when one status phase is running (extraction)' do
         it 'returns true' do
           automation = create(:automation, automation_template: template)

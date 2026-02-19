@@ -41,31 +41,39 @@ class AutomationTemplate < ApplicationRecord
   end
 
   def automation_running?
-    running_pipeline_job_steps = Automation.where(automation_template_id: id)
-      .joins(automation_steps: { pipeline_job: :harvest_reports })
-      .where(automation_steps: { step_type: 'pipeline' })
-      .where.not(
-        harvest_reports: { 
-          extraction_status: [:completed, :errored, :cancelled],
-          transformation_status: [:completed, :errored, :cancelled],
-          load_status: [:completed, :errored, :cancelled],
-          delete_status: [:completed, :errored, :cancelled]
-        }
-      )
-
-    return true if running_pipeline_job_steps.any?
-
-    running_api_call_steps = Automation.where(automation_template_id: id)
-      .joins(automation_steps: :api_response_report)
-      .where(automation_steps: { step_type: 'api_call' })
-      .where.not(api_response_reports: { status: ['completed', 'errored', 'cancelled'] })
-
-    return true if running_api_call_steps.any?
+    return true if running_pipeline_job_steps?
+    return true if running_api_call_steps?
 
     false
   end
 
   private
+
+  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Rails/WhereNotWithMultipleConditions
+  def running_pipeline_job_steps?
+    Automation.where(automation_template_id: id)
+              .joins(automation_steps: { pipeline_job: :harvest_reports })
+              .where(automation_steps: { step_type: 'pipeline' })
+              .where(pipeline_jobs: { status: [:queued, :running, :completed, :errored, nil] })
+              .where.not(
+                harvest_reports: {
+                  extraction_status: %i[completed errored cancelled],
+                  transformation_status: %i[completed errored cancelled],
+                  load_status: %i[completed errored cancelled],
+                  delete_status: %i[completed errored cancelled]
+                }
+              ).present?
+  end
+
+  def running_api_call_steps?
+    Automation.where(automation_template_id: id)
+              .joins(automation_steps: :api_response_report)
+              .where(automation_steps: { step_type: 'api_call' })
+              .where.not(api_response_reports: { status: %w[completed errored cancelled] }).present?
+  end
+  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Rails/WhereNotWithMultipleConditions
 
   def handle_automation_not_persisted
     [nil, 'Failed to create automation from template', false]
