@@ -11,8 +11,10 @@ const CodeEditor = ({ initContent, onChange, format = "ruby", ...props }) => {
   const editorRef = useRef();
 
   const editorExtensions = () => {
-    if (format == "JSON" || format == "ARCHIVE_JSON") {
+    if (format == "JSON") {
       return [basicSetup, json(), EditorState.readOnly.of(true)];
+    } else if (format == "ARCHIVE_JSON") {
+      return [basicSetup, EditorState.readOnly.of(true)];
     } else if (format == "XML" || format == "HTML") {
       return [
         basicSetup,
@@ -39,11 +41,19 @@ const CodeEditor = ({ initContent, onChange, format = "ruby", ...props }) => {
 
   const doc = () => {
     let content;
-    if (format == "JSON" || format == "ARCHIVE_JSON") {
+    if (format == "JSON") {
       try {
         content = JSON.stringify(JSON.parse(initContent), null, 2);
       } catch (err) {
         content = errorDocument();
+      }
+
+      return content;
+    } else if (format == "ARCHIVE_JSON") {
+      try {
+        content = JSON.stringify(JSON.parse(initContent), null, 2);
+      } catch (err) {
+        content = initContent ?? "";
       }
 
       return content;
