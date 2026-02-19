@@ -9,8 +9,17 @@ class JobCompletionSummary < ApplicationRecord
   validates :job_id, presence: true
   validates :job_type, presence: true
 
-  has_many :job_completions, dependent: :destroy
   has_many :job_errors, dependent: :destroy
+  StopConditionRecord = Struct.new(:stop_condition_name, :stop_condition_content, :stop_condition_type,
+                                   :occurred_at, keyword_init: true) do
+    def updated_at
+      occurred_at
+    end
+
+    def created_at
+      occurred_at
+    end
+  end
 
   def pipeline_name
     pipeline = find_pipeline_from_job(job_id, job_type)
@@ -18,15 +27,15 @@ class JobCompletionSummary < ApplicationRecord
   end
 
   def last_completed_at
-    job_completions.order(updated_at: :desc).first&.updated_at
+    stop_condition_records.first&.occurred_at
   end
 
   def completion_count
-    job_completions.count + job_errors.count
+    stop_condition_records.count + job_errors.count
   end
 
   def all_records
-    (job_completions.to_a + job_errors.to_a).sort_by { |r| r.updated_at || r.created_at }.reverse
+    (stop_condition_records + job_errors.to_a).sort_by { |r| r.updated_at || r.created_at }.reverse
   end
 
   def error_count
@@ -113,5 +122,19 @@ class JobCompletionSummary < ApplicationRecord
 
     extraction_job.harvest_job&.pipeline_job&.pipeline ||
       extraction_job.extraction_definition.pipeline
+  end
+
+  def stop_condition_records
+    return [] unless job_type == 'ExtractionJob'
+
+    extraction_job = ExtractionJob.find_by(id: job_id)
+    return [] if extraction_job&.stop_condition_name.blank?
+
+    [
+      StopConditionRecord.new(stop_condition_name: extraction_job.stop_condition_name,
+                              stop_condition_content: extraction_job.stop_condition_content,
+                              stop_condition_type: extraction_job.stop_condition_type,
+                              occurred_at: extraction_job.updated_at)
+    ]
   end
 end

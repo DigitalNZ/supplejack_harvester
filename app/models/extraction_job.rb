@@ -65,4 +65,17 @@ class ExtractionJob < ApplicationRecord
   def extraction_folder_size_in_bytes
     Dir.glob("#{extraction_folder}/**/*.*").sum { |f| File.size(f) }
   end
+
+  # Records the stop condition that ended this extraction, if any.
+  #
+  # @param type [String] who set the stop condition (system/user)
+  # @param name [String] identifier for the condition
+  # @param content [String] optional description or script
+  def record_stop_condition(type:, name:, content:)
+    update!(
+      stop_condition_type: type,
+      stop_condition_name: name,
+      stop_condition_content: content
+    )
+  end
 end
