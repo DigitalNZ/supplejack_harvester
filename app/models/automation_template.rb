@@ -40,7 +40,40 @@ class AutomationTemplate < ApplicationRecord
     [automation, 'Automation was successfully created and started', true]
   end
 
+  def automation_running?
+    return true if running_pipeline_job_steps?
+    return true if running_api_call_steps?
+
+    false
+  end
+
   private
+
+  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Rails/WhereNotWithMultipleConditions
+  def running_pipeline_job_steps?
+    Automation.where(automation_template_id: id)
+              .joins(automation_steps: { pipeline_job: :harvest_reports })
+              .where(automation_steps: { step_type: 'pipeline' })
+              .where(pipeline_jobs: { status: [:queued, :running, :completed, :errored, nil] })
+              .where.not(
+                harvest_reports: {
+                  extraction_status: %i[completed errored cancelled],
+                  transformation_status: %i[completed errored cancelled],
+                  load_status: %i[completed errored cancelled],
+                  delete_status: %i[completed errored cancelled]
+                }
+              ).present?
+  end
+
+  def running_api_call_steps?
+    Automation.where(automation_template_id: id)
+              .joins(automation_steps: :api_response_report)
+              .where(automation_steps: { step_type: 'api_call' })
+              .where.not(api_response_reports: { status: %w[completed errored cancelled] }).present?
+  end
+  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Rails/WhereNotWithMultipleConditions
 
   def handle_automation_not_persisted
     [nil, 'Failed to create automation from template', false]
@@ -87,11 +120,5 @@ class AutomationTemplate < ApplicationRecord
     automation_step.api_method = step_template.api_method
     automation_step.api_headers = step_template.api_headers
     automation_step.api_body = step_template.api_body
-  end
-
-  def automation_running?
-    automations.any? do |a|
-      a.status != 'completed' && a.status != 'errored' && a.status != 'cancelled'
-    end
   end
 end
