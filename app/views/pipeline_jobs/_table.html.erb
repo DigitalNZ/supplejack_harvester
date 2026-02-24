@@ -24,10 +24,14 @@
           <% total_jobs = jobs.size %>
           <% jobs.each.with_index(1) do |job, job_idx| %>
             <% job.harvest_definitions_to_run.zip(job.harvest_reports).each_with_index do |(definition_id, report), row_index| %>
+
+              <% harvest_definition = HarvestDefinition.where(id: definition_id) %>
+              <% next if harvest_definition.blank? %>
+
               <%= render 'pipeline_jobs/job_row',
                          job: job,
                          report: report,
-                         harvest_definition: HarvestDefinition.find(definition_id),
+                         harvest_definition: harvest_definition.first,
                          show_pipeline_col: show_pipeline_col,
                          row_index: %>
             <% end %>
