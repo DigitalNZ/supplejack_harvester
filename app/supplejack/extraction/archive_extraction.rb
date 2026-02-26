@@ -16,7 +16,7 @@ module Extraction
 
     def save_entries(extraction_folder)
       each_entry(extraction_folder) do |_, name|
-        current_document = build_doc("#{extraction_folder}/#{folder_number(extraction_definition.page)}/#{name}")
+        current_document = build_doc("#{extraction_folder}/#{name}")
         save(current_document)
         next_page
       end
