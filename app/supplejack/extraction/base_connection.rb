@@ -12,7 +12,7 @@ module Extraction
 
     def initialize(url:, params: {}, headers: {}, method: 'get')
       headers ||= {}
-      @connection = build_connection(url, params, headers)
+      @connection = connection(url, params, headers)
       @url = method == 'get' ? @connection.build_url : url
       @params = @connection.params
       @headers = @connection.headers
@@ -23,13 +23,15 @@ module Extraction
     end
 
     def post
-      Response.new(@connection.post(url, normalized_params.to_json, headers))
+      Response.new(post_request)
     end
 
     private
 
-    def build_connection(url, params, headers)
-      connection(url, params, headers)
+    # The POST request does not use @connection to avoid sending the URL params
+    # as part of the URL which causes the URL to be too big and rejected by Webservers.
+    def post_request
+      connection(url, {}, headers).post(url, normalized_params.to_json, headers)
     end
 
     # We store all values in the database as a string
