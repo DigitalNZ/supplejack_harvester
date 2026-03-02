@@ -81,7 +81,7 @@ module Extraction
                   .filter_map(&:pipeline_job)
                   .flat_map(&:harvest_jobs)
                   .map(&:name)
-                  .select { |name| name.include?('__harvest-') }
+                  .select { |name| name.include?('_harvest') }
     end
 
     def source_fragment_filter
