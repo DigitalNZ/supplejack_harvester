@@ -80,8 +80,8 @@ module Extraction
       @harvest_job.pipeline_job.automation_step.automation.automation_steps
                   .filter_map(&:pipeline_job)
                   .flat_map(&:harvest_jobs)
+                  .select { |harvest_job| harvest_job.harvest_definition.harvest? }
                   .map(&:name)
-                  .select { |name| name.include?('_harvest') }
     end
 
     def source_fragment_filter

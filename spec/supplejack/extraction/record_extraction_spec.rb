@@ -138,22 +138,23 @@ RSpec.describe Extraction::RecordExtraction do
         other_automation_step = create(:automation_step, automation:)
         other_pipeline = create(:pipeline, name: 'OtherTestPipeline')
         other_pipeline_job = create(:pipeline_job, pipeline: other_pipeline, automation_step: other_automation_step)
-        other_harvest_definition = create(:harvest_definition, pipeline: other_pipeline)
+        other_harvest_definition = create(:harvest_definition, pipeline: other_pipeline, kind: "harvest")
+        enrichment_definition = create(:harvest_definition, pipeline: other_pipeline, kind: "enrichment")
         
-        create(:harvest_job, name: 'job1__harvest-abc', pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
-        create(:harvest_job, name: 'job2__harvest-xyz', pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
-        create(:harvest_job, name: 'job3__enrichment-abc', pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
+        @harvest_job_one    = create(:harvest_job, pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
+        @harvest_job_two    = create(:harvest_job, pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
+        @enrichment_job_one = create(:harvest_job, pipeline_job: other_pipeline_job, harvest_definition: enrichment_definition)
       end
 
-      it 'returns a hash with fragments.job_id mapped to job names with __harvest-' do
+      it 'returns a hash with fragments.job_id mapped to job names that belong to "harvest" jobs and not "enrichment" jobs' do
         result = subject.send(:fragment_filter)
         expect(result).to have_key('fragments.job_id')
+
+        expect(result['fragments.job_id']).to include(harvest_job.name)
+        expect(result['fragments.job_id']).to include(@harvest_job_one.name)
+        expect(result['fragments.job_id']).to include(@harvest_job_two.name)
         
-        # Check that all job names include '__harvest-'
-        expect(result['fragments.job_id']).to all(include('__harvest-'))
-        
-        # Ensure non-harvest job names are not included
-        expect(result['fragments.job_id']).not_to include(match('job3__enrichment-abc'))
+        expect(result['fragments.job_id']).not_to include(@enrichment_job_one.name)
       end
     end
 
