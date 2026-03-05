@@ -24,6 +24,43 @@ RSpec.describe 'PipelineJobs' do
     end
   end
 
+  describe 'GET /harvest_jobs/:harvest_job_id/errors' do
+    it 'displays grouped errors for extraction, transformation and load' do
+      extraction_summary = create(:job_completion_summary,
+                                  job_id: harvest_job.extraction_job_id,
+                                  process_type: :extraction,
+                                  job_type: 'ExtractionJob')
+      transformation_summary = create(:job_completion_summary,
+                                      job_id: harvest_job.id,
+                                      process_type: :transformation,
+                                      job_type: 'TransformationJob')
+
+      create(:job_error, job_completion_summary: extraction_summary, job_id: harvest_job.extraction_job_id,
+                         job_type: 'ExtractionJob', origin: 'ExtractionWorker',
+                         message: "Extraction failure for #{harvest_job.id}")
+      create(:job_error, job_completion_summary: extraction_summary, job_id: harvest_job.extraction_job_id,
+                         job_type: 'ExtractionJob', origin: 'LoadWorker',
+                         message: "Load failure for #{harvest_job.id}")
+      create(:job_error, job_completion_summary: transformation_summary, job_id: harvest_job.id,
+                         job_type: 'TransformationJob', process_type: :transformation,
+                         origin: 'TransformationWorker',
+                         message: "Transformation failure for #{harvest_job.id}")
+
+      get pipeline_pipeline_job_harvest_job_errors_path(pipeline, pipeline_job, harvest_job)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('Harvest Job Error Details')
+      expect(response.body).to include('Extraction')
+      expect(response.body).to include('Transformation')
+      expect(response.body).to include('Load')
+      expect(response.body).to include("Extraction failure for #{harvest_job.id}")
+      expect(response.body).to include("Load failure for #{harvest_job.id}")
+      expect(response.body).to include("Transformation failure for #{harvest_job.id}")
+      expect(response.body).to include("href=\"#{pipeline_path(pipeline)}\"")
+      expect(response.body).to include("href=\"#{pipeline_pipeline_job_path(pipeline, pipeline_job)}\"")
+    end
+  end
+
   describe 'POST /create' do
     context 'with valid parameters' do
       it 'creates a new PipelineJob' do

@@ -177,4 +177,64 @@ RSpec.describe JobError, type: :model do
       expect(job_error.errors[:stack_trace]).to include("can't be blank")
     end
   end
+
+  describe '.count_for_harvest_job' do
+    it 'returns the total number of extraction and transformation errors for a harvest job' do
+      harvest_job = create(:harvest_job)
+
+      extraction_summary = create(:job_completion_summary,
+                                  job_id: harvest_job.extraction_job_id,
+                                  process_type: :extraction,
+                                  job_type: 'ExtractionJob')
+      transformation_summary = create(:job_completion_summary,
+                                      job_id: harvest_job.id,
+                                      process_type: :transformation,
+                                      job_type: 'TransformationJob')
+
+      create(:job_error, job_completion_summary: extraction_summary, job_id: harvest_job.extraction_job_id,
+                         job_type: 'ExtractionJob', origin: 'ExtractionWorker')
+      create(:job_error, job_completion_summary: extraction_summary, job_id: harvest_job.extraction_job_id,
+                         job_type: 'ExtractionJob', origin: 'LoadWorker')
+      create(:job_error, job_completion_summary: transformation_summary, job_id: harvest_job.id,
+                         job_type: 'TransformationJob', process_type: :transformation, origin: 'TransformationWorker')
+
+      expect(JobError.count_for_harvest_job(harvest_job)).to eq(3)
+    end
+  end
+
+  describe '.grouped_for_harvest_job' do
+    it 'groups errors by extraction, transformation and load stages' do
+      harvest_job = create(:harvest_job)
+
+      extraction_summary = create(:job_completion_summary,
+                                  job_id: harvest_job.extraction_job_id,
+                                  process_type: :extraction,
+                                  job_type: 'ExtractionJob')
+      transformation_summary = create(:job_completion_summary,
+                                      job_id: harvest_job.id,
+                                      process_type: :transformation,
+                                      job_type: 'TransformationJob')
+
+      extraction_error = create(:job_error, job_completion_summary: extraction_summary,
+                                            job_id: harvest_job.extraction_job_id,
+                                            job_type: 'ExtractionJob',
+                                            origin: 'ExtractionWorker')
+      load_error = create(:job_error, job_completion_summary: extraction_summary, job_id: harvest_job.extraction_job_id,
+                                      job_type: 'ExtractionJob', origin: 'LoadWorker')
+      delete_error = create(:job_error, job_completion_summary: extraction_summary,
+                                        job_id: harvest_job.extraction_job_id,
+                                        job_type: 'ExtractionJob',
+                                        origin: 'DeleteWorker')
+      transformation_error = create(:job_error, job_completion_summary: transformation_summary, job_id: harvest_job.id,
+                                                job_type: 'TransformationJob',
+                                                process_type: :transformation,
+                                                origin: 'TransformationWorker')
+
+      grouped_errors = JobError.grouped_for_harvest_job(harvest_job)
+
+      expect(grouped_errors[:extraction]).to contain_exactly(extraction_error)
+      expect(grouped_errors[:transformation]).to contain_exactly(transformation_error)
+      expect(grouped_errors[:load]).to contain_exactly(load_error, delete_error)
+    end
+  end
 end

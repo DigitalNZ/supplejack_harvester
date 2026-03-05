@@ -150,4 +150,27 @@ RSpec.describe JobsHelper do
       expect(helper.jobs_filter_url(pipeline)).to eq(expected_url)
     end
   end
+
+  describe '#extraction_end_reason' do
+    let(:harvest_job) { create(:harvest_job) }
+    let(:report) { create(:harvest_report, harvest_job:, pipeline_job: harvest_job.pipeline_job) }
+
+    it 'returns the stop condition reason when present' do
+      harvest_job.extraction_job.update!(stop_condition_type: 'user', stop_condition_name: 'Set number reached')
+
+      expect(helper.extraction_end_reason(report)).to eq('User stop condition: Set number reached')
+    end
+
+    it 'returns extraction error message when present' do
+      harvest_job.extraction_job.update!(error_message: 'Timeout while extracting')
+
+      expect(helper.extraction_end_reason(report)).to eq('Timeout while extracting')
+    end
+
+    it 'returns a status-based reason when no stop condition or error exists' do
+      report.extraction_completed!
+
+      expect(helper.extraction_end_reason(report)).to eq('Completed')
+    end
+  end
 end

@@ -1,0 +1,54 @@
+<%= content_for(:title) { "Harvest Job Errors - #{@harvest_job.name}" } %>
+<% breadcrumb :harvest_job_errors, @pipeline_job, @harvest_job %>
+
+<div class="float-start">
+  <h1 class="mb-1">Harvest Job Error Details</h1>
+  <p class="text-muted mb-0"><%= @harvest_job.name %></p>
+</div>
+<div class="clearfix"></div>
+
+<div class="row mt-3">
+  <div class="col-md-8">
+    <% %i[extraction transformation load].each do |stage| %>
+      <%= render 'stage_errors', stage: stage, errors: @stage_errors.fetch(stage, []) %>
+    <% end %>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Summary Information</h5>
+      </div>
+
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-5">Pipeline:</dt>
+          <dd class="col-sm-7"><%= link_to @pipeline.name, pipeline_path(@pipeline) %></dd>
+
+          <dt class="col-sm-5">Pipeline Job:</dt>
+          <dd class="col-sm-7"><%= link_to @pipeline_job.id, pipeline_pipeline_job_path(@pipeline, @pipeline_job) %></dd>
+
+          <dt class="col-sm-5">Harvest Job:</dt>
+          <dd class="col-sm-7">
+            <code><%= link_to @harvest_job.name, @harvest_job_path %></code>
+          </dd>
+
+          <dt class="col-sm-5">Total Errors:</dt>
+          <dd class="col-sm-7">
+            <span class="badge <%= @total_error_count.positive? ? 'bg-danger' : 'bg-secondary' %>">
+              <%= pluralize(@total_error_count, 'error') %>
+            </span>
+          </dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-body text-center">
+        <%= link_to 'Back to Pipeline Job',
+                    pipeline_pipeline_job_path(@pipeline, @pipeline_job),
+                    class: 'btn btn-outline-primary' %>
+      </div>
+    </div>
+  </div>
+</div>
