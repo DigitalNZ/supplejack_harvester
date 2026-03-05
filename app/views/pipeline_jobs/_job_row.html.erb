@@ -16,8 +16,13 @@
   </td>
   <td class="d-inline-flex align-items-center gap-1">
     <%= job_status_badge(report, job) %>
-    <%# Add the link to errors here %>
-    <%# link_to '3', '/', class: 'badge text-bg-danger text-decoration-none' %>
+    <% if report&.harvest_job.present? %>
+      <% error_count = JobError.count_for_harvest_job(report.harvest_job) %>
+      <%= link_to pluralize(error_count, 'error'),
+                  pipeline_pipeline_job_harvest_job_errors_path(job.pipeline, job, report.harvest_job),
+                  class: "badge text-decoration-none #{error_count.positive? ? 'bg-danger' : 'bg-secondary'}",
+                  title: 'View harvest job errors' %>
+    <% end %>
   </td>
   <td><%= job_started_at_label(report, job) %></td>
   <td class="text-end"><%= job_duration(report, format: :short) %></td>

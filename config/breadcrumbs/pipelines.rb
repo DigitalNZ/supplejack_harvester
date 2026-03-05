@@ -14,8 +14,14 @@ crumb :pipeline_jobs do |pipeline|
 end
 
 crumb :pipeline_job do |pipeline_job|
-  link pipeline_job.id
+  link pipeline_job.id, pipeline_pipeline_job_path(pipeline_job.pipeline, pipeline_job)
   parent :pipeline_jobs, pipeline_job.pipeline
+end
+
+crumb :harvest_job_errors do |pipeline_job, harvest_job|
+  link 'Error Details',
+       pipeline_pipeline_job_harvest_job_errors_path(pipeline_job.pipeline, pipeline_job, harvest_job)
+  parent :pipeline_job, pipeline_job
 end
 
 crumb :extraction_definition do |pipeline, harvest_definition, extraction_definition|

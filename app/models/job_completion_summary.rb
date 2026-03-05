@@ -42,6 +42,14 @@ class JobCompletionSummary < ApplicationRecord
     job_errors.count
   end
 
+  def stop_condition_count
+    stop_condition_records.count
+  end
+
+  def has_stop_conditions?
+    stop_condition_count.positive?
+  end
+
   def self.error_count_for_harvest_job(harvest_job_id)
     return 0 if harvest_job_id.blank?
 
@@ -125,12 +133,13 @@ class JobCompletionSummary < ApplicationRecord
   end
 
   def stop_condition_records
-    return [] unless job_type == 'ExtractionJob'
+    return @stop_condition_records if defined?(@stop_condition_records)
+    return @stop_condition_records = [] unless job_type == 'ExtractionJob'
 
     extraction_job = ExtractionJob.find_by(id: job_id)
-    return [] unless extraction_job&.stop_condition_name.present?
+    return @stop_condition_records = [] unless extraction_job&.stop_condition_name.present?
 
-    [
+    @stop_condition_records = [
       StopConditionRecord.new(
         stop_condition_name: extraction_job.stop_condition_name,
         stop_condition_content: extraction_job.stop_condition_content,
