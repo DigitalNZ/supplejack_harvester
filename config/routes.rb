@@ -65,6 +65,10 @@ Rails.application.routes.draw do
 
     resources :pipeline_jobs, path: :jobs, only: %i[index show create] do
       post :cancel, on: :member
+
+      resources :harvest_jobs, only: [] do
+        resource :errors, only: %i[show], controller: :harvest_job_errors
+      end
     end
 
     resources :automation_templates, only: [:index]
