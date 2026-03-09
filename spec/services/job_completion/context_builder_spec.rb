@@ -84,7 +84,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
             stop_condition_type: 'user'
           )
         }.to change(JobCompletionSummary, :count).by(1)
-          .and change(JobCompletion, :count).by(0)
+          .and change(JobError, :count).by(0)
 
         summary = JobCompletionSummary.last
         expect(summary.job_id).to eq(job.id)
@@ -241,7 +241,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
             stop_condition_content: 'if count > 100',
             stop_condition_type: 'user'
           )
-        }.not_to change(JobCompletion, :count)
+        }.not_to change(JobError, :count)
       end
     end
 
