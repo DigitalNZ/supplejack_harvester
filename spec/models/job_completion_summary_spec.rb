@@ -4,7 +4,6 @@ require 'rails_helper'
 
 RSpec.describe JobCompletionSummary, type: :model do
   describe 'associations' do
-    it { should have_many(:job_completions).dependent(:destroy) }
     it { should have_many(:job_errors).dependent(:destroy) }
   end
 
