@@ -71,19 +71,24 @@ module JobCompletionServices
       process_info = extract_process_info(args[:definition])
       job = args[:job]
 
-      find_or_create_summary({
-                               job_id: job.id,
-                               process_type: process_info[:process_type],
-                               job_type: process_info[:job_type]
-                             })
+      find_or_create_summary(stop_condition_summary_args(job, process_info))
+      record_extraction_stop_condition(job, args)
+    end
 
+    def self.stop_condition_summary_args(job, process_info)
+      {
+        job_id: job.id,
+        process_type: process_info[:process_type],
+        job_type: process_info[:job_type]
+      }
+    end
+
+    def self.record_extraction_stop_condition(job, args)
       return unless job.is_a?(ExtractionJob)
 
-      job.record_stop_condition(
-        type: args[:stop_condition_type],
-        name: args[:stop_condition_name],
-        content: args[:stop_condition_content]
-      )
+      job.record_stop_condition(type: args[:stop_condition_type],
+                                name: args[:stop_condition_name],
+                                content: args[:stop_condition_content])
     end
   end
 end
