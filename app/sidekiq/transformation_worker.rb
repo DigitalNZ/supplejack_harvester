@@ -100,7 +100,7 @@ class TransformationWorker
   end
 
   def transform_records
-    Transformation::Execution.new(records, @transformation_definition.fields).call
+    Transformation::Execution.new(records, @transformation_definition.fields, harvest_job: @harvest_job).call
   rescue StandardError => e
     handle_transform_error(e)
     []

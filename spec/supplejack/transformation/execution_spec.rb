@@ -31,5 +31,20 @@ RSpec.describe Transformation::Execution do
       expect(errors[field_with_error.id][:title]).to eq NameError
       expect(errors[field_with_error.id][:description]).to include "undefined local variable or method `result'"
     end
+
+    it 'records field errors against the provided harvest job' do
+      field_error = create(:field, transformation_definition:, block: 'result.title')
+      harvest_definition = create(:harvest_definition, pipeline:, extraction_definition:, transformation_definition:)
+      previous_harvest_job = create(:harvest_job, harvest_definition:)
+      current_harvest_job = create(:harvest_job, harvest_definition:)
+
+      described_class.new([record], [field_error], harvest_job: current_harvest_job).call
+
+      recorded_error = JobError.where(origin: 'Transformation::FieldExecution').order(created_at: :desc).first
+      expect(recorded_error).to be_present
+      expect(recorded_error.job_id).to eq(current_harvest_job.id)
+      expect(recorded_error.job_id).not_to eq(previous_harvest_job.id)
+      expect(recorded_error.job_type).to eq('TransformationJob')
+    end
   end
 end
