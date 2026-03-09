@@ -46,7 +46,7 @@ class JobCompletionSummary < ApplicationRecord
     stop_condition_records.count
   end
 
-  def has_stop_conditions?
+  def stop_conditions?
     stop_condition_count.positive?
   end
 
@@ -134,18 +134,28 @@ class JobCompletionSummary < ApplicationRecord
 
   def stop_condition_records
     return @stop_condition_records if defined?(@stop_condition_records)
-    return @stop_condition_records = [] unless job_type == 'ExtractionJob'
+
+    extraction_job = extraction_job_with_stop_condition
+    return @stop_condition_records = [] unless extraction_job
+
+    @stop_condition_records = [build_stop_condition_record(extraction_job)]
+  end
+
+  def extraction_job_with_stop_condition
+    return nil unless job_type == 'ExtractionJob'
 
     extraction_job = ExtractionJob.find_by(id: job_id)
-    return @stop_condition_records = [] unless extraction_job&.stop_condition_name.present?
+    return nil if extraction_job&.stop_condition_name.blank?
 
-    @stop_condition_records = [
-      StopConditionRecord.new(
-        stop_condition_name: extraction_job.stop_condition_name,
-        stop_condition_content: extraction_job.stop_condition_content,
-        stop_condition_type: extraction_job.stop_condition_type,
-        occurred_at: extraction_job.updated_at
-      )
-    ]
+    extraction_job
+  end
+
+  def build_stop_condition_record(extraction_job)
+    StopConditionRecord.new(
+      stop_condition_name: extraction_job.stop_condition_name,
+      stop_condition_content: extraction_job.stop_condition_content,
+      stop_condition_type: extraction_job.stop_condition_type,
+      occurred_at: extraction_job.updated_at
+    )
   end
 end

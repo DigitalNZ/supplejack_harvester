@@ -6,10 +6,10 @@
     <strong><%= job_completion_summary.process_type.humanize %></strong>
   </td>
   <td>
-    <% if job_completion_summary.has_stop_conditions? && job_completion_summary.job_errors.any? %>
+    <% if job_completion_summary.stop_conditions? && job_completion_summary.job_errors.any? %>
       <span class="badge bg-primary me-1">Completions</span>
       <span class="badge bg-danger">Errors</span>
-    <% elsif job_completion_summary.has_stop_conditions? %>
+    <% elsif job_completion_summary.stop_conditions? %>
       <span class="badge bg-primary">Completions</span>
     <% elsif job_completion_summary.job_errors.any? %>
       <span class="badge bg-danger">Errors</span>

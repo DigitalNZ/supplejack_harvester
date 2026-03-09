@@ -13,7 +13,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
   describe '.create_job_completion_or_error' do
     context 'with error' do
       it 'creates a new job error and summary' do
-        expect {
+        expect do
           described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: error,
@@ -21,8 +21,8 @@ RSpec.describe JobCompletionServices::ContextBuilder do
             job: job,
             details: {}
           )
-        }.to change(JobCompletionSummary, :count).by(1)
-          .and change(JobError, :count).by(1)
+        end.to change(JobCompletionSummary, :count).by(1)
+                                                   .and change(JobError, :count).by(1)
 
         summary = JobCompletionSummary.last
         expect(summary.job_id).to eq(job.id)
@@ -73,7 +73,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
 
     context 'with stop condition' do
       it 'records stop condition on the extraction job without creating JobCompletion' do
-        expect {
+        expect do
           described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: nil,
@@ -83,8 +83,8 @@ RSpec.describe JobCompletionServices::ContextBuilder do
             stop_condition_content: 'if count > 100',
             stop_condition_type: 'user'
           )
-        }.to change(JobCompletionSummary, :count).by(1)
-          .and change(JobError, :count).by(0)
+        end.to change(JobCompletionSummary, :count).by(1)
+                                                   .and change(JobError, :count).by(0)
 
         summary = JobCompletionSummary.last
         expect(summary.job_id).to eq(job.id)
@@ -135,14 +135,14 @@ RSpec.describe JobCompletionServices::ContextBuilder do
           job: job
         )
 
-        expect {
+        expect do
           described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: error2,
             definition: extraction_definition,
             job: job
           )
-        }.to change(JobError, :count).by(1)
+        end.to change(JobError, :count).by(1)
       end
 
       it 'creates new error when origin differs' do
@@ -153,14 +153,14 @@ RSpec.describe JobCompletionServices::ContextBuilder do
           job: job
         )
 
-        expect {
+        expect do
           described_class.create_job_completion_or_error(
             origin: 'Worker2',
             error: error,
             definition: extraction_definition,
             job: job
           )
-        }.to change(JobError, :count).by(1)
+        end.to change(JobError, :count).by(1)
       end
 
       it 'handles duplicate check with truncated messages (255 chars)' do
@@ -231,7 +231,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
           stop_condition_type: 'user'
         )
 
-        expect {
+        expect do
           described_class.create_job_completion_or_error(
             origin: 'Worker2',
             error: nil,
@@ -241,7 +241,7 @@ RSpec.describe JobCompletionServices::ContextBuilder do
             stop_condition_content: 'if count > 100',
             stop_condition_type: 'user'
           )
-        }.not_to change(JobError, :count)
+        end.not_to change(JobError, :count)
       end
     end
 
@@ -271,27 +271,27 @@ RSpec.describe JobCompletionServices::ContextBuilder do
         exception = ActiveRecord::RecordNotUnique.new('Duplicate entry')
         allow(JobError).to receive(:create!).and_raise(exception)
 
-        expect {
+        expect do
           described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: error,
             definition: extraction_definition,
             job: job
           )
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it 'raises error when creation fails with other errors' do
         allow(JobError).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(JobError.new))
 
-        expect {
+        expect do
           described_class.create_job_completion_or_error(
             origin: 'TestWorker',
             error: error,
             definition: extraction_definition,
             job: job
           )
-        }.to raise_error(ActiveRecord::RecordInvalid)
+        end.to raise_error(ActiveRecord::RecordInvalid)
       end
     end
   end
