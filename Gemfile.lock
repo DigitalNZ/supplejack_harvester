@@ -513,7 +513,7 @@ GEM
     yard (0.9.36)
     yomu (0.1.5)
     zeitwerk (2.7.3)
-    zlib (3.1.1)
+    zlib (3.2.3)
 
 PLATFORMS
   arm64-darwin
