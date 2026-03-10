@@ -36,10 +36,15 @@
               <div class="accordion-body">
                 <p><strong>Message:</strong> <%= error.message %></p>
                 <p><strong>Origin:</strong> <%= error.origin %></p>
-                <p><strong>Occurred At:</strong> <%= (error.updated_at || error.created_at)&.to_fs(:light) || 'Unknown time' %></p>
+                <% occurred_at = (error.updated_at || error.created_at)&.to_fs(:light) || 'Unknown time' %>
+                <p><strong>Occurred At:</strong> <%= occurred_at %></p>
 
                 <% if error.stack_trace.present? %>
-                  <% stack_trace_text = error.stack_trace.is_a?(Array) ? error.stack_trace.join("\n") : error.stack_trace.to_s %>
+                  <% stack_trace_text = if error.stack_trace.is_a?(Array)
+                                          error.stack_trace.join("\n")
+                                        else
+                                          error.stack_trace.to_s
+                                        end %>
                   <p class="mb-2"><strong>Stack Trace:</strong></p>
                   <pre class="bg-dark text-light p-2 rounded mb-0"><%= stack_trace_text %></pre>
                 <% end %>
