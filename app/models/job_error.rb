@@ -26,8 +26,9 @@ class JobError < ApplicationRecord
   def self.count_for_harvest_job(harvest_job)
     return 0 if harvest_job.blank?
 
-    extraction_error_count = if harvest_job.extraction_job_id.present?
-                               for_extraction_job(harvest_job.extraction_job_id).count
+    extraction_job_id = harvest_job.extraction_job_id
+    extraction_error_count = if extraction_job_id.present?
+                               for_extraction_job(extraction_job_id).count
                              else
                                0
                              end
@@ -51,9 +52,10 @@ class JobError < ApplicationRecord
     private
 
     def extraction_errors_for(harvest_job)
-      return [] if harvest_job.extraction_job_id.blank?
+      extraction_job_id = harvest_job.extraction_job_id
+      return [] if extraction_job_id.blank?
 
-      for_extraction_job(harvest_job.extraction_job_id).recent_first.to_a
+      for_extraction_job(extraction_job_id).recent_first.to_a
     end
 
     def partition_extraction_stage_errors(harvest_job)

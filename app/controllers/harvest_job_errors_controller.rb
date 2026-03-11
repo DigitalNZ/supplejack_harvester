@@ -26,15 +26,15 @@ class HarvestJobErrorsController < ApplicationController
   end
 
   def harvest_job_path
-    extraction_definition = @harvest_job.harvest_definition&.extraction_definition
-    return pipeline_pipeline_job_path(@pipeline, @pipeline_job) if extraction_definition.blank?
-    return pipeline_pipeline_job_path(@pipeline, @pipeline_job) if @harvest_job.extraction_job_id.blank?
+    extraction_job_id = @harvest_job.extraction_job_id
+    harvest_definition = @harvest_job.harvest_definition
+    extraction_definition = harvest_definition&.extraction_definition
+    if extraction_definition.blank? || extraction_job_id.blank?
+      return pipeline_pipeline_job_path(@pipeline, @pipeline_job)
+    end
 
     pipeline_harvest_definition_extraction_definition_extraction_job_path(
-      @pipeline,
-      @harvest_job.harvest_definition,
-      extraction_definition,
-      @harvest_job.extraction_job_id
+      @pipeline, harvest_definition, extraction_definition, extraction_job_id
     )
   end
 end

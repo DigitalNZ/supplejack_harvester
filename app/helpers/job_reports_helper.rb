@@ -25,10 +25,11 @@ module JobReportsHelper
   private
 
   def stop_condition_reason(extraction_job)
-    return if extraction_job.stop_condition_name.blank?
+    stop_condition_name = extraction_job.stop_condition_name
+    return if stop_condition_name.blank?
 
     condition_type = extraction_job.stop_condition_type == 'user' ? 'User stop condition' : 'System stop condition'
-    "#{condition_type}: #{extraction_job.stop_condition_name}"
+    "#{condition_type}: #{stop_condition_name}"
   end
 
   def extraction_status_reason(report)

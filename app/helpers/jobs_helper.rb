@@ -105,8 +105,9 @@ module JobsHelper
   end
 
   def job_entries_info(collection)
-    start = collection.offset_value + 1
-    end_count = collection.offset_value + collection.length
+    offset_value = collection.offset_value
+    start = offset_value + 1
+    end_count = offset_value + collection.length
     total = collection.total_count
     "#{start} - #{end_count} of #{total} jobs"
   end
