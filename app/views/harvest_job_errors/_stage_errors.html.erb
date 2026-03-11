@@ -1,0 +1,63 @@
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="card-title mb-0"><%= stage.to_s.humanize %></h5>
+    <span class="badge <%= errors.any? ? 'bg-danger' : 'bg-secondary' %>">
+      <%= pluralize(errors.count, 'error') %>
+    </span>
+  </div>
+
+  <div class="card-body">
+    <% if errors.any? %>
+      <% accordion_id = "#{stage}-errors-accordion" %>
+      <div class="accordion" id="<%= accordion_id %>">
+        <% errors.each_with_index do |error, index| %>
+          <% heading_id = "#{stage}-error-heading-#{index}" %>
+          <% collapse_id = "#{stage}-error-collapse-#{index}" %>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="<%= heading_id %>">
+              <button class="accordion-button <%= 'collapsed' unless index.zero? %>"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#<%= collapse_id %>"
+                      aria-expanded="<%= index.zero? ? 'true' : 'false' %>"
+                      aria-controls="<%= collapse_id %>">
+                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                  <div><%= error.message&.truncate(120) || 'Error' %></div>
+                  <span class="badge bg-secondary"><%= error.origin %></span>
+                </div>
+              </button>
+            </h2>
+
+            <div id="<%= collapse_id %>"
+                 class="accordion-collapse collapse <%= 'show' if index.zero? %>"
+                 aria-labelledby="<%= heading_id %>"
+                 data-bs-parent="#<%= accordion_id %>">
+              <div class="accordion-body">
+                <p><strong>Message:</strong> <%= error.message %></p>
+                <p><strong>Origin:</strong> <%= error.origin %></p>
+                <% occurred_at = (error.updated_at || error.created_at)&.to_fs(:light) || 'Unknown time' %>
+                <p><strong>Occurred At:</strong> <%= occurred_at %></p>
+
+                <% if error.stack_trace.present? %>
+                  <% stack_trace_text = if error.stack_trace.is_a?(Array)
+                                          error.stack_trace.join("\n")
+                                        else
+                                          error.stack_trace.to_s
+                                        end %>
+                  <p class="mb-2"><strong>Stack Trace:</strong></p>
+                  <pre class="bg-dark text-light p-2 rounded mb-0"><%= stack_trace_text %></pre>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-4">
+        <i class="bi bi-check-circle text-success fs-3"></i>
+        <p class="mt-2 mb-0 text-muted">No errors recorded for this stage.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

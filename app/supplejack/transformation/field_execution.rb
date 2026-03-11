@@ -3,8 +3,9 @@
 module Transformation
   # Only executes the code from the user
   class FieldExecution
-    def initialize(field)
+    def initialize(field, harvest_job: nil)
       @field = field
+      @harvest_job = harvest_job
     end
 
     def execute(extracted_record)
@@ -36,15 +37,7 @@ module Transformation
     end
 
     def handle_field_execution_error(error)
-      harvest_definition = @field.transformation_definition.harvest_definitions.first
-      harvest_job = harvest_definition&.harvest_jobs&.first
-      log_field_error(error, harvest_job)
-      @error = error
-    end
-
-    def handle_field_error(error)
-      harvest_job = find_harvest_job
-      log_field_error(error, harvest_job)
+      log_field_error(error, @harvest_job)
       @error = error
     end
 
@@ -59,13 +52,6 @@ module Transformation
                                                                                @field.transformation_definition,
                                                                              job: harvest_job
                                                                            })
-    end
-
-    def find_harvest_job
-      harvest_definition = @field.transformation_definition.harvest_definitions.first
-      return nil if harvest_definition.blank?
-
-      harvest_definition.harvest_jobs.first
     end
   end
 end

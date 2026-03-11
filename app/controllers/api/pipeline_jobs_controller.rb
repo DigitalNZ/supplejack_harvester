@@ -21,7 +21,6 @@ module Api
       PipelineJob.new(pipeline_id: pipeline.id,
                       harvest_definitions_to_run: harvest_definitions_to_run(pipeline),
                       destination_id: pipeline_job_params['destination_id'],
-                      key: SecureRandom.hex,
                       job_priority: pipeline_job_params['job_priority'])
     end
 

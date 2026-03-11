@@ -34,15 +34,14 @@ class Schedule < ApplicationRecord
 
     begin
       parsed_time = Time.zone.parse(time)
-      errors.add(:time, 'must be a valid time') if parsed_time.blank?
+      add_invalid_time_error if parsed_time.blank?
     rescue StandardError
-      errors.add(:time, 'must be a valid time')
+      add_invalid_time_error
     end
   end
 
-  after_create do
-    self.name = schedule_name
-    save!
+  def add_invalid_time_error
+    errors.add(:time, 'must be a valid time')
   end
 
   def self.schedules_within_range(start_date, end_date)
@@ -84,18 +83,11 @@ class Schedule < ApplicationRecord
 
   private
 
-  def schedule_name
-    name = subject.name.parameterize(separator: '_')
-    destination_name = destination.name.parameterize(separator: '_')
-    time_name = time.parameterize(separator: '_')
-
-    "#{name}__#{destination_name}__#{time_name}__#{SecureRandom.hex}"
-  end
-
   # This is for converting 12 hour times into 24 hour times
   # so if the user has a time of 7:45pm, it becomes 19:45
   def sanitized_time
-    return Time.zone.parse(time).strftime('%H:%M') if time.downcase.include?('am') || time.downcase.include?('pm')
+    time_d = time.downcase
+    return Time.zone.parse(time).strftime('%H:%M') if time_d.include?('am') || time_d.include?('pm')
 
     time
   end

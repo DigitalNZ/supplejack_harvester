@@ -5,27 +5,31 @@ module Transformation
   # It provides details about the execution of the transformation
   # such as errors and transformation results
   class RecordTransformation
-    def initialize(extracted_record, fields)
+    def initialize(extracted_record, fields, harvest_job: nil)
       @extracted_record = extracted_record
-      @fields = fields.select { |field| field.kind == 'field' }
-      @reject_conditions = fields.select { |field| field.kind == 'reject_if' }
-      @delete_conditions = fields.select { |field| field.kind == 'delete_if' }
+      grouped = fields.group_by(&:kind)
+      @fields = grouped['field'] || []
+      @reject_conditions = grouped['reject_if'] || []
+      @delete_conditions = grouped['delete_if'] || []
+      @harvest_job = harvest_job
     end
 
     def transform
-      reject_fields = @reject_conditions.map do |field|
-        FieldExecution.new(field).execute(@extracted_record)
-      end
-
-      delete_fields = @delete_conditions.map do |field|
-        FieldExecution.new(field).execute(@extracted_record)
-      end
-
-      transformed_fields = @fields.map do |field|
-        FieldExecution.new(field).execute(@extracted_record)
-      end
+      reject_fields = execute_fields(@reject_conditions)
+      delete_fields = execute_fields(@delete_conditions)
+      transformed_fields = execute_fields(@fields)
 
       TransformedRecord.new(transformed_fields, reject_fields, delete_fields)
+    end
+
+    private
+
+    def execute_fields(fields)
+      fields.map { |field| execute_field(field) }
+    end
+
+    def execute_field(field)
+      FieldExecution.new(field, harvest_job: @harvest_job).execute(@extracted_record)
     end
   end
 end

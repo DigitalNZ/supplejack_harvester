@@ -52,12 +52,20 @@ class SchedulesController < ApplicationController
   def assign_scheduleable_items
     @schedulable_items = [
       ['Automations', AutomationTemplate.all.sort_by(&:name).map do |at|
-        [at.name, "automation-template_#{at.id}", { data: { automation_template_id: at.id } }]
+        automation_item(at.name, at.id)
       end],
       ['Pipelines', Pipeline.all.sort_by(&:name).map do |p|
-        [p.name, "pipeline_#{p.id}", { data: { pipeline_id: p.id } }]
+        pipeline_item(p.name, p.id)
       end]
     ]
+  end
+
+  def automation_item(name, id)
+    [name, "automation-template_#{id}", { data: { automation_template_id: id } }]
+  end
+
+  def pipeline_item(name, id)
+    [name, "pipeline_#{id}", { data: { pipeline_id: id } }]
   end
 
   def find_schedule
@@ -72,7 +80,7 @@ class SchedulesController < ApplicationController
     params[:schedule][:harvest_definitions_to_run] = [] unless params[:schedule].key?(:harvest_definitions_to_run)
 
     params.require(:schedule).permit(:frequency, :time, :day, :day_of_the_month, :bi_monthly_day_one,
-                                     :bi_monthly_day_two, :name, :delete_previous_records, :pipeline_id,
+                                     :bi_monthly_day_two, :delete_previous_records, :pipeline_id,
                                      :destination_id, :automation_template_id, :job_priority, :skip_previously_enriched,
                                      harvest_definitions_to_run: [])
   end

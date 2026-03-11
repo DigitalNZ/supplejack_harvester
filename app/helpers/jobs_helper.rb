@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module JobsHelper
+  include JobReportsHelper
+
   STATUS_TO_TEXT = {
     'queued' => 'Waiting in queue...',
     'running' => 'Running...',
@@ -102,13 +104,10 @@ module JobsHelper
     job.job_priority.presence&.humanize || 'Default'
   end
 
-  def job_report_priority_label(report)
-    job_priority_label(report&.harvest_job&.pipeline_job)
-  end
-
   def job_entries_info(collection)
-    start = collection.offset_value + 1
-    end_count = collection.offset_value + collection.length
+    offset_value = collection.offset_value
+    start = offset_value + 1
+    end_count = offset_value + collection.length
     total = collection.total_count
     "#{start} - #{end_count} of #{total} jobs"
   end
