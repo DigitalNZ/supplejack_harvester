@@ -124,6 +124,9 @@ GEM
       smart_properties
     bigdecimal (3.2.2)
     builder (3.3.0)
+    bullet (8.1.0)
+      activesupport (>= 3.0.0)
+      uniform_notifier (~> 1.11)
     byebug (13.0.0)
       reline (>= 0.6.0)
     capybara (3.40.0)
@@ -491,6 +494,7 @@ GEM
     unicode-display_width (3.1.4)
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
+    uniform_notifier (1.18.0)
     uri (1.1.1)
     useragent (0.16.11)
     vite_rails (3.0.17)
@@ -529,6 +533,7 @@ DEPENDENCIES
   activerecord-nulldb-adapter
   airbrake
   aws-sdk-s3
+  bullet
   capybara
   capybara-screenshot
   codeclimate_diff!

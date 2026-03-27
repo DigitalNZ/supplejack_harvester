@@ -92,6 +92,9 @@ group :development do
 
   # For code commenting
   gem 'yard'
+
+  # Find N+1 queries
+  gem 'bullet'
 end
 
 group :test do
