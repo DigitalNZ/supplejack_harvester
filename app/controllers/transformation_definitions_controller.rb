@@ -89,8 +89,18 @@ class TransformationDefinitionsController < ApplicationController
   end
 
   def assign_schema_variables
-    @schemas = Schema.order(created_at: :desc).map(&:to_h)
-    @schema_fields = SchemaField.all.map(&:to_h)
+    @schemas = Schema
+      .order(created_at: :desc)
+      .includes(:schema_fields)
+      .map(&:to_h)
+
+    @schema_fields = SchemaField
+      .includes(
+        :schema_field_values,
+        fields: { transformation_definition: :pipeline }
+      )
+      .map(&:to_h)
+
     @schema_field_values = SchemaFieldValue.all.map(&:to_h)
   end
 
