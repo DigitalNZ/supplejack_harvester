@@ -66,10 +66,12 @@ class AutomationTemplatesController < ApplicationController
 
   def run_automation
     _, message, success = @automation_template.run_automation(current_user)
+    path = automation_template_path(@automation_template)
+
     if success
-      redirect_to automation_template_path(@automation_template), notice: message
+      redirect_to path, notice: message
     else
-      redirect_to automation_template_path(@automation_template), alert: message
+      redirect_to path, alert: message
     end
   end
 
