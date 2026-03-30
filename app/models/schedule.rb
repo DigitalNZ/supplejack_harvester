@@ -45,7 +45,9 @@ class Schedule < ApplicationRecord
   end
 
   def self.schedules_within_range(start_date, end_date)
-    schedule_map = Schedule.includes([:automation_template, :pipeline, pipeline_jobs: :harvest_reports]).all.each_with_object({}) do |schedule, hash|
+    schedule_map = Schedule.includes([:automation_template, :pipeline, {
+                                       pipeline_jobs: :harvest_reports
+                                     }]).all.each_with_object({}) do |schedule, hash|
       add_schedule_times_to_schedule_map(schedule, hash, start_date, end_date)
     end
 

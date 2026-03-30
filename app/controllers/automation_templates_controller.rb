@@ -19,16 +19,7 @@ class AutomationTemplatesController < ApplicationController
   def show
     @step_templates = @automation_template.automation_step_templates.includes(:pipeline)
     @last_automation_run = @automation_template.automations.order(created_at: :desc).first
-    @automations_history = @automation_template.automations
-      .order(created_at: :desc)
-      .includes(
-        :destination,
-        automation_steps: [
-          { pipeline_job: :harvest_reports }
-        ]
-      )
-      .page(params[:page])
-      .per(20)
+    @automations_history = automations_history(@automation_template)
   end
 
   def new
@@ -88,6 +79,19 @@ class AutomationTemplatesController < ApplicationController
   end
 
   private
+
+  def automations_history(automation_template)
+    automation_template.automations
+                       .order(created_at: :desc)
+                       .includes(
+                         :destination,
+                         automation_steps: [
+                           { pipeline_job: :harvest_reports }
+                         ]
+                       )
+                       .page(params[:page])
+                       .per(20)
+  end
 
   def set_automation_template
     @automation_template = AutomationTemplate.find(params[:id])
