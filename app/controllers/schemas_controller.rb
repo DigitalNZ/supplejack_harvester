@@ -49,7 +49,12 @@ class SchemasController < ApplicationController
   private
 
   def find_schema
-    @schema = Schema.find(params[:id])
+    @schema = Schema.includes(
+      schema_fields: [
+        :schema_field_values,
+        { fields: { transformation_definition: :pipeline } }
+      ]
+    ).find(params[:id])
   end
 
   def schema_params

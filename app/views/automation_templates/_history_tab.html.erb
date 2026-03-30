@@ -3,8 +3,7 @@
     <h5 class="mb-0">Automations from this Template</h5>
   </div>
   <div class="card-body">
-    <% automations = automation_template.automations.order(created_at: :desc).page(params[:page]).per(20) %>
-    <% if automations.any? %>
+    <% if @automations_history.any? %>
       <div class="table-responsive">
         <table class="table table-hover">
           <thead>
@@ -17,7 +16,7 @@
             </tr>
           </thead>
           <tbody>
-            <% automations.each do |automation| %>
+            <% @automations_history.each do |automation| %>
               <tr>
                 <td><%= link_to automation.name, automation_path(automation) %></td>
                 <td><%= automation.destination.name %></td>
@@ -33,7 +32,7 @@
           </tbody>
         </table>
       </div>
-      <%= render 'shared/pagination_below_table', items: automations %>
+      <%= render 'shared/pagination_below_table', items: @automations_history %>
     <% else %>
       <p class="mb-0">No automations have been created from this template yet.</p>
     <% end %>

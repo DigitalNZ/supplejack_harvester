@@ -19,6 +19,7 @@ class AutomationTemplatesController < ApplicationController
   def show
     @step_templates = @automation_template.automation_step_templates.includes(:pipeline)
     @last_automation_run = @automation_template.automations.order(created_at: :desc).first
+    @automations_history = automations_history(@automation_template)
   end
 
   def new
@@ -65,10 +66,12 @@ class AutomationTemplatesController < ApplicationController
 
   def run_automation
     _, message, success = @automation_template.run_automation(current_user)
+    path = automation_template_path(@automation_template)
+
     if success
-      redirect_to automation_template_path(@automation_template), notice: message
+      redirect_to path, notice: message
     else
-      redirect_to automation_template_path(@automation_template), alert: message
+      redirect_to path, alert: message
     end
   end
 
@@ -78,6 +81,19 @@ class AutomationTemplatesController < ApplicationController
   end
 
   private
+
+  def automations_history(automation_template)
+    automation_template.automations
+                       .order(created_at: :desc)
+                       .includes(
+                         :destination,
+                         automation_steps: [
+                           { pipeline_job: :harvest_reports }
+                         ]
+                       )
+                       .page(params[:page])
+                       .per(20)
+  end
 
   def set_automation_template
     @automation_template = AutomationTemplate.find(params[:id])

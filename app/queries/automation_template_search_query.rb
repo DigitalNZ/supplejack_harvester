@@ -3,7 +3,7 @@
 class AutomationTemplateSearchQuery
   def initialize(params)
     @words = sanitized_words(params[:search])
-    @query = AutomationTemplate
+    @query = AutomationTemplate.includes(%i[destination schedules])
   end
 
   def call

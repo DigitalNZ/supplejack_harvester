@@ -2,7 +2,8 @@
 
 class JobCompletionSummariesController < ApplicationController
   def index
-    @job_completion_summaries = JobCompletionSummary.order(updated_at: :desc).page(params[:page])
+    @job_completion_summaries = JobCompletionSummary
+                                .includes([:job_errors]).order(updated_at: :desc).page(params[:page])
 
     extraction_id = params[:extraction_id]
 

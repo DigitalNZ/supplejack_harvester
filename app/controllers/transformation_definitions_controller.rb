@@ -3,12 +3,10 @@
 class TransformationDefinitionsController < ApplicationController
   include LastEditedBy
 
-  before_action :find_pipeline
-  before_action :find_harvest_definition
+  before_action :find_pipeline, :find_harvest_definition
   before_action :find_transformation_definition, only: %i[show update destroy clone]
   before_action :find_extraction_jobs, only: %i[create update]
-  before_action :assign_schema_variables, only: %i[show update]
-  before_action :assign_show_variables, only: %i[show update]
+  before_action :assign_schema_variables, :assign_show_variables, only: %i[show update]
 
   def show; end
 
@@ -65,8 +63,7 @@ class TransformationDefinitionsController < ApplicationController
     if clone.save
       @harvest_definition.update(transformation_definition: clone)
       flash.notice = t('.success')
-      redirect_to pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition,
-                                                                             clone)
+      redirect_to pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition, clone)
     else
       flash.alert = t('.failure')
       redirect_to pipeline_path(@pipeline)
@@ -89,8 +86,13 @@ class TransformationDefinitionsController < ApplicationController
   end
 
   def assign_schema_variables
-    @schemas = Schema.order(created_at: :desc).map(&:to_h)
-    @schema_fields = SchemaField.all.map(&:to_h)
+    @schemas = Schema.order(created_at: :desc).includes(:schema_fields).map(&:to_h)
+
+    @schema_fields = SchemaField
+                     .includes(:schema_field_values,
+                               fields: [:field_schema_field_values, { transformation_definition: :pipeline }])
+                     .map(&:to_h)
+
     @schema_field_values = SchemaFieldValue.all.map(&:to_h)
   end
 
