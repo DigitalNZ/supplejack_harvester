@@ -13,9 +13,9 @@ class PipelinesController < ApplicationController
     status = params['status']
 
     @pipelines = if status == 'queued'
-                   PipelineJob.where.missing(:harvest_reports).map(&:pipeline).uniq
+                   PipelineJob.includes([pipeline: [:last_edited_by, :schedules]]).where.missing(:harvest_reports).map(&:pipeline).uniq
                  elsif status == 'running'
-                   HarvestReport.running.map { |report| report.pipeline_job.pipeline }
+                   HarvestReport.includes([:harvest_job, pipeline_job: [pipeline: [:last_edited_by, :schedules]]]).running.map { |report| report.pipeline_job.pipeline }
                                 .uniq
                  else
                    pipelines

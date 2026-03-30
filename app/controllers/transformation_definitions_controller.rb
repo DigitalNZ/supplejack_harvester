@@ -97,7 +97,7 @@ class TransformationDefinitionsController < ApplicationController
     @schema_fields = SchemaField
       .includes(
         :schema_field_values,
-        fields: { transformation_definition: :pipeline }
+        fields: [:field_schema_field_values, transformation_definition: :pipeline]
       )
       .map(&:to_h)
 

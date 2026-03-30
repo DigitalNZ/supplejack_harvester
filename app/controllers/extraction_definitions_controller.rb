@@ -66,7 +66,7 @@ class ExtractionDefinitionsController < ApplicationController
   private
 
   def assign_show_variables
-    @parameters = @extraction_definition.parameters.includes([:request]).order(created_at: :desc)
+    @parameters = @extraction_definition.parameters.order(created_at: :desc)
     @props = extraction_app_state
     @destinations = Destination.all
   end
