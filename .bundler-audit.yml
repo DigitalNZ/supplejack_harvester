@@ -1,0 +1,2 @@
+ignore:
+  - CVE-2026-32700 # ignored because requires upgrading Devise by a major version

@@ -4,7 +4,7 @@ class PipelineSearchQuery
   def initialize(params)
     @words = sanitized_words(params[:search])
     @format = params[:format]
-    @query = Pipeline
+    @query = Pipeline.includes(%i[last_edited_by schedules])
   end
 
   def call

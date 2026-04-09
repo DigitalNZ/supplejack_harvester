@@ -6,7 +6,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '3.3.8'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails', branch: 'main'
-gem 'rails', '~> 7.2'
+gem 'rails', '>= 7.2.3.1'
 
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem 'sprockets-rails'
@@ -52,7 +52,11 @@ gem 'jsonpath'
 gem 'minitar'
 gem 'nokogiri'
 gem 'selenium-webdriver'
-gem 'sidekiq'
+
+# This version has been pinned because Sidekiq is not compatinle with connection_pool 3
+# this version pins connection_pool to 2.
+# https://github.com/sidekiq/sidekiq/issues/6885
+gem 'sidekiq', '~> 7.3.10'
 gem 'yomu'
 gem 'zlib'
 
@@ -92,6 +96,9 @@ group :development do
 
   # For code commenting
   gem 'yard'
+
+  # Find N+1 queries
+  gem 'bullet'
 end
 
 group :test do

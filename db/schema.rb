@@ -195,7 +195,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_03_150437) do
     t.integer "pipeline_job_id"
     t.integer "extraction_job_id"
     t.index ["harvest_definition_id"], name: "index_harvest_jobs_on_harvest_definition_id"
-    t.index ["pipeline_job_id"], name: "index_harvest_jobs_on_pipeline_job_id"
     t.index ["status"], name: "index_harvest_jobs_on_status"
   end
 
