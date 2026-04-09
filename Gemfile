@@ -53,7 +53,8 @@ gem 'minitar'
 gem 'nokogiri'
 gem 'selenium-webdriver'
 
-# This version has been pinned because Sidekiq is not compatinle with connection_pool 3 and this version pins connection_pool to 2.
+# This version has been pinned because Sidekiq is not compatinle with connection_pool 3
+# this version pins connection_pool to 2.
 # https://github.com/sidekiq/sidekiq/issues/6885
 gem 'sidekiq', '~> 7.3.10'
 gem 'yomu'
