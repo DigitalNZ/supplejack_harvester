@@ -19,7 +19,7 @@ module Transformation
 
       begin
         send(:"#{format.downcase}_extract", page_number)
-      rescue NoMethodError, Nokogiri::XML::XPath::SyntaxError
+      rescue NoMethodError, Nokogiri::XML::XPath::SyntaxError, JSON::ParserError, MultiJson::ParseError
         []
       end
     end
