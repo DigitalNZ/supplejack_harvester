@@ -528,7 +528,7 @@ GEM
     websocket-extensions (0.1.5)
     xpath (3.2.0)
       nokogiri (~> 1.8)
-    yard (0.9.36)
+    yard (0.9.44)
     yomu (0.1.5)
     zeitwerk (2.7.5)
     zlib (3.2.3)
@@ -589,7 +589,7 @@ DEPENDENCIES
   tzinfo-data
   vite_rails
   webmock
-  yard
+  yard (>= 0.9.42)
   yomu
   zlib
 

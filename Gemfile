@@ -95,7 +95,7 @@ group :development do
   gem 'letter_opener'
 
   # For code commenting
-  gem 'yard'
+  gem 'yard', '>= 0.9.42'
 
   # Find N+1 queries
   gem 'bullet'
