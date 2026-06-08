@@ -89,7 +89,7 @@
   <div class="tab-pane fade show active" id="result-tab" role="tal" aria-labelledby="result-tab" tabindex="0">
       <div class="col-12 mt-3">
         <% if @document.present? && @document.size_in_bytes > 10.megabytes %>
-          <p>This file is too large to display in the browser.</p>
+          <p>This page is too large to preview in the browser. It has still been extracted and will be transformed normally.</p>
         <% else %>
           <div class="record-view record-view--extraction-result">
             <div
