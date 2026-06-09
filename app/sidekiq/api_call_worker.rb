@@ -63,7 +63,7 @@ class ApiCallWorker
     # Get all automation steps with pipeline jobs up to this step
     pipeline_steps = @automation_step.automation.automation_steps
                                      .where(step_type: 'pipeline')
-                                     .where('position < ?', @automation_step.position)
+                                     .where(position: ...@automation_step.position)
                                      .includes(:pipeline_job)
                                      .order(position: :asc)
 
