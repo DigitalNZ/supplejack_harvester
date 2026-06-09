@@ -1,2 +1,6 @@
 ignore:
   - CVE-2026-32700 # ignored because requires upgrading Devise by a major version
+  - CVE-2026-47737 # Story created: https://app.shortcut.com/nlnz/story/170087/upgrade-puma-6-7
+  - CVE-2026-47736 # Story created: https://app.shortcut.com/nlnz/story/170087/upgrade-puma-6-7
+  - CVE-2026-41316 # Story created: https://app.shortcut.com/nlnz/story/170089/upgrade-erb-to-fix-cve-2026-41316
+  - CVE-2026-40295 # Story created: https://app.shortcut.com/nlnz/story/170088/upgrade-devise-4-5
