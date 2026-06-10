@@ -35,5 +35,36 @@ RSpec.describe Transformation::RawRecordsExtractor do
         expect(subject.records(1)).to eq []
       end
     end
+
+    context 'when the page is larger than 10MB but still contains valid records' do
+      let(:body)      { { items: [{ id: 1 }, { id: 2 }] }.to_json }
+      let(:document)  { instance_double(Extraction::Document, body:, size_in_bytes: 50.megabytes) }
+      let(:documents) { instance_double(Extraction::Documents) }
+
+      before do
+        allow(extraction_job).to receive(:documents).and_return(documents)
+        allow(documents).to receive(:[]).with(1).and_return(document)
+      end
+
+      it 'extracts the records instead of silently dropping the page' do
+        expect(subject.records(1)).not_to be_empty
+      end
+    end
+
+    context 'when the page exceeds the maximum parseable size' do
+      let(:body)      { { items: [{ id: 1 }] }.to_json }
+      let(:document)  { instance_double(Extraction::Document, body:, size_in_bytes: 200.megabytes) }
+      let(:documents) { instance_double(Extraction::Documents) }
+
+      before do
+        allow(extraction_job).to receive(:documents).and_return(documents)
+        allow(documents).to receive(:[]).with(1).and_return(document)
+      end
+
+      it 'logs a warning and returns an empty array rather than silently dropping it' do
+        expect(Rails.logger).to receive(:warn).with(/exceeds the maximum/)
+        expect(subject.records(1)).to eq []
+      end
+    end
   end
 end

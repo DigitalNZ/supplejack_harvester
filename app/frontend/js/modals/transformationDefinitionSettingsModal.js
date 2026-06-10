@@ -174,6 +174,6 @@ function displayError(id) {
   document.getElementById(
     `js-record-selector-result-${id}`
   ).innerHTML = `<p class='text-danger'>
-    Something went wrong when attempting to display this document. This could mean that the provided record selector doesn't return anything or if the document is over 10 megabytes you will need to split it before it can be used in a Transformation.
+    Something went wrong when attempting to display this document. This could mean that the provided record selector doesn't return anything, or that the page is over 100 megabytes and too large to process.
   </p>`;
 }

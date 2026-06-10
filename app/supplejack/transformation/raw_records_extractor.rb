@@ -4,6 +4,12 @@ module Transformation
   # This class extracts records from an extraction_job using the
   # transformation_definition record_selector
   class RawRecordsExtractor
+    # Pages larger than this are skipped to avoid exhausting worker memory while
+    # parsing. It is deliberately high: a silently dropped page loses real data,
+    # so this should only ever catch pathological responses, not ordinary large
+    # ones (e.g. an OAI page containing a single very large record).
+    MAX_PARSEABLE_PAGE_SIZE = 100.megabytes
+
     def initialize(transformation_definition, extraction_job)
       @transformation_definition = transformation_definition
       @extraction_job = extraction_job
@@ -14,8 +20,9 @@ module Transformation
     #
     # @return Array
     def records(page_number)
-      return [] if @documents[page_number.to_i].nil?
-      return [] if @documents[page_number.to_i].size_in_bytes > 10.megabytes
+      document = @documents[page_number.to_i]
+      return [] if document.nil?
+      return [] if too_large_to_parse?(document, page_number)
 
       begin
         send(:"#{format.downcase}_extract", page_number)
@@ -25,6 +32,16 @@ module Transformation
     end
 
     private
+
+    def too_large_to_parse?(document, page_number)
+      return false if document.size_in_bytes <= MAX_PARSEABLE_PAGE_SIZE
+
+      Rails.logger.warn(
+        "RawRecordsExtractor: page #{page_number} (#{document.size_in_bytes} bytes) " \
+        "exceeds the maximum parseable size of #{MAX_PARSEABLE_PAGE_SIZE} bytes and was skipped"
+      )
+      true
+    end
 
     def html_extract(page)
       Nokogiri::HTML(@documents[page].body).xpath(record_selector).map(&:to_xml)
