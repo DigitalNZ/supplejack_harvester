@@ -11,9 +11,7 @@ module Extraction
       @body = body
     end
 
-    def [](index)
-      @body[index]
-    end
+    delegate :[], to: :@body
 
     def to_hash
       {
