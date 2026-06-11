@@ -13,13 +13,6 @@ Devise.setup do |config|
     manager.default_strategies(:scope => :user).unshift :two_factor_authenticatable
   end
 
-  # The secret key used by Devise. Devise uses this key to generate
-  # random tokens. Changing this key will render invalid all existing
-  # confirmation, reset password and unlock tokens in the database.
-  # Devise will use the `secret_key_base` as its `secret_key`
-  # by default. You can change it below and use your own secret key.
-  config.secret_key = ENV.fetch('SECRET_KEY_BASE', 'test_key_for_development_only')
-
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
   # config.parent_controller = 'DeviseController'
