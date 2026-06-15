@@ -11,7 +11,7 @@ RSpec.describe 'Login' do
     click_button 'Log in'
 
     # Then I expect to see an error message
-    expect(page).to have_css('.toast', text: 'Invalid Email or password.')
+    expect(page).to have_css('.toast', text: 'Invalid email or password.')
   end
 
   context 'when enforce_two_factor is false' do
