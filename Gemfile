@@ -15,7 +15,7 @@ gem 'sprockets-rails'
 gem 'mysql2', '~> 0.5'
 
 # Use the Puma web server [https://github.com/puma/puma]
-gem 'puma', '~> 6.0'
+gem 'puma', '~> 7.0'
 
 # Error reporting and performance monitoring
 gem 'airbrake'

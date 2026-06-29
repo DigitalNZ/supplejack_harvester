@@ -17,9 +17,10 @@ threads min_threads_count, max_threads_count
 #
 worker_timeout 3600 if ENV.fetch("RAILS_ENV", "development") == "development"
 
-# Specifies the `port` that Puma will listen on to receive requests; default is 3000.
-#
-port ENV.fetch("PORT") { 3000 }
+# Specifies the address/port that Puma will listen on to receive requests.
+# Bind IPv4 explicitly: Puma 7+ defaults the production bind to IPv6 (`::`),
+# which can be unreachable in IPv4-only containers/healthchecks.
+bind "tcp://0.0.0.0:#{ENV.fetch('PORT') { 3000 }}"
 
 # Specifies the `environment` that Puma will run in.
 #
