@@ -64,6 +64,39 @@ RSpec.describe ExtractionWorker, type: :job do
       let(:harvest_job)        { create(:harvest_job, harvest_definition:, pipeline_job:) }
       let(:harvest_report) { create(:harvest_report, pipeline_job:, harvest_job:) }
 
+      context 'when the extraction definition has split enabled' do
+        let!(:enrichment_definition) { create(:harvest_definition, kind: 'enrichment', pipeline:) }
+        let!(:enrichment_field) do
+          create(:field, name: 'title', block: "JsonPath.new('title').on(record).first",
+                         transformation_definition: enrichment_definition.transformation_definition)
+        end
+        let(:pipeline_job) do
+          create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [enrichment_definition.id])
+        end
+
+        before do
+          extraction_definition.update(split: true, split_selector: '//record')
+        end
+
+        it 'queues a split worker to process the extracted documents' do
+          expect do
+            subject.perform(extraction_job.id, harvest_report.id)
+          end.to change(SplitWorker.jobs, :size).by(1)
+        end
+
+        it 'does not mark the extraction as completed, as the split worker completes it after splitting' do
+          subject.perform(extraction_job.id, harvest_report.id)
+          harvest_report.reload
+          expect(harvest_report.extraction_completed?).to be false
+        end
+
+        it 'does not queue enrichments, as no records have been transformed or loaded yet' do
+          expect do
+            subject.perform(extraction_job.id, harvest_report.id)
+          end.not_to change(HarvestJob.where(harvest_definition: enrichment_definition), :count)
+        end
+      end
+
       context 'when the extraction is completed' do
         it 'updates the harvest report that the extraction is completed' do
           expect(harvest_report.extraction_completed?).to be false

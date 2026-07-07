@@ -62,10 +62,16 @@ class ExtractionWorker < ApplicationWorker
   end
 
   def update_harvest_report!
-    @harvest_report.extraction_completed! unless @job.extraction_definition.extract_text_from_file?
+    @harvest_report.extraction_completed! unless file_extraction_pending?
     @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
     @harvest_report.load_completed! if @harvest_report.load_workers_completed?
     @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
+  end
+
+  # SplitWorker and TextExtractionWorker run after this worker and mark the
+  # extraction as completed themselves once they have processed the documents.
+  def file_extraction_pending?
+    @job.extraction_definition.extract_text_from_file? || @job.extraction_definition.split?
   end
 
   def trigger_following_processes
