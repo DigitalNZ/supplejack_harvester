@@ -12,15 +12,20 @@ module Extraction
       @max_page = find_max_page(@first_api_document) if @first_api_document.body.present?
     end
 
+    # Enriching a record removes it from the 'skip previously enriched'
+    # filtered results, shifting every record behind it forward a page.
+    # Pages are processed from last to first so that the shrinking result
+    # set never shifts records into a page that has already been processed.
     def each
-      yield(@first_api_document, @page)
-      @page += 1
+      if @max_page.present?
+        @max_page.downto(@page + 1).each do |page|
+          break if @extraction_job.reload.cancelled?
 
-      (@page..@max_page).each do |page|
-        break if @extraction_job.reload.cancelled?
-
-        yield(get_api_document(page), page)
+          yield(get_api_document(page), page)
+        end
       end
+
+      yield(@first_api_document, @page)
     end
 
     def find_max_page(record_extraction)
