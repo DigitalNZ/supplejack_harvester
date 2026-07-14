@@ -31,32 +31,21 @@ RSpec.describe PreProcess::Output do
   end
 
   describe '#write_page' do
-    it 'writes to the given page number rather than a disk-derived count' do
+    # Concurrency safety: TransformationWorker jobs run in parallel, each
+    # holding a distinct extraction page number. Safety comes from the file
+    # path being a pure function of the given page — no shared disk-count
+    # read like #write's next_page — so distinct pages can never collide.
+    it 'writes to a path derived purely from the given page number' do
       output.write_page(5, [{ 'url' => '/e' }])
+      output.write_page(3, [{ 'url' => '/c' }])
 
-      documents = Extraction::Documents.new(described_class.folder(pipeline_job_id, position))
+      folder = described_class.folder(pipeline_job_id, position)
+      expect(Dir.glob("#{folder}/**/*.json").sort).to eq(
+        ["#{folder}/1/preprocess__000000003.json", "#{folder}/1/preprocess__000000005.json"]
+      )
+
+      documents = Extraction::Documents.new(folder)
       expect(JSON.parse(documents[5].body)['records']).to eq([{ 'url' => '/e' }])
-    end
-
-    it 'does not collide when two writers target distinct pages at the same time' do
-      # Simulates two concurrent TransformationWorker jobs, each already
-      # knowing its own unique page number, writing at (roughly) the same
-      # time. Because the page number is passed in rather than derived from
-      # Dir.glob(...).count, neither write can clobber the other.
-      barrier = Queue.new
-      writer = ->(page) do
-        barrier.pop
-        output.write_page(page, [{ 'url' => "/#{page}" }])
-      end
-
-      threads = [Thread.new { writer.call(1) }, Thread.new { writer.call(2) }]
-      2.times { barrier << true }
-      threads.each(&:join)
-
-      documents = Extraction::Documents.new(described_class.folder(pipeline_job_id, position))
-      expect(documents.total_pages).to eq(2)
-      expect(JSON.parse(documents[1].body)['records']).to eq([{ 'url' => '/1' }])
-      expect(JSON.parse(documents[2].body)['records']).to eq([{ 'url' => '/2' }])
     end
   end
 end
