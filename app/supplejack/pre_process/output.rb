@@ -18,7 +18,15 @@ module PreProcess
     end
 
     def write(records)
-      page = next_page
+      write_page(next_page, records)
+    end
+
+    # Writes to an explicit page number instead of deriving it from a disk
+    # count. TransformationWorker runs one Sidekiq job per page, potentially
+    # concurrently, so callers that already know a unique page number (e.g.
+    # the extraction page a given worker is handling) must use this instead
+    # of #write to avoid two workers racing on the same computed next_page.
+    def write_page(page, records)
       Extraction::Document.new(
         url: nil, method: 'GET', params: nil, request_headers: nil,
         status: 200, response_headers: nil,

@@ -287,8 +287,39 @@ RSpec.describe TransformationWorker do
           subject
           harvest_report.reload
           expect(harvest_report.transformation_end_time).to be_present
-        end 
+        end
       end
+    end
+
+    context "when the block is a preprocess block" do
+      subject { TransformationWorker.new.perform(harvest_job.id) }
+
+      before { harvest_definition.update!(kind: :preprocess, position: 0) }
+
+      after { FileUtils.rm_rf(PreProcess::Output.folder(pipeline_job.id, 0)) }
+
+      it "writes the valid transformed records to the feed-forward output" do
+        subject
+
+        documents = Extraction::Documents.new(PreProcess::Output.folder(pipeline_job.id, 0))
+        expect(documents.total_pages).to eq(1)
+        expect(JSON.parse(documents[1].body)['records'].size).to eq(8)
+      end
+
+      it "does not queue a LoadWorker" do
+        expect(LoadWorker).not_to receive(:perform_async_with_priority)
+        subject
+      end
+
+      it "does not queue a DeleteWorker" do
+        expect(DeleteWorker).not_to receive(:perform_async_with_priority)
+        subject
+      end
+
+      include_examples 'expects harvest report attribute', :records_transformed, 10
+      include_examples 'expects harvest report attribute', :records_rejected, 1
+      include_examples 'expects harvest report attribute', :load_workers_queued, 0
+      include_examples 'expects harvest report attribute', :delete_workers_queued, 0
     end
   end
 end

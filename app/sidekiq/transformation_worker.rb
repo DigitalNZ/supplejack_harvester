@@ -43,8 +43,18 @@ class TransformationWorker
 
     update_harvest_report(transformed_records.count, rejected_records.count)
 
-    queue_load_worker(valid_records)
-    queue_delete_worker(deleted_records)
+    if @harvest_job.harvest_definition.preprocess?
+      feed_forward(valid_records)
+    else
+      queue_load_worker(valid_records)
+      queue_delete_worker(deleted_records)
+    end
+  end
+
+  def feed_forward(records)
+    return if records.empty?
+
+    PreProcess::Output.new(@pipeline_job.id, @harvest_job.harvest_definition.position).write_page(@page, records)
   end
 
   def categorize_records(transformed_records)
