@@ -35,6 +35,22 @@ class Pipeline < ApplicationRecord
     harvest_definitions.where(kind: 'enrichment')
   end
 
+  def preprocesses
+    harvest_definitions.where(kind: 'preprocess').order(:position)
+  end
+
+  def ordered_blocks
+    harvest_definitions.order(:position)
+  end
+
+  def first_block
+    ordered_blocks.first
+  end
+
+  def next_block(definition)
+    ordered_blocks.where('position > ?', definition.position).first
+  end
+
   def ready_to_run?
     return false if harvest_definitions.empty?
 

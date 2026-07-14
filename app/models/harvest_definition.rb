@@ -16,7 +16,7 @@ class HarvestDefinition < ApplicationRecord
 
   validates :source_id, presence: true
 
-  enum :kind, { harvest: 0, enrichment: 1 }
+  enum :kind, { harvest: 0, enrichment: 1, preprocess: 2 }
 
   after_create do
     self.name = "#{id}_#{kind}"

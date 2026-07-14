@@ -90,4 +90,22 @@ RSpec.describe Pipeline do
       expect(pipeline.ready_to_run?).to be(true)
     end
   end
+
+  describe 'block ordering' do
+    let(:pipeline) { create(:pipeline) }
+    let!(:harvest)  { create(:harvest_definition, pipeline:, kind: :harvest,    position: 2) }
+    let!(:pre_zero) { create(:harvest_definition, pipeline:, kind: :preprocess, position: 0) }
+    let!(:pre_one)  { create(:harvest_definition, pipeline:, kind: :preprocess, position: 1) }
+
+    it 'returns preprocess blocks in position order' do
+      expect(pipeline.preprocesses.to_a).to eq([pre_zero, pre_one])
+    end
+
+    it 'exposes the first block and the next block by position' do
+      expect(pipeline.first_block).to eq(pre_zero)
+      expect(pipeline.next_block(pre_zero)).to eq(pre_one)
+      expect(pipeline.next_block(pre_one)).to eq(harvest)
+      expect(pipeline.next_block(harvest)).to be_nil
+    end
+  end
 end

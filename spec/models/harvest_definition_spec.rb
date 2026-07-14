@@ -55,6 +55,13 @@ RSpec.describe HarvestDefinition do
     end
   end
 
+  describe 'kind enum' do
+    it 'supports a preprocess kind' do
+      definition = create(:harvest_definition, kind: :preprocess)
+      expect(definition.preprocess?).to be true
+    end
+  end
+
   describe '#ready_to_run?' do
     it 'returns false if it has no extraction definition' do
       pipeline = create(:pipeline)

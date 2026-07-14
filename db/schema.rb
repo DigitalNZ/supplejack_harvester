@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_03_150437) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_14_214935) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -175,6 +175,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_03_150437) do
     t.boolean "required_for_active_record", default: false
     t.bigint "pipeline_id"
     t.bigint "harvest_report_id"
+    t.integer "position", default: 0, null: false
     t.index ["extraction_definition_id"], name: "index_harvest_definitions_on_extraction_definition_id"
     t.index ["harvest_report_id"], name: "index_harvest_definitions_on_harvest_report_id"
     t.index ["pipeline_id"], name: "index_harvest_definitions_on_pipeline_id"

@@ -17,7 +17,7 @@ class ExtractionDefinition < ApplicationRecord
   has_many :parameters, through: :requests
   has_many :stop_conditions, dependent: :destroy
 
-  enum :kind, { harvest: 0, enrichment: 1 }
+  enum :kind, { harvest: 0, enrichment: 1, preprocess: 2 }
 
   after_create do
     if name.blank?
