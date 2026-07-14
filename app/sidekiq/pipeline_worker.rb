@@ -5,6 +5,33 @@ class PipelineWorker < ApplicationWorker
     @pipeline_job = pipeline_job
     @pipeline = pipeline_job.pipeline
 
+    if running_the_chain?
+      start_chain
+    else
+      start_definitions
+    end
+  end
+
+  # avoids the ApplicationWorker job_end updating the job status to completed
+  def job_end; end
+
+  private
+
+  # We are running the processing chain when its first block (the lowest-position
+  # preprocess/harvest definition) is included in this run. In that case only the
+  # first block is started here; the chain steps itself forward on completion via
+  # PipelineJob#advance_to_next_block. Otherwise (e.g. an enrichment-only run) we
+  # fall back to the legacy behaviour of starting the requested definitions.
+  def running_the_chain?
+    first_block.present? && definitions_to_run.include?(first_block.id)
+  end
+
+  def start_chain
+    job = HarvestJob.create(pipeline_job: @pipeline_job, harvest_definition: first_block)
+    HarvestWorker.perform_async_with_priority(@pipeline_job.job_priority, job.id)
+  end
+
+  def start_definitions
     @pipeline_job.harvest_definitions_to_run.each do |harvest_definition|
       definition = HarvestDefinition.find(harvest_definition)
 
@@ -18,6 +45,11 @@ class PipelineWorker < ApplicationWorker
     end
   end
 
-  # avoids the ApplicationWorker job_end updating the job status to completed
-  def job_end; end
+  def first_block
+    @first_block ||= @pipeline.first_block
+  end
+
+  def definitions_to_run
+    @pipeline_job.harvest_definitions_to_run.map(&:to_i)
+  end
 end

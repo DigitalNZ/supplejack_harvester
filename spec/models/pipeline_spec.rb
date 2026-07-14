@@ -107,5 +107,13 @@ RSpec.describe Pipeline do
       expect(pipeline.next_block(pre_one)).to eq(harvest)
       expect(pipeline.next_block(harvest)).to be_nil
     end
+
+    it 'excludes enrichment definitions from the chain accessors' do
+      enrichment = create(:harvest_definition, pipeline:, kind: :enrichment, position: 0)
+
+      expect(pipeline.ordered_blocks).not_to include(enrichment)
+      expect(pipeline.first_block).to eq(pre_zero)
+      expect(pipeline.next_block(pre_one)).to eq(harvest)
+    end
   end
 end

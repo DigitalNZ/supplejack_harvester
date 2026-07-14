@@ -40,6 +40,26 @@ class PipelineJob < ApplicationRecord
     AutomationWorker.perform_async_with_priority(job_priority, current_step.automation_id, next_step.id)
   end
 
+  # Step the processing chain forward once a block has finished. Creates the
+  # next block's HarvestJob and enqueues it; when the chain is exhausted it falls
+  # through to the enrichment jobs (preserving the legacy end-of-harvest behaviour).
+  #
+  # The existence guard makes this idempotent: the transformation-completion gate
+  # that triggers this can, under concurrent workers, fire more than once for a
+  # single block, and we must never create duplicate HarvestJobs for the next block.
+  def advance_to_next_block(completed_definition)
+    reload
+    return if cancelled?
+
+    next_definition = pipeline.next_block(completed_definition)
+    return enqueue_enrichment_jobs(completed_definition.name) if next_definition.nil?
+
+    return if harvest_jobs.exists?(harvest_definition_id: next_definition.id)
+
+    job = HarvestJob.create(harvest_definition: next_definition, pipeline_job: self)
+    HarvestWorker.perform_async_with_priority(job_priority, job.id)
+  end
+
   def enqueue_enrichment_jobs(job_id)
     return unless should_queue_enrichments?
 
