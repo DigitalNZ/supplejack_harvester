@@ -8,9 +8,8 @@ class ExtractionWorker < ApplicationWorker
     Rails.logger.warn "Failed #{job['class']} with #{job['args']}: #{job['error_message']}"
   end
 
-  # rubocop:disable Metrics/AbcSize
   def child_perform(extraction_job)
-    if extraction_job.extraction_definition.enrichment?
+    if iterate_previous?(extraction_job)
       Extraction::EnrichmentExecution.new(extraction_job).call
     else
       Extraction::Execution.new(extraction_job, extraction_job.extraction_definition).call
@@ -24,7 +23,13 @@ class ExtractionWorker < ApplicationWorker
 
     TextExtractionWorker.perform_async_with_priority(job_priority, extraction_job.id)
   end
-  # rubocop:enable Metrics/AbcSize
+
+  def iterate_previous?(extraction_job)
+    return true if extraction_job.extraction_definition.enrichment?
+
+    definition = extraction_job.harvest_job&.harvest_definition
+    definition.present? && definition.position.positive?
+  end
 
   def job_priority
     return if @harvest_report.blank?

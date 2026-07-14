@@ -52,6 +52,28 @@ RSpec.describe ExtractionWorker, type: :job do
       end
     end
 
+    context 'when the extraction is for a block that iterates the previous block (position > 0)' do
+      let(:destination) { create(:destination) }
+      let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }
+      let(:preprocess_definition) { create(:harvest_definition, pipeline:, kind: :preprocess, position: 1) }
+      let(:harvest_job) { create(:harvest_job, harvest_definition: preprocess_definition, pipeline_job:) }
+      let(:extraction_definition) { create(:extraction_definition, destination:) }
+      let!(:request) { create(:request, extraction_definition:) }
+      let(:extraction_job) do
+        create(:extraction_job, extraction_definition:, harvest_job:, status: 'queued')
+      end
+
+      it 'triggers the Enrichment Extraction process instead of the Harvest Extraction process' do
+        expect_any_instance_of(Extraction::EnrichmentExecution).to receive(:call)
+        subject.perform(extraction_job.id)
+      end
+
+      it 'does not trigger the Harvest Extraction process' do
+        expect_any_instance_of(Extraction::Execution).not_to receive(:call)
+        subject.perform(extraction_job.id)
+      end
+    end
+
     it 'marks the job as completed' do
       subject.perform(extraction_job.id)
       extraction_job.reload

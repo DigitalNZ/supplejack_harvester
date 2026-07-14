@@ -12,7 +12,7 @@ module Extraction
     end
 
     def call
-      SjApiEnrichmentIterator.new(@extraction_job).each do |api_document, page|
+      iterator.each do |api_document, page|
         break if api_document.body.blank?
 
         process_enrichment_page(api_document, page)
@@ -38,6 +38,14 @@ module Extraction
     end
 
     private
+
+    def iterator
+      definition = @harvest_job&.harvest_definition
+      return SjApiEnrichmentIterator.new(@extraction_job) if definition.nil? || definition.position.zero?
+
+      folder = PreProcess::Output.folder(@harvest_job.pipeline_job.id, definition.position - 1)
+      PreProcessRecordIterator.new(folder)
+    end
 
     def extract_and_save_enrichment_documents(api_records)
       api_records.each_with_index do |api_record, index|
