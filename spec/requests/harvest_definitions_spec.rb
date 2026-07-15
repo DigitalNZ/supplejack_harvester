@@ -135,6 +135,32 @@ RSpec.describe 'HarvestDefinitions' do
         expect(chain_harvest.reload.position).to eq(5)
       end
     end
+
+    context 'when a harvest is added after preprocess blocks already exist' do
+      # The Task 10 / full self-serve build sequence: preprocess blocks first (positions 0, 1),
+      # THEN the harvest. The #add-harvest modal has no position field, so the harvest would
+      # land at the schema default (0) and Pipeline#ordered_blocks' (position, id) sort would
+      # place it BETWEEN the preprocess blocks - violating the terminal-harvest invariant the
+      # chain stepper depends on. The controller must place a late-added harvest at the end.
+      let(:chain_pipeline) { create(:pipeline) }
+      let!(:pre_zero) do
+        create(:harvest_definition, pipeline: chain_pipeline, kind: :preprocess, position: 0,
+                                    source_id: 'tpk_pre_0')
+      end
+      let!(:pre_one) do
+        create(:harvest_definition, pipeline: chain_pipeline, kind: :preprocess, position: 1,
+                                    source_id: 'tpk_pre_1')
+      end
+
+      it 'places the harvest after the existing preprocess blocks' do
+        post pipeline_harvest_definitions_path(chain_pipeline), params: {
+          harvest_definition: { pipeline_id: chain_pipeline.id, source_id: 'tpk_harvest', kind: 'harvest' }
+        }
+
+        expect(chain_pipeline.harvest.position).to eq(2)
+        expect(chain_pipeline.ordered_blocks.map(&:source_id)).to eq(%w[tpk_pre_0 tpk_pre_1 tpk_harvest])
+      end
+    end
   end
 
   describe 'PATCH /update' do

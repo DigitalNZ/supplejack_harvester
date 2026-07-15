@@ -49,16 +49,19 @@ class HarvestDefinitionsController < ApplicationController
   # chain stepper relies on the harvest always being the LAST block. Preprocess blocks are
   # appended to the end of the chain on creation (position: pipeline.preprocesses.count - see
   # the "Add Pre-processing block" modal), but the harvest's own position defaults to 0 (schema
-  # default) and nothing else ever moves it. If a harvest is already persisted at a position
-  # that no longer trails every preprocess block once a new one is added (e.g. harvest created
-  # first, at its default position 0, then one or more preprocess blocks added afterwards), the
-  # (position, id) ordering could place the harvest before, or between, preprocess blocks. Guard
-  # that invariant here on every preprocess creation instead of relying on callers to always
-  # create blocks in chain order.
+  # default, and the "Add harvest" modal sends no position field), so both creation orders can
+  # break the invariant:
+  #   - harvest first, preprocess added later: the harvest (position 0) ties with or trails the
+  #     new preprocess blocks and the id tiebreak puts it first -> bump the existing harvest.
+  #   - preprocess blocks first, harvest added later: the new harvest lands at position 0,
+  #     BETWEEN or before the existing preprocess blocks -> place the new harvest at the end.
+  # Both directions resolve to the same rule: the harvest-kind block must sit at (at least)
+  # one position past the last preprocess block. Enforced here, on every chain-block creation,
+  # instead of relying on callers to always create blocks in chain order.
   def keep_harvest_last_in_chain
-    return unless @harvest_definition.preprocess?
+    return if @harvest_definition.enrichment?
 
-    harvest = @pipeline.harvest
+    harvest = @harvest_definition.harvest? ? @harvest_definition : @pipeline.harvest
     return if harvest.blank?
 
     end_of_chain_position = @pipeline.preprocesses.count

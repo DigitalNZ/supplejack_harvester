@@ -124,9 +124,16 @@ RSpec.describe 'Pipelines' do
     end
 
     it 'renders preprocess blocks in position order, before the harvest' do
-      harvest_definition.update!(source_id: 'harvest-block', position: 2)
-      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
-      create(:harvest_definition, pipeline:, kind: :preprocess, position: 1, source_id: 'pre-two')
+      # Build the chain through the controller (the same path the UI takes), which appends the
+      # preprocess positions and keeps the harvest's position at the end of the chain - rather
+      # than hand-setting positions the UI could never produce.
+      harvest_definition.update!(source_id: 'harvest-block')
+      post pipeline_harvest_definitions_path(pipeline), params: {
+        harvest_definition: { pipeline_id: pipeline.id, source_id: 'pre-one', kind: 'preprocess', position: 0 }
+      }
+      post pipeline_harvest_definitions_path(pipeline), params: {
+        harvest_definition: { pipeline_id: pipeline.id, source_id: 'pre-two', kind: 'preprocess', position: 1 }
+      }
 
       get pipeline_path(pipeline)
 
