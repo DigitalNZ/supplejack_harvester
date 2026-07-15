@@ -80,6 +80,61 @@ RSpec.describe 'HarvestDefinitions' do
         expect(definition.position).to eq(3)
       end
     end
+
+    context 'when a preprocess block is added after the harvest already exists' do
+      # A dedicated pipeline/harvest here (rather than the file's shared `pipeline`/
+      # `harvest_definition`, which - via the :figshare trait plus its own let! - already
+      # carries TWO harvest-kind blocks) so `pipeline.harvest` unambiguously resolves to
+      # the one harvest under test.
+      #
+      # That harvest sits at the schema default position (0). Pipeline#ordered_blocks sorts
+      # by (position, id), so without the HarvestDefinitionsController#keep_harvest_last_in_chain
+      # guard, a new preprocess block (also created at position 0, appended via the "Add
+      # Pre-processing block" modal's `position: pipeline.preprocesses.count`) would tie with
+      # the harvest's position and lose the tiebreak (the harvest's id is lower - it was
+      # created first), putting the harvest BEFORE the preprocess block it should follow.
+      let(:chain_pipeline) { create(:pipeline) }
+      let!(:chain_harvest) { create(:harvest_definition, pipeline: chain_pipeline, source_id: 'test') }
+
+      it "bumps the harvest's position so it stays the last chain block" do
+        post pipeline_harvest_definitions_path(chain_pipeline), params: {
+          harvest_definition: {
+            pipeline_id: chain_pipeline.id, source_id: 'tpk_pre_0', kind: 'preprocess', position: 0
+          }
+        }
+
+        expect(chain_harvest.reload.position).to eq(1)
+        expect(chain_pipeline.ordered_blocks.map(&:kind)).to eq(%w[preprocess harvest])
+      end
+
+      it 'keeps the harvest last as more preprocess blocks are appended' do
+        post pipeline_harvest_definitions_path(chain_pipeline), params: {
+          harvest_definition: {
+            pipeline_id: chain_pipeline.id, source_id: 'tpk_pre_0', kind: 'preprocess', position: 0
+          }
+        }
+        post pipeline_harvest_definitions_path(chain_pipeline), params: {
+          harvest_definition: {
+            pipeline_id: chain_pipeline.id, source_id: 'tpk_pre_1', kind: 'preprocess', position: 1
+          }
+        }
+
+        expect(chain_harvest.reload.position).to eq(2)
+        expect(chain_pipeline.ordered_blocks.map(&:source_id)).to eq(%w[tpk_pre_0 tpk_pre_1 test])
+      end
+
+      it 'does not move the harvest when it already trails every preprocess block' do
+        chain_harvest.update!(position: 5)
+
+        post pipeline_harvest_definitions_path(chain_pipeline), params: {
+          harvest_definition: {
+            pipeline_id: chain_pipeline.id, source_id: 'tpk_pre_0', kind: 'preprocess', position: 0
+          }
+        }
+
+        expect(chain_harvest.reload.position).to eq(5)
+      end
+    end
   end
 
   describe 'PATCH /update' do

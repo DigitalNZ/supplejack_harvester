@@ -105,6 +105,7 @@ class PipelinesController < ApplicationController
     @harvest_definition = @pipeline.harvest_definitions.find(&:harvest?) || HarvestDefinition.new(pipeline: @pipeline)
     @extraction_jobs = @harvest_definition.extraction_definition&.extraction_jobs&.order(created_at: :desc)
     @enrichment_definition = HarvestDefinition.new(pipeline: @pipeline)
+    @preprocess_definition = HarvestDefinition.new(pipeline: @pipeline, kind: :preprocess)
   end
 
   def find_pipeline

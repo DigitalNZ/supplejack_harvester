@@ -1,0 +1,256 @@
+<%# A pre-processing block behaves exactly like a position-0 (seed) harvest block: its
+    extraction/transformation definitions are created with kind: 'harvest' below, NOT
+    kind: preprocess_definition.kind ('preprocess'). This is deliberate, not an oversight:
+      - TransformationDefinition#kind only has harvest/enrichment values (no preprocess) -
+        passing 'preprocess' would raise ArgumentError on save.
+      - ExtractionWorker#iterate_previous? and the request-preview routing in
+        RequestsController both key off HarvestDefinition#position (position.zero? => seed,
+        position.positive? => iterate-previous), not off ExtractionDefinition#kind. The
+        "Add Pre-processing block" entry only ever creates the FIRST block in the chain
+        (see show.html.erb), i.e. position 0, so 'harvest'-kind extraction/transformation
+        definitions are the semantically correct choice here (see
+        spec/integration/preprocessing_pipeline_spec.rb block0, which uses the same
+        default 'harvest' kind for its position-0 preprocess block). %>
+<div class='card p-4'>
+  <div class='d-flex'>
+    <div class='me-auto'>
+      <%= render layout: 'shared/inline_editable_element', locals:
+        {
+          id: "harvest-definition-#{preprocess_definition.id}-source-id",
+          model: preprocess_definition,
+          attribute: :source_id,
+          url: pipeline_harvest_definition_path(@pipeline, preprocess_definition)
+        } do %>
+        <h4><%= preprocess_definition.source_id %> </h4>
+      <% end %>
+    </div>
+
+    <div>
+      <button
+        type="button"
+        class="btn btn-outline-danger mb-4"
+        data-bs-toggle="modal"
+        data-bs-target="<%= "#delete-harvest-definition-#{preprocess_definition.id}" %>">
+        <i class="bi bi-trash" aria-hidden="true"></i> Delete Pre-processing block
+      </button>
+    </div>
+
+    <%= render layout: 'shared/delete_modal',
+               locals: { path: pipeline_harvest_definition_path(@pipeline, preprocess_definition),
+                         id: "delete-harvest-definition-#{preprocess_definition.id}",
+                         heading_text: 'Delete Pre-processing block' } do %>
+      <p>Are you sure you want to delete "<%= preprocess_definition.source_id %>"?</p>
+
+      <% if preprocess_definition.extraction_definition.present? %>
+        <p><%= definition_delete_text(preprocess_definition.extraction_definition, 'extraction') %></p>
+      <% end %>
+
+      <% if preprocess_definition.transformation_definition.present? %>
+        <p><%= definition_delete_text(preprocess_definition.transformation_definition, 'transformation') %></p>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class='row'>
+    <div class='col-6'>
+      <% if preprocess_definition.extraction_definition.present? %>
+
+        <%= render partial: 'pipelines/card',
+                   locals: {
+                     pipeline: @pipeline,
+                     block_definition: preprocess_definition,
+                     definition: preprocess_definition.extraction_definition,
+                     edit_path:
+           pipeline_harvest_definition_extraction_definition_path(
+             @pipeline,
+             preprocess_definition,
+             preprocess_definition.extraction_definition
+           ),
+                     edit_text: definition_edit_text(preprocess_definition.extraction_definition, 'extraction'),
+                     jobs_path:
+           pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+             @pipeline,
+             preprocess_definition,
+             preprocess_definition.extraction_definition
+           ),
+                     run_sample_extraction_path:
+           pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+             @pipeline,
+             preprocess_definition,
+             preprocess_definition.extraction_definition,
+             kind: :sample
+           ),
+                     run_full_extraction_path:
+           pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+             @pipeline,
+             preprocess_definition,
+             preprocess_definition.extraction_definition,
+             kind: :full
+           ),
+                     delete_path:
+           pipeline_harvest_definition_extraction_definition_path(
+             @pipeline,
+             preprocess_definition,
+             preprocess_definition.extraction_definition
+           )
+                   } %>
+
+      <% else %>
+        <button
+          type="button"
+          class="harvest-card card card--create-cta d-flex h-100"
+          data-bs-toggle="modal"
+          data-bs-target="<%= "#add-preprocess-extraction-#{preprocess_definition.id}" %>">
+          <div class="card-body align-items-center d-flex justify-content-center">
+            <p class='card-text'>+ Add pre-processing extraction</p>
+          </div>
+          <i class="bi bi-arrow-right harvest-card__right-arrow"></i>
+        </button>
+      <% end %>
+    </div>
+
+    <div class='col-6'>
+      <% if preprocess_definition.transformation_definition.present? %>
+
+        <%= render partial: 'pipelines/card',
+                   locals: {
+                     pipeline: @pipeline,
+                     block_definition: preprocess_definition,
+                     definition: preprocess_definition.transformation_definition,
+                     edit_path:
+           pipeline_harvest_definition_transformation_definition_path(
+             @pipeline,
+             preprocess_definition,
+             preprocess_definition.transformation_definition
+           ),
+                     edit_text: definition_edit_text(preprocess_definition.transformation_definition,
+                                                     'transformation'),
+                     jobs_path: '',
+                     delete_path:
+             pipeline_harvest_definition_transformation_definition_path(
+               @pipeline,
+               preprocess_definition,
+               preprocess_definition.transformation_definition
+             )
+                   } %>
+
+      <% else %>
+
+        <% disabled =
+             preprocess_definition.extraction_definition.blank? ||
+             preprocess_definition.extraction_definition.extraction_jobs&.none?(&:completed?) %>
+
+        <button
+          type="button"
+          class="<%= class_names(
+                       'card', 'mb-3', 'card--create-cta', 'd-flex', 'h-100',
+                       'card--create-cta-disabled': disabled
+                     ) %>"
+          <% if disabled %>
+            data-bs-toggle="tooltip" data-bs-placement="top"
+            data-bs-title="You need to extract some data before you can add a transformation"
+          <% else %>
+            data-bs-toggle="modal"
+            data-bs-target="<%= "#add-preprocess-transformation-#{preprocess_definition.id}" %>"
+          <% end %>>
+
+          <div class="card-body align-items-center d-flex justify-content-center">
+            <p class="card-text">+ Add pre-processing transformation</p>
+          </div>
+        </button>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<% if preprocess_definition.extraction_definition.blank? %>
+  <%= render(
+        layout: 'shared/create_modal',
+        locals: {
+          modal_heading: 'Add pre-processing extraction',
+          id: "add-preprocess-extraction-#{preprocess_definition.id}",
+          modal_subheading:
+            'A pre-processing extraction is a set of rules that define how you collect records from a content source'
+        }
+      ) do %>
+
+    <div class='d-grid mt-4'>
+      <input
+        id="js-auto-complete-preprocess-extraction-definition-<%= preprocess_definition.id %>"
+        class='js-auto-complete'
+        data-src="<%= autocomplete_harvest_extraction_definitions %>"
+        data-path="<%= "/pipelines/#{@pipeline.id}/harvest_definitions/#{preprocess_definition.id}.json" %>"
+        data-field="extraction_definition_id"
+        data-placeholder='Start typing to use an existing definition..'
+        data-key='name'>
+
+      <div class='text-center mt-4 mb-4'>
+        or
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="<%= "#create-preprocess-extraction-definition-modal-#{preprocess_definition.id}" %>">
+        + Add a new extraction definition
+      </button>
+    </div>
+  <% end %>
+
+  <%= render 'extraction_definitions/create_edit_harvest_modal',
+             id: "create-preprocess-extraction-definition-modal-#{preprocess_definition.id}",
+             harvest_definition: preprocess_definition,
+             modal_heading: 'Create extraction definition',
+             modal_subheading: 'Define the settings for your extraction definition' %>
+<% end %>
+
+<% if preprocess_definition.transformation_definition.blank? %>
+  <%= render(
+        layout: 'shared/create_modal',
+        locals: {
+          modal_heading: 'Add pre-processing transformation',
+          id: "add-preprocess-transformation-#{preprocess_definition.id}",
+          modal_subheading:
+            'A pre-processing transformation is a set of rules that defines the shape you want your ' \
+            'pre-processed records to have'
+        }
+      ) do %>
+    <div class='d-grid mt-4'>
+      <input
+        id="js-auto-complete-preprocess-transformation-definition-<%= preprocess_definition.id %>"
+        class='js-auto-complete'
+        data-src="<%= autocomplete_harvest_transformation_definitions %>"
+        data-placeholder='Start typing to use an existing definition..'
+        data-path="<%= "/pipelines/#{@pipeline.id}/harvest_definitions/#{preprocess_definition.id}.json" %>"
+        data-field="transformation_definition_id"
+        data-key='name'>
+
+      <div class='text-center mt-4 mb-4'>
+        or
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="<%= "#create-preprocess-transformation-definition-modal-#{preprocess_definition.id}" %>">
+        + Add a new transformation definition
+      </button>
+    </div>
+  <% end %>
+
+  <% preprocess_extraction_jobs =
+       preprocess_definition.extraction_definition&.extraction_jobs&.order(created_at: :desc) %>
+
+  <%= render 'transformation_definitions/create_edit_modal',
+             {
+               id: "create-preprocess-transformation-definition-modal-#{preprocess_definition.id}",
+               modal_heading: 'Create transformation definition',
+               harvest_definition: preprocess_definition,
+               modal_subheading: 'Define the settings for your transformation definition',
+               extraction_jobs: preprocess_extraction_jobs,
+               kind: 'harvest',
+               confirmation_button_text: 'Create pre-processing transformation'
+             } %>
+<% end %>

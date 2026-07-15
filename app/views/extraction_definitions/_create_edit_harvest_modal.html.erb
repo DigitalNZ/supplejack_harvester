@@ -3,6 +3,7 @@
 <% modal_subheading ||= '' %>
 <% model ||= ExtractionDefinition.new %>
 <% confirmation_button_text ||= 'Create harvest extraction' %>
+<% harvest_definition ||= @harvest_definition %>
 
 <%= tag.div(
       class: 'modal fade',
@@ -21,7 +22,7 @@
         <p><%= modal_subheading %></p>
       </div>
       <div class="modal-body">
-        <%= vertical_form_with model: [@pipeline, @harvest_definition, model] do |form| %>
+        <%= vertical_form_with model: [@pipeline, harvest_definition, model] do |form| %>
           <div class='row gy-3 align-items-center'>
 
             <%= form.hidden_field :kind, value: 'harvest' %>
@@ -51,7 +52,7 @@
               <%= form.text_field :base_url,
                                   class: {
                                     'form-control': true,
-                                    'is-invalid': @harvest_definition.errors[:base_url].any?
+                                    'is-invalid': harvest_definition.errors[:base_url].any?
                                   }, required: true %>
             </div>
 
@@ -181,7 +182,7 @@
                                   id: 'js-extraction-definition-split-selector',
                                   class: {
                                     'form-control': true,
-                                    'is-invalid': @harvest_definition.errors[:split_selector].any?
+                                    'is-invalid': harvest_definition.errors[:split_selector].any?
                                   } %>
             </div>
 

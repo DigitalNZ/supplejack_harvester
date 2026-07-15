@@ -13,6 +13,7 @@ class HarvestDefinitionsController < ApplicationController
     harvest_kind = @harvest_definition.kind.capitalize
 
     if @harvest_definition.save
+      keep_harvest_last_in_chain
       update_last_edited_by([@pipeline])
       redirect_to pipeline_path(@pipeline), notice: t('.success', kind: harvest_kind)
     else
@@ -43,6 +44,26 @@ class HarvestDefinitionsController < ApplicationController
   end
 
   private
+
+  # Pipeline#ordered_blocks (app/models/pipeline.rb) sorts blocks by (position, id), and the
+  # chain stepper relies on the harvest always being the LAST block. Preprocess blocks are
+  # appended to the end of the chain on creation (position: pipeline.preprocesses.count - see
+  # the "Add Pre-processing block" modal), but the harvest's own position defaults to 0 (schema
+  # default) and nothing else ever moves it. If a harvest is already persisted at a position
+  # that no longer trails every preprocess block once a new one is added (e.g. harvest created
+  # first, at its default position 0, then one or more preprocess blocks added afterwards), the
+  # (position, id) ordering could place the harvest before, or between, preprocess blocks. Guard
+  # that invariant here on every preprocess creation instead of relying on callers to always
+  # create blocks in chain order.
+  def keep_harvest_last_in_chain
+    return unless @harvest_definition.preprocess?
+
+    harvest = @pipeline.harvest
+    return if harvest.blank?
+
+    end_of_chain_position = @pipeline.preprocesses.count
+    harvest.update!(position: end_of_chain_position) if harvest.position < end_of_chain_position
+  end
 
   def html_update
     if @harvest_definition.update(harvest_definition_params)

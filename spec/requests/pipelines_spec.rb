@@ -80,6 +80,46 @@ RSpec.describe 'Pipelines' do
       expect(response).to have_http_status :ok
       expect(response.body).to include pipeline.name
     end
+
+    it 'offers "Add Pre-processing block" in the add-block dropdown before any blocks exist' do
+      empty_pipeline = create(:pipeline, name: 'Empty pipeline')
+
+      get pipeline_path(empty_pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include 'Add Pre-processing block'
+    end
+
+    it 'renders preprocess blocks in position order, before the harvest' do
+      harvest_definition.update!(source_id: 'harvest-block', position: 2)
+      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
+      create(:harvest_definition, pipeline:, kind: :preprocess, position: 1, source_id: 'pre-two')
+
+      get pipeline_path(pipeline)
+
+      body = response.body
+      expect(body.index('pre-one')).to be < body.index('pre-two')
+      expect(body.index('pre-two')).to be < body.index('harvest-block')
+    end
+
+    it "points a pre-processing block's create-extraction-definition form at its own " \
+       'harvest_definition, not the pipeline harvest' do
+      preprocess = create(:harvest_definition, pipeline:, kind: :preprocess, position: 0,
+                                               source_id: 'pre-one', extraction_definition: nil)
+
+      get pipeline_path(pipeline)
+
+      expected_action = pipeline_harvest_definition_extraction_definitions_path(pipeline, preprocess)
+      wrong_action = pipeline_harvest_definition_extraction_definitions_path(pipeline, harvest_definition)
+
+      # Match the exact quoted form `action="..."` attribute (not a loose substring), since the
+      # harvest's own extraction/transformation *member* routes (edit/delete/jobs links, which DO
+      # already exist for `harvest_definition` on this page) share the same collection path as a
+      # prefix, e.g. ".../extraction_definitions/42" - a plain #include? on the bare path would
+      # give a false failure there.
+      expect(response.body).to include "action=\"#{CGI.escapeHTML(expected_action)}\""
+      expect(response.body).not_to include "action=\"#{CGI.escapeHTML(wrong_action)}\""
+    end
   end
 
   describe 'PATCH /update' do

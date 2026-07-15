@@ -68,6 +68,11 @@
 
 <% if @pipeline.harvest_definitions.any? %>
 
+  <% @pipeline.preprocesses.each do |preprocess_definition| %>
+    <%= render partial: 'pipelines/preprocess_definition', locals: { preprocess_definition: } %>
+    <span class='definition-group__bridge'></span>
+  <% end %>
+
   <% if @pipeline.harvest_definitions.any?(&:harvest?) %>
     <%= render partial: 'pipelines/harvest_definition' %>
     <span class='definition-group__bridge'></span>
@@ -127,6 +132,7 @@
         </div>
       </button>
       <ul class="dropdown-menu w-100">
+        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-preprocess">Add Pre-processing block</a></li>
         <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-harvest">Add Harvest</a></li>
         <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-enrichment">Add Enrichment</a></li>
       </ul>
@@ -149,6 +155,41 @@
       <p><%= definition_delete_text(definition.transformation_definition, 'transformation') %></p>
     <% end %>
   <% end %>
+<% end %>
+
+<%= render layout: 'shared/create_modal',
+           locals: { modal_heading: 'Add pre-processing block', id: 'add-preprocess',
+                     modal_subheading: 'Add a source_id to identify records from this pre-processing block.' } do %>
+  <div class='d-grid mt-4'>
+    <%= vertical_form_with model: [@pipeline, @preprocess_definition] do |form| %>
+      <div class='row gy-3 align-items-center'>
+        <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
+        <%= form.hidden_field :kind, value: 'preprocess' %>
+        <%= form.hidden_field :position, value: @pipeline.preprocesses.count %>
+
+        <div class="col-4">
+          <%= form.label :source_id, class: 'form-label' do %>
+            Source ID
+            <span
+              data-bs-toggle="tooltip"
+              data-bs-title="This is used as a way to identify records from this pre-processing block."><i class="bi bi-question-circle" aria-label="helper text"></i>
+
+          <% end %>
+        </div>
+        <div class='col-8'>
+          <%= form.text_field :source_id,
+                              class: {
+                                'form-control': true,
+                                'is-invalid': @preprocess_definition.errors[:source_id].any?
+                              } %>
+        </div>
+      </div>
+
+      <div class='d-grid mt-4'>
+        <button type="submit" class="btn btn-primary">Add to pipeline</button>
+      </div>
+    <% end %>
+  </div>
 <% end %>
 
 <%= render layout: 'shared/create_modal',
