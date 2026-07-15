@@ -1,16 +1,18 @@
-<%# A pre-processing block behaves exactly like a position-0 (seed) harvest block: its
-    extraction/transformation definitions are created with kind: 'harvest' below, NOT
-    kind: preprocess_definition.kind ('preprocess'). This is deliberate, not an oversight:
+<%# A pre-processing block's extraction/transformation definitions are created with
+    kind: 'harvest' below, NOT kind: preprocess_definition.kind ('preprocess'). This is
+    deliberate, not an oversight:
       - TransformationDefinition#kind only has harvest/enrichment values (no preprocess) -
-        passing 'preprocess' would raise ArgumentError on save.
-      - ExtractionWorker#iterate_previous? and the request-preview routing in
-        RequestsController both key off HarvestDefinition#position (position.zero? => seed,
-        position.positive? => iterate-previous), not off ExtractionDefinition#kind. The
-        "Add Pre-processing block" entry only ever creates the FIRST block in the chain
-        (see show.html.erb), i.e. position 0, so 'harvest'-kind extraction/transformation
-        definitions are the semantically correct choice here (see
-        spec/integration/preprocessing_pipeline_spec.rb block0, which uses the same
-        default 'harvest' kind for its position-0 preprocess block). %>
+        passing 'preprocess' would raise ArgumentError on save, so 'harvest' is the only
+        valid choice that keeps validations active.
+      - Runtime input routing (which block reads the previous block's feed-forward output
+        vs. seeds its own extraction) keys off HarvestDefinition#position in
+        ExtractionWorker#iterate_previous? (position.zero? => seed, position.positive? =>
+        iterate-previous), not off ExtractionDefinition#kind or #preprocess?.
+      - Request PREVIEW is a separate concern: RequestsController#show routes purely on
+        extraction_definition.harvest? and never looks at position, so previewing a
+        position > 0 preprocess block's request currently always runs the seed path
+        instead of iterating a previous block's output. This is a known POC limitation of
+        the preview feature, not a bug in the harvest chain itself. %>
 <div class='card p-4'>
   <div class='d-flex'>
     <div class='me-auto'>
