@@ -85,7 +85,7 @@
       </div>
     </button>
     <ul class="dropdown-menu w-100">
-      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-preprocess">Add Pre-processing block</a></li>
+      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-preprocess">Add Pre-processing</a></li>
       <% unless @pipeline.harvest_definitions.any?(&:harvest?) %>
         <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-harvest">Add Harvest</a></li>
       <% end %>
@@ -146,7 +146,7 @@
         </div>
       </button>
       <ul class="dropdown-menu w-100">
-        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-preprocess">Add Pre-processing block</a></li>
+        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-preprocess">Add Pre-processing</a></li>
         <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-harvest">Add Harvest</a></li>
         <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-enrichment">Add Enrichment</a></li>
       </ul>
@@ -172,7 +172,7 @@
 <% end %>
 
 <%= render layout: 'shared/create_modal',
-           locals: { modal_heading: 'Add pre-processing block', id: 'add-preprocess',
+           locals: { modal_heading: 'Add pre-processing', id: 'add-preprocess',
                      modal_subheading: 'Add a source_id to identify records from this pre-processing block.' } do %>
   <div class='d-grid mt-4'>
     <%= vertical_form_with model: [@pipeline, @preprocess_definition] do |form| %>

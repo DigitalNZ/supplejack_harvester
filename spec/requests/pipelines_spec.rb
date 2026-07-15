@@ -81,22 +81,22 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include pipeline.name
     end
 
-    it 'offers "Add Pre-processing block" in the add-block dropdown before any blocks exist' do
+    it 'offers "Add Pre-processing" in the add-block dropdown before any blocks exist' do
       empty_pipeline = create(:pipeline, name: 'Empty pipeline')
 
       get pipeline_path(empty_pipeline)
 
       expect(response).to have_http_status :ok
-      expect(response.body).to include 'Add Pre-processing block'
+      expect(response.body).to include 'Add Pre-processing'
     end
 
-    it 'still offers "Add Pre-processing block" once the pipeline has blocks' do
+    it 'still offers "Add Pre-processing" once the pipeline has blocks' do
       create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
 
       get pipeline_path(pipeline)
 
       expect(response).to have_http_status :ok
-      expect(response.body).to include 'Add Pre-processing block'
+      expect(response.body).to include 'Add Pre-processing'
       # The add-preprocess modal's hidden position must append to the END of the existing
       # preprocess chain (one block at position 0 exists, so the next one goes to 1).
       expect(response.body).to match(/value="1"[^>]*name="harvest_definition\[position\]"/)
