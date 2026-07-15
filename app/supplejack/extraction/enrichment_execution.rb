@@ -80,7 +80,10 @@ module Extraction
     end
 
     def page_from_index(index)
-      ((@extraction_definition.page - 1) * @extraction_definition.per_page) + (index + 1)
+      # per_page is nil for non-paginated sources (e.g. a pre-processing block
+      # scraping HTML); page is 1 in that case, so the paging offset is 0.
+      per_page = @extraction_definition.per_page || 0
+      ((@extraction_definition.page - 1) * per_page) + (index + 1)
     end
   end
 end
