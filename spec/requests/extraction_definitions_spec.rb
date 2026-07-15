@@ -67,6 +67,21 @@ RSpec.describe 'ExtractionDefinitions' do
       end
     end
 
+    context 'when created under a pre-processing block' do
+      let!(:preprocess_definition) do
+        create(:harvest_definition, kind: :preprocess, pipeline:, extraction_definition: nil, source_id: 'pre-0')
+      end
+
+      it 'auto-names the definition after the pre-processing block, not its harvest kind' do
+        post pipeline_harvest_definition_extraction_definitions_path(pipeline, preprocess_definition), params: {
+          extraction_definition: build(:extraction_definition, pipeline:).attributes
+        }
+
+        definition = ExtractionDefinition.order(:id).last
+        expect(definition.name).to eq "#{definition.id}_pre-processing-extraction"
+      end
+    end
+
     context 'with invalid parameters' do
       it 'does not create a new extraction definition' do
         extraction_definition2 = build(:extraction_definition, format: nil, pipeline:)

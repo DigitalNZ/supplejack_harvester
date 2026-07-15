@@ -2,6 +2,7 @@
 
 class TransformationDefinitionsController < ApplicationController
   include LastEditedBy
+  include DefinitionAttachment
 
   before_action :find_pipeline, :find_harvest_definition
   before_action :find_transformation_definition, only: %i[show update destroy clone]
@@ -14,7 +15,7 @@ class TransformationDefinitionsController < ApplicationController
     @transformation_definition = TransformationDefinition.new(transformation_definition_params)
 
     if @transformation_definition.save
-      @harvest_definition.update(transformation_definition_id: @transformation_definition.id)
+      attach_to_block(@transformation_definition, 'transformation')
 
       redirect_to pipeline_harvest_definition_transformation_definition_path(
         @pipeline, @harvest_definition, @transformation_definition
@@ -78,11 +79,7 @@ class TransformationDefinitionsController < ApplicationController
 
     @props = transformation_app_state
 
-    @extraction_jobs = if @harvest_definition.extraction_definition.present?
-                         @harvest_definition.extraction_definition.extraction_jobs.order(created_at: :desc)
-                       else
-                         []
-                       end
+    @extraction_jobs = @harvest_definition.extraction_definition&.extraction_jobs&.order(created_at: :desc) || []
   end
 
   def assign_schema_variables

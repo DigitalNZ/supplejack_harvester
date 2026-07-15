@@ -2,6 +2,7 @@
 
 class ExtractionDefinitionsController < ApplicationController
   include LastEditedBy
+  include DefinitionAttachment
 
   before_action :find_pipeline
   before_action :find_harvest_definition
@@ -15,7 +16,7 @@ class ExtractionDefinitionsController < ApplicationController
     @extraction_definition = ExtractionDefinition.new(extraction_definition_params)
 
     if @extraction_definition.save
-      @harvest_definition.update(extraction_definition_id: @extraction_definition.id)
+      attach_to_block(@extraction_definition, 'extraction')
 
       2.times { Request.create(extraction_definition: @extraction_definition) }
 

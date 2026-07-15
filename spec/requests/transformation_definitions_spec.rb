@@ -43,6 +43,21 @@ RSpec.describe 'Transformation Definitions' do
       end
     end
 
+    context 'when created under a pre-processing block' do
+      let!(:preprocess_definition) do
+        create(:harvest_definition, kind: :preprocess, pipeline:, transformation_definition: nil, source_id: 'pre-0')
+      end
+
+      it 'auto-names the definition after the pre-processing block, not its harvest kind' do
+        post pipeline_harvest_definition_transformation_definitions_path(pipeline, preprocess_definition), params: {
+          transformation_definition: build(:transformation_definition, pipeline:, extraction_job:).attributes
+        }
+
+        definition = TransformationDefinition.order(:id).last
+        expect(definition.name).to eq "#{definition.id}_pre-processing-transformation"
+      end
+    end
+
     context 'with invalid parameters' do
       let(:transformation_definition) { build(:transformation_definition) }
 
