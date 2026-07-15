@@ -69,6 +69,17 @@ RSpec.describe 'HarvestDefinitions' do
         end.not_to change(HarvestDefinition, :count)
       end
     end
+
+    context 'with preprocess kind and position' do
+      it 'creates a preprocess block with a position' do
+        post pipeline_harvest_definitions_path(pipeline), params: {
+          harvest_definition: { pipeline_id: pipeline.id, source_id: 'tpk_pre_0', kind: 'preprocess', position: 3 }
+        }
+        definition = pipeline.harvest_definitions.order(:created_at).last
+        expect(definition.preprocess?).to be true
+        expect(definition.position).to eq(3)
+      end
+    end
   end
 
   describe 'PATCH /update' do
