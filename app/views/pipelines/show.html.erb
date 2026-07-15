@@ -78,6 +78,20 @@
     <span class='definition-group__bridge'></span>
   <% end %>
 
+  <div class="dropdown mb-5">
+    <button class="btn btn-primary dropdown-toggle w-100 harvest-card card card--create-cta d-flex" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      <div class="card-body align-items-center d-flex justify-content-center">
+        + Add block
+      </div>
+    </button>
+    <ul class="dropdown-menu w-100">
+      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-preprocess">Add Pre-processing block</a></li>
+      <% unless @pipeline.harvest_definitions.any?(&:harvest?) %>
+        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#add-harvest">Add Harvest</a></li>
+      <% end %>
+    </ul>
+  </div>
+
   <div class='card px-5 pt-5 mb-5'>
     <% if @pipeline.enrichments.any? %>
       <% @pipeline.enrichments.each do |enrichment_definition| %>

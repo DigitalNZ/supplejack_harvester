@@ -90,6 +90,39 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include 'Add Pre-processing block'
     end
 
+    it 'still offers "Add Pre-processing block" once the pipeline has blocks' do
+      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include 'Add Pre-processing block'
+      # The add-preprocess modal's hidden position must append to the END of the existing
+      # preprocess chain (one block at position 0 exists, so the next one goes to 1).
+      expect(response.body).to match(/value="1"[^>]*name="harvest_definition\[position\]"/)
+    end
+
+    it 'offers "Add Harvest" when the pipeline has blocks but no harvest yet' do
+      preprocess_pipeline = create(:pipeline, name: 'Preprocess only')
+      create(:harvest_definition, pipeline: preprocess_pipeline, kind: :preprocess, position: 0,
+                                  source_id: 'pre-one')
+
+      get pipeline_path(preprocess_pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include 'Add Harvest'
+    end
+
+    it 'does not offer "Add Harvest" when the pipeline already has a harvest' do
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      # "Add Harvest" (capital H) is the dropdown entry's exact label; the harvest block's own
+      # "+ Add harvest extraction/transformation" CTAs and the "Add harvest" modal heading are
+      # lowercase-h, so this assertion targets only the dropdown entry.
+      expect(response.body).not_to include 'Add Harvest'
+    end
+
     it 'renders preprocess blocks in position order, before the harvest' do
       harvest_definition.update!(source_id: 'harvest-block', position: 2)
       create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
