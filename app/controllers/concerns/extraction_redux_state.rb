@@ -115,8 +115,6 @@ module ExtractionReduxState
   end
 
   def active_request_id
-    return @extraction_definition.requests.first.id if @extraction_definition.harvest?
-
-    @extraction_definition.requests.last.id
+    @extraction_definition.configured_request.id
   end
 end

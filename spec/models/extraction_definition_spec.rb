@@ -122,6 +122,33 @@ RSpec.describe ExtractionDefinition do
     end
   end
 
+  describe '#configured_request' do
+    let(:pipeline) { create(:pipeline) }
+
+    context 'when the extraction definition is for a harvest or preprocess block' do
+      let(:extraction_definition) { create(:extraction_definition, pipeline:) }
+      let!(:first_request)  { create(:request, extraction_definition:) }
+      let!(:second_request) { create(:request, extraction_definition:) }
+
+      it 'is the first request, where the editor attaches parameters' do
+        expect(extraction_definition.configured_request).to eq(first_request)
+      end
+    end
+
+    context 'when the extraction definition is for an enrichment' do
+      let(:destination) { create(:destination) }
+      let(:extraction_definition) do
+        create(:extraction_definition, :enrichment, pipeline:, destination:, source_id: 'test')
+      end
+      let!(:first_request)  { create(:request, extraction_definition:) }
+      let!(:second_request) { create(:request, extraction_definition:) }
+
+      it 'is the last request, where the editor attaches parameters' do
+        expect(extraction_definition.configured_request).to eq(second_request)
+      end
+    end
+  end
+
   describe '#shared?' do
     let(:pipeline)                  { create(:pipeline) }
     let!(:harvest_definition_one)   { create(:harvest_definition, extraction_definition: shared, pipeline:) }

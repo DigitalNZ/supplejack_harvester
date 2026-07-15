@@ -34,11 +34,17 @@ RSpec.describe 'Pre-processing pipeline (3 blocks)', type: :integration do
   end
 
   # --- Block 1: fetch each category, gather its record links --------------
+  # Feed-forward blocks (preprocess/harvest) are created with kind: harvest in the UI
+  # (see app/views/pipelines/_preprocess_definition.html.erb), so use the default kind here.
   let!(:ed1) do
-    create(:extraction_definition, :enrichment, pipeline:, destination:, name: 'category-source',
-                                                base_url: 'https://data.example.com/category')
+    create(:extraction_definition, pipeline:, destination:, name: 'category-source',
+                                   base_url: 'https://data.example.com/category')
   end
+  # The UI creates every extraction definition with two requests and attaches the
+  # editor's parameters to the first one (see ExtractionDefinition#configured_request),
+  # so mirror that here rather than the single-request shortcut.
   let!(:request1) { create(:request, extraction_definition: ed1) }
+  let!(:subsequent_request1) { create(:request, extraction_definition: ed1) }
   let!(:param1) do
     create(:parameter, kind: 'slug', content_type: 'dynamic',
                        content: "response['transformed_record']['slug']", request: request1)
@@ -56,10 +62,11 @@ RSpec.describe 'Pre-processing pipeline (3 blocks)', type: :integration do
 
   # --- Block 2: fetch each record page and load it ------------------------
   let!(:ed2) do
-    create(:extraction_definition, :enrichment, pipeline:, destination:, name: 'record-source',
-                                                base_url: 'https://data.example.com/record')
+    create(:extraction_definition, pipeline:, destination:, name: 'record-source',
+                                   base_url: 'https://data.example.com/record')
   end
   let!(:request2) { create(:request, extraction_definition: ed2) }
+  let!(:subsequent_request2) { create(:request, extraction_definition: ed2) }
   let!(:param2) do
     create(:parameter, kind: 'slug', content_type: 'dynamic',
                        content: "response['transformed_record']['ref']", request: request2)

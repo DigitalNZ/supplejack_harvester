@@ -59,6 +59,14 @@ class ExtractionDefinition < ApplicationRecord
     }
   end
 
+  # The request that carries the parameters configured in the extraction editor.
+  # A harvest (and a preprocess block, which is stored as a harvest) puts them on
+  # the first request; an enrichment puts them on the last. The editor and the
+  # extraction executors must agree on this, so both read it from here.
+  def configured_request
+    harvest? ? requests.first : requests.last
+  end
+
   def json?
     format.in? %w[JSON ARCHIVE_JSON]
   end

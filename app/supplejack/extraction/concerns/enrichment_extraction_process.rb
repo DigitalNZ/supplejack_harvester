@@ -43,7 +43,7 @@ module Extraction
 
       def build_enrichment_extraction(parsed_params, extraction_definition, extraction_job)
         Extraction::EnrichmentExtraction.new(
-          extraction_definition.requests.last,
+          extraction_definition.configured_request,
           Extraction::ApiRecord.new(parsed_params['api_record']),
           parsed_params['page'],
           extraction_job.extraction_folder
