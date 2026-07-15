@@ -80,6 +80,27 @@ RSpec.describe ExtractionWorker, type: :job do
       expect(extraction_job.completed?).to be true
     end
 
+    context 'when the extraction is for a preprocess block' do
+      let(:pipeline_job) do
+        create(:pipeline_job, pipeline:, destination:, harvest_definitions_to_run: [enrichment_definition.id])
+      end
+      let(:preprocess_definition) { create(:harvest_definition, pipeline:, kind: :preprocess, position: 0) }
+      let(:harvest_job) { create(:harvest_job, harvest_definition: preprocess_definition, pipeline_job:) }
+      let(:harvest_report) { create(:harvest_report, pipeline_job:, harvest_job:) }
+      let!(:enrichment_definition) { create(:harvest_definition, kind: 'enrichment', pipeline:) }
+      let!(:enrichment_field) do
+        create(:field, name: 'title', block: "JsonPath.new('title').on(record).first",
+                       transformation_definition: enrichment_definition.transformation_definition)
+      end
+
+      it 'does not enqueue an enrichment job when the preprocess block completes, ' \
+         'because the harvest has not run yet' do
+        expect do
+          subject.perform(extraction_job.id, harvest_report.id)
+        end.not_to change(HarvestJob.where(harvest_definition: enrichment_definition), :count)
+      end
+    end
+
     context 'when the extraction is part of a harvest' do
       let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }
       let(:harvest_definition) { create(:harvest_definition, pipeline:) }
