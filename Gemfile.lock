@@ -603,7 +603,7 @@ DEPENDENCIES
   zlib
 
 RUBY VERSION
-   ruby 3.4.10p104
+   ruby 3.4.5p51
 
 BUNDLED WITH
    2.4.19
