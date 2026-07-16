@@ -1,0 +1,4 @@
+[client]
+# MariaDB Connector/C 3.4+ (Alpine 3.24) verifies the server certificate by default.
+# The DB presents a self-signed cert, so skip verification (connection stays encrypted).
+ssl-verify-server-cert=0
