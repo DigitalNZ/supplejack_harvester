@@ -1,0 +1,59 @@
+<%# Shared header for a pipeline block definition (enrichment / pre-processing).
+    locals:
+      definition:    the HarvestDefinition for this block
+      label:         noun used in the delete button / modal (e.g. 'Enrichment')
+      show_priority: whether to show the editable priority (defaults to false) %>
+<% show_priority = false unless defined?(show_priority) %>
+
+<div class='d-flex'>
+  <div class='me-auto'>
+    <%= render layout: 'shared/inline_editable_element', locals:
+      {
+        id: "harvest-definition-#{definition.id}-source-id",
+        model: definition,
+        attribute: :source_id,
+        url: pipeline_harvest_definition_path(@pipeline, definition)
+      } do %>
+      <h4><%= definition.source_id %> </h4>
+    <% end %>
+
+    <% if show_priority %>
+      <%= render layout: 'shared/inline_editable_element', locals:
+        {
+          id: "harvest-definition-#{definition.id}-priority",
+          model: definition,
+          attribute: :priority,
+          url: pipeline_harvest_definition_path(@pipeline, definition)
+        } do %>
+        <%= definition.priority %>
+      <% end %>
+
+      <br>
+    <% end %>
+  </div>
+
+  <div>
+    <button
+      type="button"
+      class="btn btn-outline-danger mb-4"
+      data-bs-toggle="modal"
+      data-bs-target="<%= "#delete-harvest-definition-#{definition.id}" %>">
+      <i class="bi bi-trash" aria-hidden="true"></i> Delete <%= label %>
+    </button>
+  </div>
+
+  <%= render layout: 'shared/delete_modal',
+             locals: { path: pipeline_harvest_definition_path(@pipeline, definition),
+                       id: "delete-harvest-definition-#{definition.id}",
+                       heading_text: "Delete #{label}" } do %>
+    <p>Are you sure you want to delete "<%= definition.source_id %>"?</p>
+
+    <% if definition.extraction_definition.present? %>
+      <p><%= definition_delete_text(definition.extraction_definition, 'extraction') %></p>
+    <% end %>
+
+    <% if definition.transformation_definition.present? %>
+      <p><%= definition_delete_text(definition.transformation_definition, 'transformation') %></p>
+    <% end %>
+  <% end %>
+</div>

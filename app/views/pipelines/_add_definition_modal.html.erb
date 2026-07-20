@@ -1,0 +1,43 @@
+<%# "Add an existing definition" modal with an autocomplete input and a
+    "create a new one" button. Shared by the enrichment / pre-processing blocks
+    for both extraction and transformation definitions. Element ids, heading and
+    button text are derived from the block's kind and the definition type.
+    locals:
+      block_definition: the HarvestDefinition this modal belongs to
+      definition_type:  :extraction or :transformation
+      autocomplete_src: data-src for the autocomplete input
+      modal_subheading: modal subheading text %>
+<% slug = block_definition.kind %>
+<% label = block_definition.enrichment? ? 'enrichment' : 'pre-processing' %>
+
+<%= render(
+      layout: 'shared/create_modal',
+      locals: {
+        modal_heading: "Add #{label} #{definition_type}",
+        id: "add-#{slug}-#{definition_type}-#{block_definition.id}",
+        modal_subheading:
+      }
+    ) do %>
+  <div class='d-grid mt-4'>
+    <input
+      id="js-auto-complete-<%= slug %>-<%= definition_type %>-definition-<%= block_definition.id %>"
+      class='js-auto-complete'
+      data-src="<%= autocomplete_src %>"
+      data-path="<%= "/pipelines/#{@pipeline.id}/harvest_definitions/#{block_definition.id}.json" %>"
+      data-field="<%= definition_type %>_definition_id"
+      data-placeholder='Start typing to use an existing definition..'
+      data-key='name'>
+
+    <div class='text-center mt-4 mb-4'>
+      or
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      data-bs-toggle="modal"
+      data-bs-target="<%= "#create-#{slug}-#{definition_type}-definition-modal-#{block_definition.id}" %>">
+      + Add a new <%= definition_type %> definition
+    </button>
+  </div>
+<% end %>

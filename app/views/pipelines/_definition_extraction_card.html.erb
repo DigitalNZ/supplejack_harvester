@@ -1,0 +1,31 @@
+<%# Extraction definition card for a pipeline block (enrichment / pre-processing).
+    locals:
+      pipeline:         the pipeline
+      block_definition: the HarvestDefinition owning the extraction definition %>
+<%= render partial: 'pipelines/card',
+           locals: {
+             pipeline:,
+             block_definition:,
+             definition: block_definition.extraction_definition,
+             edit_path:
+               pipeline_harvest_definition_extraction_definition_path(
+                 pipeline, block_definition, block_definition.extraction_definition
+               ),
+             edit_text: definition_edit_text(block_definition.extraction_definition, 'extraction'),
+             jobs_path:
+               pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+                 pipeline, block_definition, block_definition.extraction_definition
+               ),
+             run_sample_extraction_path:
+               pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+                 pipeline, block_definition, block_definition.extraction_definition, kind: :sample
+               ),
+             run_full_extraction_path:
+               pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+                 pipeline, block_definition, block_definition.extraction_definition, kind: :full
+               ),
+             delete_path:
+               pipeline_harvest_definition_extraction_definition_path(
+                 pipeline, block_definition, block_definition.extraction_definition
+               )
+           } %>
