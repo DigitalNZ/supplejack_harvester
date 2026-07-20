@@ -40,10 +40,10 @@ module Extraction
     private
 
     def iterator
-      definition = @harvest_job&.harvest_definition
-      return SjApiEnrichmentIterator.new(@extraction_job) if definition.nil? || definition.position.zero?
+      position = @harvest_job&.harvest_definition&.position || 0
+      return SjApiEnrichmentIterator.new(@extraction_job) if position.zero?
 
-      folder = PreProcess::Output.folder(@harvest_job.pipeline_job.id, definition.position - 1)
+      folder = PreProcess::Output.folder(@harvest_job.pipeline_job.id, position - 1)
       PreProcessRecordIterator.new(folder)
     end
 

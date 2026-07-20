@@ -52,7 +52,7 @@ class PipelineJob < ApplicationRecord
     return if cancelled?
 
     next_definition = pipeline.next_block(completed_definition)
-    return enqueue_enrichment_jobs(completed_definition.name) if next_definition.nil?
+    return enqueue_enrichment_jobs(completed_definition.name) if next_definition.blank?
 
     return if harvest_jobs.exists?(harvest_definition_id: next_definition.id)
 

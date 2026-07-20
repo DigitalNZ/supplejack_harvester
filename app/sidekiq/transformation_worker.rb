@@ -112,9 +112,10 @@ class TransformationWorker
     # loads/deletes), so this is where we step the chain forward. This method is
     # reached once per block via the transformation-completion gate in #job_end;
     # advance_to_next_block is idempotent as a further safeguard.
-    return unless @harvest_job.harvest_definition.preprocess?
+    definition = @harvest_job.harvest_definition
+    return unless definition.preprocess?
 
-    @pipeline_job.advance_to_next_block(@harvest_job.harvest_definition)
+    @pipeline_job.advance_to_next_block(definition)
   end
 
   def transform_records

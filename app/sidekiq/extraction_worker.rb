@@ -9,25 +9,25 @@ class ExtractionWorker < ApplicationWorker
   end
 
   def child_perform(extraction_job)
-    if iterate_previous?(extraction_job)
+    extraction_definition = extraction_job.extraction_definition
+
+    if iterate_previous?
       Extraction::EnrichmentExecution.new(extraction_job).call
     else
-      Extraction::Execution.new(extraction_job, extraction_job.extraction_definition).call
+      Extraction::Execution.new(extraction_job, extraction_definition).call
 
-      if extraction_job.extraction_definition.split
-        SplitWorker.perform_async_with_priority(job_priority, extraction_job.id)
-      end
+      SplitWorker.perform_async_with_priority(job_priority, extraction_job.id) if extraction_definition.split
     end
 
-    return unless extraction_job.extraction_definition.extract_text_from_file?
+    return unless extraction_definition.extract_text_from_file?
 
     TextExtractionWorker.perform_async_with_priority(job_priority, extraction_job.id)
   end
 
-  def iterate_previous?(extraction_job)
-    return true if extraction_job.extraction_definition.enrichment?
+  def iterate_previous?
+    return true if @job.extraction_definition.enrichment?
 
-    definition = extraction_job.harvest_job&.harvest_definition
+    definition = @job.harvest_job&.harvest_definition
     definition.present? && definition.position.positive?
   end
 
@@ -63,7 +63,7 @@ class ExtractionWorker < ApplicationWorker
 
     update_harvest_report!
 
-    trigger_following_processes
+    @harvest_report.harvest_job.trigger_following_processes
   end
 
   def update_harvest_report!
@@ -77,15 +77,5 @@ class ExtractionWorker < ApplicationWorker
   # extraction as completed themselves once they have processed the documents.
   def file_extraction_pending?
     @job.extraction_definition.extract_text_from_file? || @job.extraction_definition.split?
-  end
-
-  def trigger_following_processes
-    harvest_job = @harvest_report.harvest_job
-
-    unless harvest_job.harvest_definition.preprocess?
-      @harvest_report.pipeline_job.enqueue_enrichment_jobs(harvest_job.name)
-    end
-
-    harvest_job.execute_delete_previous_records
   end
 end
