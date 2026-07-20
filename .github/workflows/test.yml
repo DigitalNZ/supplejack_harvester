@@ -31,7 +31,7 @@ jobs:
 
       - name: Erblint
         run: |
-          bundle exec erblint --lint-all
+          bundle exec erb_lint --lint-all
 
   rubocop:
     runs-on: ubuntu-latest
