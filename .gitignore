@@ -66,3 +66,4 @@ node_modules
 
 # LLMs
 .claude/
+.playwright-mcp/

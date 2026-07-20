@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'archive/tar/minitar'
+require 'minitar'
 
 module Extraction
   class Archive
