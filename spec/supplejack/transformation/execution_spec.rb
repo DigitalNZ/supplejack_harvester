@@ -29,7 +29,7 @@ RSpec.describe Transformation::Execution do
       errors = described_class.new([record], [field_with_error]).call.first.errors
 
       expect(errors[field_with_error.id][:title]).to eq NameError
-      expect(errors[field_with_error.id][:description]).to include "undefined local variable or method `result'"
+      expect(errors[field_with_error.id][:description]).to include "undefined local variable or method 'result'"
     end
 
     it 'records field errors against the provided harvest job' do
