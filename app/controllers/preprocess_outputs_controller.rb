@@ -7,6 +7,7 @@ class PreprocessOutputsController < ApplicationController
   def index
     @pipeline_jobs = @pipeline.pipeline_jobs
                               .where(id: PreProcess::Output.pipeline_job_ids_with_output(@harvest_definition.position))
+                              .includes(harvest_jobs: :harvest_report)
                               .order(created_at: :desc)
                               .page(params[:page])
   end

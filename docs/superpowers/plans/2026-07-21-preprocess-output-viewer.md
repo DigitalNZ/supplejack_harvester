@@ -453,3 +453,4 @@ Expected: CI green, including the "Code quality" check.
 
 - Raw extracted data for a preprocess block was already viewable via the existing extraction-jobs routes; this plan adds the missing piece — the fed-forward output.
 - Known gap (separate story): `extractions/<env>/preprocess/<pipeline_job_id>/` folders are never cleaned up when a pipeline job is destroyed.
+- Preprocess output on disk is keyed by the block's `position` (write path and viewer alike); positions are user-editable and can be reused after a mid-chain delete (see comment at `app/models/pipeline.rb:46`), so historical output for position N is shown under whichever block currently holds position N. This is a documented limitation of the feed-forward design — a durable fix (keying by harvest_definition id) would be its own story.

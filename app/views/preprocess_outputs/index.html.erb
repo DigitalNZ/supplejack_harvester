@@ -18,7 +18,7 @@
             <h6 class='card-subtitle'><%= pipeline_job.created_at.to_fs(:light) %></h6>
 
             <% report = pipeline_job.harvest_jobs
-                                    .find_by(harvest_definition: @harvest_definition)&.harvest_report %>
+                                    .find { |job| job.harvest_definition_id == @harvest_definition.id }&.harvest_report %>
             <%= job_status_badge(report, pipeline_job) %>
           </div>
         <% end %>
