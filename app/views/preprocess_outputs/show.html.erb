@@ -1,0 +1,29 @@
+<%= content_for(:title) { 'Pre-processed data' } %>
+<% breadcrumb :preprocess_output, @pipeline, @harvest_definition, @pipeline_job %>
+
+<%= content_for(:header) do %>
+  <h1>Pre-processed Data</h1>
+  <p>
+    <span class="me-1"><%= @harvest_definition.source_id %></span>|
+    <span class="ms-1"><strong>Job #<%= @pipeline_job.id %>, <%= @pipeline_job.created_at.to_fs(:verbose) %></strong></span>
+  </p>
+<% end %>
+
+<div class="my-4">
+  <span class="me-1">Total Pages: <%= @documents.total_pages %></span>
+  <%= render 'shared/pagination_above_table', items: @documents %>
+</div>
+
+<% if @documents.total_pages.zero? %>
+  <p>This run has no pre-processed data.</p>
+<% elsif @document.size_in_bytes > 10.megabytes %>
+  <p>This page is too large to preview in the browser. It has still been pre-processed and will be harvested normally.</p>
+<% else %>
+  <div class="record-view record-view--extraction-result">
+    <div
+      id="extraction-result-viewer"
+      data-results="<%= @document.body %>"
+      data-format="JSON">
+    </div>
+  </div>
+<% end %>
