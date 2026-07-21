@@ -18,6 +18,11 @@
              definition: preprocess_definition,
              label: 'Pre-processing block' %>
 
+  <%= link_to pipeline_harvest_definition_preprocess_outputs_path(@pipeline, preprocess_definition),
+              class: 'btn btn-outline-primary mb-4' do %>
+    <i class="bi bi-eye" aria-hidden="true"></i> View pre-processed data
+  <% end %>
+
   <div class='row'>
     <div class='col-6'>
       <% if preprocess_definition.extraction_definition.present? %>

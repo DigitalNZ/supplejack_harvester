@@ -61,4 +61,16 @@ RSpec.describe 'PreprocessOutputs' do
       end.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
+
+  describe 'navigation from the pipeline page' do
+    it 'links the preprocess block to its pre-processed data' do
+      preprocess_definition
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include(
+        pipeline_harvest_definition_preprocess_outputs_path(pipeline, preprocess_definition)
+      )
+    end
+  end
 end
