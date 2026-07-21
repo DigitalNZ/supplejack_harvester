@@ -67,3 +67,5 @@ node_modules
 # LLMs
 .claude/
 .playwright-mcp/
+# Local working docs (specs/plans) — not part of the app
+docs/superpowers/
