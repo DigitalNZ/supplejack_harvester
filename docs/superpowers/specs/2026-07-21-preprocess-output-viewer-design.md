@@ -82,7 +82,9 @@ read side so nothing else learns the path structure:
   format JSON). No Request/Response tabs (the stored documents are synthetic:
   `url: nil, status: 200`), no action buttons. Keeps the >10 MB "too large to
   preview in the browser" guard.
-- Breadcrumbs wired into the existing breadcrumb config; new `en.yml` strings.
+- Breadcrumbs wired into the existing breadcrumb config. Copy lives inline in
+  the views (consistent with the rest of the app); no `en.yml` entries are
+  needed because the read-only controller has no flash messages.
 
 ### Edge cases
 
