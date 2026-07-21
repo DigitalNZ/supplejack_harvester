@@ -34,6 +34,14 @@ module PreProcess
       ).save(file_path(page))
     end
 
+    def documents
+      Extraction::Documents.new(@folder)
+    end
+
+    def exists?
+      Dir.glob("#{@folder}/**/*.json").any?
+    end
+
     private
 
     def next_page

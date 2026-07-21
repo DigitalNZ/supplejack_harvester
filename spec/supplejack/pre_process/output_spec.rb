@@ -48,4 +48,28 @@ RSpec.describe PreProcess::Output do
       expect(JSON.parse(documents[5].body)['records']).to eq([{ 'url' => '/e' }])
     end
   end
+
+  describe '#documents' do
+    it 'returns pageable Extraction::Documents for the output folder' do
+      output.write_page(1, [{ 'url' => '/a' }])
+
+      documents = output.documents
+
+      expect(documents).to be_a(Extraction::Documents)
+      expect(documents.total_pages).to eq(1)
+      expect(JSON.parse(documents[1].body)['records']).to eq([{ 'url' => '/a' }])
+    end
+  end
+
+  describe '#exists?' do
+    it 'is false when nothing has been written' do
+      expect(output.exists?).to be false
+    end
+
+    it 'is true once a page has been written' do
+      output.write_page(1, [{ 'url' => '/a' }])
+
+      expect(output.exists?).to be true
+    end
+  end
 end
