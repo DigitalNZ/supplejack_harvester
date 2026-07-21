@@ -16,6 +16,8 @@
 
 <% if @documents.total_pages.zero? %>
   <p>This run has no pre-processed data.</p>
+<% elsif @document.blank? %>
+  <p>The pre-processed page could not be found.</p>
 <% elsif @document.size_in_bytes > 10.megabytes %>
   <p>This page is too large to preview in the browser. It has still been pre-processed and will be harvested normally.</p>
 <% else %>

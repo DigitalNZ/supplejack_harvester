@@ -60,6 +60,17 @@ RSpec.describe 'PreprocessOutputs' do
         get pipeline_harvest_definition_preprocess_output_path(pipeline, preprocess_definition, other_job)
       end.to raise_error(ActiveRecord::RecordNotFound)
     end
+
+    it 'displays a friendly message when the page file on disk is corrupt' do
+      output.write_page(1, [{ 'title' => 'Record A' }])
+      page_path = "#{PreProcess::Output.folder(pipeline_job.id, preprocess_definition.position)}/1/preprocess__000000001.json"
+      File.write(page_path, 'not json{')
+
+      get pipeline_harvest_definition_preprocess_output_path(pipeline, preprocess_definition, pipeline_job)
+
+      expect(response).to be_successful
+      expect(response.body).to include 'The pre-processed page could not be found'
+    end
   end
 
   describe 'navigation from the pipeline page' do
