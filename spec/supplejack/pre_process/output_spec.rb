@@ -61,15 +61,33 @@ RSpec.describe PreProcess::Output do
     end
   end
 
-  describe '#exists?' do
-    it 'is false when nothing has been written' do
-      expect(output.exists?).to be false
+  describe '.pipeline_job_ids_with_output' do
+    let(:other_pipeline_job_id) { 43 }
+    let(:other_position)        { 1 }
+
+    after do
+      FileUtils.rm_rf(described_class.folder(pipeline_job_id, other_position))
+      FileUtils.rm_rf(described_class.folder(other_pipeline_job_id, position))
+      FileUtils.rm_rf(described_class.folder(other_pipeline_job_id, other_position))
     end
 
-    it 'is true once a page has been written' do
+    it 'returns ids of jobs that have written output for the given position' do
       output.write_page(1, [{ 'url' => '/a' }])
+      described_class.new(other_pipeline_job_id, position).write_page(1, [{ 'url' => '/b' }])
 
-      expect(output.exists?).to be true
+      expect(described_class.pipeline_job_ids_with_output(position)).to contain_exactly(
+        pipeline_job_id, other_pipeline_job_id
+      )
+    end
+
+    it 'excludes jobs that only wrote output for a different position' do
+      described_class.new(pipeline_job_id, other_position).write_page(1, [{ 'url' => '/a' }])
+
+      expect(described_class.pipeline_job_ids_with_output(position)).to eq([])
+    end
+
+    it 'returns [] when nothing exists' do
+      expect(described_class.pipeline_job_ids_with_output(position)).to eq([])
     end
   end
 end

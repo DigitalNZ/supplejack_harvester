@@ -13,6 +13,14 @@ module PreProcess
       "#{FOLDER}/#{pipeline_job_id}/#{position}"
     end
 
+    # Finds which pipeline jobs have written preprocess output for the given
+    # block position, with a single disk walk rather than a per-job glob.
+    def self.pipeline_job_ids_with_output(position)
+      Dir.glob("#{FOLDER}/*/#{position}/**/*.json")
+         .map { |path| path.delete_prefix("#{FOLDER}/").to_i }
+         .uniq
+    end
+
     def initialize(pipeline_job_id, position)
       @folder = self.class.folder(pipeline_job_id, position)
     end
@@ -36,10 +44,6 @@ module PreProcess
 
     def documents
       Extraction::Documents.new(@folder)
-    end
-
-    def exists?
-      Dir.glob("#{@folder}/**/*.json").any?
     end
 
     private
