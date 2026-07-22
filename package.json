@@ -35,7 +35,8 @@
       "app/frontend"
     ],
     "moduleNameMapper": {
-      "~/(.*)": "<rootDir>/app/frontend/$1"
+      "~/(.*)": "<rootDir>/app/frontend/$1",
+      "^/js/(.*)": "<rootDir>/app/frontend/js/$1"
     },
     "testEnvironment": "jsdom",
     "setupFilesAfterEnv": [

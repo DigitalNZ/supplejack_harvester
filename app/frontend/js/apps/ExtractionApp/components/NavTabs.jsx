@@ -7,7 +7,6 @@ import { selectRequestIds } from "~/js/features/ExtractionApp/RequestsSlice";
 import { selectAllParameters } from "~/js/features/ExtractionApp/ParametersSlice";
 import { selectAppDetails } from "~/js/features/TransformationApp/AppDetailsSlice";
 import { selectAllSharedDefinitions } from "~/js/features/SharedDefinitionsSlice";
-import { selectHarvestDefinition } from "/js/features/ExtractionApp/AppDetailsSlice";
 
 import { toggleDisplayParameters } from "~/js/features/ExtractionApp/UiParametersSlice";
 
@@ -20,11 +19,15 @@ import {
 
 const NavTabs = () => {
   const dispatch = useDispatch();
-  const harvestDefinition = useSelector(selectHarvestDefinition);
   const appDetails = useSelector(selectAppDetails);
   const uiAppDetails = useSelector(selectUiAppDetails);
   const requestIds = useSelector(selectRequestIds);
-  const initialRequestIndex = harvestDefinition.kind == "harvest" ? 0 : 1;
+  // The configured request lives on the FIRST request for a harvest-kind
+  // extraction definition (including pre-processing blocks, which are stored
+  // with kind: 'harvest') and on the LAST request for an enrichment - this
+  // must mirror ExtractionDefinition#configured_request.
+  const initialRequestIndex =
+    appDetails.extractionDefinition.kind == "harvest" ? 0 : 1;
   const initialRequestId = requestIds[initialRequestIndex];
   const mainRequestId = requestIds[1];
   const sharedDefinitions = useSelector(selectAllSharedDefinitions);
