@@ -74,7 +74,7 @@ RSpec.describe 'PreprocessOutputs' do
   end
 
   describe 'navigation from the pipeline page' do
-    it 'links the preprocess block to its pre-processed data' do
+    it 'links the preprocess transformation card to its transformed data' do
       preprocess_definition
 
       get pipeline_path(pipeline)
@@ -82,6 +82,15 @@ RSpec.describe 'PreprocessOutputs' do
       expect(response.body).to include(
         pipeline_harvest_definition_preprocess_outputs_path(pipeline, preprocess_definition)
       )
+      expect(response.body).to include 'View Transformed Data'
+    end
+
+    it 'does not add the transformed data link to enrichment transformation cards' do
+      create(:harvest_definition, kind: 'enrichment', pipeline:)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).not_to include 'View Transformed Data'
     end
   end
 end

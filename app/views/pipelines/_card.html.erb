@@ -1,4 +1,5 @@
 <% jobs_path ||= ''
+   jobs_text ||= 'View Extraction Jobs'
    run_sample_extraction_path ||= ''
    run_full_extraction_path ||= ''
    type = definition.class.name.gsub(/Definition$/, '').downcase
@@ -90,7 +91,7 @@
             <% if jobs_path.present? %>
               <li>
                 <%= link_to jobs_path, class: 'dropdown-item harvest-card__action' do %>
-                  <i class="bi bi-eye me-2"></i> View Extraction Jobs
+                  <i class="bi bi-eye me-2"></i> <%= jobs_text %>
                 <% end %>
               </li>
             <% end %>
