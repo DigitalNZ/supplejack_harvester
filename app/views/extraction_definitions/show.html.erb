@@ -23,18 +23,22 @@
 
 <div id="js-extraction-app" data-props="<%= @props %>"></div>
 
-<% if @harvest_definition.harvest? %>
-  <%= render 'create_edit_harvest_modal',
-             id: 'update-extraction-definition-modal',
-             model: @extraction_definition,
-             modal_heading: 'Edit extraction definition',
-             modal_subheading: 'Define the settings for your extraction definition',
-             confirmation_button_text: 'Update extraction definition' %>
-<% else %>
+<%# A pre-processing block's extraction definition is created with kind: 'harvest'
+    (see app/views/pipelines/_preprocess_definition.html.erb), so it must be edited
+    with the harvest modal too - the enrichment modal would silently rewrite its
+    kind to 'enrichment' via a hidden field. %>
+<% if @harvest_definition.enrichment? %>
   <%= render 'create_edit_enrichment_modal',
              id: 'update-extraction-definition-modal',
              model: @extraction_definition,
              enrichment_definition: @harvest_definition,
+             modal_heading: 'Edit extraction definition',
+             modal_subheading: 'Define the settings for your extraction definition',
+             confirmation_button_text: 'Update extraction definition' %>
+<% else %>
+  <%= render 'create_edit_harvest_modal',
+             id: 'update-extraction-definition-modal',
+             model: @extraction_definition,
              modal_heading: 'Edit extraction definition',
              modal_subheading: 'Define the settings for your extraction definition',
              confirmation_button_text: 'Update extraction definition' %>
