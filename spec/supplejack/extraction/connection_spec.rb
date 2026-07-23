@@ -131,4 +131,20 @@ RSpec.describe Extraction::Connection do
       expect(described_class.new(url: 'http://google.com/hello').get).to be_a(Extraction::Response)
     end
   end
+
+  describe 'redirects' do
+    before do
+      stub_request(:get, 'http://google.com/redirect')
+        .to_return(status: 301, headers: { 'Location' => 'http://google.com/target' })
+      stub_request(:get, 'http://google.com/target')
+        .to_return(status: 200, body: 'target')
+    end
+
+    it 'follows 3xx redirects' do
+      response = described_class.new(url: 'http://google.com/redirect').get
+
+      expect(response.status).to eq 200
+      expect(a_request(:get, 'http://google.com/target')).to have_been_made
+    end
+  end
 end

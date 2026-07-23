@@ -12,7 +12,7 @@ module Extraction
 
     def initialize(url:, params: {}, headers: {}, method: 'get')
       headers ||= {}
-      @connection = connection(url, params, headers)
+      @connection = build_connection(url, params, headers)
       @url = method == 'get' ? @connection.build_url : url
       @params = @connection.params
       @headers = @connection.headers
@@ -28,10 +28,16 @@ module Extraction
 
     private
 
+    # Builds the Faraday connection. Subclasses override this to change the
+    # middleware stack (e.g. to disable following redirects).
+    def build_connection(url, params, headers)
+      connection(url, params, headers)
+    end
+
     # The POST request does not use @connection to avoid sending the URL params
     # as part of the URL which causes the URL to be too big and rejected by Webservers.
     def post_request
-      connection(url, {}, headers).post(url, normalized_params.to_json, headers)
+      build_connection(url, {}, headers).post(url, normalized_params.to_json, headers)
     end
 
     # We store all values in the database as a string
