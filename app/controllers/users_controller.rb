@@ -41,6 +41,6 @@ class UsersController < ApplicationController
   def user_params
     # In case you use this method, make sure that the user is an admin
     # brakeman warns against having :role as a permitted attribute
-    params.require(:user).permit(:username, :role, :enforce_two_factor)
+    params.expect(user: %i[username role enforce_two_factor])
   end
 end
