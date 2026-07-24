@@ -8,6 +8,7 @@ class RequestsController < ApplicationController
   def show
     @request = Request.find(params[:id])
 
+    return preprocess_request if preprocess_consumer?
     return harvest_request if @request.extraction_definition.harvest?
 
     enrichment_request
@@ -80,6 +81,89 @@ class RequestsController < ApplicationController
 
   def second_enrichment_request_response
     @request.to_h.merge(preview: Extraction::EnrichmentExtraction.new(@request, api_record).extract)
+  end
+
+  def preprocess_consumer?
+    @request.extraction_definition.harvest? && harvest_definition.position.to_i.positive?
+  end
+
+  def preprocess_request
+    render json: @request.to_h.merge(preview: preprocess_preview)
+  end
+
+  def preprocess_preview
+    runs = preprocess_runs
+    return empty_preprocess_preview if runs.empty?
+
+    build_preprocess_preview(chosen_run(runs), runs)
+  end
+
+  def build_preprocess_preview(run, runs)
+    documents, records, api_record = preprocess_input(run)
+
+    {
+      input: api_record.to_hash,
+      response: preprocess_response(api_record),
+      total_pages: documents.total_pages,
+      total_records: records.count,
+      runs: runs.map { |job| { id: job.id, label: run_label(job) } },
+      current_run_id: run.id
+    }
+  end
+
+  def preprocess_input(run)
+    documents = PreProcess::Output.new(run.id, preceding_position).documents
+    records = preprocess_page_records(documents)
+    api_record = Extraction::ApiRecord.new(records[record_param.to_i - 1])
+
+    [documents, records, api_record]
+  end
+
+  def empty_preprocess_preview
+    { input: nil, response: nil, total_pages: 0, total_records: 0, runs: [], current_run_id: nil }
+  end
+
+  def preprocess_runs
+    pipeline.pipeline_jobs
+            .where(id: PreProcess::Output.pipeline_job_ids_with_output(preceding_position))
+            .order(created_at: :desc)
+            .to_a
+  end
+
+  def chosen_run(runs)
+    runs.find { |job| job.id == params[:pipeline_job_id].to_i } || runs.first
+  end
+
+  def preprocess_page_records(documents)
+    document = documents[page_param]
+    return [] unless document.is_a?(Extraction::Document)
+
+    JSON.parse(document.body)['records'] || []
+  rescue JSON::ParserError
+    []
+  end
+
+  def preprocess_response(api_record)
+    return {} if api_record.body.blank?
+
+    document = Extraction::EnrichmentExtraction.new(@request, api_record).extract
+    document.respond_to?(:to_hash) ? document.to_hash : {}
+  end
+
+  def preceding_position
+    harvest_definition.position.to_i - 1
+  end
+
+  def run_label(job)
+    "Job ##{job.id} - #{job.created_at.strftime('%-d %b %Y, %H:%M')}"
+  end
+
+  def pipeline
+    @pipeline ||= Pipeline.find(params[:pipeline_id])
+  end
+
+  def harvest_definition
+    @harvest_definition ||= HarvestDefinition.find(params[:harvest_definition_id])
   end
 
   def request_params
