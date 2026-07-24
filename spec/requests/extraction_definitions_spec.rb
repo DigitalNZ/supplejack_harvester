@@ -60,6 +60,8 @@ RSpec.describe 'ExtractionDefinitions' do
 
         expect(response.body).to include 'Target Source ID'
         expect(response.body).not_to include 'Paginated'
+        expect(response.body).to include 'Preview Data:'
+        expect(response.body).not_to include 'Preview harvested records from'
       end
     end
   end
