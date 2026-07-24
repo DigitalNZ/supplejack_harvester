@@ -90,8 +90,9 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
         <Modal.Title>Pre-processed data extraction preview</Modal.Title>
 
         <div className="float-end d-flex align-items-center">
-          <label className="me-2 mb-0">Preview Data:</label>
+          <label className="me-2 mb-0" htmlFor="preprocess-preview-run">Preview Data:</label>
           <select
+            id="preprocess-preview-run"
             className="form-select me-2"
             style={{ width: "auto" }}
             value={selectedRunId}
@@ -126,7 +127,7 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
         )}
 
         {!loading && runs.length == 0 && (
-          <p className="text-danger">
+          <p className="text-muted">
             No pre-processed data yet — run the pipeline first.
           </p>
         )}

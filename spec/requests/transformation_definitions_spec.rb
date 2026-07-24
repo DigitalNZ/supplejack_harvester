@@ -82,17 +82,6 @@ RSpec.describe 'Transformation Definitions' do
   end
 
   describe '#show' do
-    it 'labels the preview-data dropdown "Preview Data:"' do
-      get pipeline_harvest_definition_transformation_definition_path(
-        pipeline, harvest_definition, transformation_definition
-      )
-
-      expect(response).to be_successful
-      expect(response.body).to include 'Preview Data:'
-    end
-  end
-
-  describe '#show' do
     let(:transformation_definition) { create(:transformation_definition, pipeline:, extraction_job:) }
 
     it 'shows the details for a transformation_definition' do
@@ -100,6 +89,15 @@ RSpec.describe 'Transformation Definitions' do
                                                                      transformation_definition)
 
       expect(response).to have_http_status :ok
+    end
+
+    it 'labels the preview-data dropdown "Preview Data:"' do
+      get pipeline_harvest_definition_transformation_definition_path(
+        pipeline, harvest_definition, transformation_definition
+      )
+
+      expect(response).to be_successful
+      expect(response.body).to include 'Preview Data:'
     end
   end
 

@@ -99,11 +99,11 @@ class RequestsController < ApplicationController
   end
 
   def build_preprocess_preview(run, runs)
-    documents, records, api_record = preprocess_input(run)
+    documents, records, input_record = preprocess_input(run)
 
     {
-      input: api_record.to_hash,
-      response: preprocess_response(api_record),
+      input: input_record.to_hash,
+      response: preprocess_response(input_record),
       total_pages: documents.total_pages,
       total_records: records.count,
       runs: runs.map { |job| { id: job.id, label: run_label(job) } },
@@ -114,9 +114,9 @@ class RequestsController < ApplicationController
   def preprocess_input(run)
     documents = PreProcess::Output.new(run.id, preceding_position).documents
     records = preprocess_page_records(documents)
-    api_record = Extraction::ApiRecord.new(records[record_param.to_i - 1])
+    input_record = Extraction::ApiRecord.new(records[record_param.to_i - 1])
 
-    [documents, records, api_record]
+    [documents, records, input_record]
   end
 
   def empty_preprocess_preview
@@ -131,6 +131,8 @@ class RequestsController < ApplicationController
   end
 
   def chosen_run(runs)
+    # Fall back to the most recent run when the requested pipeline_job_id isn't among this
+    # position's runs (e.g. stale client state). Safe: runs is already pipeline-scoped.
     runs.find { |job| job.id == params[:pipeline_job_id].to_i } || runs.first
   end
 
@@ -143,10 +145,10 @@ class RequestsController < ApplicationController
     []
   end
 
-  def preprocess_response(api_record)
-    return {} if api_record.body.blank?
+  def preprocess_response(input_record)
+    return {} if input_record.body.blank?
 
-    document = Extraction::EnrichmentExtraction.new(@request, api_record).extract
+    document = Extraction::EnrichmentExtraction.new(@request, input_record).extract
     document.respond_to?(:to_hash) ? document.to_hash : {}
   end
 
