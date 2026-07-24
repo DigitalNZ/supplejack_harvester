@@ -19,6 +19,7 @@ export const previewRequest = createAsyncThunk(
       harvestDefinitionId,
       extractionDefinitionId,
       previousRequestId,
+      pipelineJobId,
       page,
       record,
     } = payload;
@@ -27,6 +28,10 @@ export const previewRequest = createAsyncThunk(
 
     if (previousRequestId != undefined) {
       path = `${path}&previous_request_id=${previousRequestId}`;
+    }
+
+    if (pipelineJobId != undefined && pipelineJobId != null) {
+      path = `${path}&pipeline_job_id=${pipelineJobId}`;
     }
 
     const response = request.get(path).then((response) => {
