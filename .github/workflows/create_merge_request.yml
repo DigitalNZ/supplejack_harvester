@@ -7,6 +7,9 @@ on:
 jobs:
   create-merge-request:
     runs-on: ubuntu-latest
+    # Dependabot runs can't see these secrets, and its PRs are reviewed and
+    # merged on GitHub rather than mirrored as GitLab merge requests.
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: create-merge-request
         env:
