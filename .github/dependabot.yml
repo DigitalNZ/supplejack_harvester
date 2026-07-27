@@ -1,9 +1,7 @@
-# Dependabot version updates for supplejack_harvester.
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-#
-# Strategy: minor/patch bumps are grouped into a handful of PRs per ecosystem so
-# the GitLab mirror doesn't get flooded with merge requests. Major bumps are
-# deliberately left ungrouped so each one lands as its own reviewable PR.
 
 version: 2
 updates:
