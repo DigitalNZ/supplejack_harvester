@@ -1,0 +1,181 @@
+# Dependabot version updates for supplejack_harvester.
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Strategy: minor/patch bumps are grouped into a handful of PRs per ecosystem so
+# the GitLab mirror doesn't get flooded with merge requests. Major bumps are
+# deliberately left ungrouped so each one lands as its own reviewable PR.
+
+version: 2
+updates:
+  # ---------------------------------------------------------------- bundler --
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Pacific/Auckland"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ruby"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore(dev)"
+      include: "scope"
+    groups:
+      rails:
+        patterns:
+          - "rails"
+          - "activerecord-*"
+          - "sprockets-rails"
+          - "rails-controller-testing"
+        update-types:
+          - "minor"
+          - "patch"
+      rubocop:
+        patterns:
+          - "rubocop"
+          - "rubocop-*"
+          - "erb_lint"
+        update-types:
+          - "minor"
+          - "patch"
+      devise:
+        patterns:
+          - "devise"
+          - "devise-*"
+          - "devise_*"
+        update-types:
+          - "minor"
+          - "patch"
+      test-tooling:
+        patterns:
+          - "rspec-rails"
+          - "capybara"
+          - "capybara-*"
+          - "factory_bot_rails"
+          - "faker"
+          - "shoulda-matchers"
+          - "simplecov"
+          - "webmock"
+        update-types:
+          - "minor"
+          - "patch"
+      ruby-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # -------------------------------------------------------------- npm/yarn --
+  # yarn.lock (Yarn 1.22) is handled by the "npm" ecosystem.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Pacific/Auckland"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore(dev)"
+      include: "scope"
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-redux"
+          - "react-bootstrap"
+          - "react-intersection-observer"
+          - "react-test-renderer"
+          - "@reduxjs/toolkit"
+          - "@testing-library/*"
+        update-types:
+          - "minor"
+          - "patch"
+      codemirror:
+        patterns:
+          - "codemirror"
+          - "@codemirror/*"
+        update-types:
+          - "minor"
+          - "patch"
+      babel:
+        patterns:
+          - "@babel/*"
+          - "babel-jest"
+        update-types:
+          - "minor"
+          - "patch"
+      jest:
+        patterns:
+          - "jest"
+          - "jest-*"
+          - "msw"
+        update-types:
+          - "minor"
+          - "patch"
+      vite:
+        patterns:
+          - "vite"
+          - "vite-*"
+        update-types:
+          - "minor"
+          - "patch"
+      js-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # --------------------------------------------------------- github actions --
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Pacific/Auckland"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # ----------------------------------------------------------------- docker --
+  # Covers the Dockerfile base image. Note that a `ruby:` image bump must be
+  # matched by hand in .ruby-version and the `ruby` line in the Gemfile, so
+  # these PRs are never mergeable on their own.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Pacific/Auckland"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    ignore:
+      # A major Ruby jump is always a deliberate, planned upgrade.
+      - dependency-name: "ruby"
+        update-types:
+          - "version-update:semver-major"
