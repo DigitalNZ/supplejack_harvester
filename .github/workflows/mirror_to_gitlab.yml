@@ -6,10 +6,17 @@ jobs:
   mirror-repository:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      # Dependabot-triggered runs read from a separate secrets store, so the
+      # GitLab credentials below arrive empty and the mirror can only fail.
+      #
+      # This is guarded at the step level rather than the job level on purpose:
+      # mirror-repository is a required status check on main, so the job still
+      # has to run and report success or Dependabot PRs can never be merged.
       - name: mirror-repository
+        if: github.actor != 'dependabot[bot]'
         uses: yesolutions/mirror-action@master
         with:
           REMOTE: ${{ secrets.GITLAB_REPO_SSH }}
