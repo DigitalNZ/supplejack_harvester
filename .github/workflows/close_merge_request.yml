@@ -7,6 +7,8 @@ on:
 jobs:
   close-merge-request:
     runs-on: ubuntu-latest
+    # No GitLab MR is opened for Dependabot PRs, so there is nothing to close.
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: close-merge-request
         env:
