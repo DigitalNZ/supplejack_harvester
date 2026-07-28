@@ -78,6 +78,8 @@ Rails.application.routes.draw do
     end
 
     resources :harvest_definitions, only: %i[create update destroy] do
+      resources :preprocess_outputs, only: %i[index show]
+
       resources :extraction_definitions, only: %i[show create update destroy] do
         member do
           post :clone

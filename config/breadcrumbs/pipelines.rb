@@ -47,3 +47,13 @@ crumb :extraction_job do |pipeline, harvest_definition, extraction_job|
   link extraction_job.id
   parent :extraction_jobs, pipeline, harvest_definition, extraction_job.extraction_definition
 end
+
+crumb :preprocess_outputs do |pipeline, harvest_definition|
+  link 'Pre-processed Data', pipeline_harvest_definition_preprocess_outputs_path(pipeline, harvest_definition)
+  parent :pipeline, pipeline
+end
+
+crumb :preprocess_output do |pipeline, harvest_definition, pipeline_job|
+  link pipeline_job.id
+  parent :preprocess_outputs, pipeline, harvest_definition
+end

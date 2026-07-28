@@ -1,0 +1,32 @@
+<%= content_for(:title) { 'Pre-processed data' } %>
+<% breadcrumb :preprocess_outputs, @pipeline, @harvest_definition %>
+
+<%= content_for(:header) do %>
+  <h1 class='my-4'><%= @harvest_definition.source_id %>: pre-processed data</h1>
+<% end %>
+
+<%- if @pipeline_jobs.any? %>
+  <div class='row'>
+    <%- @pipeline_jobs.each do |pipeline_job| %>
+      <div class='col-3'>
+        <%= link_to pipeline_harvest_definition_preprocess_output_path(
+              @pipeline, @harvest_definition, pipeline_job
+            ),
+                    class: 'card card--clickable mb-3' do %>
+          <div class='card-body'>
+            <h5 class='card-title'>Job #<%= pipeline_job.id %></h5>
+            <h6 class='card-subtitle'><%= pipeline_job.created_at.to_fs(:light) %></h6>
+
+            <% report = pipeline_job.harvest_jobs
+                                    .find { |job| job.harvest_definition_id == @harvest_definition.id }&.harvest_report %>
+            <%= job_status_badge(report, pipeline_job) %>
+          </div>
+        <% end %>
+      </div>
+    <%- end %>
+
+    <%= render 'shared/pagination_below_table', items: @pipeline_jobs %>
+  </div>
+<% else %>
+  <p>This block has no pre-processed data yet. Run the pipeline to generate some.</p>
+<% end %>

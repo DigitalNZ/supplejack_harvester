@@ -48,4 +48,46 @@ RSpec.describe PreProcess::Output do
       expect(JSON.parse(documents[5].body)['records']).to eq([{ 'url' => '/e' }])
     end
   end
+
+  describe '#documents' do
+    it 'returns pageable Extraction::Documents for the output folder' do
+      output.write_page(1, [{ 'url' => '/a' }])
+
+      documents = output.documents
+
+      expect(documents).to be_a(Extraction::Documents)
+      expect(documents.total_pages).to eq(1)
+      expect(JSON.parse(documents[1].body)['records']).to eq([{ 'url' => '/a' }])
+    end
+  end
+
+  describe '.pipeline_job_ids_with_output' do
+    let(:other_pipeline_job_id) { 43 }
+    let(:other_position)        { 1 }
+
+    after do
+      FileUtils.rm_rf(described_class.folder(pipeline_job_id, other_position))
+      FileUtils.rm_rf(described_class.folder(other_pipeline_job_id, position))
+      FileUtils.rm_rf(described_class.folder(other_pipeline_job_id, other_position))
+    end
+
+    it 'returns ids of jobs that have written output for the given position' do
+      output.write_page(1, [{ 'url' => '/a' }])
+      described_class.new(other_pipeline_job_id, position).write_page(1, [{ 'url' => '/b' }])
+
+      expect(described_class.pipeline_job_ids_with_output(position)).to contain_exactly(
+        pipeline_job_id, other_pipeline_job_id
+      )
+    end
+
+    it 'excludes jobs that only wrote output for a different position' do
+      described_class.new(pipeline_job_id, other_position).write_page(1, [{ 'url' => '/a' }])
+
+      expect(described_class.pipeline_job_ids_with_output(position)).to eq([])
+    end
+
+    it 'returns [] when nothing exists' do
+      expect(described_class.pipeline_job_ids_with_output(position)).to eq([])
+    end
+  end
 end
