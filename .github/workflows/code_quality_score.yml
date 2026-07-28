@@ -6,4 +6,11 @@ on:
 jobs:
   code_quality_score:
     name: Code quality
+    # Dependabot runs get a read-only GITHUB_TOKEN, so the score comment this
+    # workflow posts back to the PR always fails. Dependency bumps don't change
+    # our own code quality either, so there is nothing to measure.
+    #
+    # Safe to skip at the job level: unlike mirror-repository, "Code quality" is
+    # not a required status check on main.
+    if: github.actor != 'dependabot[bot]'
     uses: DigitalNZ/code_quality_score/.github/workflows/calculate-code-quality-score.yml@main
