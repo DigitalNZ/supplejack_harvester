@@ -121,7 +121,7 @@ class PipelinesController < ApplicationController
   end
 
   def pipeline_params
-    safe_params = params.require(:pipeline).permit(:name, :description)
+    safe_params = params.expect(pipeline: %i[name description])
     merge_last_edited_by(safe_params)
   end
 end

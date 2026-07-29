@@ -32,7 +32,7 @@ class FieldSchemaFieldValuesController < ApplicationController
   private
 
   def field_schema_field_value_params
-    params.require(:field_schema_field_value).permit(:field_id, :schema_field_value_id)
+    params.expect(field_schema_field_value: %i[field_id schema_field_value_id])
   end
 
   def find_field_schema_field_value

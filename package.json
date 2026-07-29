@@ -2,10 +2,10 @@
   "name": "app",
   "private": "true",
   "dependencies": {
-    "@codemirror/lang-html": "^6.4.4",
+    "@codemirror/lang-html": "^6.4.11",
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lang-xml": "^6.0.2",
-    "@codemirror/legacy-modes": "^6.3.2",
+    "@codemirror/legacy-modes": "^6.5.3",
     "@popperjs/core": "^2.11.7",
     "@reduxjs/toolkit": "^1.9.5",
     "@tarekraafat/autocomplete.js": "^10.2.7",

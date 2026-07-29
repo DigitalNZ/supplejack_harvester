@@ -6,7 +6,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '3.4.10'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails', branch: 'main'
-gem 'rails', '>= 7.2.3.1'
+gem 'rails', '~> 8.0.0'
 
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem 'sprockets-rails'
@@ -15,7 +15,7 @@ gem 'sprockets-rails'
 gem 'mysql2', '~> 0.5'
 
 # Use the Puma web server [https://github.com/puma/puma]
-gem 'puma', '~> 7.0'
+gem 'puma', '~> 8.0'
 
 # Error reporting and performance monitoring
 gem 'airbrake'
