@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Lists the pipeline jobs that wrote preprocess output for a block, and shows
+# the transformed records from one of those jobs. Read-only: output is written
+# by TransformationWorker via PreProcess::Output.
 class PreprocessOutputsController < ApplicationController
   before_action :find_pipeline
   before_action :find_harvest_definition

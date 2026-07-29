@@ -53,12 +53,12 @@ RSpec.describe 'PreprocessOutputs' do
       expect(response.body).to include 'This run has no pre-processed data'
     end
 
-    it 'raises RecordNotFound for a pipeline job belonging to another pipeline' do
+    it 'responds with not found for a pipeline job belonging to another pipeline' do
       other_job = create(:pipeline_job)
 
-      expect do
-        get pipeline_harvest_definition_preprocess_output_path(pipeline, preprocess_definition, other_job)
-      end.to raise_error(ActiveRecord::RecordNotFound)
+      get pipeline_harvest_definition_preprocess_output_path(pipeline, preprocess_definition, other_job)
+
+      expect(response).to have_http_status(:not_found)
     end
 
     it 'displays a friendly message when the page file on disk is corrupt' do

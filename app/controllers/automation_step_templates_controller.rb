@@ -105,14 +105,11 @@ class AutomationStepTemplatesController < ApplicationController
   end
 
   def automation_step_template_params
-    params.require(:automation_step_template).permit(
-      :pipeline_id,
-      :position,
-      :step_type,
-      :api_url,
-      :api_method,
-      :api_body,
-      harvest_definition_ids: []
+    params.expect(
+      automation_step_template: [
+        :pipeline_id, :position, :step_type, :api_url, :api_method, :api_body,
+        { harvest_definition_ids: [] }
+      ]
     )
   end
 end

@@ -46,6 +46,6 @@ class StopConditionsController < ApplicationController
   end
 
   def stop_condition_params
-    params.require(:stop_condition).permit(:name, :content, :extraction_definition_id)
+    params.expect(stop_condition: %i[name content extraction_definition_id])
   end
 end

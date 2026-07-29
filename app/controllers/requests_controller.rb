@@ -169,6 +169,6 @@ class RequestsController < ApplicationController
   end
 
   def request_params
-    params.require(:request).permit(:http_method)
+    params.expect(request: [:http_method])
   end
 end
