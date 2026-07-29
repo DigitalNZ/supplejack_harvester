@@ -61,6 +61,6 @@ class DestinationsController < ApplicationController
   end
 
   def destination_params
-    params.require(:destination).permit(:name, :url, :api_key)
+    params.expect(destination: %i[name url api_key])
   end
 end

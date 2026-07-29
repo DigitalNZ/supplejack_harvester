@@ -33,6 +33,6 @@ class TwoFactorSetupsController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:otp_attempt)
+    params.expect(user: [:otp_attempt])
   end
 end

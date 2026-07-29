@@ -8,7 +8,7 @@ class Schedule < ApplicationRecord
   belongs_to :destination
   has_many   :pipeline_jobs, dependent: :nullify
 
-  serialize :harvest_definitions_to_run, type: Array
+  serialize :harvest_definitions_to_run, type: Array, coder: YAML
 
   validates :frequency,                  presence: true
   validates :time,                       presence: true

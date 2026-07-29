@@ -104,7 +104,7 @@ class AutomationTemplatesController < ApplicationController
   end
 
   def automation_template_params
-    safe_params = params.require(:automation_template).permit(:name, :description, :destination_id, :job_priority)
+    safe_params = params.expect(automation_template: %i[name description destination_id job_priority])
     merge_last_edited_by(safe_params)
   end
 
