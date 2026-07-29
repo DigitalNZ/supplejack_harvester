@@ -58,6 +58,6 @@ class SchemasController < ApplicationController
   end
 
   def schema_params
-    params.require(:schema).permit(:name, :description)
+    params.expect(schema: %i[name description])
   end
 end

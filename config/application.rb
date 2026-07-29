@@ -23,7 +23,12 @@ ENV.update YAML.load_file('config/application.yml', aliases: true)[Rails.env] re
 module Harvester
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.0
+    config.load_defaults 8.0
+
+    # Please, add to the `ignore` list any other `lib` subdirectories that do
+    # not contain `.rb` files, or that should not be reloaded or eager loaded.
+    # Common ones are `templates`, `generators`, or `middleware`, for example.
+    config.autoload_lib(ignore: %w[assets tasks])
 
     # Configuration for the application, engines, and railties goes here.
     #
@@ -44,5 +49,12 @@ module Harvester
     config.active_record.encryption.primary_key = ENV['ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY']
     config.active_record.encryption.deterministic_key = ENV['ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY']
     config.active_record.encryption.key_derivation_salt = ENV['ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT']
+
+    # Data encrypted before this app moved to `load_defaults 8.0` had its keys
+    # derived with SHA-1 (the Rails <= 7.0 default). Rails 7.1+ derives keys with
+    # SHA-256, which cannot decrypt that older non-deterministic data (e.g. the
+    # devise-two-factor `otp_secret`). Registering the SHA-1 key as a previous
+    # scheme lets existing records decrypt while new writes use SHA-256.
+    config.active_record.encryption.support_sha1_for_non_deterministic_encryption = true
   end
 end
