@@ -9,10 +9,17 @@ import PreviewPanel from "~/js/apps/ExtractionApp/components/PreviewPanel";
 
 const Preview = ({ id, view = "accordion" }) => {
   const { loading } = useSelector((state) => selectUiRequestById(state, id));
-  const { preview, format } = useSelector((state) => selectRequestById(state, id));
+  const { preview, format } = useSelector((state) =>
+    selectRequestById(state, id)
+  );
 
   return (
-    <PreviewPanel preview={preview} format={format} loading={loading} view={view} />
+    <PreviewPanel
+      preview={preview}
+      format={format}
+      loading={loading}
+      view={view}
+    />
   );
 };
 

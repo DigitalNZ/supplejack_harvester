@@ -1,3 +1,5 @@
+import { initRunBlocks } from "~/js/run-blocks";
+
 const schedulableSelect = document.getElementById("js-schedulable-select");
 
 if (schedulableSelect) {
@@ -15,7 +17,7 @@ if (schedulableSelect) {
   if (pipelineInput.value) {
     schedulableSelect.value = `pipeline_${pipelineInput.value}`;
     document.getElementById("js-pipeline-settings").classList.remove("d-none");
-    fetchHarvestDefinitions(pipelineInput.value);
+    fetchRunBlocks(pipelineInput.value);
   }
 
   if (automationInput.value) {
@@ -33,7 +35,7 @@ if (schedulableSelect) {
     if (pipelineId) {
       pipelineInput.value = pipelineId;
       automationInput.value = "";
-      fetchHarvestDefinitions(pipelineId);
+      fetchRunBlocks(pipelineId);
       document
         .getElementById("js-pipeline-settings")
         .classList.remove("d-none");
@@ -49,52 +51,24 @@ if (schedulableSelect) {
     }
   });
 
-  function fetchHarvestDefinitions(pipelineId) {
+  // Renders the same partial as the Run modal (PipelinesController#run_blocks) so a
+  // schedule is configured with exactly the same layout and the same input choices.
+  function fetchRunBlocks(pipelineId) {
     harvestDefinitionsContainer.innerHTML =
-      '<div class="text-muted">Loading harvest definitions...</div>';
+      '<div class="text-muted">Loading blocks...</div>';
 
-    fetch(`/pipelines/${pipelineId}/harvest_definitions`)
-      .then((response) => response.json())
-      .then((data) => {
-        updateHarvestDefinitionsCheckboxes(data);
+    const scheduleId = document.getElementById("js-schedule-id")?.value;
+    const query = scheduleId ? `?schedule_id=${scheduleId}` : "";
+
+    fetch(`/pipelines/${pipelineId}/run_blocks${query}`)
+      .then((response) => response.text())
+      .then((html) => {
+        harvestDefinitionsContainer.innerHTML = html;
+        initRunBlocks(harvestDefinitionsContainer);
       })
       .catch(() => {
         harvestDefinitionsContainer.innerHTML =
-          '<div class="text-danger">Error loading harvest definitions</div>';
+          '<div class="text-danger">Error loading blocks</div>';
       });
-  }
-
-  function updateHarvestDefinitionsCheckboxes(definitions) {
-    const existingBlocksToRun = document
-      .getElementById("js-existing-blocks-to-run")
-      .value.split(" ");
-
-    harvestDefinitionsContainer.innerHTML =
-      '<label class="form-label" for="schedule_harvest_definitions_to_run">Blocks to run</label>';
-
-    definitions.forEach((definition) => {
-      const div = document.createElement("div");
-      div.className = "form-check";
-
-      const checkedAttribute = existingBlocksToRun.includes(
-        String(definition.id)
-      )
-        ? ' checked="checked"'
-        : "";
-
-      div.innerHTML = `
-        <input class="form-check-input" 
-               type="checkbox" 
-               name="schedule[harvest_definitions_to_run][]" 
-               value="${definition.id}"
-               ${checkedAttribute}
-               id="harvest_definition_${definition.id}">
-        <label class="form-check-label" for="harvest_definition_${definition.id}">
-          ${definition.name}
-        </label>
-      `;
-
-      harvestDefinitionsContainer.appendChild(div);
-    });
   }
 }

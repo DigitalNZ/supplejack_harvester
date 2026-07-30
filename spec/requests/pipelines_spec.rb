@@ -81,6 +81,23 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include pipeline.name
     end
 
+    it 'configures each block separately in the Run modal' do
+      create(:field, transformation_definition: harvest_definition.transformation_definition)
+      preprocess = create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one',
+                                               transformation_definition:
+                                                 harvest_definition.transformation_definition)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include CGI.escapeHTML("pipeline_job[block_settings][#{preprocess.id}][run]")
+      expect(response.body).to include CGI.escapeHTML("pipeline_job[block_settings][#{preprocess.id}][input]")
+      expect(response.body).to include CGI.escapeHTML("pipeline_job[block_settings][#{harvest_definition.id}][input]")
+
+      # The single job-wide "Transformation input" select is gone: reusing an existing
+      # extraction is now one of the per-block input choices.
+      expect(response.body).not_to include 'Transformation input'
+    end
+
     it 'offers "Add Pre-processing" in the add-block dropdown before any blocks exist' do
       empty_pipeline = create(:pipeline, name: 'Empty pipeline')
 
@@ -264,6 +281,44 @@ RSpec.describe 'Pipelines' do
       get harvest_definitions_pipeline_path(pipeline)
 
       expect(response.body).to eq pipeline.harvest_definitions.map(&:to_h).to_json
+    end
+  end
+
+  describe 'GET /run_blocks' do
+    let(:destination) { create(:destination) }
+    let!(:preprocess) { create(:harvest_definition, :preprocess, pipeline:, position: 0) }
+    let!(:harvest)    { create(:harvest_definition, pipeline:, position: 1) }
+
+    def checked?(id)
+      Nokogiri::HTML(response.body).at_css("##{id}")&.attr('checked').present?
+    end
+
+    it 'renders the block rows for the schedule form' do
+      get pipeline_run_blocks_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include "schedule[block_settings][#{preprocess.id}][run]"
+      expect(response.body).to include "schedule[block_settings][#{harvest.id}][input]"
+    end
+
+    it 'offers the most recent pre-processed data, which schedules resolve at run time' do
+      get pipeline_run_blocks_path(pipeline)
+
+      expect(response.body).to include 'preprocess_output:latest'
+    end
+
+    it "renders an existing schedule's selection" do
+      # The schedule runs only the harvest, on whatever pre-processed data is most
+      # recent when it fires.
+      schedule = create(:schedule, pipeline:, destination:,
+                                   block_settings: {
+                                     harvest.id.to_s => { 'run' => true, 'input' => 'preprocess_output:latest' }
+                                   })
+
+      get pipeline_run_blocks_path(pipeline), params: { schedule_id: schedule.id }
+
+      expect(checked?("schedule_block_#{harvest.id}_run")).to be true
+      expect(checked?("schedule_block_#{preprocess.id}_run")).to be false
     end
   end
 

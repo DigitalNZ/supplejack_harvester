@@ -1,0 +1,86 @@
+<%# Per-block run configuration: one row per block, in the order they run, each with
+    its own input. Rendered into the Run modal and (via Pipelines::RunBlocksController)
+    into the schedule form, so both places offer the same choices.
+
+    Locals:
+      pipeline     - the pipeline whose blocks are being configured
+      prefix       - form param prefix, 'pipeline_job' or 'schedule'
+      settings     - RunSettings holding the current selection
+      allow_latest - offer "most recent pre-processed data" (schedules only) %>
+
+<div id='js-run-blocks'>
+  <label class='form-label'>
+    Blocks to run
+
+    <span
+      data-bs-toggle="tooltip"
+      data-bs-title="Select the blocks you want to run, and where each one takes its input from. Untick a pre-processing block and give the block after it some data you prepared earlier."><i class="bi bi-question-circle" aria-label="helper text"></i>
+    </span>
+  </label>
+
+  <div class='border rounded'>
+    <% blocks = pipeline.ordered_blocks.to_a %>
+
+    <% blocks.each_with_index do |definition, index| %>
+      <div class='row gx-2 align-items-center p-2 <%= 'border-bottom' if index < blocks.size - 1 %>'
+           data-position='<%= definition.position %>'
+           data-js='run-block-row'>
+        <div class='col-5'>
+          <div class='form-check mb-0'>
+            <%= hidden_field_tag "#{prefix}[block_settings][#{definition.id}][run]", '0', id: nil %>
+
+            <%= check_box_tag "#{prefix}[block_settings][#{definition.id}][run]", '1',
+                              settings.run?(definition.id),
+                              class: 'form-check-input',
+                              data: { js: 'run-block-checkbox' },
+                              disabled: !definition.ready_to_run?,
+                              id: "#{prefix}_block_#{definition.id}_run" %>
+
+            <%= label_tag "#{prefix}_block_#{definition.id}_run", class: 'form-check-label' do %>
+              <%= block_row_label(definition) %>
+              <span class='badge bg-light text-dark fw-normal'><%= block_kind_label(definition) %></span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class='col-7'>
+          <%= select_tag "#{prefix}[block_settings][#{definition.id}][input]",
+                         block_input_options(pipeline, definition, allow_latest:,
+                                                                   selected: settings.input_for(definition.id).to_s),
+                         class: 'form-select form-select-sm',
+                         data: { js: 'run-block-input' },
+                         disabled: !definition.ready_to_run? || !settings.run?(definition.id),
+                         id: "#{prefix}_block_#{definition.id}_input" %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Enrichments are not part of the position-ordered chain - they run after the
+        harvest loads and iterate records back out of the destination API, so there
+        is no input to choose. %>
+    <% pipeline.enrichments.each do |definition| %>
+      <div class='row gx-2 align-items-center p-2 border-top'>
+        <div class='col-5'>
+          <div class='form-check mb-0'>
+            <%= hidden_field_tag "#{prefix}[block_settings][#{definition.id}][run]", '0', id: nil %>
+
+            <%= check_box_tag "#{prefix}[block_settings][#{definition.id}][run]", '1',
+                              settings.run?(definition.id),
+                              class: 'form-check-input',
+                              disabled: !definition.ready_to_run?,
+                              id: "#{prefix}_block_#{definition.id}_run" %>
+
+            <%= label_tag "#{prefix}_block_#{definition.id}_run", class: 'form-check-label' do %>
+              <%= block_row_label(definition) %>
+              <span class='badge bg-light text-dark fw-normal'><%= block_kind_label(definition) %></span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class='col-7'>
+          <span class='text-muted small'>Harvested records</span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -62,6 +62,48 @@ RSpec.describe 'PipelineJobs' do
   end
 
   describe 'POST /create' do
+    context 'with per-block run settings' do
+      let!(:preprocess) { create(:harvest_definition, :preprocess, pipeline:, position: 0) }
+      let!(:harvest)    { create(:harvest_definition, pipeline:, position: 1) }
+      let(:extraction_job) { create(:extraction_job, extraction_definition: harvest.extraction_definition) }
+
+      it 'stores what runs and what feeds each block' do
+        post pipeline_pipeline_jobs_path(pipeline), params: {
+          pipeline_job: {
+            destination_id: destination.id,
+            pipeline_id: pipeline.id,
+            block_settings: {
+              preprocess.id.to_s => { run: '0', input: 'fresh' },
+              harvest.id.to_s => { run: '1', input: "extraction_job:#{extraction_job.id}" }
+            }
+          }
+        }
+
+        job = PipelineJob.last
+
+        expect(job.harvest_definitions_to_run).to eq [harvest.id.to_s]
+        expect(job.existing_extraction_job_for(harvest)).to eq extraction_job
+      end
+
+      it 'rejects a run whose skipped block leaves the next one with no input' do
+        expect do
+          post pipeline_pipeline_jobs_path(pipeline), params: {
+            pipeline_job: {
+              destination_id: destination.id,
+              pipeline_id: pipeline.id,
+              block_settings: {
+                preprocess.id.to_s => { run: '0', input: 'fresh' },
+                harvest.id.to_s => { run: '1', input: 'fresh' }
+              }
+            }
+          }
+        end.not_to change(PipelineJob, :count)
+
+        follow_redirect!
+        expect(response.body).to include 'There was an issue creating your pipeline job'
+      end
+    end
+
     context 'with valid parameters' do
       it 'creates a new PipelineJob' do
         expect do
