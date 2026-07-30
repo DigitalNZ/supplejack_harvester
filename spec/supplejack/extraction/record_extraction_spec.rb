@@ -139,10 +139,11 @@ RSpec.describe Extraction::RecordExtraction do
         other_pipeline = create(:pipeline, name: 'OtherTestPipeline')
         other_pipeline_job = create(:pipeline_job, pipeline: other_pipeline, automation_step: other_automation_step)
         other_harvest_definition = create(:harvest_definition, pipeline: other_pipeline, kind: "harvest")
+        second_harvest_definition = create(:harvest_definition, pipeline: other_pipeline, kind: "harvest")
         enrichment_definition = create(:harvest_definition, pipeline: other_pipeline, kind: "enrichment")
-        
+
         @harvest_job_one    = create(:harvest_job, pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
-        @harvest_job_two    = create(:harvest_job, pipeline_job: other_pipeline_job, harvest_definition: other_harvest_definition)
+        @harvest_job_two    = create(:harvest_job, pipeline_job: other_pipeline_job, harvest_definition: second_harvest_definition)
         @enrichment_job_one = create(:harvest_job, pipeline_job: other_pipeline_job, harvest_definition: enrichment_definition)
       end
 
