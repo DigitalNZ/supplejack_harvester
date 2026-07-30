@@ -24,6 +24,30 @@ RSpec.describe 'PipelineJobs' do
     end
   end
 
+  describe 'GET /show' do
+    it "links to a pre-processing block's transformed data" do
+      preprocess_definition = create(:harvest_definition, :preprocess, pipeline:, position: 0)
+      preprocess_job = create(:harvest_job, harvest_definition: preprocess_definition, pipeline_job:)
+      create(:harvest_report, pipeline_job:, harvest_job: preprocess_job, kind: 'preprocess')
+
+      get pipeline_pipeline_job_path(pipeline, pipeline_job)
+
+      expect(response.body).to include 'View transformed data'
+      expect(response.body).to include pipeline_harvest_definition_preprocess_output_path(
+        pipeline, preprocess_definition, pipeline_job
+      )
+    end
+
+    # Every other kind loads its records to the destination, so there is nothing on
+    # disk to link to.
+    it 'does not offer transformed data for a harvest block' do
+      get pipeline_pipeline_job_path(pipeline, pipeline_job)
+
+      expect(response.body).to include 'View extracted data'
+      expect(response.body).not_to include 'View transformed data'
+    end
+  end
+
   describe 'GET /harvest_jobs/:harvest_job_id/errors' do
     it 'displays grouped errors for extraction, transformation and load' do
       extraction_summary = create(:job_completion_summary,
