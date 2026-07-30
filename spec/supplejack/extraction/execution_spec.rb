@@ -87,10 +87,16 @@ RSpec.describe Extraction::Execution do
         create(:harvest_job, extraction_job:, harvest_definition:, pipeline_job:)
       end
       let!(:harvest_report)                 { create(:harvest_report, pipeline_job:, harvest_job:) }
+      # A definition can only have one harvest job per pipeline job, so the
+      # sample harvest runs in its own pipeline job.
+      let(:sample_pipeline_job)             { create(:pipeline_job, pipeline:, destination:) }
       let!(:sample_harvest_job)             do
-        create(:harvest_job, extraction_job: sample_extraction_job, harvest_definition:, pipeline_job:)
+        create(:harvest_job, extraction_job: sample_extraction_job, harvest_definition:,
+                             pipeline_job: sample_pipeline_job)
       end
-      let!(:sample_harvest_report)          { create(:harvest_report, pipeline_job:, harvest_job: sample_harvest_job) }
+      let!(:sample_harvest_report)          do
+        create(:harvest_report, pipeline_job: sample_pipeline_job, harvest_job: sample_harvest_job)
+      end
       let(:request_one)                     { create(:request, :figshare_initial_request, extraction_definition:) }
       let(:request_two)                     { create(:request, :figshare_main_request, extraction_definition:) }
 

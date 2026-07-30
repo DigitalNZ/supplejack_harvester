@@ -43,10 +43,6 @@ class PipelineJob < ApplicationRecord
   # Step the processing chain forward once a block has finished. Creates the
   # next block's HarvestJob and enqueues it; when the chain is exhausted it falls
   # through to the enrichment jobs (preserving the legacy end-of-harvest behaviour).
-  #
-  # The existence guard makes this idempotent: the transformation-completion gate
-  # that triggers this can, under concurrent workers, fire more than once for a
-  # single block, and we must never create duplicate HarvestJobs for the next block.
   def advance_to_next_block(completed_definition)
     reload
     return if cancelled?
@@ -54,10 +50,8 @@ class PipelineJob < ApplicationRecord
     next_definition = pipeline.next_block(completed_definition)
     return enqueue_enrichment_jobs(completed_definition.name) if next_definition.blank?
 
-    return if harvest_jobs.exists?(harvest_definition_id: next_definition.id)
-
-    job = HarvestJob.create(harvest_definition: next_definition, pipeline_job: self)
-    HarvestWorker.perform_async_with_priority(job_priority, job.id)
+    job = create_next_block_job(next_definition)
+    HarvestWorker.perform_async_with_priority(job_priority, job.id) if job.present?
   end
 
   def enqueue_enrichment_jobs(job_id)
@@ -83,6 +77,16 @@ class PipelineJob < ApplicationRecord
   end
 
   private
+
+  # The transformation-completion gate can fire more than once for a single
+  # block under concurrent workers. The unique index on
+  # (pipeline_job_id, harvest_definition_id) turns the losing caller's insert
+  # into RecordNotUnique instead of a duplicate job; it must enqueue nothing.
+  def create_next_block_job(next_definition)
+    HarvestJob.create!(harvest_definition: next_definition, pipeline_job: self)
+  rescue ActiveRecord::RecordNotUnique
+    nil
+  end
 
   def should_queue_enrichments?
     reload

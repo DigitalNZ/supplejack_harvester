@@ -84,7 +84,10 @@ RSpec.describe LoadWorker, type: :job do
     end
 
     context 'when the harvest job is cancelled' do
-      let(:cancelled_harvest_job) { create(:harvest_job, :cancelled, harvest_definition:, pipeline_job:) }
+      let(:cancelled_pipeline_job) { create(:pipeline_job, pipeline:, destination:) }
+      let(:cancelled_harvest_job) do
+        create(:harvest_job, :cancelled, harvest_definition:, pipeline_job: cancelled_pipeline_job)
+      end
       let!(:cancelled_harvest_report) do
         create(:harvest_report, harvest_job: cancelled_harvest_job, pipeline_job:)
       end

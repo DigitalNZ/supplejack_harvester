@@ -57,6 +57,20 @@ RSpec.describe PipelineJob do
       end.not_to(change { pipeline_job.harvest_jobs.where(harvest_definition: pre_one).count })
     end
 
+    it 'neither duplicates the job nor enqueues a worker when completion signals race' do
+      allow(HarvestWorker).to receive(:perform_async_with_priority)
+
+      # The winning racer's row is already committed; this losing call must
+      # hit the unique index and back off without enqueueing anything.
+      create(:harvest_job, pipeline_job:, harvest_definition: pre_one)
+
+      expect do
+        pipeline_job.advance_to_next_block(pre_zero)
+      end.not_to(change { pipeline_job.harvest_jobs.where(harvest_definition: pre_one).count })
+
+      expect(HarvestWorker).not_to have_received(:perform_async_with_priority)
+    end
+
     it 'falls through to enrichments when there is no next block' do
       expect(pipeline_job).to receive(:enqueue_enrichment_jobs).with(pre_one.name)
 

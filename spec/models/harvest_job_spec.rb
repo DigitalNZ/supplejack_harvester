@@ -15,6 +15,16 @@ RSpec.describe HarvestJob do
     end
   end
 
+  describe 'uniqueness per pipeline job and harvest definition' do
+    it 'refuses a second harvest job for the same pipeline job and harvest definition' do
+      create(:harvest_job, harvest_definition:, pipeline_job:)
+
+      expect do
+        create(:harvest_job, harvest_definition:, pipeline_job:)
+      end.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
+
   describe '#execute_delete_previous_records' do
     let(:pipeline) { create(:pipeline, :figshare) }
     let(:harvest_definition) { pipeline.harvest }
