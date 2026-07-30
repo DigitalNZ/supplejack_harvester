@@ -65,6 +65,6 @@ class FieldsController < ApplicationController
   end
 
   def field_params
-    params.require(:field).permit(:name, :block, :transformation_definition_id, :kind, :schema_field_id)
+    params.expect(field: %i[name block transformation_definition_id kind schema_field_id])
   end
 end

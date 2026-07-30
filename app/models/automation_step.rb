@@ -14,7 +14,7 @@ class AutomationStep < ApplicationRecord
   validates :api_url, :api_method, presence: true, if: -> { step_type == 'api_call' }
   validate :validate_step_type_requirements
 
-  serialize :harvest_definition_ids, type: Array
+  serialize :harvest_definition_ids, type: Array, coder: YAML
 
   API_METHODS = %w[GET POST PUT PATCH DELETE].freeze
 

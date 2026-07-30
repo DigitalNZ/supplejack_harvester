@@ -121,9 +121,9 @@ class TransformationDefinitionsController < ApplicationController
   end
 
   def transformation_definition_params
-    safe_params = params.require(:transformation_definition).permit(
-      :pipeline_id, :content_source_id, :name, :extraction_job_id,
-      :record_selector, :kind
+    safe_params = params.expect(
+      transformation_definition: %i[pipeline_id content_source_id name extraction_job_id
+                                    record_selector kind]
     )
     merge_last_edited_by(safe_params)
   end

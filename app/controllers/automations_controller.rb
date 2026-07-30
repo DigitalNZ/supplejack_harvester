@@ -29,6 +29,6 @@ class AutomationsController < ApplicationController
   end
 
   def automation_params
-    params.require(:automation).permit(:name, :description, :destination_id)
+    params.expect(automation: %i[name description destination_id])
   end
 end

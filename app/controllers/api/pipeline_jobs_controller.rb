@@ -25,7 +25,7 @@ module Api
     end
 
     def pipeline_job_params
-      params.require(:pipeline_job).permit(:pipeline_id, :destination_id, :job_priority, harvest_definitions_to_run: [])
+      params.expect(pipeline_job: [:pipeline_id, :destination_id, :job_priority, { harvest_definitions_to_run: [] }])
     end
 
     def harvest_definitions_to_run(pipeline)
