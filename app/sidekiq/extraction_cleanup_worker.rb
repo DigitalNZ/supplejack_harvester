@@ -66,6 +66,12 @@ class ExtractionCleanupWorker
 
   # Preprocess output has no owning database record, so cleanup is keyed off
   # the pipeline job that wrote each folder rather than a purge timestamp.
+  #
+  # The rescue is attached to this do...end block, not a method - same trick
+  # as purge_extraction_jobs. It covers the sweepability check as well as the
+  # removal: a folder that vanishes between Dir.children and the mtime stat
+  # (ENOENT) or one FileUtils.rm_r can't remove (e.g. permissions) must not
+  # abort the batch or swallow the summary log for the rest of the run.
   def sweep_preprocess_folders
     PreProcess::Output.pipeline_job_ids_on_disk.each do |pipeline_job_id|
       folder = PreProcess::Output.job_folder(pipeline_job_id)
@@ -73,17 +79,25 @@ class ExtractionCleanupWorker
 
       @preprocess_examined += 1
       log("preprocess pipeline_job=#{pipeline_job_id}")
-      next if @policy.dry_run?
-
-      FileUtils.rm_rf(folder)
-      @preprocess_swept += 1
+      remove_preprocess_folder(folder) unless @policy.dry_run?
+    rescue StandardError => e
+      report_preprocess_failure(pipeline_job_id, e)
     end
+  end
+
+  def remove_preprocess_folder(folder)
+    FileUtils.rm_r(folder)
+    @preprocess_swept += 1
   end
 
   # A folder whose pipeline job row no longer exists is an orphan, only swept
   # once it has sat untouched for a day so this can never race a run whose
-  # row was only just created. Otherwise the owning job's own status decides:
-  # still running keeps its folders no matter how old.
+  # row was only just created. Otherwise the owning job decides: a terminal
+  # status old enough to clear min_age_cutoff is swept as normal, and a job
+  # that never reaches a terminal status (nothing in the app ever sets
+  # status to errored, so a crashed run stays "running" forever) is swept
+  # once it clears the much larger max_age_cutoff regardless of status, so
+  # a dead run's output doesn't linger indefinitely.
   #
   # Checks the status column directly rather than PipelineJob#finished? --
   # that method is overridden to track whether every harvest report's load
@@ -93,7 +107,22 @@ class ExtractionCleanupWorker
     pipeline_job = PipelineJob.find_by(id: pipeline_job_id)
     return File.mtime(folder) < 1.day.ago if pipeline_job.nil?
 
+    finished_and_old?(pipeline_job) || past_max_age?(pipeline_job)
+  end
+
+  def finished_and_old?(pipeline_job)
     pipeline_job.status.in?(%w[cancelled completed errored]) && pipeline_job.created_at < @policy.min_age_cutoff
+  end
+
+  def past_max_age?(pipeline_job)
+    pipeline_job.created_at < @policy.max_age_cutoff
+  end
+
+  def report_preprocess_failure(pipeline_job_id, error)
+    Rails.logger.error(
+      "[extraction_cleanup] failed preprocess pipeline_job=#{pipeline_job_id} #{error.class}: #{error.message}"
+    )
+    Airbrake.notify(error)
   end
 
   def summary_message
