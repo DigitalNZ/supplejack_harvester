@@ -6,6 +6,8 @@ class ExtractionJob < ApplicationRecord
   include Job
 
   EXTRACTIONS_FOLDER = Rails.root.join("extractions/#{Rails.env}").to_s.freeze
+  FINISHED_STATUSES = %w[cancelled completed errored].freeze
+  UNFINISHED_STATUSES = %w[queued running].freeze
 
   enum :kind, { full: 0, sample: 1 }, prefix: :is
 
@@ -91,5 +93,59 @@ class ExtractionJob < ApplicationRecord
   # policy. The job row itself still exists.
   def purged?
     purged_at.present?
+  end
+
+  # Extraction jobs whose data is old enough to delete under the lifecycle
+  # policy, oldest first.
+  #
+  # The ranking runs over every job that still has data, whatever its status:
+  # filtering before ranking would let a running job shift every index by one.
+  # Exclusions are applied to the ranked set.
+  #
+  # @return ActiveRecord::Relation
+  def self.purge_candidates(policy)
+    eligible_for_purge(policy)
+      .where(beyond_retention, keep: policy.keep_latest,
+                               pinned: pinned_ids.presence || [0],
+                               max_age: policy.max_age_cutoff)
+      .order(:created_at, :id)
+      .limit(policy.batch_limit)
+  end
+
+  # The ranked, status-and-exclusion-filtered set purge_candidates chooses
+  # from, before the keep_latest/max_age retention clause is applied.
+  def self.eligible_for_purge(policy)
+    from(ranked_by_recency, :extraction_jobs)
+      .where(status: FINISHED_STATUSES)
+      .where.not(extraction_definition_id: policy.excluded_extraction_definition_ids)
+      .where.not(id: busy_ids)
+      .where(created_at: ...policy.min_age_cutoff)
+  end
+
+  # Numbers each definition's surviving extractions, 1 being the newest.
+  def self.ranked_by_recency
+    select(
+      'extraction_jobs.*',
+      'ROW_NUMBER() OVER (PARTITION BY extraction_definition_id ' \
+      'ORDER BY created_at DESC, id DESC) AS extraction_index'
+    ).where(purged_at: nil)
+  end
+
+  # Dan's rule: past the newest N for its definition, or simply too old. A job a
+  # transformation definition previews from is spared the first clause but not
+  # the second.
+  def self.beyond_retention
+    '(extraction_index > :keep AND extraction_jobs.id NOT IN (:pinned)) OR created_at < :max_age'
+  end
+
+  # Extraction jobs a transformation definition renders its preview from.
+  def self.pinned_ids
+    TransformationDefinition.distinct.pluck(:extraction_job_id).compact
+  end
+
+  # Extraction jobs that work still in flight is reading.
+  def self.busy_ids
+    (HarvestJob.where(status: UNFINISHED_STATUSES).pluck(:extraction_job_id) +
+      PipelineJob.where(status: UNFINISHED_STATUSES).pluck(:extraction_job_id)).compact
   end
 end
