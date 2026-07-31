@@ -78,4 +78,18 @@ class ExtractionJob < ApplicationRecord
       stop_condition_content: content
     )
   end
+
+  # Removes the extracted data from disk while keeping the job row, so run
+  # history and anything pointing at this job survive. Safe to call when the
+  # folder is already missing.
+  def purge!
+    delete_folder
+    update!(purged_at: Time.zone.now)
+  end
+
+  # True once the extracted data has been removed from disk by the lifecycle
+  # policy. The job row itself still exists.
+  def purged?
+    purged_at.present?
+  end
 end

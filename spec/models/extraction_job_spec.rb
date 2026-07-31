@@ -184,4 +184,50 @@ RSpec.describe ExtractionJob do
       expect(unfinished_ej.finished?).to be false
     end
   end
+
+  describe '#purged?' do
+    it 'is false when the data is still on disk' do
+      expect(subject.purged?).to be false
+    end
+
+    it 'is true once purged_at is stamped' do
+      subject.update(purged_at: Time.zone.now)
+
+      expect(subject.purged?).to be true
+    end
+  end
+
+  describe '#purge!' do
+    it 'deletes the extraction folder' do
+      FileUtils.mkdir_p("#{subject.extraction_folder}/1")
+      File.write("#{subject.extraction_folder}/1/page.json", '{}')
+
+      subject.purge!
+
+      expect(Dir.exist?(subject.extraction_folder)).to be false
+    end
+
+    it 'stamps purged_at' do
+      subject.purge!
+
+      expect(subject.reload.purged_at).to be_present
+    end
+
+    it 'stamps purged_at even when the folder is already gone' do
+      FileUtils.rm_rf(subject.extraction_folder)
+
+      subject.purge!
+
+      expect(subject.reload.purged_at).to be_present
+    end
+
+    it 'keeps the row and its harvest job' do
+      harvest_job = create(:harvest_job, extraction_job: subject)
+
+      subject.purge!
+
+      expect(described_class.find_by(id: subject.id)).to be_present
+      expect(HarvestJob.find_by(id: harvest_job.id)).to be_present
+    end
+  end
 end
