@@ -8,3 +8,8 @@ extraction_cleanup:
   class: "ExtractionCleanupWorker"
   queue: low_priority
   description: "Removes extracted data that has aged out of the retention policy"
+preprocess_cleanup:
+  cron: "30 2 * * * <%= Time.zone.tzinfo.name %>"
+  class: "PreProcessCleanupWorker"
+  queue: low_priority
+  description: "Removes preprocess block output that has aged out of the retention policy"

@@ -31,4 +31,30 @@ RSpec.describe 'config/schedule.yml' do
   it 'uses the low_priority queue' do
     expect(schedule.dig('extraction_cleanup', 'queue')).to eq 'low_priority'
   end
+
+  it 'schedules the preprocess cleanup nightly' do
+    cron_string = schedule.dig('preprocess_cleanup', 'cron')
+    cron = Fugit::Cron.parse(cron_string)
+    # Check frequency is daily (86400 seconds in a day)
+    expect(cron.rough_frequency).to eq 86400
+    # Check time is 2:30 AM (hour 2, minute 30) - offset from extraction
+    # cleanup so the two nightly sweeps don't start at the same moment.
+    expect(cron_string).to start_with('30 2 ')
+  end
+
+  it 'maps to the preprocess cleanup worker' do
+    expect(schedule.dig('preprocess_cleanup', 'class')).to eq 'PreProcessCleanupWorker'
+  end
+
+  it 'names a preprocess cleanup class that exists' do
+    expect { schedule.dig('preprocess_cleanup', 'class').constantize }.not_to raise_error
+  end
+
+  it 'uses a preprocess cleanup cron expression fugit can parse' do
+    expect(Fugit::Cron.parse(schedule.dig('preprocess_cleanup', 'cron'))).to be_present
+  end
+
+  it 'uses the low_priority queue for preprocess cleanup' do
+    expect(schedule.dig('preprocess_cleanup', 'queue')).to eq 'low_priority'
+  end
 end
