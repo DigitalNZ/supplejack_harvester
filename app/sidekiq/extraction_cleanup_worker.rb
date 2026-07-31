@@ -15,8 +15,11 @@ class ExtractionCleanupWorker
     @examined_bytes = 0
     @purged = 0
     @purged_bytes = 0
+    @preprocess_examined = 0
+    @preprocess_swept = 0
 
     purge_extraction_jobs
+    sweep_preprocess_folders
 
     log(summary_message)
   end
@@ -61,10 +64,46 @@ class ExtractionCleanupWorker
     Airbrake.notify(error)
   end
 
-  def summary_message
-    return "finished examined=#{@examined} would_free_bytes=#{@examined_bytes} dry_run=true" if @policy.dry_run?
+  # Preprocess output has no owning database record, so cleanup is keyed off
+  # the pipeline job that wrote each folder rather than a purge timestamp.
+  def sweep_preprocess_folders
+    PreProcess::Output.pipeline_job_ids_on_disk.each do |pipeline_job_id|
+      folder = PreProcess::Output.job_folder(pipeline_job_id)
+      next unless sweepable?(pipeline_job_id, folder)
 
-    "finished purged=#{@purged} bytes=#{@purged_bytes} examined=#{@examined} dry_run=false"
+      @preprocess_examined += 1
+      log("preprocess pipeline_job=#{pipeline_job_id}")
+      next if @policy.dry_run?
+
+      FileUtils.rm_rf(folder)
+      @preprocess_swept += 1
+    end
+  end
+
+  # A folder whose pipeline job row no longer exists is an orphan, only swept
+  # once it has sat untouched for a day so this can never race a run whose
+  # row was only just created. Otherwise the owning job's own status decides:
+  # still running keeps its folders no matter how old.
+  #
+  # Checks the status column directly rather than PipelineJob#finished? --
+  # that method is overridden to track whether every harvest report's load
+  # workers have completed (see LoadWorker#job_end), a different question
+  # from whether the job itself has stopped running.
+  def sweepable?(pipeline_job_id, folder)
+    pipeline_job = PipelineJob.find_by(id: pipeline_job_id)
+    return File.mtime(folder) < 1.day.ago if pipeline_job.nil?
+
+    pipeline_job.status.in?(%w[cancelled completed errored]) && pipeline_job.created_at < @policy.min_age_cutoff
+  end
+
+  def summary_message
+    if @policy.dry_run?
+      "finished examined=#{@examined} would_free_bytes=#{@examined_bytes} dry_run=true " \
+        "preprocess_would_sweep=#{@preprocess_examined}"
+    else
+      "finished purged=#{@purged} bytes=#{@purged_bytes} examined=#{@examined} dry_run=false " \
+        "preprocess_swept=#{@preprocess_swept}"
+    end
   end
 
   def log(message)

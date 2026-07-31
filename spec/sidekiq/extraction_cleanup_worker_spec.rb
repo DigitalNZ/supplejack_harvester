@@ -129,5 +129,102 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
         expect(Airbrake).to have_received(:notify).with(instance_of(Errno::EACCES))
       end
     end
+
+    describe 'preprocess sweep' do
+      def preprocess_folder(pipeline_job_id)
+        folder = PreProcess::Output.folder(pipeline_job_id, 1)
+        FileUtils.mkdir_p(folder)
+        File.write("#{folder}/preprocess__000000001.json", '{}')
+        PreProcess::Output.job_folder(pipeline_job_id)
+      end
+
+      it 'sweeps output belonging to an old finished pipeline job' do
+        pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
+        folder = preprocess_folder(pipeline_job.id)
+
+        described_class.new.perform
+
+        expect(Dir.exist?(folder)).to be false
+      end
+
+      it 'keeps output from a recent pipeline job' do
+        pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 2.days.ago)
+        folder = preprocess_folder(pipeline_job.id)
+
+        described_class.new.perform
+
+        expect(Dir.exist?(folder)).to be true
+      end
+
+      it 'keeps output from an old pipeline job that is still running' do
+        pipeline_job = create(:pipeline_job, pipeline:, status: 'running', created_at: 3.months.ago)
+        folder = preprocess_folder(pipeline_job.id)
+
+        described_class.new.perform
+
+        expect(Dir.exist?(folder)).to be true
+      end
+
+      it 'sweeps an orphan folder older than a day' do
+        folder = preprocess_folder(999_999)
+        FileUtils.touch(folder, mtime: 2.days.ago.to_time)
+
+        described_class.new.perform
+
+        expect(Dir.exist?(folder)).to be false
+      end
+
+      it 'keeps a freshly written orphan folder' do
+        folder = preprocess_folder(999_998)
+
+        described_class.new.perform
+
+        expect(Dir.exist?(folder)).to be true
+      end
+
+      it 'sweeps a folder whose pipeline job row has since been deleted' do
+        pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
+        folder = preprocess_folder(pipeline_job.id)
+        pipeline_job.destroy
+        FileUtils.touch(folder, mtime: 2.days.ago.to_time)
+
+        described_class.new.perform
+
+        expect(Dir.exist?(folder)).to be false
+      end
+
+      it 'reports how many preprocess folders it swept' do
+        pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
+        preprocess_folder(pipeline_job.id)
+        allow(Rails.logger).to receive(:info)
+
+        described_class.new.perform
+
+        expect(Rails.logger).to have_received(:info).with(a_string_matching(/preprocess_swept=1\z/))
+      end
+
+      context 'when dry_run is on' do
+        let(:policy_attributes) { super().merge(dry_run: true) }
+
+        it 'sweeps nothing' do
+          pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
+          folder = preprocess_folder(pipeline_job.id)
+
+          described_class.new.perform
+
+          expect(Dir.exist?(folder)).to be true
+        end
+
+        it 'reports what it would sweep, not that anything was swept' do
+          pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
+          preprocess_folder(pipeline_job.id)
+          allow(Rails.logger).to receive(:info)
+
+          described_class.new.perform
+
+          expect(Rails.logger).to have_received(:info).with(a_string_matching(/preprocess_would_sweep=1\z/))
+        end
+      end
+    end
   end
 end
