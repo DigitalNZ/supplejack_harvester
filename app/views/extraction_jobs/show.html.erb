@@ -38,6 +38,17 @@
   <p>It will delete all the data related to it.</p>
 <% end %>
 
+<% if @extraction_job.purged? %>
+  <div class="my-4">
+    <span class="badge bg-secondary me-1">Data removed</span>|
+    <span class="ms-1"><%= job_status_text(@extraction_job) %></span>
+  </div>
+
+  <div class="alert alert-secondary" role="alert">
+    <%= t('.purged', date: @extraction_job.purged_at.to_fs(:verbose)) %>
+  </div>
+<% else %>
+
 <div class="my-4">
   <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span>|
   <%- if @extraction_job.duration_seconds.present? %>
@@ -160,4 +171,5 @@
   </div>
 </div>
 
+<% end %>
 <% end %>

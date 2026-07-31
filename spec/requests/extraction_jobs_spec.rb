@@ -34,6 +34,26 @@ RSpec.describe 'ExtractionJobs' do
     end
   end
 
+  describe '#show when the extracted data has been purged' do
+    before do
+      subject.update(status: 'completed', purged_at: Time.zone.parse('2026-06-01 09:00'))
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(pipeline, harvest_definition,
+                                                                                extraction_definition, subject)
+    end
+
+    it 'returns a successful response' do
+      expect(response).to be_successful
+    end
+
+    it 'says the data was removed' do
+      expect(response.body).to include('Extracted data was removed')
+    end
+
+    it 'does not render the result viewer' do
+      expect(response.body).not_to include('extraction-result-viewer')
+    end
+  end
+
   describe '#create' do
     context 'when the format is HTML' do
       describe 'is successful' do
