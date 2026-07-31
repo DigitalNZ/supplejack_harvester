@@ -251,6 +251,32 @@ RSpec.describe ExtractionJob do
       expect(described_class.purge_candidates(policy)).not_to include(recent)
     end
 
+    it 'keeps a young job even though it ranks past keep_latest' do
+      job_created(1.day.ago)
+      job_created(2.days.ago)
+      young_but_over_keep_latest = job_created(3.days.ago)
+
+      expect(described_class.purge_candidates(policy)).not_to include(young_but_over_keep_latest)
+    end
+
+    it 'ranks jobs separately per extraction definition' do
+      other_definition = create(:extraction_definition)
+
+      own_newest = job_created(5.months.ago)
+      job_created(6.months.ago)
+      job_created(7.months.ago)
+
+      other_newest = create(:extraction_job, extraction_definition: other_definition,
+                                              status: 'completed', created_at: 2.months.ago)
+      create(:extraction_job, extraction_definition: other_definition, status: 'completed', created_at: 3.months.ago)
+      create(:extraction_job, extraction_definition: other_definition, status: 'completed', created_at: 4.months.ago)
+
+      candidates = described_class.purge_candidates(policy)
+
+      expect(candidates).not_to include(own_newest)
+      expect(candidates).not_to include(other_newest)
+    end
+
     it 'keeps the newest keep_latest jobs even when they are old' do
       newest = job_created(2.months.ago)
       job_created(3.months.ago)
