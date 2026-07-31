@@ -57,6 +57,23 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
 
         expect(old_job.reload.purged_at).to be_nil
       end
+
+      it 'still logs the candidate it would purge' do
+        allow(Rails.logger).to receive(:info)
+
+        described_class.new.perform
+
+        expect(Rails.logger).to have_received(:info).with(a_string_including("extraction_job=#{old_job.id}"))
+      end
+
+      it 'reports how much would be freed, not that anything was purged' do
+        allow(Rails.logger).to receive(:info)
+
+        described_class.new.perform
+
+        expect(Rails.logger).to have_received(:info)
+          .with(a_string_matching(/finished examined=1 would_free_bytes=\d+ dry_run=true/))
+      end
     end
 
     context 'when batch_limit is reached' do
@@ -94,6 +111,22 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
         described_class.new.perform
 
         expect(old_job.reload.purged_at).to be_present
+      end
+
+      it 'does not count the failed job among what it purged' do
+        allow(Rails.logger).to receive(:info)
+
+        described_class.new.perform
+
+        expect(Rails.logger).to have_received(:info).with(a_string_matching(/finished purged=1 /))
+      end
+
+      it 'notifies Airbrake of the failure' do
+        allow(Airbrake).to receive(:notify)
+
+        described_class.new.perform
+
+        expect(Airbrake).to have_received(:notify).with(instance_of(Errno::EACCES))
       end
     end
   end
