@@ -9,8 +9,14 @@ RSpec.describe 'config/schedule.yml' do
 
   it 'schedules the extraction cleanup nightly' do
     cron_string = schedule.dig('extraction_cleanup', 'cron')
-    # Should run at 2 AM (hour 2, minute 0)
+    cron = Fugit::Cron.parse(cron_string)
+    # Check frequency is daily (86400 seconds in a day)
+    expect(cron.rough_frequency).to eq 86400
+    # Check time is 2 AM (hour 2, minute 0)
     expect(cron_string).to start_with('0 2 ')
+  end
+
+  it 'maps to the extraction cleanup worker' do
     expect(schedule.dig('extraction_cleanup', 'class')).to eq 'ExtractionCleanupWorker'
   end
 
