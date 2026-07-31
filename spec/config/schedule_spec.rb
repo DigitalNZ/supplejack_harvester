@@ -8,6 +8,9 @@ RSpec.describe 'config/schedule.yml' do
   end
 
   it 'schedules the extraction cleanup nightly' do
+    cron_string = schedule.dig('extraction_cleanup', 'cron')
+    # Should run at 2 AM (hour 2, minute 0)
+    expect(cron_string).to start_with('0 2 ')
     expect(schedule.dig('extraction_cleanup', 'class')).to eq 'ExtractionCleanupWorker'
   end
 
@@ -17,5 +20,9 @@ RSpec.describe 'config/schedule.yml' do
 
   it 'uses a cron expression fugit can parse' do
     expect(Fugit::Cron.parse(schedule.dig('extraction_cleanup', 'cron'))).to be_present
+  end
+
+  it 'uses the low_priority queue' do
+    expect(schedule.dig('extraction_cleanup', 'queue')).to eq 'low_priority'
   end
 end
