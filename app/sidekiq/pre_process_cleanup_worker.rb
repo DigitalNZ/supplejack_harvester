@@ -69,7 +69,7 @@ class PreProcessCleanupWorker
   end
 
   def finished_and_old?(pipeline_job)
-    pipeline_job.status.in?(%w[cancelled completed errored]) && pipeline_job.created_at < @policy.min_age_cutoff
+    pipeline_job.status.in?(Job::FINISHED_STATUSES) && pipeline_job.created_at < @policy.min_age_cutoff
   end
 
   def past_max_age?(pipeline_job)

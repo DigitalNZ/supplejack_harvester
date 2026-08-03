@@ -6,7 +6,6 @@ class ExtractionJob < ApplicationRecord
   include Job
 
   EXTRACTIONS_FOLDER = Rails.root.join("extractions/#{Rails.env}").to_s.freeze
-  FINISHED_STATUSES = %w[cancelled completed errored].freeze
   UNFINISHED_STATUSES = %w[queued running].freeze
 
   enum :kind, { full: 0, sample: 1 }, prefix: :is
