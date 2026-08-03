@@ -39,8 +39,8 @@ RSpec.describe PipelineJob do
       build(:pipeline_job, pipeline:, destination:, block_settings: settings)
     end
 
-    def runs(definition, input: 'fresh')
-      { definition.id.to_s => { 'run' => true, 'input' => input } }
+    def runs(definition, input: 'fresh', pages: nil)
+      { definition.id.to_s => { 'run' => true, 'input' => input, 'pages' => pages } }
     end
 
     def skips(definition)
@@ -135,6 +135,44 @@ RSpec.describe PipelineJob do
 
       it 'accepts a run of nothing at all' do
         expect(job_with(skips(pre_zero).merge(skips(pre_one)).merge(skips(harvest)))).to be_valid
+      end
+    end
+
+    describe '#pages_for' do
+      it 'is the limit set on that block' do
+        job = job_with(runs(pre_zero, pages: 5).merge(runs(pre_one)).merge(runs(harvest, pages: 2)))
+
+        expect(job.pages_for(pre_zero)).to eq 5
+        expect(job.pages_for(harvest)).to eq 2
+      end
+
+      it 'is nil for a block left on every available page' do
+        job = job_with(runs(pre_zero).merge(runs(pre_one)).merge(runs(harvest)))
+
+        expect(job.pages_for(pre_one)).to be_nil
+      end
+
+      it 'treats an empty or zero field as every available page' do
+        job = job_with(runs(pre_zero, pages: '').merge(runs(pre_one, pages: '0')).merge(runs(harvest)))
+
+        expect(job.pages_for(pre_zero)).to be_nil
+        expect(job.pages_for(pre_one)).to be_nil
+      end
+
+      # The API and automation paths still post a single page limit for the whole run.
+      it 'falls back to the job-wide limit for callers posting the flat fields' do
+        job = create(:pipeline_job, pipeline:, destination:, page_type: 'set_number', pages: 3,
+                                    harvest_definitions_to_run: [pre_zero.id.to_s])
+
+        expect(job.pages_for(pre_zero)).to eq 3
+        expect(job.pages_for(harvest)).to eq 3
+      end
+
+      it 'ignores the job-wide limit when it is for all available pages' do
+        job = create(:pipeline_job, pipeline:, destination:, page_type: 'all_available_pages', pages: 3,
+                                    harvest_definitions_to_run: [pre_zero.id.to_s])
+
+        expect(job.pages_for(pre_zero)).to be_nil
       end
     end
 

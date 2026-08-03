@@ -44,7 +44,6 @@ import "/js/SubmittingSelect";
 import "/js/AutoComplete";
 import "/js/editor";
 import "/js/form-header-submission";
-import "/js/pipeline";
 import "/js/run-blocks";
 import "/js/schedules";
 import "/js/automation-template-tabs";

@@ -28,6 +28,11 @@ class RunBlockRow
     settings.run?(id)
   end
 
+  # nil renders an empty field, which reads as "all of them" next to the placeholder.
+  def pages
+    settings.pages_for(id)
+  end
+
   def field_name(attribute)
     "#{subject}[block_settings][#{id}][#{attribute}]"
   end

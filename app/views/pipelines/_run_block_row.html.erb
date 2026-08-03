@@ -1,5 +1,6 @@
-<%# One block's row: whether it runs, and what feeds it. Rendered for the chain
-    blocks and for the enrichments, which have no input to choose.
+<%# One block's row: whether it runs, what feeds it, and how much of it to process.
+    Rendered for the chain blocks and for the enrichments, which have neither an
+    input nor a page limit to choose.
 
     Locals:
       row       - a RunBlockRow
@@ -8,7 +9,7 @@
 <div class='row gx-2 align-items-center p-2 <%= row_class %>'
      data-position='<%= row.position %>'
      data-js='<%= 'run-block-row' unless row.enrichment? %>'>
-  <div class='col-5'>
+  <div class='col-4'>
     <div class='form-check mb-0'>
       <%= hidden_field_tag row.field_name(:run), '0', id: nil %>
 
@@ -25,15 +26,28 @@
     </div>
   </div>
 
-  <div class='col-7'>
-    <% if row.enrichment? %>
+  <% if row.enrichment? %>
+    <div class='col-8'>
       <span class='text-muted small'>Harvested records</span>
-    <% else %>
+    </div>
+  <% else %>
+    <div class='col-5'>
       <%= select_tag row.field_name(:input), row.input_options,
                      class: 'form-select form-select-sm',
                      data: { js: 'run-block-input' },
                      disabled: !row.ready_to_run? || !row.run?,
                      id: row.field_id(:input) %>
-    <% end %>
-  </div>
+    </div>
+
+    <div class='col-3'>
+      <%= number_field_tag row.field_name(:pages), row.pages,
+                           autocomplete: 'off',
+                           min: 1,
+                           placeholder: 'All pages',
+                           class: 'form-control form-control-sm',
+                           data: { js: 'run-block-pages' },
+                           disabled: !row.ready_to_run? || !row.run?,
+                           id: row.field_id(:pages) %>
+    </div>
+  <% end %>
 </div>

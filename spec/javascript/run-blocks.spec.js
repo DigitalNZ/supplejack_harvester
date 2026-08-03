@@ -11,6 +11,7 @@ const rowMarkup = (index, storedOutput) => `
         ${storedOutput ? '<option value="preprocess_output:44">Pre-processed data from job #44</option>' : ""}
         <option value="extraction_job:987">Existing extraction: 987</option>
       </select>
+      <input type="number" data-js="run-block-pages" id="pages-${index}">
     </div>
   </div>
 `;
@@ -27,6 +28,7 @@ const render = ({ rows = 2, storedOutput = true } = {}) => {
 
 const checkbox = (index) => document.getElementById(`run-${index}`);
 const input = (index) => document.getElementById(`input-${index}`);
+const pages = (index) => document.getElementById(`pages-${index}`);
 
 const toggle = (index) => {
   const box = checkbox(index);
@@ -42,12 +44,19 @@ describe("run blocks", () => {
     expect(input(1).disabled).toBe(false);
   });
 
-  it("disables the input of a block that is not running", () => {
+  it("disables the input and page limit of a block that is not running", () => {
     render();
 
     toggle(1);
 
     expect(input(1).disabled).toBe(true);
+    expect(pages(1).disabled).toBe(true);
+  });
+
+  it("enables the page limit of a block that is running", () => {
+    render();
+
+    expect(pages(1).disabled).toBe(false);
   });
 
   it("switches to stored pre-processed data when the block before it is not running", () => {

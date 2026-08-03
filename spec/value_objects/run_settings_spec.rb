@@ -9,11 +9,21 @@ RSpec.describe RunSettings do
                             '13' => { run: '0', input: 'garbage' } })
     end
 
-    it 'coerces params into booleans, string keys and canonical inputs' do
+    it 'coerces params into booleans, string keys, canonical inputs and page limits' do
       expect(settings.to_h).to eq(
-        '12' => { 'run' => true, 'input' => 'preprocess_output:44' },
-        '13' => { 'run' => false, 'input' => 'fresh' }
+        '12' => { 'run' => true, 'input' => 'preprocess_output:44', 'pages' => nil },
+        '13' => { 'run' => false, 'input' => 'fresh', 'pages' => nil }
       )
+    end
+
+    it 'reads a page limit, treating a blank or zero as every page' do
+      settings = described_class.new({ '12' => { 'pages' => '4' },
+                                       '13' => { 'pages' => '' },
+                                       '14' => { 'pages' => '0' } })
+
+      expect(settings.pages_for(12)).to eq 4
+      expect(settings.pages_for('13')).to be_nil
+      expect(settings.pages_for(14)).to be_nil
     end
 
     it 'answers run? and input_for by definition id' do
@@ -34,8 +44,7 @@ RSpec.describe RunSettings do
 
   describe '.legacy' do
     it 'reads the flat fields as per-block settings' do
-      settings = described_class.legacy(definitions_to_run: %w[12 13], extraction_job_id: 987,
-                                        non_enrichment_ids: [12])
+      settings = described_class.legacy(definition_ids: %w[12 13], extraction_job_id: 987, chain_ids: [12])
 
       expect(settings.run?(12)).to be true
       expect(settings.run?(13)).to be true
@@ -45,14 +54,13 @@ RSpec.describe RunSettings do
     # extraction_job_id was only ever consumed for non-enrichment blocks
     # (HarvestWorker), so an enrichment must not inherit it.
     it 'leaves enrichment blocks on a fresh input' do
-      settings = described_class.legacy(definitions_to_run: %w[12 13], extraction_job_id: 987,
-                                        non_enrichment_ids: [12])
+      settings = described_class.legacy(definition_ids: %w[12 13], extraction_job_id: 987, chain_ids: [12])
 
       expect(settings.input_for(13)).to be_fresh
     end
 
     it 'is empty when nothing was requested' do
-      expect(described_class.legacy(definitions_to_run: [''])).to be_empty
+      expect(described_class.legacy(definition_ids: [''])).to be_empty
     end
   end
 

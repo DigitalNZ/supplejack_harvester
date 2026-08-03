@@ -95,6 +95,23 @@ RSpec.describe HarvestWorker, type: :job do
           HarvestWorker.new.perform(harvest_job.id)
         end
       end
+
+      context 'when the block has its own page limit' do
+        let!(:pipeline_job) do
+          create(:pipeline_job, pipeline:, destination:,
+                                block_settings: {
+                                  harvest_definition.id.to_s => {
+                                    'run' => true, 'input' => "extraction_job:#{full_job.id}", 'pages' => 3
+                                  }
+                                })
+        end
+
+        it "queues a number of TransformationWorkers based on that block's limit" do
+          expect(TransformationWorker).to receive(:perform_in).exactly(3).times.and_call_original
+
+          HarvestWorker.new.perform(harvest_job.id)
+        end
+      end
     end
   end
 end

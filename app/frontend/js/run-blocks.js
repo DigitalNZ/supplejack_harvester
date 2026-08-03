@@ -4,7 +4,8 @@
 //   - a run cannot leave a hole in the chain: it starts at some block and continues
 //     to the end. Unticking a block therefore unticks everything before it, and
 //     ticking one ticks everything after it
-//   - a block that is not running has no input to choose, so its select is disabled
+//   - a block that is not running has no input or page limit to choose, so both of
+//     its fields are disabled
 //   - a block whose preceding block is not running cannot take "output of previous
 //     block": it needs data prepared by an earlier run, so that option is removed
 //     from the choices and a pre-processed-data option is selected instead
@@ -18,6 +19,8 @@ const rowsIn = (root) =>
 const checkboxIn = (row) => row.querySelector('[data-js="run-block-checkbox"]');
 
 const inputIn = (row) => row.querySelector('[data-js="run-block-input"]');
+
+const pagesIn = (row) => row.querySelector('[data-js="run-block-pages"]');
 
 const firstPreprocessOption = (select) =>
   Array.from(select.options).find((option) =>
@@ -52,10 +55,12 @@ const setFeedback = (select, message) => {
 const refreshRow = (row, previousRow) => {
   const checkbox = checkboxIn(row);
   const select = inputIn(row);
+  const pages = pagesIn(row);
 
   if (!checkbox || !select) return;
 
   select.disabled = checkbox.disabled || !checkbox.checked;
+  if (pages) pages.disabled = select.disabled;
 
   const freshOption = Array.from(select.options).find(
     (option) => option.value === FRESH

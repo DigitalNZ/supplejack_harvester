@@ -29,17 +29,22 @@ module RunConfiguration
   # memo here would silently answer questions about the previous state.
   def run_settings
     settings = RunSettings.new(block_settings)
-    return settings unless settings.empty?
-
-    RunSettings.legacy(
-      definitions_to_run: harvest_definitions_to_run,
-      extraction_job_id: legacy_extraction_job_id,
-      non_enrichment_ids: pipeline&.ordered_blocks&.ids || []
-    )
+    settings.empty? ? RunSettings.legacy(**legacy_fields) : settings
   end
 
   def input_for(definition)
     run_settings.input_for(definition.id)
+  end
+
+  # How many pages of this block to process, or nil for every available page. Read by
+  # Extraction::Execution when extracting and by HarvestWorker when transforming an
+  # extraction that already exists.
+  #
+  # Falls back to the job-wide page_type/pages fields, which applied to every block
+  # regardless of what was being run, so a caller still posting those (the API and
+  # automation paths) keeps the limit it asked for.
+  def pages_for(definition)
+    run_settings.pages_for(definition.id) || legacy_pages
   end
 
   # The ExtractionJob whose documents this block should transform instead of
@@ -56,9 +61,19 @@ module RunConfiguration
 
   private
 
-  # Schedule has no extraction_job_id column; PipelineJob does.
-  def legacy_extraction_job_id
-    respond_to?(:extraction_job_id) ? extraction_job_id : nil
+  # The flat fields a caller may have posted instead of block_settings. Schedule has
+  # no extraction_job_id column, hence the try.
+  def legacy_fields
+    {
+      definition_ids: harvest_definitions_to_run,
+      chain_ids: pipeline&.ordered_blocks&.ids || [],
+      extraction_job_id: try(:extraction_job_id)
+    }
+  end
+
+  # Schedule has no page_type or pages columns.
+  def legacy_pages
+    pages if try(:set_number?)
   end
 
   def derive_harvest_definitions_to_run
