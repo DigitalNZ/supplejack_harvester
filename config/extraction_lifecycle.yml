@@ -1,8 +1,14 @@
-# Retention numbers for the nightly extraction cleanup.
+# Retention numbers for the nightly cleanups. Two workers read this file,
+# so flipping dry_run arms or disarms both:
 #
-# An extraction is purged when it is older than min_age_months AND either it is
-# no longer among the newest keep_latest extractions for its extraction
-# definition, or it is older than max_age_months.
+# ExtractionCleanupWorker uses every key. An extraction is purged when it is
+# older than min_age_months AND either it is no longer among the newest
+# keep_latest extractions for its extraction definition, or it is older than
+# max_age_months.
+#
+# PreProcessCleanupWorker uses only dry_run, min_age_months and
+# max_age_months. batch_limit, keep_latest and
+# excluded_extraction_definition_ids have no effect on the preprocess sweep.
 #
 # Safety exclusions (unfinished jobs, jobs referenced by running work,
 # extractions a transformation definition previews from) live in code and are
