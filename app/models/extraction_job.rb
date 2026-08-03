@@ -111,42 +111,46 @@ class ExtractionJob < ApplicationRecord
       .limit(policy.batch_limit)
   end
 
-  # The ranked, status-and-exclusion-filtered set purge_candidates chooses
-  # from, before the keep_latest/max_age retention clause is applied.
-  def self.eligible_for_purge(policy)
-    from(ranked_by_recency, :extraction_jobs)
-      .where(status: FINISHED_STATUSES)
-      .where.not(extraction_definition_id: policy.excluded_extraction_definition_ids)
-      .where.not(id: busy_ids)
-      .where(created_at: ...policy.min_age_cutoff)
-  end
+  class << self
+    private
 
-  # Numbers each definition's surviving extractions, 1 being the newest.
-  def self.ranked_by_recency
-    select(
-      'extraction_jobs.*',
-      'ROW_NUMBER() OVER (PARTITION BY extraction_definition_id ' \
-      'ORDER BY created_at DESC, id DESC) AS extraction_index'
-    ).where(purged_at: nil)
-  end
+    # The ranked, status-and-exclusion-filtered set purge_candidates chooses
+    # from, before the keep_latest/max_age retention clause is applied.
+    def eligible_for_purge(policy)
+      from(ranked_by_recency, :extraction_jobs)
+        .where(status: Job::FINISHED_STATUSES)
+        .where.not(extraction_definition_id: policy.excluded_extraction_definition_ids)
+        .where.not(id: busy_ids)
+        .where(created_at: ...policy.min_age_cutoff)
+    end
 
-  # Dan's rule: past the newest N for its definition, or simply too old. A job a
-  # transformation definition previews from is spared the first clause but not
-  # the second.
-  def self.beyond_retention
-    '(extraction_index > :keep AND extraction_jobs.id NOT IN (:pinned)) OR created_at < :max_age'
-  end
+    # Numbers each definition's surviving extractions, 1 being the newest.
+    def ranked_by_recency
+      select(
+        'extraction_jobs.*',
+        'ROW_NUMBER() OVER (PARTITION BY extraction_definition_id ' \
+        'ORDER BY created_at DESC, id DESC) AS extraction_index'
+      ).where(purged_at: nil)
+    end
 
-  # Extraction jobs a transformation definition renders its preview from.
-  def self.pinned_ids
-    TransformationDefinition.distinct.pluck(:extraction_job_id).compact
-  end
+    # Dan's rule: past the newest N for its definition, or simply too old. A job a
+    # transformation definition previews from is spared the first clause but not
+    # the second.
+    def beyond_retention
+      '(extraction_index > :keep AND extraction_jobs.id NOT IN (:pinned)) OR created_at < :max_age'
+    end
 
-  # Extraction jobs that work still in flight is reading. A pipeline job's
-  # status stays NULL until PipelineWorker picks it up (the column has no
-  # default), so NULL counts as busy.
-  def self.busy_ids
-    (HarvestJob.where(status: UNFINISHED_STATUSES).pluck(:extraction_job_id) +
-      PipelineJob.where(status: UNFINISHED_STATUSES + [nil]).pluck(:extraction_job_id)).compact
+    # Extraction jobs a transformation definition renders its preview from.
+    def pinned_ids
+      TransformationDefinition.distinct.pluck(:extraction_job_id).compact
+    end
+
+    # Extraction jobs that work still in flight is reading. A pipeline job's
+    # status stays NULL until PipelineWorker picks it up (the column has no
+    # default), so NULL counts as busy.
+    def busy_ids
+      (HarvestJob.where(status: UNFINISHED_STATUSES).pluck(:extraction_job_id) +
+        PipelineJob.where(status: UNFINISHED_STATUSES + [nil]).pluck(:extraction_job_id)).compact
+    end
   end
 end
