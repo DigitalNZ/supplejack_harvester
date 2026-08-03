@@ -36,7 +36,8 @@ RSpec.describe 'ExtractionJobs' do
 
   describe '#show when the extracted data has been purged' do
     before do
-      subject.update(status: 'completed', purged_at: Time.zone.parse('2026-06-01 09:00'))
+      subject.update(status: 'completed', purged_at: Time.zone.parse('2026-06-01 09:00'),
+                     start_time: Time.zone.parse('2026-05-01 09:00'), end_time: Time.zone.parse('2026-05-01 10:00'))
       get pipeline_harvest_definition_extraction_definition_extraction_job_path(pipeline, harvest_definition,
                                                                                 extraction_definition, subject)
     end
@@ -49,8 +50,25 @@ RSpec.describe 'ExtractionJobs' do
       expect(response.body).to include('Extracted data was removed')
     end
 
+    it 'still shows how long the job ran' do
+      expect(response.body).to include('Duration: 1 hour')
+    end
+
     it 'does not render the result viewer' do
       expect(response.body).not_to include('extraction-result-viewer')
+    end
+  end
+
+  describe '#show when purged extracted data had errored' do
+    before do
+      subject.update(status: 'errored', error_message: 'Connection refused by host',
+                     purged_at: Time.zone.parse('2026-06-01 09:00'))
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(pipeline, harvest_definition,
+                                                                                extraction_definition, subject)
+    end
+
+    it 'still shows why the job failed' do
+      expect(response.body).to include('Connection refused by host')
     end
   end
 
