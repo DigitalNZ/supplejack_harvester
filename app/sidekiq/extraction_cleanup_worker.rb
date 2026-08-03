@@ -2,8 +2,6 @@
 
 # Nightly removal of extracted data that has aged out of the retention policy.
 # Folders are deleted; the job rows stay so run history survives.
-#
-# See docs/superpowers/specs/2026-07-31-extracted-data-lifecycle-policy-design.md
 class ExtractionCleanupWorker
   include Sidekiq::Job
 

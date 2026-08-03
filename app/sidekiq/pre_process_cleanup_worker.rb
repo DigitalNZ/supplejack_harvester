@@ -4,8 +4,6 @@
 # retention policy. Unlike extraction folders (see ExtractionCleanupWorker),
 # preprocess output has no owning database record, so cleanup here is keyed
 # off the pipeline job that wrote each folder rather than a purge timestamp.
-#
-# See docs/superpowers/specs/2026-07-31-extracted-data-lifecycle-policy-design.md
 class PreProcessCleanupWorker
   include Sidekiq::Job
 
