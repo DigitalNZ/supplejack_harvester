@@ -339,6 +339,14 @@ RSpec.describe ExtractionJob do
       expect(described_class.purge_candidates(policy)).not_to include(job)
     end
 
+    it 'excludes jobs a created-but-not-started pipeline job is using' do
+      job = job_created(7.months.ago)
+      # A pipeline job has no status until PipelineWorker picks it up.
+      create(:pipeline_job, extraction_job: job)
+
+      expect(described_class.purge_candidates(policy)).not_to include(job)
+    end
+
     it 'excludes extraction definitions on the escape-hatch list' do
       job = job_created(7.months.ago)
       excluded_policy = ExtractionLifecyclePolicy.new(

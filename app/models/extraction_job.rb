@@ -143,9 +143,11 @@ class ExtractionJob < ApplicationRecord
     TransformationDefinition.distinct.pluck(:extraction_job_id).compact
   end
 
-  # Extraction jobs that work still in flight is reading.
+  # Extraction jobs that work still in flight is reading. A pipeline job's
+  # status stays NULL until PipelineWorker picks it up (the column has no
+  # default), so NULL counts as busy.
   def self.busy_ids
     (HarvestJob.where(status: UNFINISHED_STATUSES).pluck(:extraction_job_id) +
-      PipelineJob.where(status: UNFINISHED_STATUSES).pluck(:extraction_job_id)).compact
+      PipelineJob.where(status: UNFINISHED_STATUSES + [nil]).pluck(:extraction_job_id)).compact
   end
 end
