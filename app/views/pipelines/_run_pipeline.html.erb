@@ -25,23 +25,9 @@
                      settings: RunSettings.default_for(@pipeline) %>
         </div>
 
-        <div class="col-5">
-          <%= form.label :page_type, class: 'form-label' do %>
-            Pages to transform
-          <% end %>
-        </div>
-
-        <div id='js-pipeline-page-type' class='col-7'>
-          <%= form.select :page_type, options_for_select(
-                PipelineJob.page_types.map do |key, _value|
-                  [key.humanize, key]
-                end
-              ), {}, id: 'js-pipeline-page-type-select', class: 'form-select' %>
-        </div>
-
-        <div id='js-pipeline-pages' class='col-3 d-none'>
-          <%= form.number_field :pages, class: 'form-control' %>
-        </div>
+        <%# "Pages to transform" is per block now - see the Pages column above. The
+            job-wide page_type/pages columns remain for the API and automation paths,
+            which still post them. %>
 
         <div class="col-5">
           <%= form.label :destination, class: 'form-label' do %>

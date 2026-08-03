@@ -17,9 +17,7 @@ class RunBlockRow
   end
 
   def label
-    return source_id if enrichment?
-
-    "#{position + 1}. #{source_id}"
+    source_id
   end
 
   def kind_label
@@ -28,6 +26,11 @@ class RunBlockRow
 
   def run?
     settings.run?(id)
+  end
+
+  # nil renders an empty field, which reads as "all of them" next to the placeholder.
+  def pages
+    settings.pages_for(id)
   end
 
   def field_name(attribute)

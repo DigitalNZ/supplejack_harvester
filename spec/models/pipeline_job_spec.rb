@@ -39,8 +39,8 @@ RSpec.describe PipelineJob do
       build(:pipeline_job, pipeline:, destination:, block_settings: settings)
     end
 
-    def runs(definition, input: 'fresh')
-      { definition.id.to_s => { 'run' => true, 'input' => input } }
+    def runs(definition, input: 'fresh', pages: nil)
+      { definition.id.to_s => { 'run' => true, 'input' => input, 'pages' => pages } }
     end
 
     def skips(definition)
@@ -49,10 +49,12 @@ RSpec.describe PipelineJob do
 
     describe 'harvest_definitions_to_run' do
       it 'is derived from the block settings so existing readers keep working' do
-        job = job_with(runs(pre_zero).merge(runs(pre_one)).merge(skips(harvest)))
+        job = job_with(skips(pre_zero)
+                         .merge(runs(pre_one, input: 'extraction_job:987'))
+                         .merge(runs(harvest)))
         job.save!
 
-        expect(job.harvest_definitions_to_run).to eq [pre_zero.id.to_s, pre_one.id.to_s]
+        expect(job.harvest_definitions_to_run).to eq [pre_one.id.to_s, harvest.id.to_s]
       end
 
       it 'is left alone when a caller posts the flat fields instead' do
@@ -67,43 +69,117 @@ RSpec.describe PipelineJob do
 
     describe 'validation of the chain inputs' do
       it 'rejects a block whose preceding block is not running and has no input' do
-        job = job_with(skips(pre_zero).merge(runs(pre_one)))
+        job = job_with(skips(pre_zero).merge(runs(pre_one)).merge(runs(harvest)))
 
         expect(job).not_to be_valid
         expect(job.errors[:block_settings].join).to include 'needs an input'
       end
 
       it 'rejects a nominated run that has no pre-processed data' do
-        job = job_with(skips(pre_zero).merge(runs(pre_one, input: 'preprocess_output:999')))
+        job = job_with(skips(pre_zero)
+                         .merge(runs(pre_one, input: 'preprocess_output:999'))
+                         .merge(runs(harvest)))
 
         expect(job).not_to be_valid
         expect(job.errors[:block_settings].join).to include 'no pre-processed data'
       end
 
       it 'accepts an existing extraction instead' do
-        job = job_with(skips(pre_zero).merge(runs(pre_one, input: 'extraction_job:987')))
+        job = job_with(skips(pre_zero)
+                         .merge(runs(pre_one, input: 'extraction_job:987'))
+                         .merge(runs(harvest)))
 
         expect(job).to be_valid
       end
 
       it 'accepts the default input when the preceding block is running' do
-        expect(job_with(runs(pre_zero).merge(runs(pre_one)))).to be_valid
+        expect(job_with(runs(pre_zero).merge(runs(pre_one)).merge(runs(harvest)))).to be_valid
       end
 
       it 'accepts nominated data that exists' do
         source = create(:pipeline_job, pipeline:, destination:)
         allow(PreProcess::Output).to receive(:pipeline_job_ids_with_output).with(0).and_return([source.id])
 
-        job = job_with(skips(pre_zero).merge(runs(pre_one, input: "preprocess_output:#{source.id}")))
+        job = job_with(skips(pre_zero)
+                         .merge(runs(pre_one, input: "preprocess_output:#{source.id}"))
+                         .merge(runs(harvest)))
 
         expect(job).to be_valid
+      end
+    end
+
+    # A run starts somewhere and continues to the end: a block only exists to feed the
+    # one after it, so there is nothing coherent to do with a hole in the middle.
+    describe 'validation that the chain has no gaps' do
+      it 'rejects a run that skips a block in the middle' do
+        job = job_with(runs(pre_zero).merge(skips(pre_one)).merge(runs(harvest)))
+
+        expect(job).not_to be_valid
+        expect(job.errors[:block_settings].join).to include "#{pre_one.source_id} must run too"
+      end
+
+      it 'rejects a run that stops before the end of the chain' do
+        job = job_with(runs(pre_zero).merge(runs(pre_one)).merge(skips(harvest)))
+
+        expect(job).not_to be_valid
+        expect(job.errors[:block_settings].join).to include "#{harvest.source_id} must run too"
+      end
+
+      it 'accepts a run that skips only leading blocks' do
+        job = job_with(skips(pre_zero)
+                         .merge(runs(pre_one, input: 'extraction_job:987'))
+                         .merge(runs(harvest)))
+
+        expect(job).to be_valid
+      end
+
+      it 'accepts a run of nothing at all' do
+        expect(job_with(skips(pre_zero).merge(skips(pre_one)).merge(skips(harvest)))).to be_valid
+      end
+    end
+
+    describe '#pages_for' do
+      it 'is the limit set on that block' do
+        job = job_with(runs(pre_zero, pages: 5).merge(runs(pre_one)).merge(runs(harvest, pages: 2)))
+
+        expect(job.pages_for(pre_zero)).to eq 5
+        expect(job.pages_for(harvest)).to eq 2
+      end
+
+      it 'is nil for a block left on every available page' do
+        job = job_with(runs(pre_zero).merge(runs(pre_one)).merge(runs(harvest)))
+
+        expect(job.pages_for(pre_one)).to be_nil
+      end
+
+      it 'treats an empty or zero field as every available page' do
+        job = job_with(runs(pre_zero, pages: '').merge(runs(pre_one, pages: '0')).merge(runs(harvest)))
+
+        expect(job.pages_for(pre_zero)).to be_nil
+        expect(job.pages_for(pre_one)).to be_nil
+      end
+
+      # The API and automation paths still post a single page limit for the whole run.
+      it 'falls back to the job-wide limit for callers posting the flat fields' do
+        job = create(:pipeline_job, pipeline:, destination:, page_type: 'set_number', pages: 3,
+                                    harvest_definitions_to_run: [pre_zero.id.to_s])
+
+        expect(job.pages_for(pre_zero)).to eq 3
+        expect(job.pages_for(harvest)).to eq 3
+      end
+
+      it 'ignores the job-wide limit when it is for all available pages' do
+        job = create(:pipeline_job, pipeline:, destination:, page_type: 'all_available_pages', pages: 3,
+                                    harvest_definitions_to_run: [pre_zero.id.to_s])
+
+        expect(job.pages_for(pre_zero)).to be_nil
       end
     end
 
     describe '#preprocess_source_job_id' do
       it 'is the job itself when the block runs on its own chain output' do
         job = create(:pipeline_job, pipeline:, destination:,
-                                    block_settings: runs(pre_zero).merge(runs(pre_one)))
+                                    block_settings: runs(pre_zero).merge(runs(pre_one)).merge(runs(harvest)))
 
         expect(job.preprocess_source_job_id(pre_one)).to eq job.id
       end
@@ -114,7 +190,8 @@ RSpec.describe PipelineJob do
 
         job = create(:pipeline_job, pipeline:, destination:,
                                     block_settings: skips(pre_zero)
-                                      .merge(runs(pre_one, input: "preprocess_output:#{source.id}")))
+                                      .merge(runs(pre_one, input: "preprocess_output:#{source.id}"))
+                                      .merge(runs(harvest)))
 
         expect(job.preprocess_source_job_id(pre_one)).to eq source.id
       end
@@ -127,7 +204,8 @@ RSpec.describe PipelineJob do
 
         job = create(:pipeline_job, pipeline:, destination:,
                                     block_settings: skips(pre_zero)
-                                      .merge(runs(pre_one, input: 'preprocess_output:latest')))
+                                      .merge(runs(pre_one, input: 'preprocess_output:latest'))
+                                      .merge(runs(harvest)))
 
         expect(job.preprocess_source_job_id(pre_one)).to eq newer.id
       end
@@ -139,6 +217,7 @@ RSpec.describe PipelineJob do
       it 'is the nominated extraction job for that block only' do
         job = create(:pipeline_job, pipeline:, destination:,
                                     block_settings: runs(pre_zero)
+                                      .merge(runs(pre_one))
                                       .merge(runs(harvest, input: "extraction_job:#{extraction_job.id}")))
 
         expect(job.existing_extraction_job_for(harvest)).to eq extraction_job

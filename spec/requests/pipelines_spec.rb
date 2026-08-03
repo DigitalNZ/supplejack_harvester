@@ -92,10 +92,12 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include CGI.escapeHTML("pipeline_job[block_settings][#{preprocess.id}][run]")
       expect(response.body).to include CGI.escapeHTML("pipeline_job[block_settings][#{preprocess.id}][input]")
       expect(response.body).to include CGI.escapeHTML("pipeline_job[block_settings][#{harvest_definition.id}][input]")
+      expect(response.body).to include CGI.escapeHTML("pipeline_job[block_settings][#{preprocess.id}][pages]")
 
-      # The single job-wide "Transformation input" select is gone: reusing an existing
-      # extraction is now one of the per-block input choices.
+      # The job-wide "Transformation input" and "Pages to transform" controls are gone:
+      # both are per-block choices now.
       expect(response.body).not_to include 'Transformation input'
+      expect(response.body).not_to include 'Pages to transform'
     end
 
     it 'offers "Add Pre-processing" in the add-block dropdown before any blocks exist' do
