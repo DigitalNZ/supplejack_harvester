@@ -9,6 +9,7 @@ module Extraction
       @extraction_definition = extraction_job.extraction_definition
       @harvest_job = extraction_job.harvest_job
       @harvest_report = @harvest_job.harvest_report if @harvest_job.present?
+      @records_consumed = 0
     end
 
     def call
@@ -25,6 +26,7 @@ module Extraction
       @extraction_definition.page = page
       api_records = JSON.parse(api_document.body)['records']
       extract_and_save_enrichment_documents(api_records)
+      @records_consumed += api_records.size
     end
 
     def handle_enrichment_error(error)
@@ -84,9 +86,14 @@ module Extraction
     end
 
     def page_from_index(index)
-      # per_page is nil for non-paginated sources (e.g. a pre-processing block
-      # scraping HTML); page is 1 in that case, so the paging offset is 0.
-      per_page = @extraction_definition.per_page || 0
+      # Page numbers name the saved document files, so they must be unique
+      # across the whole job — a repeated page silently overwrites an earlier
+      # record. Sources without per_page (e.g. preprocess output spanning
+      # multiple documents) can't derive an offset from pagination, so they
+      # use a running count of records consumed instead.
+      per_page = @extraction_definition.per_page
+      return @records_consumed + index + 1 if per_page.nil?
+
       ((@extraction_definition.page - 1) * per_page) + (index + 1)
     end
   end
