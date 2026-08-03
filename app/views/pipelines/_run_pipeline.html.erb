@@ -21,9 +21,8 @@
               selection to restore here. %>
           <%= render 'pipelines/run_blocks',
                      pipeline: @pipeline,
-                     prefix: 'pipeline_job',
-                     settings: RunSettings.default_for(@pipeline),
-                     allow_latest: false %>
+                     subject: 'pipeline_job',
+                     settings: RunSettings.default_for(@pipeline) %>
         </div>
 
         <div class="col-5">

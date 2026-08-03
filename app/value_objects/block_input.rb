@@ -72,11 +72,4 @@ class BlockInput
   def to_s
     fresh? ? FRESH : "#{kind}:#{reference}"
   end
-
-  def ==(other)
-    other.is_a?(BlockInput) && to_s == other.to_s
-  end
-  alias eql? ==
-
-  delegate :hash, to: :to_s
 end
