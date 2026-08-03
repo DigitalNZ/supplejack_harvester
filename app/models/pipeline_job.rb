@@ -2,6 +2,7 @@
 
 class PipelineJob < ApplicationRecord
   include Job
+  include RunConfiguration
 
   serialize :harvest_definitions_to_run, type: Array, coder: YAML
 
@@ -47,7 +48,7 @@ class PipelineJob < ApplicationRecord
     reload
     return if cancelled?
 
-    next_definition = pipeline.next_block(completed_definition)
+    next_definition = next_block_to_run(completed_definition)
     return enqueue_enrichment_jobs(completed_definition.name) if next_definition.blank?
 
     job = create_next_block_job(next_definition)
@@ -68,6 +69,25 @@ class PipelineJob < ApplicationRecord
     end
   end
 
+  # The next block of the chain that this run is actually configured to run. Blocks
+  # the user unticked are stepped over: their data comes from whatever the following
+  # block's input nominates (see RunConfiguration#validate_chain_inputs).
+  def next_block_to_run(completed_definition)
+    pipeline.ordered_blocks
+            .where(position: (completed_definition.position + 1)..)
+            .find { |definition| should_run?(definition.id) }
+  end
+
+  # Which run's pre-processed output this block reads from. Its own, unless the user
+  # nominated an earlier run's data in the Run modal.
+  def preprocess_source_job_id(definition)
+    input = input_for(definition)
+    return id unless input.preprocess_output?
+    return input.pipeline_job_id unless input.latest?
+
+    latest_source_job_id(definition) || id
+  end
+
   def harvest_report
     harvest_reports.find_by(kind: 'harvest')
   end
@@ -77,6 +97,16 @@ class PipelineJob < ApplicationRecord
   end
 
   private
+
+  # For a schedule-driven run, 'latest' means the most recent *other* run of this
+  # pipeline that has output for the position this block consumes.
+  def latest_source_job_id(definition)
+    pipeline.pipeline_jobs
+            .where(id: PreProcess::Output.pipeline_job_ids_with_output(definition.position - 1))
+            .where.not(id:)
+            .order(created_at: :desc)
+            .pick(:id)
+  end
 
   # The transformation-completion gate can fire more than once for a single
   # block under concurrent workers. The unique index on

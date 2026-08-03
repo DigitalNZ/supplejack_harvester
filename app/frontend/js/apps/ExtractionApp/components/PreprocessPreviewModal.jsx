@@ -6,7 +6,10 @@ import { selectAppDetails } from "~/js/features/ExtractionApp/AppDetailsSlice";
 import Modal from "react-bootstrap/Modal";
 import PreviewPanel from "~/js/apps/ExtractionApp/components/PreviewPanel";
 
-import { previewRequest, selectRequestById } from "~/js/features/ExtractionApp/RequestsSlice";
+import {
+  previewRequest,
+  selectRequestById,
+} from "~/js/features/ExtractionApp/RequestsSlice";
 import {
   setLoading,
   selectUiRequestById,
@@ -20,7 +23,9 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
   const [currentRecord, setCurrentRecord] = useState(1);
   const [currentRunId, setCurrentRunId] = useState(null);
 
-  const { loading } = useSelector((state) => selectUiRequestById(state, requestId));
+  const { loading } = useSelector((state) =>
+    selectUiRequestById(state, requestId)
+  );
   const { preview, format } = useSelector((state) =>
     selectRequestById(state, requestId)
   );
@@ -90,7 +95,9 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
         <Modal.Title>Pre-processed data extraction preview</Modal.Title>
 
         <div className="float-end d-flex align-items-center">
-          <label className="me-2 mb-0" htmlFor="preprocess-preview-run">Preview Data:</label>
+          <label className="me-2 mb-0" htmlFor="preprocess-preview-run">
+            Preview Data:
+          </label>
           <select
             id="preprocess-preview-run"
             className="form-select me-2"
@@ -147,7 +154,10 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
                   handlePreviousRecordClick();
                 }}
               >
-                <i className="bi bi-arrow-left-short me-1" aria-hidden="true"></i>
+                <i
+                  className="bi bi-arrow-left-short me-1"
+                  aria-hidden="true"
+                ></i>
                 Previous record
               </button>
 
@@ -159,7 +169,10 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
                 }}
               >
                 Next record
-                <i className="bi bi-arrow-right-short me-1" aria-hidden="true"></i>
+                <i
+                  className="bi bi-arrow-right-short me-1"
+                  aria-hidden="true"
+                ></i>
               </button>
             </div>
 

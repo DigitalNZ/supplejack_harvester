@@ -2,6 +2,7 @@
 
 class Schedule < ApplicationRecord
   include CronUtilities
+  include RunConfiguration
 
   belongs_to :pipeline, optional: true
   belongs_to :automation_template, optional: true

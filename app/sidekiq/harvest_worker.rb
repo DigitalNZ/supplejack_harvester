@@ -9,11 +9,12 @@ class HarvestWorker < ApplicationWorker
                                            kind: @harvest_job.harvest_definition.kind,
                                            definition_name: @harvest_job.harvest_definition.name)
 
-    if @pipeline_job.extraction_job.nil? || @harvest_job.harvest_definition.enrichment?
-      create_extraction_job
-    else
-      create_transformation_jobs
-    end
+    # Reusing an existing extraction is a per-block choice now (the Run modal's
+    # "Input" column), so ask the run configuration about this block rather than
+    # applying the job-wide extraction_job to every non-enrichment block.
+    existing = @pipeline_job.existing_extraction_job_for(@harvest_job.harvest_definition)
+
+    existing.nil? ? create_extraction_job : create_transformation_jobs(existing)
   end
 
   def create_extraction_job
@@ -26,9 +27,7 @@ class HarvestWorker < ApplicationWorker
   end
 
   # rubocop:disable Metrics/AbcSize
-  # rubocop:disable Metrics/MethodLength
-  def create_transformation_jobs
-    extraction_job = @pipeline_job.extraction_job
+  def create_transformation_jobs(extraction_job)
     @harvest_job.update(extraction_job_id: extraction_job.id)
     @harvest_report.extraction_completed!
 
@@ -43,7 +42,6 @@ class HarvestWorker < ApplicationWorker
     end
   end
   # rubocop:enable Metrics/AbcSize
-  # rubocop:enable Metrics/MethodLength
 
   private
 

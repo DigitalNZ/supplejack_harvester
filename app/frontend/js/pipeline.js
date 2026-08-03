@@ -1,5 +1,3 @@
-import { each } from "lodash";
-
 const pipelinePageTypeSelect = document.getElementById(
   "js-pipeline-page-type-select"
 );
@@ -7,10 +5,11 @@ const pipelinePageTypeSelect = document.getElementById(
 if (pipelinePageTypeSelect) {
   const pipelinePageType = document.getElementById("js-pipeline-page-type");
   const pipelinePages = document.getElementById("js-pipeline-pages");
-  const pipelinePagesInput = document.getElementById("harvest_job_pages");
-  const pipelineHarvestCheckbox = document.getElementsByClassName(
-    "js-pipeline-harvest-checkbox"
-  )[0];
+  // The field is rendered by a form_with model: PipelineJob (see
+  // app/views/pipelines/_run_pipeline.html.erb), so its id is pipeline_job_pages.
+  // Nothing has ever been called harvest_job_pages, so this lookup returned null and
+  // both branches below threw before they could set the required attribute.
+  const pipelinePagesInput = document.getElementById("pipeline_job_pages");
 
   pipelinePageTypeSelect.addEventListener("change", (event) => {
     if (event.target.value == "all_available_pages") {
@@ -23,22 +22,4 @@ if (pipelinePageTypeSelect) {
       pipelinePagesInput.setAttribute("required", "true");
     }
   });
-
-  if (pipelineHarvestCheckbox) {
-    const jsTransformationInput = document.getElementsByClassName(
-      "js-transformation-input"
-    );
-
-    pipelineHarvestCheckbox.addEventListener("click", (event) => {
-      if (event.target.checked) {
-        each(jsTransformationInput, (input) => {
-          input.style.display = "block";
-        });
-      } else {
-        each(jsTransformationInput, (input) => {
-          input.style.display = "none";
-        });
-      }
-    });
-  }
 }

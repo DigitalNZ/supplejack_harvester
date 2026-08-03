@@ -23,6 +23,7 @@ class ScheduleWorker
     PipelineJob.create(
       pipeline_id: schedule.pipeline.id,
       harvest_definitions_to_run: schedule.harvest_definitions_to_run,
+      block_settings: schedule.block_settings,
       destination_id: schedule.destination.id,
       page_type: :all_available_pages,
       schedule_id: schedule.id, delete_previous_records: schedule.delete_previous_records,

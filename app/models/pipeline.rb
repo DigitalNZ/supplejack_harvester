@@ -48,14 +48,6 @@ class Pipeline < ApplicationRecord
     harvest_definitions.where.not(kind: :enrichment).order(:position, :id)
   end
 
-  def first_block
-    ordered_blocks.first
-  end
-
-  def next_block(definition)
-    ordered_blocks.where('position > ?', definition.position).first
-  end
-
   def ready_to_run?
     return false if harvest_definitions.empty?
 

@@ -1,0 +1,39 @@
+<%# One block's row: whether it runs, and what feeds it. Rendered for the chain
+    blocks and for the enrichments, which have no input to choose.
+
+    Locals:
+      row       - a RunBlockRow
+      row_class - border class positioning this row in the table %>
+
+<div class='row gx-2 align-items-center p-2 <%= row_class %>'
+     data-position='<%= row.position %>'
+     data-js='<%= 'run-block-row' unless row.enrichment? %>'>
+  <div class='col-5'>
+    <div class='form-check mb-0'>
+      <%= hidden_field_tag row.field_name(:run), '0', id: nil %>
+
+      <%= check_box_tag row.field_name(:run), '1', row.run?,
+                        class: 'form-check-input',
+                        data: { js: 'run-block-checkbox' },
+                        disabled: !row.ready_to_run?,
+                        id: row.field_id(:run) %>
+
+      <%= label_tag row.field_id(:run), class: 'form-check-label' do %>
+        <%= row.label %>
+        <span class='badge bg-light text-dark fw-normal'><%= row.kind_label %></span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class='col-7'>
+    <% if row.enrichment? %>
+      <span class='text-muted small'>Harvested records</span>
+    <% else %>
+      <%= select_tag row.field_name(:input), row.input_options,
+                     class: 'form-select form-select-sm',
+                     data: { js: 'run-block-input' },
+                     disabled: !row.ready_to_run? || !row.run?,
+                     id: row.field_id(:input) %>
+    <% end %>
+  </div>
+</div>
