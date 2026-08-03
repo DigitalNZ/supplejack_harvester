@@ -1,4 +1,11 @@
-# Loaded by sidekiq-cron on Sidekiq server startup.
+# PARKED: sidekiq-cron only auto-loads config/schedule.yml, so nothing here
+# runs while the file carries this name. The lifecycle policy is being
+# verified with manual console runs first (ExtractionCleanupWorker.new.perform).
+# To go live, rename this file back to config/schedule.yml — and first confirm
+# a Sidekiq process consumes the low_priority queue, or these jobs will
+# enqueue nightly and never run.
+#
+# When enabled, this is loaded by sidekiq-cron on Sidekiq server startup.
 #
 # Jobs here are tagged source: "schedule". The Schedule model creates its own
 # cron entries at runtime without a source, and sidekiq-cron only prunes

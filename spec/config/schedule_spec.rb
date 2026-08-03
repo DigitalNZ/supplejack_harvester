@@ -2,9 +2,13 @@
 
 require 'rails_helper'
 
-RSpec.describe 'config/schedule.yml' do
+# The schedule is parked as schedule.disabled.yml while the lifecycle policy
+# is verified by hand — sidekiq-cron only auto-loads config/schedule.yml.
+# These examples keep pinning the content that goes live when it is renamed
+# back.
+RSpec.describe 'config/schedule.disabled.yml' do
   subject(:schedule) do
-    YAML.safe_load(ERB.new(Rails.root.join('config/schedule.yml').read).result)
+    YAML.safe_load(ERB.new(Rails.root.join('config/schedule.disabled.yml').read).result)
   end
 
   it 'schedules the extraction cleanup nightly' do
