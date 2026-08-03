@@ -68,43 +68,12 @@ module RunConfiguration
     self.harvest_definitions_to_run = settings.definition_ids_to_run
   end
 
-  # A block at position > 0 normally eats the previous block's feed-forward output.
-  # If that previous block is not part of this run, the data has to come from
-  # somewhere the user nominated, or the run would extract from an empty folder and
-  # silently harvest nothing.
   def validate_chain_inputs
     settings = RunSettings.new(block_settings)
     return if pipeline.blank? || settings.empty?
 
-    blocks_needing_supplied_input(settings).each do |definition, preceding|
-      validate_supplied_input(settings.input_for(definition.id), definition, preceding)
+    ChainInputs.new(pipeline:, settings:).errors.each do |message|
+      errors.add(:block_settings, message)
     end
-  end
-
-  # Each block this run will run whose preceding block it will not, paired with that
-  # preceding block.
-  def blocks_needing_supplied_input(settings)
-    blocks = pipeline.ordered_blocks.to_a
-
-    blocks.each_with_index.filter_map do |definition, index|
-      next if index.zero? || !settings.run?(definition.id)
-
-      [definition, blocks[index - 1]] unless settings.run?(blocks[index - 1].id)
-    end
-  end
-
-  def validate_supplied_input(input, definition, preceding)
-    return if input.extraction_job?
-
-    unless input.preprocess_output?
-      return errors.add(:block_settings,
-                        "#{definition.source_id} needs an input because #{preceding.source_id} is not running")
-    end
-
-    # 'latest' is resolved when the run starts, so there is nothing to check now.
-    return if input.latest?
-    return if PreProcess::Output.pipeline_job_ids_with_output(preceding.position).include?(input.pipeline_job_id)
-
-    errors.add(:block_settings, "the run chosen for #{definition.source_id} has no pre-processed data")
   end
 end

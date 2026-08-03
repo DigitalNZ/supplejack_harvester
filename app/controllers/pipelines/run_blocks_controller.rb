@@ -11,7 +11,7 @@ module Pipelines
       schedule = Schedule.find_by(id: params[:schedule_id])
 
       render partial: 'pipelines/run_blocks',
-             locals: { pipeline:, prefix: 'schedule', allow_latest: true,
+             locals: { pipeline:, subject: 'schedule',
                        settings: schedule&.run_settings || RunSettings.default_for(pipeline) }
     end
   end

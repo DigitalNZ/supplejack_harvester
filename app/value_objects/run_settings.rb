@@ -19,7 +19,7 @@ class RunSettings
 
   # @param settings [Hash] the raw block_settings hash
   def initialize(settings = {})
-    @settings = normalize(settings)
+    normalize(settings)
   end
 
   # The old flat fields expressed as per-block settings. extraction_job_id was a
@@ -72,14 +72,17 @@ class RunSettings
   # Params arrive as strings ('1'/'0' for the checkbox, and an unvalidated input
   # string). Coercing here means the rest of the app - and anything reading the
   # column back out of YAML - only ever sees booleans and canonical input strings.
+  # nil.to_h is {}, which covers a record whose column has never been written.
   def normalize(settings)
-    (settings || {}).to_h.each_with_object({}) do |(definition_id, block), normalized|
-      block = block.to_h.with_indifferent_access
+    @settings = settings.to_h.to_h { |definition_id, block| [definition_id.to_s, normalized_block(block)] }
+  end
 
-      normalized[definition_id.to_s] = {
-        RUN => ActiveModel::Type::Boolean.new.cast(block[RUN]) || false,
-        INPUT => BlockInput.parse(block[INPUT]).to_s
-      }
-    end
+  def normalized_block(block)
+    values = block.to_h.with_indifferent_access
+
+    {
+      RUN => ActiveModel::Type::Boolean.new.cast(values[RUN]) || false,
+      INPUT => BlockInput.parse(values[INPUT]).to_s
+    }
   end
 end
