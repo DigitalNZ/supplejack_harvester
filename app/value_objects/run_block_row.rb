@@ -17,9 +17,7 @@ class RunBlockRow
   end
 
   def label
-    return source_id if enrichment?
-
-    "#{position + 1}. #{source_id}"
+    source_id
   end
 
   def kind_label
