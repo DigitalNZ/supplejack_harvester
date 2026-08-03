@@ -285,6 +285,14 @@ RSpec.describe ExtractionJob do
       expect(described_class.purge_candidates(policy)).not_to include(newest)
     end
 
+    it 'keeps the job ranked exactly at keep_latest' do
+      job_created(2.months.ago)
+      at_boundary = job_created(3.months.ago)
+      job_created(4.months.ago)
+
+      expect(described_class.purge_candidates(policy)).not_to include(at_boundary)
+    end
+
     it 'purges old jobs beyond the newest keep_latest' do
       job_created(2.months.ago)
       job_created(3.months.ago)
