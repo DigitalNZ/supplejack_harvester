@@ -89,6 +89,14 @@ RSpec.describe ExtractionJob do
 
       expect { subject.delete_folder }.not_to raise_error
     end
+
+    it 'deletes a folder holding a dotfile' do
+      File.write("#{subject.extraction_folder}/.DS_Store", 'written by macOS Finder')
+
+      subject.delete_folder
+
+      expect(File.exist?(subject.extraction_folder)).to be false
+    end
   end
 
   describe '#documents' do
@@ -218,6 +226,16 @@ RSpec.describe ExtractionJob do
 
       subject.purge!
 
+      expect(subject.reload.purged_at).to be_present
+    end
+
+    it 'purges a folder holding a dotfile' do
+      FileUtils.mkdir_p("#{subject.extraction_folder}/1")
+      File.write("#{subject.extraction_folder}/.DS_Store", 'written by macOS Finder')
+
+      subject.purge!
+
+      expect(Dir.exist?(subject.extraction_folder)).to be false
       expect(subject.reload.purged_at).to be_present
     end
 

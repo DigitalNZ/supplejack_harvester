@@ -43,14 +43,17 @@ class ExtractionJob < ApplicationRecord
     Dir.mkdir(extraction_folder)
   end
 
-  # Deletes a folder at the location of the extraction folder
+  # Deletes a folder at the location of the extraction folder.
   #
-  # @return [true, false] depending on success of the folder deletion
+  # Removes the folder itself rather than globbing its contents first: a glob
+  # skips dotfiles, so a stray .DS_Store used to leave the folder behind and
+  # Dir.rmdir raised Errno::ENOTEMPTY.
+  #
+  # @return Array the paths removed
   def delete_folder
     return unless Dir.exist?(extraction_folder)
 
-    FileUtils.rm_rf Dir.glob("#{extraction_folder}/*")
-    Dir.rmdir(extraction_folder)
+    FileUtils.rm_rf(extraction_folder)
   end
 
   # Converts the files stored in the extraction folder into pageable objects
