@@ -24,14 +24,11 @@ development:
 uat:
   <<: *default
   database: <%= ENV.fetch('MYSQL_DATABASE') { 'harvester_uat' } %>
-  sslca: <%= ENV.fetch('MYSQL_SSLCA') { nil } %>
 
 staging:
   <<: *default
   database: <%= ENV.fetch('MYSQL_DATABASE') { 'harvester_staging' } %>
-  sslca: <%= ENV.fetch('MYSQL_SSLCA') { nil } %>
 
 production:
   <<: *default
   database: <%= ENV.fetch('MYSQL_DATABASE') { 'harvester_production' } %>
-  sslca: <%= ENV.fetch('MYSQL_SSLCA') { nil } %>

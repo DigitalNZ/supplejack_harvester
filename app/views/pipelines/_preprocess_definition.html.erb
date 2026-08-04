@@ -1,0 +1,110 @@
+<%# A pre-processing block's extraction/transformation definitions are created with
+    kind: 'harvest' below, NOT kind: preprocess_definition.kind ('preprocess'). This is
+    deliberate, not an oversight:
+      - TransformationDefinition#kind only has harvest/enrichment values (no preprocess) -
+        passing 'preprocess' would raise ArgumentError on save, so 'harvest' is the only
+        valid choice that keeps validations active.
+      - Runtime input routing (which block reads the previous block's feed-forward output
+        vs. seeds its own extraction) keys off HarvestDefinition#position in
+        ExtractionWorker#iterate_previous? (position.zero? => seed, position.positive? =>
+        iterate-previous), not off ExtractionDefinition#kind or #preprocess?.
+      - Request PREVIEW is a separate concern: RequestsController#show routes purely on
+        extraction_definition.harvest? and never looks at position, so previewing a
+        position > 0 preprocess block's request currently always runs the seed path
+        instead of iterating a previous block's output. This is a known POC limitation of
+        the preview feature, not a bug in the harvest chain itself. %>
+<div class='card p-4'>
+  <%= render 'pipelines/definition_header',
+             definition: preprocess_definition,
+             label: 'Pre-processing block' %>
+
+  <div class='row'>
+    <div class='col-6'>
+      <% if preprocess_definition.extraction_definition.present? %>
+        <%= render 'pipelines/definition_extraction_card',
+                   pipeline: @pipeline, block_definition: preprocess_definition %>
+      <% else %>
+        <button
+          type="button"
+          class="harvest-card card card--create-cta d-flex h-100"
+          data-bs-toggle="modal"
+          data-bs-target="<%= "#add-preprocess-extraction-#{preprocess_definition.id}" %>">
+          <div class="card-body align-items-center d-flex justify-content-center">
+            <p class='card-text'>+ Add pre-processing extraction</p>
+          </div>
+          <i class="bi bi-arrow-right harvest-card__right-arrow"></i>
+        </button>
+      <% end %>
+    </div>
+
+    <div class='col-6'>
+      <% if preprocess_definition.transformation_definition.present? %>
+        <%= render 'pipelines/definition_transformation_card',
+                   pipeline: @pipeline, block_definition: preprocess_definition %>
+      <% else %>
+
+        <% disabled =
+             preprocess_definition.extraction_definition.blank? ||
+             preprocess_definition.extraction_definition.extraction_jobs&.none?(&:completed?) %>
+
+        <button
+          type="button"
+          class="<%= class_names(
+                       'card', 'mb-3', 'card--create-cta', 'd-flex', 'h-100',
+                       'card--create-cta-disabled': disabled
+                     ) %>"
+          <% if disabled %>
+            data-bs-toggle="tooltip" data-bs-placement="top"
+            data-bs-title="You need to extract some data before you can add a transformation"
+          <% else %>
+            data-bs-toggle="modal"
+            data-bs-target="<%= "#add-preprocess-transformation-#{preprocess_definition.id}" %>"
+          <% end %>>
+
+          <div class="card-body align-items-center d-flex justify-content-center">
+            <p class="card-text">+ Add pre-processing transformation</p>
+          </div>
+        </button>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<% if preprocess_definition.extraction_definition.blank? %>
+  <%= render 'pipelines/add_definition_modal',
+             block_definition: preprocess_definition,
+             definition_type: :extraction,
+             autocomplete_src: autocomplete_harvest_extraction_definitions,
+             modal_subheading:
+               'A pre-processing extraction is a set of rules that define how you collect records from a content source' %>
+
+  <%= render 'extraction_definitions/create_edit_harvest_modal',
+             id: "create-preprocess-extraction-definition-modal-#{preprocess_definition.id}",
+             harvest_definition: preprocess_definition,
+             modal_heading: 'Create extraction definition',
+             modal_subheading: 'Define the settings for your extraction definition' %>
+<% end %>
+
+<% if preprocess_definition.transformation_definition.blank? %>
+  <%= render 'pipelines/add_definition_modal',
+             block_definition: preprocess_definition,
+             definition_type: :transformation,
+             autocomplete_src: autocomplete_harvest_transformation_definitions,
+             modal_subheading:
+               'A pre-processing transformation is a set of rules that defines the shape you want your ' \
+               'pre-processed records to have' %>
+
+  <% preprocess_extraction_jobs =
+       preprocess_definition.extraction_definition&.extraction_jobs&.order(created_at: :desc) %>
+
+  <%= render 'transformation_definitions/create_edit_modal',
+             {
+               id: "create-preprocess-transformation-definition-modal-#{preprocess_definition.id}",
+               modal_heading: 'Create transformation definition',
+               harvest_definition: preprocess_definition,
+               modal_subheading: 'Define the settings for your transformation definition',
+               extraction_jobs: preprocess_extraction_jobs,
+               kind: 'harvest',
+               confirmation_button_text: 'Create pre-processing transformation'
+             } %>
+<% end %>

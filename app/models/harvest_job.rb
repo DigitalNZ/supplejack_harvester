@@ -33,6 +33,13 @@ class HarvestJob < ApplicationRecord
     DeletePreviousRecords::Execution.new(harvest_definition.source_id, name, pipeline_job.destination).call
   end
 
+  # Runs after this job's extraction completes. A preprocess block must not
+  # queue enrichments — the harvest it enriches has not run yet.
+  def trigger_following_processes
+    pipeline_job.enqueue_enrichment_jobs(name) unless harvest_definition.preprocess?
+    execute_delete_previous_records
+  end
+
   private
 
   # The order of arguments is important to sidekiq workers as they do not support keyword arguments

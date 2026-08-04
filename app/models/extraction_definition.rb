@@ -17,7 +17,7 @@ class ExtractionDefinition < ApplicationRecord
   has_many :parameters, through: :requests
   has_many :stop_conditions, dependent: :destroy
 
-  enum :kind, { harvest: 0, enrichment: 1 }
+  enum :kind, { harvest: 0, enrichment: 1, preprocess: 2 }
 
   after_create do
     if name.blank?
@@ -57,6 +57,14 @@ class ExtractionDefinition < ApplicationRecord
       id:,
       name:
     }
+  end
+
+  # The request that carries the parameters configured in the extraction editor.
+  # A harvest (and a preprocess block, which is stored as a harvest) puts them on
+  # the first request; an enrichment puts them on the last. The editor and the
+  # extraction executors must agree on this, so both read it from here.
+  def configured_request
+    harvest? ? requests.first : requests.last
   end
 
   def json?

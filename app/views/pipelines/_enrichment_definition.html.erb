@@ -1,100 +1,14 @@
 <div class='card p-4 definition-group--spacer'>
-  <div class='d-flex'>
-    <div class='me-auto'>
-
-      <%= render layout: 'shared/inline_editable_element', locals:
-        {
-          id: "harvest-definition-#{enrichment_definition.id}-source-id",
-          model: enrichment_definition,
-          attribute: :source_id,
-          url: pipeline_harvest_definition_path(@pipeline, enrichment_definition)
-        } do %>
-        <h4><%= enrichment_definition.source_id %> </h4>
-      <% end %>
-
-      <%= render layout: 'shared/inline_editable_element', locals:
-        {
-          id: "harvest-definition-#{enrichment_definition.id}-priority",
-          model: enrichment_definition,
-          attribute: :priority,
-          url: pipeline_harvest_definition_path(@pipeline, enrichment_definition)
-        } do %>
-        <%= enrichment_definition.priority %>
-      <% end %>
-
-      <br>
-    </div>
-
-    <div>
-      <button
-        type="button"
-        class="btn btn-outline-danger mb-4"
-        data-bs-toggle="modal"
-        data-bs-target="<%= "#delete-harvest-definition-#{enrichment_definition.id}" %>">
-        <i class="bi bi-trash" aria-hidden="true"></i> Delete Enrichment
-      </button>
-    </div>
-
-    <%= render layout: 'shared/delete_modal',
-               locals: { path: pipeline_harvest_definition_path(@pipeline, enrichment_definition),
-                         id: "delete-harvest-definition-#{enrichment_definition.id}",
-                         heading_text: 'Delete Enrichment' } do %>
-      <p>Are you sure you want to delete "<%= enrichment_definition.source_id %>"?</p>
-
-      <% if enrichment_definition.extraction_definition.present? %>
-        <p><%= definition_delete_text(enrichment_definition.extraction_definition, 'extraction') %></p>
-      <% end %>
-
-      <% if enrichment_definition.transformation_definition.present? %>
-        <p><%= definition_delete_text(enrichment_definition.transformation_definition, 'transformation') %></p>
-      <% end %>
-    <% end %>
-  </div>
+  <%= render 'pipelines/definition_header',
+             definition: enrichment_definition,
+             label: 'Enrichment',
+             show_priority: true %>
 
   <div class='row'>
     <div class='col-6'>
       <% if enrichment_definition.extraction_definition.present? %>
-
-      <%= render partial: 'pipelines/card',
-                 locals: {
-                   pipeline: @pipeline,
-                   block_definition: enrichment_definition,
-                   definition: enrichment_definition.extraction_definition,
-                   edit_path:
-           pipeline_harvest_definition_extraction_definition_path(
-             @pipeline,
-             enrichment_definition,
-             enrichment_definition.extraction_definition
-           ),
-                   edit_text: definition_edit_text(enrichment_definition.extraction_definition, 'extraction'),
-                   jobs_path:
-           pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
-             @pipeline,
-             enrichment_definition,
-             enrichment_definition.extraction_definition
-           ),
-                   run_sample_extraction_path:
-           pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
-             @pipeline,
-             enrichment_definition,
-             enrichment_definition.extraction_definition,
-             kind: :sample
-           ),
-                   run_full_extraction_path:
-           pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
-             @pipeline,
-             enrichment_definition,
-             enrichment_definition.extraction_definition,
-             kind: :full
-           ),
-                   delete_path:
-         pipeline_harvest_definition_extraction_definition_path(
-           @pipeline,
-           enrichment_definition,
-           enrichment_definition.extraction_definition
-         )
-                 } %>
-
+        <%= render 'pipelines/definition_extraction_card',
+                   pipeline: @pipeline, block_definition: enrichment_definition %>
       <% else %>
 
         <button
@@ -108,68 +22,19 @@
           <i class="bi bi-arrow-right harvest-card__right-arrow"></i>
         </button>
 
-        <%= render(
-              layout: 'shared/create_modal',
-              locals: {
-                modal_heading: 'Add enrichment extraction',
-                id: "add-enrichment-extraction-#{enrichment_definition.id}",
-                modal_subheading: 'An enrichment extraction is a set of rules that ' \
-                                  'define how you collect records from a content source'
-              }
-            ) do %>
-
-          <div class='d-grid mt-4'>
-            <input
-              id="js-auto-complete-enrichment-extraction-definition-<%= enrichment_definition.id %>"
-              class='js-auto-complete'
-              data-src="<%= autocomplete_enrichment_extraction_definitions %>"
-              data-path="<%= "/pipelines/#{@pipeline.id}/harvest_definitions/#{enrichment_definition.id}.json" %>"
-              data-field="extraction_definition_id"
-              data-placeholder='Start typing to use an existing definition..'
-              data-key='name'>
-
-            <div class='text-center mt-4 mb-4'>
-              or
-            </div>
-
-            <button
-              type="button"
-              class="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#create-enrichment-extraction-definition-modal-<%= enrichment_definition.id %>">
-              + Add a new extraction definition
-            </button>
-
-          </div>
-        <% end %>
+        <%= render 'pipelines/add_definition_modal',
+                   block_definition: enrichment_definition,
+                   definition_type: :extraction,
+                   autocomplete_src: autocomplete_enrichment_extraction_definitions,
+                   modal_subheading: 'An enrichment extraction is a set of rules that ' \
+                                     'define how you collect records from a content source' %>
       <% end %>
     </div>
 
     <div class='col-6'>
       <% if enrichment_definition.transformation_definition.present? %>
-
-      <%= render partial: 'pipelines/card',
-                 locals: {
-                   pipeline: @pipeline,
-                   block_definition: enrichment_definition,
-                   definition: enrichment_definition.transformation_definition,
-                   edit_path:
-           pipeline_harvest_definition_transformation_definition_path(
-             @pipeline,
-             enrichment_definition,
-             enrichment_definition.transformation_definition
-           ),
-                   edit_text: definition_edit_text(enrichment_definition.transformation_definition,
-                                                   'transformation'),
-                   jobs_path: '',
-                   delete_path:
-                   pipeline_harvest_definition_transformation_definition_path(
-                     @pipeline,
-                     enrichment_definition,
-                     enrichment_definition.transformation_definition
-                   )
-                 } %>
-
+        <%= render 'pipelines/definition_transformation_card',
+                   pipeline: @pipeline, block_definition: enrichment_definition %>
       <% else %>
 
         <% disabled =
@@ -194,40 +59,12 @@
           </div>
         </button>
 
-        <%= render(
-              layout: 'shared/create_modal',
-              locals: {
-                modal_heading: 'Add enrichment transformation',
-                id: "add-enrichment-transformation-#{enrichment_definition.id}",
-                modal_subheading: 'An enrichment transformation is a set of rules that defines ' \
-                                  'the shape you want your enriched fragments to have'
-              }
-            ) do %>
-          <div class='d-grid mt-4'>
-            <input
-              id="js-auto-complete-enrichment-transformation-definition-<%= enrichment_definition.id %>"
-              class='js-auto-complete'
-              data-src="<%= autocomplete_enrichment_transformation_definitions %>"
-              data-placeholder='Start typing to use an existing definition..'
-              data-path="<%= "/pipelines/#{@pipeline.id}/harvest_definitions/#{enrichment_definition.id}.json" %>"
-              data-field="transformation_definition_id"
-              data-key='name'>
-
-            <div class='text-center mt-4 mb-4'>
-              or
-            </div>
-
-            <% bs_target = "#create-enrichment-transformation-definition-modal-#{enrichment_definition.id}" %>
-
-            <button
-              type="button"
-              class="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="<%= bs_target %>">
-              + Add a new transformation definition
-            </button>
-          </div>
-        <% end %>
+        <%= render 'pipelines/add_definition_modal',
+                   block_definition: enrichment_definition,
+                   definition_type: :transformation,
+                   autocomplete_src: autocomplete_enrichment_transformation_definitions,
+                   modal_subheading: 'An enrichment transformation is a set of rules that defines ' \
+                                     'the shape you want your enriched fragments to have' %>
 
         <% unless disabled %>
           <% extraction_jobs = enrichment_definition
@@ -247,7 +84,6 @@
                        confirmation_button_text: 'Create enrichment transformation'
                      } %>
         <% end %>
-
       <% end %>
     </div>
   </div>

@@ -9,6 +9,7 @@ import {
 } from "~/js/features/ExtractionApp/RequestsSlice";
 import PreviewModal from "~/js/apps/ExtractionApp/components/PreviewModal";
 import EnrichmentPreviewModal from "~/js/apps/ExtractionApp/components/EnrichmentPreviewModal";
+import PreprocessPreviewModal from "~/js/apps/ExtractionApp/components/PreprocessPreviewModal";
 import RunSample from "~/js/apps/ExtractionApp/components/RunSample";
 
 const HeaderActions = () => {
@@ -19,12 +20,20 @@ const HeaderActions = () => {
   const initialRequestId = requestIds[0];
   const mainRequestId = requestIds[1];
 
+  const isPreprocessConsumer =
+    appDetails.extractionDefinition.kind == "harvest" &&
+    appDetails.harvestDefinition.position > 0;
+
   const [showModal, setShowModal] = useState(false);
   const handleClose = () => setShowModal(false);
   const handleShow = () => setShowModal(true);
 
   const handlePreviewClick = async () => {
     handleShow();
+
+    if (isPreprocessConsumer) {
+      return;
+    }
 
     dispatch(setLoading(initialRequestId));
     dispatch(setLoading(mainRequestId));
@@ -69,14 +78,23 @@ const HeaderActions = () => {
 
       {appDetails.extractionDefinition.split && <RunSample />}
 
-      {appDetails.extractionDefinition.kind == "harvest" && (
-        <PreviewModal
+      {isPreprocessConsumer && (
+        <PreprocessPreviewModal
           showModal={showModal}
           handleClose={handleClose}
-          initialRequestId={initialRequestId}
-          mainRequestId={mainRequestId}
+          requestId={initialRequestId}
         />
       )}
+
+      {!isPreprocessConsumer &&
+        appDetails.extractionDefinition.kind == "harvest" && (
+          <PreviewModal
+            showModal={showModal}
+            handleClose={handleClose}
+            initialRequestId={initialRequestId}
+            mainRequestId={mainRequestId}
+          />
+        )}
 
       {appDetails.extractionDefinition.kind == "enrichment" && (
         <EnrichmentPreviewModal

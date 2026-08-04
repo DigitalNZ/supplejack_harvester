@@ -15,6 +15,16 @@ RSpec.describe HarvestJob do
     end
   end
 
+  describe 'uniqueness per pipeline job and harvest definition' do
+    it 'refuses a second harvest job for the same pipeline job and harvest definition' do
+      create(:harvest_job, harvest_definition:, pipeline_job:)
+
+      expect do
+        create(:harvest_job, harvest_definition:, pipeline_job:)
+      end.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
+
   describe '#execute_delete_previous_records' do
     let(:pipeline) { create(:pipeline, :figshare) }
     let(:harvest_definition) { pipeline.harvest }
@@ -97,6 +107,24 @@ RSpec.describe HarvestJob do
         expect(DeletePreviousRecords::Execution).to receive(:new).exactly(0).times.and_call_original
 
         harvest_job.execute_delete_previous_records
+      end
+    end
+  end
+
+  describe '#trigger_following_processes' do
+    it 'enqueues the pipeline enrichment jobs for a harvest' do
+      expect(harvest_job.pipeline_job).to receive(:enqueue_enrichment_jobs).with(harvest_job.name)
+
+      harvest_job.trigger_following_processes
+    end
+
+    context 'when the job is for a preprocess block' do
+      let(:harvest_definition) { create(:harvest_definition, pipeline:, kind: :preprocess, position: 0) }
+
+      it 'does not enqueue enrichment jobs, because the harvest has not run yet' do
+        expect(harvest_job.pipeline_job).not_to receive(:enqueue_enrichment_jobs)
+
+        harvest_job.trigger_following_processes
       end
     end
   end

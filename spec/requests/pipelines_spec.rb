@@ -80,6 +80,86 @@ RSpec.describe 'Pipelines' do
       expect(response).to have_http_status :ok
       expect(response.body).to include pipeline.name
     end
+
+    it 'offers "Add Pre-processing" in the add-block dropdown before any blocks exist' do
+      empty_pipeline = create(:pipeline, name: 'Empty pipeline')
+
+      get pipeline_path(empty_pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include 'Add Pre-processing'
+    end
+
+    it 'still offers "Add Pre-processing" once the pipeline has blocks' do
+      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include 'Add Pre-processing'
+      # The add-preprocess modal's hidden position must append to the END of the existing
+      # preprocess chain (one block at position 0 exists, so the next one goes to 1).
+      expect(response.body).to match(/value="1"[^>]*name="harvest_definition\[position\]"/)
+    end
+
+    it 'offers "Add Harvest" when the pipeline has blocks but no harvest yet' do
+      preprocess_pipeline = create(:pipeline, name: 'Preprocess only')
+      create(:harvest_definition, pipeline: preprocess_pipeline, kind: :preprocess, position: 0,
+                                  source_id: 'pre-one')
+
+      get pipeline_path(preprocess_pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include 'Add Harvest'
+    end
+
+    it 'does not offer "Add Harvest" when the pipeline already has a harvest' do
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      # "Add Harvest" (capital H) is the dropdown entry's exact label; the harvest block's own
+      # "+ Add harvest extraction/transformation" CTAs and the "Add harvest" modal heading are
+      # lowercase-h, so this assertion targets only the dropdown entry.
+      expect(response.body).not_to include 'Add Harvest'
+    end
+
+    it 'renders preprocess blocks in position order, before the harvest' do
+      # Build the chain through the controller (the same path the UI takes), which appends the
+      # preprocess positions and keeps the harvest's position at the end of the chain - rather
+      # than hand-setting positions the UI could never produce.
+      harvest_definition.update!(source_id: 'harvest-block')
+      post pipeline_harvest_definitions_path(pipeline), params: {
+        harvest_definition: { pipeline_id: pipeline.id, source_id: 'pre-one', kind: 'preprocess', position: 0 }
+      }
+      post pipeline_harvest_definitions_path(pipeline), params: {
+        harvest_definition: { pipeline_id: pipeline.id, source_id: 'pre-two', kind: 'preprocess', position: 1 }
+      }
+
+      get pipeline_path(pipeline)
+
+      body = response.body
+      expect(body.index('pre-one')).to be < body.index('pre-two')
+      expect(body.index('pre-two')).to be < body.index('harvest-block')
+    end
+
+    it "points a pre-processing block's create-extraction-definition form at its own " \
+       'harvest_definition, not the pipeline harvest' do
+      preprocess = create(:harvest_definition, pipeline:, kind: :preprocess, position: 0,
+                                               source_id: 'pre-one', extraction_definition: nil)
+
+      get pipeline_path(pipeline)
+
+      expected_action = pipeline_harvest_definition_extraction_definitions_path(pipeline, preprocess)
+      wrong_action = pipeline_harvest_definition_extraction_definitions_path(pipeline, harvest_definition)
+
+      # Match the exact quoted form `action="..."` attribute (not a loose substring), since the
+      # harvest's own extraction/transformation *member* routes (edit/delete/jobs links, which DO
+      # already exist for `harvest_definition` on this page) share the same collection path as a
+      # prefix, e.g. ".../extraction_definitions/42" - a plain #include? on the bare path would
+      # give a false failure there.
+      expect(response.body).to include "action=\"#{CGI.escapeHTML(expected_action)}\""
+      expect(response.body).not_to include "action=\"#{CGI.escapeHTML(wrong_action)}\""
+    end
   end
 
   describe 'PATCH /update' do

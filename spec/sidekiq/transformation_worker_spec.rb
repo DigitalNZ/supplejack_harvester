@@ -287,8 +287,57 @@ RSpec.describe TransformationWorker do
           subject
           harvest_report.reload
           expect(harvest_report.transformation_end_time).to be_present
-        end 
+        end
       end
+    end
+
+    context "when the block is a preprocess block" do
+      subject { TransformationWorker.new.perform(harvest_job.id) }
+
+      before { harvest_definition.update!(kind: :preprocess, position: 0) }
+
+      after { FileUtils.rm_rf(PreProcess::Output.folder(pipeline_job.id, 0)) }
+
+      it "writes the valid transformed records to the feed-forward output" do
+        subject
+
+        documents = Extraction::Documents.new(PreProcess::Output.folder(pipeline_job.id, 0))
+        expect(documents.total_pages).to eq(1)
+        expect(JSON.parse(documents[1].body)['records'].size).to eq(8)
+      end
+
+      it "writes to the worker's own page number so the iterator can read sparse output" do
+        # Give the extraction a page 3 so this worker (one Sidekiq job per
+        # page) has something to transform at a page other than 1.
+        source = Dir.glob("#{extraction_job.extraction_folder}/1/*__000000001.json").first
+        FileUtils.cp(source, source.sub('000000001', '000000003'))
+
+        TransformationWorker.new.perform(harvest_job.id, 3)
+
+        folder = PreProcess::Output.folder(pipeline_job.id, 0)
+        expect(Dir.glob("#{folder}/**/*.json")).to eq(["#{folder}/1/preprocess__000000003.json"])
+
+        yielded = []
+        Extraction::PreProcessRecordIterator.new(folder).each do |document, page|
+          yielded << [page, JSON.parse(document.body)['records'].size]
+        end
+        expect(yielded).to eq([[1, 8]])
+      end
+
+      it "does not queue a LoadWorker" do
+        expect(LoadWorker).not_to receive(:perform_async_with_priority)
+        subject
+      end
+
+      it "does not queue a DeleteWorker" do
+        expect(DeleteWorker).not_to receive(:perform_async_with_priority)
+        subject
+      end
+
+      include_examples 'expects harvest report attribute', :records_transformed, 10
+      include_examples 'expects harvest report attribute', :records_rejected, 1
+      include_examples 'expects harvest report attribute', :load_workers_queued, 0
+      include_examples 'expects harvest report attribute', :delete_workers_queued, 0
     end
   end
 end

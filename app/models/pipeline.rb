@@ -35,6 +35,27 @@ class Pipeline < ApplicationRecord
     harvest_definitions.where(kind: 'enrichment')
   end
 
+  def preprocesses
+    harvest_definitions.where(kind: 'preprocess').order(:position)
+  end
+
+  # The processing chain: preprocess and harvest blocks in position order.
+  # Enrichment definitions are deliberately excluded - they are not part of the
+  # position-ordered chain and are enqueued separately after the harvest loads
+  # (see PipelineJob#enqueue_enrichment_jobs). The `id` tiebreaker keeps ordering
+  # deterministic when two blocks share a position (e.g. legacy position 0 data).
+  def ordered_blocks
+    harvest_definitions.where.not(kind: :enrichment).order(:position, :id)
+  end
+
+  def first_block
+    ordered_blocks.first
+  end
+
+  def next_block(definition)
+    ordered_blocks.where('position > ?', definition.position).first
+  end
+
   def ready_to_run?
     return false if harvest_definitions.empty?
 

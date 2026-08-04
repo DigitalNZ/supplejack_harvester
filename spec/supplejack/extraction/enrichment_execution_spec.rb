@@ -112,5 +112,59 @@ RSpec.describe Extraction::EnrichmentExecution do
         subject.call
       end
     end
+
+    context 'when the block iterates the previous block (position > 0)' do
+      let(:pipeline)           { create(:pipeline) }
+      let(:destination)        { create(:destination) }
+      let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
+      let(:definition)         { create(:harvest_definition, pipeline:, kind: :preprocess, position: 1) }
+      let(:harvest_job)        { create(:harvest_job, harvest_definition: definition, pipeline_job:) }
+      let(:extraction_def)     { create(:extraction_definition, :enrichment, destination:) }
+      let!(:request)           { create(:request, extraction_definition: extraction_def) }
+      let(:extraction_job)     { create(:extraction_job, extraction_definition: extraction_def, harvest_job:) }
+
+      before do
+        PreProcess::Output.new(pipeline_job.id, 0).write([{ 'url' => '/a' }])
+      end
+
+      after { FileUtils.rm_rf(PreProcess::Output.folder(pipeline_job.id, 0)) }
+
+      it 'iterates the previous block output rather than the API' do
+        expect(Extraction::SjApiEnrichmentIterator).not_to receive(:new)
+        expect_any_instance_of(Extraction::PreProcessRecordIterator).to receive(:each)
+
+        described_class.new(extraction_job).call
+      end
+    end
+
+    context 'when the previous block output spans multiple documents' do
+      let(:pipeline)           { create(:pipeline) }
+      let(:destination)        { create(:destination) }
+      let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
+      let(:definition)         { create(:harvest_definition, pipeline:, kind: :preprocess, position: 1) }
+      let(:harvest_job)        { create(:harvest_job, harvest_definition: definition, pipeline_job:) }
+      let(:extraction_def)     { create(:extraction_definition, :enrichment, destination:, per_page: nil) }
+      let!(:request)           { create(:request, extraction_definition: extraction_def) }
+      let(:extraction_job)     { create(:extraction_job, extraction_definition: extraction_def, harvest_job:) }
+
+      before do
+        output = PreProcess::Output.new(pipeline_job.id, 0)
+        output.write_page(1, [{ 'url' => '/a' }, { 'url' => '/b' }])
+        output.write_page(2, [{ 'url' => '/c' }, { 'url' => '/d' }, { 'url' => '/e' }])
+
+        stub_request(:get, extraction_def.base_url).to_return(status: 200, body: '{}')
+      end
+
+      after { FileUtils.rm_rf(PreProcess::Output.folder(pipeline_job.id, 0)) }
+
+      it 'saves every record under a unique page number across documents' do
+        described_class.new(extraction_job).call
+
+        extracted_files = Dir.glob("#{extraction_job.extraction_folder}/**/*.json")
+        pages = extracted_files.map { |file| File.basename(file, '.json').split('__').last.to_i }
+
+        expect(pages.sort).to eq [1, 2, 3, 4, 5]
+      end
+    end
   end
 end

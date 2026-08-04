@@ -12,6 +12,60 @@ RSpec.describe 'ExtractionDefinitions' do
     sign_in user
   end
 
+  describe '#show' do
+    context 'when the extraction definition belongs to a harvest' do
+      let!(:requests) { create_list(:request, 2, extraction_definition:) }
+
+      it 'renders the harvest settings modal' do
+        get pipeline_harvest_definition_extraction_definition_path(pipeline, harvest_definition,
+                                                                   extraction_definition)
+
+        expect(response.body).to include 'Paginated'
+        expect(response.body).not_to include 'Target Source ID'
+      end
+    end
+
+    context 'when the extraction definition belongs to a pre-processing block' do
+      let(:preprocess_extraction_definition) { create(:extraction_definition, pipeline:) }
+      let(:preprocess_definition) do
+        create(:harvest_definition, kind: :preprocess, pipeline:,
+                                    extraction_definition: preprocess_extraction_definition, source_id: 'pre-0')
+      end
+
+      let!(:requests) { create_list(:request, 2, extraction_definition: preprocess_extraction_definition) }
+
+      it 'renders the harvest settings modal' do
+        get pipeline_harvest_definition_extraction_definition_path(pipeline, preprocess_definition,
+                                                                   preprocess_extraction_definition)
+
+        expect(response.body).to include 'Paginated'
+        expect(response.body).not_to include 'Target Source ID'
+      end
+    end
+
+    context 'when the extraction definition belongs to an enrichment' do
+      let(:enrichment_extraction_definition) do
+        create(:extraction_definition, :enrichment, pipeline:, destination: create(:destination))
+      end
+      let(:enrichment_definition) do
+        create(:harvest_definition, kind: :enrichment, pipeline:,
+                                    extraction_definition: enrichment_extraction_definition)
+      end
+
+      let!(:requests) { create_list(:request, 2, extraction_definition: enrichment_extraction_definition) }
+
+      it 'renders the enrichment settings modal' do
+        get pipeline_harvest_definition_extraction_definition_path(pipeline, enrichment_definition,
+                                                                   enrichment_extraction_definition)
+
+        expect(response.body).to include 'Target Source ID'
+        expect(response.body).not_to include 'Paginated'
+        expect(response.body).to include 'Preview Data:'
+        expect(response.body).not_to include 'Preview harvested records from'
+      end
+    end
+  end
+
   describe '#create' do
     context 'with valid parameters' do
       let(:extraction_definition2) { build(:extraction_definition, pipeline:) }
@@ -64,6 +118,21 @@ RSpec.describe 'ExtractionDefinitions' do
         harvest_definition.reload
 
         expect(harvest_definition.extraction_definition).not_to be_nil
+      end
+    end
+
+    context 'when created under a pre-processing block' do
+      let!(:preprocess_definition) do
+        create(:harvest_definition, kind: :preprocess, pipeline:, extraction_definition: nil, source_id: 'pre-0')
+      end
+
+      it 'auto-names the definition after the pre-processing block, not its harvest kind' do
+        post pipeline_harvest_definition_extraction_definitions_path(pipeline, preprocess_definition), params: {
+          extraction_definition: build(:extraction_definition, pipeline:).attributes
+        }
+
+        definition = ExtractionDefinition.order(:id).last
+        expect(definition.name).to eq "#{definition.id}_pre-processing-extraction"
       end
     end
 

@@ -40,6 +40,20 @@ class PipelineJob < ApplicationRecord
     AutomationWorker.perform_async_with_priority(job_priority, current_step.automation_id, next_step.id)
   end
 
+  # Step the processing chain forward once a block has finished. Creates the
+  # next block's HarvestJob and enqueues it; when the chain is exhausted it falls
+  # through to the enrichment jobs (preserving the legacy end-of-harvest behaviour).
+  def advance_to_next_block(completed_definition)
+    reload
+    return if cancelled?
+
+    next_definition = pipeline.next_block(completed_definition)
+    return enqueue_enrichment_jobs(completed_definition.name) if next_definition.blank?
+
+    job = create_next_block_job(next_definition)
+    HarvestWorker.perform_async_with_priority(job_priority, job.id) if job.present?
+  end
+
   def enqueue_enrichment_jobs(job_id)
     return unless should_queue_enrichments?
 
@@ -63,6 +77,16 @@ class PipelineJob < ApplicationRecord
   end
 
   private
+
+  # The transformation-completion gate can fire more than once for a single
+  # block under concurrent workers. The unique index on
+  # (pipeline_job_id, harvest_definition_id) turns the losing caller's insert
+  # into RecordNotUnique instead of a duplicate job; it must enqueue nothing.
+  def create_next_block_job(next_definition)
+    HarvestJob.create!(harvest_definition: next_definition, pipeline_job: self)
+  rescue ActiveRecord::RecordNotUnique
+    nil
+  end
 
   def should_queue_enrichments?
     reload

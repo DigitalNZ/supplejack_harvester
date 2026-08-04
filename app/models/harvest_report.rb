@@ -25,7 +25,7 @@ class HarvestReport < ApplicationRecord
   delegate :extraction_definition, to: :harvest_job, allow_nil: true
   delegate :transformation_definition, to: :harvest_job, allow_nil: true
 
-  enum :kind, { harvest: 0, enrichment: 1 }
+  enum :kind, { harvest: 0, enrichment: 1, preprocess: 2 }
 
   METRICS = %w[
     pages_extracted records_transformed records_loaded records_rejected
