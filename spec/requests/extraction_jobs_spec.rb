@@ -32,6 +32,10 @@ RSpec.describe 'ExtractionJobs' do
       subject.reload
       expect(response.body).to include subject.updated_at.to_fs(:verbose)
     end
+
+    it 'labels the destructive button for what it removes: the job' do
+      expect(response.body).to include('Delete job')
+    end
   end
 
   describe '#show when the extracted data has been purged' do
