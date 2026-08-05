@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-# The numbers behind the nightly extraction cleanup, read from
-# config/retention.yml.
+# The numbers behind the nightly extraction cleanup, read from the `extraction`
+# section of config/retention.yml. The preprocess sweep has its own section and
+# its own policy - see PreProcessRetentionPolicy.
 #
 # Deliberately shaped like a future database-backed policy record: when
 # retention becomes editable in the UI, only .load needs to change.
@@ -10,7 +11,7 @@ class ExtractionRetentionPolicy
               :excluded_extraction_definition_ids
 
   def self.load
-    new(Rails.application.config_for(:retention).to_h)
+    new(Rails.application.config_for(:retention).fetch(:extraction).to_h)
   end
 
   def initialize(config)

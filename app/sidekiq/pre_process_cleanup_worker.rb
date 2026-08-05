@@ -10,7 +10,7 @@ class PreProcessCleanupWorker
   sidekiq_options retry: 0, queue: 'low_priority'
 
   def perform
-    @policy = ExtractionRetentionPolicy.load
+    @policy = PreProcessRetentionPolicy.load
     @examined = 0
     @swept = 0
 

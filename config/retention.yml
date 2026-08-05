@@ -1,22 +1,28 @@
-# Retention numbers for the nightly cleanups. Two workers read this file,
-# so flipping dry_run arms or disarms both:
+# Retention numbers for the nightly cleanups. Each worker reads its own section
+# and its own dry_run flag, so the two can be armed independently.
 #
-# ExtractionCleanupWorker uses every key. An extraction is purged when it is
+# ExtractionCleanupWorker reads `extraction`. An extraction is purged when it is
 # older than min_age_months AND either it is no longer among the newest
 # keep_latest extractions for its extraction definition, or it is older than
 # max_age_months.
 #
-# PreProcessCleanupWorker uses only dry_run, min_age_months and
-# max_age_months. batch_limit, keep_latest and
-# excluded_extraction_definition_ids have no effect on the preprocess sweep.
+# PreProcessCleanupWorker reads `preprocess`. A folder is swept when its pipeline
+# job has finished and is older than min_age_months, or when the run is older
+# than max_age_months whatever its status. There is no keep_latest here: every
+# folder is judged on its own age.
 #
 # Safety exclusions (unfinished jobs, jobs referenced by running work,
 # extractions a transformation definition previews from) live in code and are
 # deliberately not configurable here.
 shared:
-  dry_run: true
-  batch_limit: 200
-  min_age_months: 1
-  keep_latest: 24
-  max_age_months: 6
-  excluded_extraction_definition_ids: []
+  extraction:
+    dry_run: true
+    batch_limit: 200
+    min_age_months: 1
+    keep_latest: 24
+    max_age_months: 6
+    excluded_extraction_definition_ids: []
+  preprocess:
+    dry_run: true
+    min_age_months: 1
+    max_age_months: 6

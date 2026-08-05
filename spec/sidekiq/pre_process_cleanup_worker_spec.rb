@@ -6,14 +6,11 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
   let(:pipeline) { create(:pipeline) }
 
   let(:policy_attributes) do
-    {
-      dry_run: false, batch_limit: 100, min_age_months: 1,
-      keep_latest: 0, max_age_months: 6, excluded_extraction_definition_ids: []
-    }
+    { dry_run: false, min_age_months: 1, max_age_months: 6 }
   end
 
   before do
-    allow(ExtractionRetentionPolicy).to receive(:load).and_return(ExtractionRetentionPolicy.new(policy_attributes))
+    allow(PreProcessRetentionPolicy).to receive(:load).and_return(PreProcessRetentionPolicy.new(policy_attributes))
   end
 
   describe '#perform' do
