@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-# The schedule is parked as schedule.disabled.yml while the lifecycle policy
+# The schedule is parked as schedule.disabled.yml while the retention policy
 # is verified by hand — sidekiq-cron only auto-loads config/schedule.yml.
 # These examples keep pinning the content that goes live when it is renamed
 # back.

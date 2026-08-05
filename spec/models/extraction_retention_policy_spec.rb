@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe ExtractionLifecyclePolicy do
+RSpec.describe ExtractionRetentionPolicy do
   let(:config) do
     {
       dry_run: false,
@@ -17,7 +17,7 @@ RSpec.describe ExtractionLifecyclePolicy do
   subject(:policy) { described_class.new(config) }
 
   describe '.load' do
-    it 'reads the numbers from config/extraction_lifecycle.yml' do
+    it 'reads the numbers from config/retention.yml' do
       loaded = described_class.load
 
       expect(loaded.keep_latest).to eq 24

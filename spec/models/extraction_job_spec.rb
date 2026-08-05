@@ -251,7 +251,7 @@ RSpec.describe ExtractionJob do
 
   describe '.purge_candidates' do
     let(:policy) do
-      ExtractionLifecyclePolicy.new(
+      ExtractionRetentionPolicy.new(
         dry_run: false, batch_limit: 100, min_age_months: 1,
         keep_latest: 2, max_age_months: 6, excluded_extraction_definition_ids: []
       )
@@ -375,7 +375,7 @@ RSpec.describe ExtractionJob do
 
     it 'excludes extraction definitions on the escape-hatch list' do
       job = job_created(7.months.ago)
-      excluded_policy = ExtractionLifecyclePolicy.new(
+      excluded_policy = ExtractionRetentionPolicy.new(
         dry_run: false, batch_limit: 100, min_age_months: 1, keep_latest: 2,
         max_age_months: 6, excluded_extraction_definition_ids: [extraction_definition.id]
       )
@@ -410,7 +410,7 @@ RSpec.describe ExtractionJob do
     it 'caps the batch at batch_limit, oldest first' do
       job_created(5.months.ago)
       oldest = job_created(7.months.ago)
-      capped = ExtractionLifecyclePolicy.new(
+      capped = ExtractionRetentionPolicy.new(
         dry_run: false, batch_limit: 1, min_age_months: 1, keep_latest: 0,
         max_age_months: 6, excluded_extraction_definition_ids: []
       )

@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 # The numbers behind the nightly extraction cleanup, read from
-# config/extraction_lifecycle.yml.
+# config/retention.yml.
 #
 # Deliberately shaped like a future database-backed policy record: when
 # retention becomes editable in the UI, only .load needs to change.
-class ExtractionLifecyclePolicy
+class ExtractionRetentionPolicy
   attr_reader :batch_limit, :min_age_months, :keep_latest, :max_age_months,
               :excluded_extraction_definition_ids
 
   def self.load
-    new(Rails.application.config_for(:extraction_lifecycle).to_h)
+    new(Rails.application.config_for(:retention).to_h)
   end
 
   def initialize(config)

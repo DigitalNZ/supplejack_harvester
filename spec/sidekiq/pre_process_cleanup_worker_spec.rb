@@ -13,7 +13,7 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
   end
 
   before do
-    allow(ExtractionLifecyclePolicy).to receive(:load).and_return(ExtractionLifecyclePolicy.new(policy_attributes))
+    allow(ExtractionRetentionPolicy).to receive(:load).and_return(ExtractionRetentionPolicy.new(policy_attributes))
   end
 
   describe '#perform' do

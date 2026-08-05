@@ -1,5 +1,5 @@
 # PARKED: sidekiq-cron only auto-loads config/schedule.yml, so nothing here
-# runs while the file carries this name. The lifecycle policy is being
+# runs while the file carries this name. The retention policy is being
 # verified with manual console runs first (ExtractionCleanupWorker.new.perform).
 # To go live, rename this file back to config/schedule.yml — and first confirm
 # a Sidekiq process consumes the low_priority queue, or these jobs will

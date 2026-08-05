@@ -91,13 +91,13 @@ class ExtractionJob < ApplicationRecord
     update!(purged_at: Time.zone.now)
   end
 
-  # True once the extracted data has been removed from disk by the lifecycle
+  # True once the extracted data has been removed from disk by the retention
   # policy. The job row itself still exists.
   def purged?
     purged_at.present?
   end
 
-  # Extraction jobs whose data is old enough to delete under the lifecycle
+  # Extraction jobs whose data is old enough to delete under the retention
   # policy, oldest first.
   #
   # The ranking runs over every job that still has data, whatever its status:
