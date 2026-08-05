@@ -1,15 +1,48 @@
 # Retention numbers for the nightly cleanups. Each worker reads its own section
 # and its own dry_run flag, so the two can be armed independently.
 #
+# Both workers delete FILES ONLY. Database rows always survive, so run history,
+# status, duration and error messages are never lost. These are the two kinds of
+# folder they remove:
+#
+#   extractions/<env>/2026-08-05_12-19-09_-_3/            raw extracted pages,
+#     └── 1/1_pre-processing-extraction__-__000000001.json  one folder per
+#                                                           extraction job
+#
+#   extractions/<env>/preprocess/1/0/1/                   preprocess block
+#     └── preprocess__000000001.json                        output, one folder
+#                                                           per pipeline job
+#
 # ExtractionCleanupWorker reads `extraction`. An extraction is purged when it is
 # older than min_age_months AND either it is no longer among the newest
 # keep_latest extractions for its extraction definition, or it is older than
-# max_age_months.
+# max_age_months. It stamps purged_at on the job and the UI then shows a
+# "Data removed" badge.
+#
+#   With the numbers below:
+#     - 30 extractions for one definition, all 2 months old: the oldest 6 go,
+#       the newest 24 stay.
+#     - an extraction from 3 weeks ago: untouched. Nothing under
+#       min_age_months is ever deleted.
+#     - an extraction from 7 months ago: goes, even if a transformation
+#       definition previews from it. The max_age_months clause ignores that
+#       exclusion, so a preview holds data back but never forever.
+#     - 500 qualify at once: the oldest 200 go tonight (batch_limit), the rest
+#       over the following nights.
 #
 # PreProcessCleanupWorker reads `preprocess`. A folder is swept when its pipeline
 # job has finished and is older than min_age_months, or when the run is older
 # than max_age_months whatever its status. There is no keep_latest here: every
-# folder is judged on its own age.
+# folder is judged on its own age, and nothing is recorded in the database
+# because no row owns the folder.
+#
+#   With the numbers below:
+#     - output of a run that completed 2 months ago: swept.
+#     - output of a run still marked running after 2 months: kept. An
+#       unfinished run only clears at max_age_months, because the worker cannot
+#       tell a crashed run from one still writing.
+#     - a folder whose pipeline job row was deleted: swept once the folder has
+#       sat untouched for a day.
 #
 # Safety exclusions (unfinished jobs, jobs referenced by running work,
 # extractions a transformation definition previews from) live in code and are
