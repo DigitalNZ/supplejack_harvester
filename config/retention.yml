@@ -30,19 +30,23 @@
 #     - 500 qualify at once: the oldest 200 go tonight (batch_limit), the rest
 #       over the following nights.
 #
-# PreProcessCleanupWorker reads `preprocess`. A folder is swept when its pipeline
-# job has finished and is older than min_age_months, or when the run is older
-# than max_age_months whatever its status. There is no keep_latest here: every
-# folder is judged on its own age, and nothing is recorded in the database
-# because no row owns the folder.
+# PreProcessCleanupWorker reads `preprocess`. Each pipeline keeps its newest
+# keep_latest runs that still have output on disk; every older folder is
+# swept. Nothing is recorded in the database because no row owns the folder.
+# Two safety rules live in code, not here: an out-ranked run that is
+# unfinished and less than a day old is kept (it may still be writing), and
+# a folder whose pipeline job row is gone is only swept once it has sat
+# untouched for a day.
 #
 #   With the numbers below:
-#     - output of a run that completed 2 months ago: swept.
-#     - output of a run still marked running after 2 months: kept. An
-#       unfinished run only clears at max_age_months, because the worker cannot
-#       tell a crashed run from one still writing.
-#     - a folder whose pipeline job row was deleted: swept once the folder has
-#       sat untouched for a day.
+#     - a pipeline has 10 runs with output on disk: the oldest 6 folders go,
+#       the newest 4 stay.
+#     - a run from this morning already overtaken by 4 newer runs: kept
+#       tonight, swept tomorrow night.
+#     - a preprocess-only pipeline (its runs never reach a finished status):
+#       each run becomes sweepable a day after it starts, once overtaken.
+#     - a folder whose pipeline job row was deleted: swept once the folder
+#       has sat untouched for a day.
 #
 # Safety exclusions (unfinished jobs, jobs referenced by running work,
 # extractions a transformation definition previews from) live in code and are
@@ -58,5 +62,3 @@ shared:
   preprocess:
     dry_run: true
     keep_latest: 4
-    min_age_months: 1
-    max_age_months: 6

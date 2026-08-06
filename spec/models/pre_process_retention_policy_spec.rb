@@ -6,9 +6,7 @@ RSpec.describe PreProcessRetentionPolicy do
   let(:config) do
     {
       dry_run: false,
-      keep_latest: 4,
-      min_age_months: 1,
-      max_age_months: 6
+      keep_latest: 4
     }
   end
 
@@ -16,27 +14,18 @@ RSpec.describe PreProcessRetentionPolicy do
 
   describe '.load' do
     it 'reads the preprocess section of config/retention.yml' do
-      loaded = described_class.load
-
-      expect(loaded.keep_latest).to eq 4
-      expect(loaded.min_age_months).to eq 1
-      expect(loaded.max_age_months).to eq 6
+      expect(described_class.load.keep_latest).to eq 4
     end
 
     it 'ships with dry_run switched on' do
       expect(described_class.load.dry_run?).to be true
     end
-  end
 
-  describe '#min_age_cutoff' do
-    it 'is min_age_months before now' do
-      expect(policy.min_age_cutoff).to be_within(1.second).of(1.month.ago)
-    end
-  end
+    it 'has no age cutoffs - a leftover age key would change nothing here' do
+      loaded = described_class.load
 
-  describe '#max_age_cutoff' do
-    it 'is max_age_months before now' do
-      expect(policy.max_age_cutoff).to be_within(1.second).of(6.months.ago)
+      expect(loaded.respond_to?(:min_age_cutoff)).to be false
+      expect(loaded.respond_to?(:max_age_cutoff)).to be false
     end
   end
 
@@ -44,5 +33,9 @@ RSpec.describe PreProcessRetentionPolicy do
     it 'reflects the configured flag' do
       expect(policy.dry_run?).to be false
     end
+  end
+
+  it 'fails loudly when a key is missing' do
+    expect { described_class.new(dry_run: true) }.to raise_error(KeyError)
   end
 end

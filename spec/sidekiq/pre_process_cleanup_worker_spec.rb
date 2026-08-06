@@ -6,7 +6,7 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
   let(:pipeline) { create(:pipeline) }
 
   let(:policy_attributes) do
-    { dry_run: false, keep_latest: 2, min_age_months: 1, max_age_months: 6 }
+    { dry_run: false, keep_latest: 2 }
   end
 
   before do
