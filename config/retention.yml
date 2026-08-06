@@ -41,8 +41,8 @@
 #   With the numbers below:
 #     - a pipeline has 10 runs with output on disk: the oldest 6 folders go,
 #       the newest 4 stay.
-#     - a run from this morning already overtaken by 4 newer runs: kept
-#       tonight, swept tomorrow night.
+#     - a run from this morning, still unfinished and already overtaken by 4
+#       newer runs: kept tonight, swept tomorrow night.
 #     - a preprocess-only pipeline (its runs never reach a finished status):
 #       each run becomes sweepable a day after it starts, once overtaken.
 #     - a folder whose pipeline job row was deleted: swept once the folder
@@ -50,7 +50,8 @@
 #
 # Safety exclusions (unfinished jobs, jobs referenced by running work,
 # extractions a transformation definition previews from) live in code and are
-# deliberately not configurable here.
+# deliberately not configurable here. For preprocess, the unfinished-job
+# exclusion only holds for a day - see the writing window above.
 shared:
   extraction:
     dry_run: true
