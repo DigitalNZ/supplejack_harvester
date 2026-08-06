@@ -17,6 +17,10 @@ class PipelineJob < ApplicationRecord
 
   enum :page_type, { all_available_pages: 0, set_number: 1 }
 
+  # How long an unfinished run is protected from the preprocess sweep. A
+  # safety window, not a retention choice, so it lives in code, not config.
+  PREPROCESS_WRITING_WINDOW = 1.day
+
   with_options if: :set_number? do
     validates :pages, presence: true
   end
@@ -24,6 +28,16 @@ class PipelineJob < ApplicationRecord
   # Check if this job is part of an automation
   def from_automation?
     automation_step.present?
+  end
+
+  # Whether this run might still be writing preprocess output. Checks the
+  # status column directly, not #finished? -- that method is overridden to
+  # track whether every harvest report's load workers have completed, a
+  # different question. Status alone cannot be trusted either: nothing ever
+  # moves a crashed run to errored, and a preprocess-only pipeline never
+  # completes, so "unfinished" stops protecting a run once it is a day old.
+  def maybe_still_writing?
+    !status.in?(Job::FINISHED_STATUSES) && created_at > PREPROCESS_WRITING_WINDOW.ago
   end
 
   # Trigger the next step in the automation if this job is from an automation and has completed

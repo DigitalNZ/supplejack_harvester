@@ -87,4 +87,26 @@ RSpec.describe PipelineJob do
       end.not_to(change { pipeline_job.harvest_jobs.count })
     end
   end
+
+  describe '#maybe_still_writing?' do
+    let(:pipeline) { create(:pipeline) }
+
+    it 'is true for an unfinished run created within the last day' do
+      job = create(:pipeline_job, pipeline:, destination:, status: 'running', created_at: 2.hours.ago)
+
+      expect(job.maybe_still_writing?).to be true
+    end
+
+    it 'is false for an unfinished run older than a day' do
+      job = create(:pipeline_job, pipeline:, destination:, status: 'running', created_at: 25.hours.ago)
+
+      expect(job.maybe_still_writing?).to be false
+    end
+
+    it 'is false for a finished run, however recent' do
+      job = create(:pipeline_job, pipeline:, destination:, status: 'completed', created_at: 2.hours.ago)
+
+      expect(job.maybe_still_writing?).to be false
+    end
+  end
 end
