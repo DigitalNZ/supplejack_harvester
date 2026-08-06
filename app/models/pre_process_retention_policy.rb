@@ -7,7 +7,7 @@
 # object: the two cleanups answer different questions, and a separate dry_run
 # lets one be armed while the other stays disarmed.
 class PreProcessRetentionPolicy
-  attr_reader :min_age_months, :max_age_months
+  attr_reader :keep_latest, :min_age_months, :max_age_months
 
   def self.load
     new(Rails.application.config_for(:retention).fetch(:preprocess).to_h)
@@ -15,6 +15,7 @@ class PreProcessRetentionPolicy
 
   def initialize(config)
     @dry_run = config.fetch(:dry_run)
+    @keep_latest = config.fetch(:keep_latest)
     @min_age_months = config.fetch(:min_age_months)
     @max_age_months = config.fetch(:max_age_months)
   end

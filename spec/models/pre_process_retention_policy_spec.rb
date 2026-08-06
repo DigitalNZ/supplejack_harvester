@@ -6,6 +6,7 @@ RSpec.describe PreProcessRetentionPolicy do
   let(:config) do
     {
       dry_run: false,
+      keep_latest: 4,
       min_age_months: 1,
       max_age_months: 6
     }
@@ -17,16 +18,13 @@ RSpec.describe PreProcessRetentionPolicy do
     it 'reads the preprocess section of config/retention.yml' do
       loaded = described_class.load
 
+      expect(loaded.keep_latest).to eq 4
       expect(loaded.min_age_months).to eq 1
       expect(loaded.max_age_months).to eq 6
     end
 
     it 'ships with dry_run switched on' do
       expect(described_class.load.dry_run?).to be true
-    end
-
-    it 'is independent of the extraction section' do
-      expect(described_class.load.respond_to?(:keep_latest)).to be false
     end
   end
 
