@@ -6,7 +6,7 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
   let(:pipeline) { create(:pipeline) }
 
   let(:policy_attributes) do
-    { dry_run: false, keep_latest: 4, min_age_months: 1, max_age_months: 6 }
+    { dry_run: false, keep_latest: 2, min_age_months: 1, max_age_months: 6 }
   end
 
   before do
@@ -26,43 +26,61 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
       PreProcess::Output.job_folder(pipeline_job_id)
     end
 
-    it 'sweeps output belonging to an old finished pipeline job' do
-      pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
-      folder = preprocess_folder(pipeline_job.id)
-
-      described_class.new.perform
-
-      expect(Dir.exist?(folder)).to be false
+    def run_with_output(pipeline, created_at:, status: 'completed')
+      pipeline_job = create(:pipeline_job, pipeline:, status:, created_at:)
+      preprocess_folder(pipeline_job.id)
     end
 
-    it 'keeps output from a recent pipeline job' do
-      pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 2.days.ago)
-      folder = preprocess_folder(pipeline_job.id)
+    it 'keeps the newest keep_latest runs and sweeps the rest' do
+      oldest = run_with_output(pipeline, created_at: 5.days.ago)
+      middle = run_with_output(pipeline, created_at: 4.days.ago)
+      newest = run_with_output(pipeline, created_at: 3.days.ago)
 
       described_class.new.perform
 
-      expect(Dir.exist?(folder)).to be true
+      expect(Dir.exist?(oldest)).to be false
+      expect(Dir.exist?(middle)).to be true
+      expect(Dir.exist?(newest)).to be true
     end
 
-    it 'keeps output from an old pipeline job that is still running' do
-      pipeline_job = create(:pipeline_job, pipeline:, status: 'running', created_at: 3.months.ago)
-      folder = preprocess_folder(pipeline_job.id)
+    it 'ranks runs per pipeline, not globally' do
+      other_pipeline = create(:pipeline)
+      old_a = run_with_output(pipeline, created_at: 5.days.ago)
+      kept_a = run_with_output(pipeline, created_at: 4.days.ago)
+      kept_b = run_with_output(pipeline, created_at: 3.days.ago)
+      old_c = run_with_output(other_pipeline, created_at: 6.days.ago)
+      kept_c = run_with_output(other_pipeline, created_at: 2.days.ago)
+      kept_d = run_with_output(other_pipeline, created_at: 1.day.ago)
 
       described_class.new.perform
 
-      expect(Dir.exist?(folder)).to be true
+      expect(Dir.exist?(old_a)).to be false
+      expect(Dir.exist?(old_c)).to be false
+      [kept_a, kept_b, kept_c, kept_d].each do |folder|
+        expect(Dir.exist?(folder)).to be true
+      end
     end
 
-    it 'sweeps output from a non-terminal job once it clears max_age_cutoff' do
-      # Nothing in the app ever moves a PipelineJob to 'errored', so a crashed
-      # run stays 'running' forever. max_age_months (6, here) is the backstop
-      # that reclaims its output anyway once it's far too old to be real work.
-      pipeline_job = create(:pipeline_job, pipeline:, status: 'running', created_at: 7.months.ago)
-      folder = preprocess_folder(pipeline_job.id)
+    it 'keeps an out-ranked run that might still be writing' do
+      still_writing = run_with_output(pipeline, created_at: 2.hours.ago, status: 'running')
+      run_with_output(pipeline, created_at: 1.hour.ago)
+      run_with_output(pipeline, created_at: 30.minutes.ago)
 
       described_class.new.perform
 
-      expect(Dir.exist?(folder)).to be false
+      expect(Dir.exist?(still_writing)).to be true
+    end
+
+    it 'sweeps an out-ranked unfinished run once it is older than a day' do
+      # A crashed run stays "running" forever and a preprocess-only pipeline
+      # never completes; the one-day writing window lets keep-N reclaim both.
+      abandoned = run_with_output(pipeline, created_at: 3.days.ago, status: 'running')
+      run_with_output(pipeline, created_at: 2.days.ago)
+      run_with_output(pipeline, created_at: 1.day.ago)
+
+      described_class.new.perform
+
+      expect(Dir.exist?(abandoned)).to be false
     end
 
     it 'sweeps an orphan folder older than a day' do
@@ -94,8 +112,9 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
     end
 
     it 'reports how many folders it swept' do
-      pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
-      preprocess_folder(pipeline_job.id)
+      run_with_output(pipeline, created_at: 5.days.ago)
+      run_with_output(pipeline, created_at: 4.days.ago)
+      run_with_output(pipeline, created_at: 3.days.ago)
       allow(Rails.logger).to receive(:info)
 
       described_class.new.perform
@@ -108,17 +127,19 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
       let(:policy_attributes) { super().merge(dry_run: true) }
 
       it 'sweeps nothing' do
-        pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
-        folder = preprocess_folder(pipeline_job.id)
+        oldest = run_with_output(pipeline, created_at: 5.days.ago)
+        run_with_output(pipeline, created_at: 4.days.ago)
+        run_with_output(pipeline, created_at: 3.days.ago)
 
         described_class.new.perform
 
-        expect(Dir.exist?(folder)).to be true
+        expect(Dir.exist?(oldest)).to be true
       end
 
       it 'reports what it would sweep, not that anything was swept' do
-        pipeline_job = create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago)
-        preprocess_folder(pipeline_job.id)
+        run_with_output(pipeline, created_at: 5.days.ago)
+        run_with_output(pipeline, created_at: 4.days.ago)
+        run_with_output(pipeline, created_at: 3.days.ago)
         allow(Rails.logger).to receive(:info)
 
         described_class.new.perform
@@ -128,12 +149,13 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
     end
 
     context 'when a folder cannot be removed' do
-      let(:pipeline_job) { create(:pipeline_job, pipeline:, status: 'completed', created_at: 3.months.ago) }
-      let!(:folder) { preprocess_folder(pipeline_job.id) }
+      let!(:folder) { run_with_output(pipeline, created_at: 5.days.ago) }
 
       # Keyed on the exact path, not stubbed wholesale, so the `after` hook's
       # own FileUtils.rm_rf (which rm_r underneath) can still clean up.
       before do
+        run_with_output(pipeline, created_at: 4.days.ago)
+        run_with_output(pipeline, created_at: 3.days.ago)
         allow(FileUtils).to receive(:rm_r).and_wrap_original do |original, path, **kwargs|
           raise Errno::EACCES if path == folder
 
