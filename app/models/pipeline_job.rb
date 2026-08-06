@@ -25,6 +25,22 @@ class PipelineJob < ApplicationRecord
     validates :pages, presence: true
   end
 
+  # Preprocess output folders whose run has fallen outside the newest
+  # keep_latest runs of its pipeline. ids_on_disk comes from
+  # PreProcess::Output.pipeline_job_ids_on_disk, so the ranking only ever
+  # considers runs that still have output: keep_latest means "the newest N
+  # folders", not "the newest N runs". Plain Ruby rather than a SQL window
+  # function because the set is at most a few folders per pipeline once the
+  # sweep is live.
+  def self.preprocess_sweep_candidates(policy, ids_on_disk)
+    where(id: ids_on_disk)
+      .order(created_at: :desc, id: :desc)
+      .group_by(&:pipeline_id)
+      .values
+      .flat_map { |jobs| jobs.drop(policy.keep_latest) }
+      .reject(&:maybe_still_writing?)
+  end
+
   # Check if this job is part of an automation
   def from_automation?
     automation_step.present?
