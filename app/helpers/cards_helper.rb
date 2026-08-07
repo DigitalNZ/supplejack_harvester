@@ -2,7 +2,7 @@
 
 module CardsHelper
   def extraction_card_subtitle(definition)
-    total_pages = definition.extraction_jobs.is_full.last&.documents&.total_pages
+    total_pages = definition.extraction_jobs.not_purged.is_full.last&.documents&.total_pages
     [
       last_edited_by(definition),
       total_pages.nil? ? nil : pluralize(total_pages, 'page')
