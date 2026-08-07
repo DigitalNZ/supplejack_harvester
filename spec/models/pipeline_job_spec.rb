@@ -87,4 +87,104 @@ RSpec.describe PipelineJob do
       end.not_to(change { pipeline_job.harvest_jobs.count })
     end
   end
+
+  describe '#maybe_still_writing?' do
+    let(:pipeline) { create(:pipeline) }
+
+    it 'is true for an unfinished run created within the last day' do
+      job = create(:pipeline_job, pipeline:, destination:, status: 'running', created_at: 2.hours.ago)
+
+      expect(job.maybe_still_writing?).to be true
+    end
+
+    it 'is false for an unfinished run older than a day' do
+      job = create(:pipeline_job, pipeline:, destination:, status: 'running', created_at: 25.hours.ago)
+
+      expect(job.maybe_still_writing?).to be false
+    end
+
+    it 'is false for a finished run, however recent' do
+      job = create(:pipeline_job, pipeline:, destination:, status: 'completed', created_at: 2.hours.ago)
+
+      expect(job.maybe_still_writing?).to be false
+    end
+  end
+
+  describe '.preprocess_sweep_candidates' do
+    let(:pipeline) { create(:pipeline) }
+    # The real PreProcessRetentionPolicy gains keep_latest in a later commit;
+    # a Struct keeps this unit spec independent of the config file's shape.
+    let(:policy) { Struct.new(:keep_latest).new(2) }
+
+    def run(pipeline, created_at, status: 'completed')
+      create(:pipeline_job, pipeline:, destination:, status:, created_at:)
+    end
+
+    it 'returns the runs beyond the newest keep_latest for a pipeline' do
+      oldest = run(pipeline, 5.days.ago)
+      run(pipeline, 4.days.ago)
+      run(pipeline, 3.days.ago)
+
+      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
+
+      expect(candidates).to eq [oldest]
+    end
+
+    it 'ranks each pipeline separately' do
+      other_pipeline = create(:pipeline)
+      old_a = run(pipeline, 5.days.ago)
+      run(pipeline, 4.days.ago)
+      run(pipeline, 3.days.ago)
+      old_b = run(other_pipeline, 6.days.ago)
+      run(other_pipeline, 4.days.ago)
+      run(other_pipeline, 3.days.ago)
+
+      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
+
+      expect(candidates).to contain_exactly(old_a, old_b)
+    end
+
+    it 'only ranks runs whose output is still on disk' do
+      oldest = run(pipeline, 5.days.ago)
+      middle = run(pipeline, 4.days.ago)
+      run(pipeline, 3.days.ago)
+
+      candidates = described_class.preprocess_sweep_candidates(policy, [oldest.id, middle.id])
+
+      expect(candidates).to be_empty
+    end
+
+    it 'skips an out-ranked run that might still be writing' do
+      run(pipeline, 2.hours.ago, status: 'running')
+      run(pipeline, 1.hour.ago)
+      run(pipeline, 30.minutes.ago)
+
+      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
+
+      expect(candidates).to be_empty
+    end
+
+    it 'includes an out-ranked unfinished run once it is older than a day' do
+      # A crashed run stays "running" forever, and a preprocess-only pipeline
+      # never completes; the writing window is what lets keep-N reclaim them.
+      abandoned = run(pipeline, 3.days.ago, status: 'running')
+      run(pipeline, 2.days.ago)
+      run(pipeline, 1.day.ago)
+
+      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
+
+      expect(candidates).to eq [abandoned]
+    end
+
+    it 'breaks created_at ties by id, treating the higher id as newer' do
+      born = 3.days.ago
+      first = run(pipeline, born)
+      run(pipeline, born)
+      run(pipeline, born)
+
+      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
+
+      expect(candidates).to eq [first]
+    end
+  end
 end

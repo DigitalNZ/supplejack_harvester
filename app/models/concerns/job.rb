@@ -4,6 +4,7 @@ module Job
   extend ActiveSupport::Concern
 
   STATUSES = %w[queued cancelled running completed errored].freeze
+  FINISHED_STATUSES = %w[cancelled completed errored].freeze
 
   included do
     enum :status, STATUSES
@@ -25,6 +26,6 @@ module Job
   #
   # @return Boolean
   def finished?
-    status.in? %w[cancelled completed errored]
+    status.in? FINISHED_STATUSES
   end
 end

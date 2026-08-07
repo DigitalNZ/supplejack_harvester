@@ -17,13 +17,43 @@ class PipelineJob < ApplicationRecord
 
   enum :page_type, { all_available_pages: 0, set_number: 1 }
 
+  # How long an unfinished run is protected from the preprocess sweep. A
+  # safety window, not a retention choice, so it lives in code, not config.
+  PREPROCESS_WRITING_WINDOW = 1.day
+
   with_options if: :set_number? do
     validates :pages, presence: true
+  end
+
+  # Preprocess output folders whose run has fallen outside the newest
+  # keep_latest runs of its pipeline. ids_on_disk comes from
+  # PreProcess::Output.pipeline_job_ids_on_disk, so the ranking only ever
+  # considers runs that still have output: keep_latest means "the newest N
+  # folders", not "the newest N runs". Plain Ruby rather than a SQL window
+  # function because the set is at most a few folders per pipeline once the
+  # sweep is live.
+  def self.preprocess_sweep_candidates(policy, ids_on_disk)
+    where(id: ids_on_disk)
+      .order(created_at: :desc, id: :desc)
+      .group_by(&:pipeline_id)
+      .values
+      .flat_map { |jobs| jobs.drop(policy.keep_latest) }
+      .reject(&:maybe_still_writing?)
   end
 
   # Check if this job is part of an automation
   def from_automation?
     automation_step.present?
+  end
+
+  # Whether this run might still be writing preprocess output. Checks the
+  # status column directly, not #finished? -- that method is overridden to
+  # track whether every harvest report's load workers have completed, a
+  # different question. Status alone cannot be trusted either: nothing ever
+  # moves a crashed run to errored, and a preprocess-only pipeline never
+  # completes, so "unfinished" stops protecting a run once it is a day old.
+  def maybe_still_writing?
+    !status.in?(Job::FINISHED_STATUSES) && created_at > PREPROCESS_WRITING_WINDOW.ago
   end
 
   # Trigger the next step in the automation if this job is from an automation and has completed

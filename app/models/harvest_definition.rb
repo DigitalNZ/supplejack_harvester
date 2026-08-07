@@ -36,6 +36,14 @@ class HarvestDefinition < ApplicationRecord
     @completed_harvest_jobs ||= harvest_jobs.completed.any?
   end
 
+  # Extraction jobs a picker can offer for this definition: data still on
+  # disk, newest first. Nil when there is no extraction definition yet.
+  def available_extraction_jobs
+    return if extraction_definition.blank?
+
+    extraction_definition.extraction_jobs.not_purged.order(created_at: :desc)
+  end
+
   def ready_to_run?
     return false if extraction_definition.blank?
     return false if transformation_definition.blank?

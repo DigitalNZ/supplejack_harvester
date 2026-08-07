@@ -24,7 +24,7 @@
     <% end %>
 
     <button type="button" class="btn btn-danger px-2 py-2" data-bs-toggle="modal" data-bs-target="#delete-modal">
-      <i class="bi bi-trash" aria-hidden="true"></i> Delete data
+      <i class="bi bi-trash" aria-hidden="true"></i> Delete job
     </button>
   </div>
 
@@ -37,6 +37,27 @@
   <p>Are you sure you want to delete this job?</p>
   <p>It will delete all the data related to it.</p>
 <% end %>
+
+<% if @extraction_job.purged? %>
+  <div class="my-4">
+    <span class="badge bg-secondary me-1">Data removed</span>|
+    <span class="ms-1 me-1"><%= job_status_text(@extraction_job) %></span>
+    <%- if @extraction_job.duration_seconds.present? %>
+      |<span class="ms-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>
+    <% end %>
+  </div>
+
+  <div class="alert alert-secondary" role="alert">
+    <%= t('.purged', date: @extraction_job.purged_at.to_fs(:verbose)) %>
+  </div>
+
+  <% if @extraction_job.errored? %>
+    <div class="alert alert-danger" role="alert">
+      <h4 class="alert-heading">Error</h4>
+      <p class="mb-0"><%= @extraction_job.error_message %></p>
+    </div>
+  <% end %>
+<% else %>
 
 <div class="my-4">
   <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span>|
@@ -160,4 +181,5 @@
   </div>
 </div>
 
+<% end %>
 <% end %>
