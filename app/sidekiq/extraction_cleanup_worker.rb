@@ -29,10 +29,19 @@ class ExtractionCleanupWorker
       bytes = examine(job)
       next if @policy.dry_run?
 
-      job.purge!
-      record_purge(bytes)
+      purge(job, bytes)
     rescue StandardError => e
       report_failure(job, e)
+    end
+  end
+
+  # purge! backs out with false when the job turned busy mid-batch; that skip
+  # is logged but never counted as a purge.
+  def purge(job, bytes)
+    if job.purge!
+      record_purge(bytes)
+    else
+      log("skipped busy extraction_job=#{job.id}")
     end
   end
 

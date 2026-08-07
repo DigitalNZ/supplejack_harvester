@@ -88,6 +88,39 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
       end
     end
 
+    context 'when a job becomes busy after the candidate list was built' do
+      let!(:other_job) do
+        create(:extraction_job, extraction_definition:, status: 'completed', created_at: 8.months.ago)
+      end
+
+      before do
+        # Simulates work starting mid-batch: the candidate list already holds
+        # the job, but by the time purge! re-checks, it is busy.
+        allow_any_instance_of(ExtractionJob).to receive(:busy?) { |job| job.id == other_job.id }
+      end
+
+      it 'leaves the busy job unpurged' do
+        described_class.new.perform
+
+        expect(other_job.reload.purged_at).to be_nil
+        expect(Dir.exist?(other_job.extraction_folder)).to be true
+      end
+
+      it 'still purges the rest of the batch' do
+        described_class.new.perform
+
+        expect(old_job.reload.purged_at).to be_present
+      end
+
+      it 'does not count the skipped job among what it purged' do
+        allow(Rails.logger).to receive(:info)
+
+        described_class.new.perform
+
+        expect(Rails.logger).to have_received(:info).with(a_string_matching(/finished purged=1 /))
+      end
+    end
+
     context 'when a folder cannot be deleted' do
       let!(:other_job) do
         create(:extraction_job, extraction_definition:, status: 'completed', created_at: 8.months.ago)

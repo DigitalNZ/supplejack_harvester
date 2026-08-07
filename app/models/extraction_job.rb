@@ -87,10 +87,24 @@ class ExtractionJob < ApplicationRecord
     )
   end
 
+  # True while unfinished work is still reading this job's data: an
+  # unfinished harvest job, or a pipeline job re-using the extraction.
+  # The per-job twin of the bulk busy_ids query below.
+  def busy?
+    HarvestJob.exists?(extraction_job_id: id, status: UNFINISHED_STATUSES) ||
+      PipelineJob.exists?(extraction_job_id: id, status: UNFINISHED_STATUSES + [nil])
+  end
+
   # Removes the extracted data from disk while keeping the job row, so run
   # history and anything pointing at this job survive. Safe to call when the
   # folder is already missing.
+  #
+  # Refuses busy jobs and returns false: the nightly batch's busy list is a
+  # snapshot, so work that starts mid-batch is only caught by re-checking
+  # here, just before the folder goes.
   def purge!
+    return false if busy?
+
     delete_folder
     update!(purged_at: Time.zone.now)
   end

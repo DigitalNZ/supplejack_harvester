@@ -214,7 +214,50 @@ RSpec.describe ExtractionJob do
     end
   end
 
+  describe '#busy?' do
+    it 'is false when nothing references the job' do
+      expect(subject.busy?).to be false
+    end
+
+    it 'is true while an unfinished harvest job reads it' do
+      create(:harvest_job, extraction_job: subject, status: 'running')
+
+      expect(subject.busy?).to be true
+    end
+
+    it 'is true while an unfinished pipeline job re-uses it' do
+      create(:pipeline_job, pipeline:, extraction_job: subject, status: 'queued')
+
+      expect(subject.busy?).to be true
+    end
+
+    it 'counts a pipeline job no worker has picked up yet as busy' do
+      create(:pipeline_job, pipeline:, extraction_job: subject, status: nil)
+
+      expect(subject.busy?).to be true
+    end
+
+    it 'is false once the referencing jobs are finished' do
+      create(:harvest_job, extraction_job: subject, status: 'completed')
+      create(:pipeline_job, pipeline:, extraction_job: subject, status: 'completed')
+
+      expect(subject.busy?).to be false
+    end
+  end
+
   describe '#purge!' do
+    it 'refuses to purge a busy job' do
+      create(:harvest_job, extraction_job: subject, status: 'running')
+
+      expect(subject.purge!).to be false
+      expect(subject.reload.purged_at).to be_nil
+      expect(Dir.exist?(subject.extraction_folder)).to be true
+    end
+
+    it 'returns true once the data is purged' do
+      expect(subject.purge!).to be true
+    end
+
     it 'deletes the extraction folder' do
       FileUtils.mkdir_p("#{subject.extraction_folder}/1")
       File.write("#{subject.extraction_folder}/1/page.json", '{}')
