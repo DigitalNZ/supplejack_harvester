@@ -19,9 +19,16 @@
 # max_age_months. It stamps purged_at on the job and the UI then shows a
 # "Data removed" badge.
 #
+# Sample extractions take slots in the keep_latest count just like full ones:
+# one shared count per definition, by deliberate choice. On a definition that
+# is sampled often but full-harvested rarely, samples can push an old full
+# run out of the kept window.
+#
 #   With the numbers below:
 #     - 30 extractions for one definition, all 2 months old: the oldest 6 go,
 #       the newest 24 stay.
+#     - 24 fresh samples and one full run older than a month: the full run
+#       goes. Re-run the extraction if the data is needed again.
 #     - an extraction from 3 weeks ago: untouched. Nothing under
 #       min_age_months is ever deleted.
 #     - an extraction from 7 months ago: goes, even if a transformation
