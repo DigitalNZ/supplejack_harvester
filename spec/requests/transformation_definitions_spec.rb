@@ -104,6 +104,17 @@ RSpec.describe 'Transformation Definitions' do
       expect(response).to have_http_status :ok
     end
 
+    it 'explains that purged preview data was removed, instead of booting the editor' do
+      extraction_job.update!(status: 'completed', purged_at: Time.zone.now)
+
+      get pipeline_harvest_definition_transformation_definition_path(
+        pipeline, harvest_definition, transformation_definition
+      )
+
+      expect(response.body).to include 'Data removed'
+      expect(response.body).not_to include 'js-transformation-app'
+    end
+
     it 'does not offer purged extraction jobs in the preview-data dropdown' do
       extraction_definition = harvest_definition.extraction_definition
       live = create(:extraction_job, extraction_definition:)
