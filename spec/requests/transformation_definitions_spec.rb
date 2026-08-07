@@ -33,6 +33,19 @@ RSpec.describe 'Transformation Definitions' do
         expect(TransformationDefinition.last.last_edited_by).to eq user
       end
 
+      it 'does not offer purged extraction jobs in the grouped job dropdown' do
+        live = create(:extraction_job)
+        purged = create(:extraction_job, purged_at: Time.zone.now)
+
+        post pipeline_harvest_definition_transformation_definitions_path(pipeline, harvest_definition), params: {
+          transformation_definition: transformation_definition.attributes
+        }
+
+        offered_ids = assigns(:extraction_jobs).flat_map { |_name, jobs| jobs.map(&:last) }
+        expect(offered_ids).to include live.id
+        expect(offered_ids).not_to include purged.id
+      end
+
       it 'redirects to the pipeline transformation definition path' do
         post pipeline_harvest_definition_transformation_definitions_path(pipeline, harvest_definition), params: {
           transformation_definition: transformation_definition.attributes
@@ -89,6 +102,19 @@ RSpec.describe 'Transformation Definitions' do
                                                                      transformation_definition)
 
       expect(response).to have_http_status :ok
+    end
+
+    it 'does not offer purged extraction jobs in the preview-data dropdown' do
+      extraction_definition = harvest_definition.extraction_definition
+      live = create(:extraction_job, extraction_definition:)
+      purged = create(:extraction_job, extraction_definition:, purged_at: Time.zone.now)
+
+      get pipeline_harvest_definition_transformation_definition_path(
+        pipeline, harvest_definition, transformation_definition
+      )
+
+      expect(response.body).to include live.name
+      expect(response.body).not_to include purged.name
     end
 
     it 'labels the preview-data dropdown "Preview Data:"' do

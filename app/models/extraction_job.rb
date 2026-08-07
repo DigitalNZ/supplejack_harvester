@@ -13,6 +13,10 @@ class ExtractionJob < ApplicationRecord
   belongs_to :extraction_definition
   has_one :harvest_job, dependent: :destroy
 
+  # Jobs whose extracted data is still on disk. Anything offering a job to
+  # read from (pickers, previews) should use this.
+  scope :not_purged, -> { where(purged_at: nil) }
+
   after_create :create_folder
   after_destroy :delete_folder
 
@@ -129,11 +133,11 @@ class ExtractionJob < ApplicationRecord
 
     # Numbers each definition's surviving extractions, 1 being the newest.
     def ranked_by_recency
-      select(
+      not_purged.select(
         'extraction_jobs.*',
         'ROW_NUMBER() OVER (PARTITION BY extraction_definition_id ' \
         'ORDER BY created_at DESC, id DESC) AS extraction_index'
-      ).where(purged_at: nil)
+      )
     end
 
     # Dan's rule: past the newest N for its definition, or simply too old. A job a

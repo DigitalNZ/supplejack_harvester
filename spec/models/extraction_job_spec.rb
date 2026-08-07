@@ -205,6 +205,15 @@ RSpec.describe ExtractionJob do
     end
   end
 
+  describe '.not_purged' do
+    it 'excludes jobs whose data has been purged' do
+      purged = create(:extraction_job, extraction_definition:, purged_at: Time.zone.now)
+
+      expect(described_class.not_purged).to include(subject)
+      expect(described_class.not_purged).not_to include(purged)
+    end
+  end
+
   describe '#purge!' do
     it 'deletes the extraction folder' do
       FileUtils.mkdir_p("#{subject.extraction_folder}/1")

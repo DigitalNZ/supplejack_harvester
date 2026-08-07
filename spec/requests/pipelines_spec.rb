@@ -81,6 +81,20 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include pipeline.name
     end
 
+    it 'does not offer purged extraction jobs in the run-pipeline dropdown' do
+      # The run-settings modal only renders when the pipeline is ready to run,
+      # which needs a transformation definition with at least one field.
+      create(:field, transformation_definition: harvest_definition.transformation_definition)
+      extraction_definition = harvest_definition.extraction_definition
+      live = create(:extraction_job, extraction_definition:)
+      purged = create(:extraction_job, extraction_definition:, purged_at: Time.zone.now)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include live.name
+      expect(response.body).not_to include purged.name
+    end
+
     it 'offers "Add Pre-processing" in the add-block dropdown before any blocks exist' do
       empty_pipeline = create(:pipeline, name: 'Empty pipeline')
 
