@@ -123,8 +123,12 @@ class ExtractionJob < ApplicationRecord
   # Exclusions are applied to the ranked set.
   #
   # @return ActiveRecord::Relation
-  def self.purge_candidates(policy)
-    eligible_for_purge(policy)
+  def self.purge_candidates(policy, pipeline_id: nil)
+    scope = eligible_for_purge(policy)
+    # Filtered outside the ranking subquery, so scoping never shifts a rank.
+    scope = scope.where(extraction_definition_id: ExtractionDefinition.where(pipeline_id:).select(:id)) if pipeline_id
+
+    scope
       .where(beyond_retention, keep: policy.keep_latest,
                                pinned: pinned_ids.presence || [0],
                                max_age: policy.max_age_cutoff)

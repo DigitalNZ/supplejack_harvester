@@ -469,5 +469,27 @@ RSpec.describe ExtractionJob do
 
       expect(described_class.purge_candidates(capped)).to contain_exactly(oldest)
     end
+
+    context 'when scoped to a pipeline' do
+      it 'only returns jobs whose definition belongs to that pipeline' do
+        ours = job_created(7.months.ago)
+        other_definition = create(:extraction_definition)
+        theirs = create(:extraction_job, extraction_definition: other_definition,
+                                         status: 'completed', created_at: 7.months.ago)
+
+        candidates = described_class.purge_candidates(policy, pipeline_id: pipeline.id)
+
+        expect(candidates).to include(ours)
+        expect(candidates).not_to include(theirs)
+      end
+
+      it 'behaves exactly as unscoped when pipeline_id is nil' do
+        other_definition = create(:extraction_definition)
+        theirs = create(:extraction_job, extraction_definition: other_definition,
+                                         status: 'completed', created_at: 7.months.ago)
+
+        expect(described_class.purge_candidates(policy, pipeline_id: nil)).to include(theirs)
+      end
+    end
   end
 end
