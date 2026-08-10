@@ -1,9 +1,10 @@
 // Behaviour for the "Blocks to run" rows (app/views/pipelines/_run_blocks.html.erb).
 //
 // Three rules, all of which the server also enforces (RunConfiguration#validate_chain_inputs):
-//   - a run cannot leave a hole in the chain: it starts at some block and continues
-//     to the end. Unticking a block therefore unticks everything before it, and
-//     ticking one ticks everything after it
+//   - a run covers one unbroken stretch of the chain. It may start late and it may
+//     stop early, but it cannot skip a block and run a later one. Unticking a block
+//     therefore stops the run there, unticking the blocks after it, and ticking one
+//     fills in any blocks it would otherwise have skipped over
 //   - a block that is not running has no input or page limit to choose, so both of
 //     its fields are disabled
 //   - a block whose preceding block is not running cannot take "output of previous
@@ -95,15 +96,28 @@ const setChecked = (row, checked) => {
   if (checkbox && !checkbox.disabled) checkbox.checked = checked;
 };
 
-// Keeps the ticked blocks contiguous to the end of the chain. Unticking a block
-// means the run no longer reaches it, so the blocks feeding it are pointless;
-// ticking one means the run reaches everything after it.
+const isTicked = (row) => Boolean(checkboxIn(row)?.checked);
+
+// Keeps the ticked blocks in one unbroken stretch. Unticking a block stops the run
+// there, so the blocks after it come off too; ticking one that sits away from the
+// stretch fills in the blocks it would otherwise skip over, since those would have
+// nothing to read.
 const closeGaps = (rows, index) => {
-  if (checkboxIn(rows[index])?.checked) {
-    rows.slice(index + 1).forEach((row) => setChecked(row, true));
-  } else {
-    rows.slice(0, index).forEach((row) => setChecked(row, false));
+  if (!isTicked(rows[index])) {
+    // With nothing ticked before it, the run simply starts later and the blocks after
+    // it are untouched. Otherwise the run stops here, so they come off.
+    if (rows.slice(0, index).some(isTicked)) {
+      rows.slice(index + 1).forEach((row) => setChecked(row, false));
+    }
+
+    return;
   }
+
+  const ticked = rows.filter(isTicked);
+  const first = rows.indexOf(ticked[0]);
+  const last = rows.indexOf(ticked[ticked.length - 1]);
+
+  rows.slice(first, last + 1).forEach((row) => setChecked(row, true));
 };
 
 export const initRunBlocks = (root) => {

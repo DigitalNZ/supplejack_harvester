@@ -79,48 +79,48 @@ describe("run blocks", () => {
     ).toContain("No pre-processed data available");
   });
 
-  // A run starts at some block and continues to the end of the chain, so the ticked
-  // blocks always stay contiguous.
+  // A run covers one unbroken stretch of the chain: it may start late and stop early,
+  // but it may never skip a block and run a later one.
   describe("keeping the chain contiguous", () => {
-    it("unticks the blocks before one that is unticked", () => {
+    const state = () => [0, 1, 2].map((index) => checkbox(index).checked);
+
+    it("stops the run at a block that is unticked", () => {
       render({ rows: 3 });
 
       toggle(1);
 
-      expect(checkbox(0).checked).toBe(false);
-      expect(checkbox(1).checked).toBe(false);
-      expect(checkbox(2).checked).toBe(true);
+      expect(state()).toEqual([true, false, false]);
     });
 
-    it("ticks the blocks after one that is ticked", () => {
+    it("leaves only the first block running when the second is unticked", () => {
       render({ rows: 3 });
 
-      // Untick from the front, leaving only the last block running.
-      toggle(0);
       toggle(1);
-      expect([0, 1, 2].map((index) => checkbox(index).checked)).toEqual([
-        false,
-        false,
-        true,
-      ]);
 
-      // Ticking the first block again has to bring the rest of the chain with it.
-      toggle(0);
-
-      expect([0, 1, 2].map((index) => checkbox(index).checked)).toEqual([
-        true,
-        true,
-        true,
-      ]);
+      expect(checkbox(0).checked).toBe(true);
+      expect(input(0).disabled).toBe(false);
+      expect(input(1).disabled).toBe(true);
     });
 
-    it("leaves the last block alone when it is the only one running", () => {
+    it("keeps a run that starts late", () => {
       render({ rows: 3 });
 
-      toggle(1);
+      toggle(0);
 
-      expect(checkbox(2).checked).toBe(true);
-      expect(input(2).disabled).toBe(false);
+      expect(state()).toEqual([false, true, true]);
+    });
+
+    it("fills in a block that would otherwise be skipped over", () => {
+      render({ rows: 3 });
+
+      // Leave only the first block running, then tick the last one: the middle block
+      // has to come with it, or it would have nothing to read.
+      toggle(1);
+      expect(state()).toEqual([true, false, false]);
+
+      toggle(2);
+
+      expect(state()).toEqual([true, true, true]);
     });
   });
 });

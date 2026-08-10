@@ -108,21 +108,23 @@ RSpec.describe PipelineJob do
       end
     end
 
-    # A run starts somewhere and continues to the end: a block only exists to feed the
-    # one after it, so there is nothing coherent to do with a hole in the middle.
+    # A run covers one unbroken stretch of the chain. A block only exists to feed the
+    # one after it, so skipping one and running the next leaves the next with nothing to
+    # read - but starting late and stopping early are both fine.
     describe 'validation that the chain has no gaps' do
-      it 'rejects a run that skips a block in the middle' do
+      it 'rejects a run that skips a block and runs a later one' do
         job = job_with(runs(pre_zero).merge(skips(pre_one)).merge(runs(harvest)))
 
         expect(job).not_to be_valid
         expect(job.errors[:block_settings].join).to include "#{pre_one.source_id} must run too"
       end
 
-      it 'rejects a run that stops before the end of the chain' do
-        job = job_with(runs(pre_zero).merge(runs(pre_one)).merge(skips(harvest)))
+      it 'accepts a run that stops early' do
+        expect(job_with(runs(pre_zero).merge(runs(pre_one)).merge(skips(harvest)))).to be_valid
+      end
 
-        expect(job).not_to be_valid
-        expect(job.errors[:block_settings].join).to include "#{harvest.source_id} must run too"
+      it 'accepts running only the first block, to prepare data for later' do
+        expect(job_with(runs(pre_zero).merge(skips(pre_one)).merge(skips(harvest)))).to be_valid
       end
 
       it 'accepts a run that skips only leading blocks' do
