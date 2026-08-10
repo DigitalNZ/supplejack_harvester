@@ -50,6 +50,12 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
       expect(report).to match(/finished purged=1 /)
     end
 
+    it 'does not flag the cap when under the batch limit' do
+      report = described_class.new.perform
+
+      expect(report).not_to include('batch_limit reached')
+    end
+
     context 'when scoped to a pipeline' do
       let!(:other_job) do
         create(:extraction_job, extraction_definition: create(:extraction_definition),
@@ -102,8 +108,8 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
 
         described_class.new.perform
 
-        expect(Rails.logger).to have_received(:info)
-          .with(a_string_matching(/finished examined=1 would_free_bytes=\d+ dry_run=true/))
+        expected_line = /\A\[extraction_cleanup\] \[dry run\] finished examined=1 would_free_bytes=\d+ dry_run=true\z/
+        expect(Rails.logger).to have_received(:info).with(a_string_matching(expected_line))
       end
 
       it 'marks every report line as a dry run' do
@@ -122,6 +128,14 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
         described_class.new.perform
 
         expect(ExtractionJob.where.not(purged_at: nil).count).to eq 1
+      end
+
+      it 'flags the cap in the report' do
+        create(:extraction_job, extraction_definition:, status: 'completed', created_at: 8.months.ago)
+
+        report = described_class.new.perform
+
+        expect(report).to include('batch_limit reached (1); more may qualify')
       end
     end
 

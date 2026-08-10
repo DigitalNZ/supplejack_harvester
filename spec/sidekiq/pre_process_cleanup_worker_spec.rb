@@ -187,7 +187,8 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
 
         described_class.new.perform
 
-        expect(Rails.logger).to have_received(:info).with(a_string_matching(/finished would_sweep=1 dry_run=true\z/))
+        expect(Rails.logger).to have_received(:info)
+          .with(a_string_matching(/\A\[preprocess_cleanup\] \[dry run\] finished would_sweep=1 dry_run=true\z/))
       end
     end
 

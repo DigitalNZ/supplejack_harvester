@@ -10,21 +10,26 @@ class ExtractionCleanupWorker
   # Pass a pipeline id to clean one pipeline only (console use); nil sweeps
   # everything. Returns the logged lines so a console run can `puts` them.
   def perform(pipeline_id = nil)
-    @policy = ExtractionRetentionPolicy.load
-    @report = []
-    @examined = 0
-    @examined_bytes = 0
-    @purged = 0
-    @purged_bytes = 0
+    reset_state
 
     log_scope(pipeline_id)
     purge_extraction_jobs(pipeline_id)
+    log_batch_limit_reached
     log(summary_message)
 
     @report.join("\n")
   end
 
   private
+
+  def reset_state
+    @policy = ExtractionRetentionPolicy.load
+    @report = []
+    @examined = 0
+    @examined_bytes = 0
+    @purged = 0
+    @purged_bytes = 0
+  end
 
   # The `rescue` below is attached to this `do...end` block, not to a method -
   # Ruby allows that without a `begin`. It keeps one bad folder from aborting
@@ -79,6 +84,15 @@ class ExtractionCleanupWorker
     return "finished examined=#{@examined} would_free_bytes=#{@examined_bytes} dry_run=true" if @policy.dry_run?
 
     "finished purged=#{@purged} bytes=#{@purged_bytes} examined=#{@examined} dry_run=false"
+  end
+
+  # A capped batch looks complete in the report but is not: more candidates
+  # may still qualify next run. Flag it so a reader doesn't mistake the batch
+  # for the full picture.
+  def log_batch_limit_reached
+    return unless @examined == @policy.batch_limit
+
+    log("batch_limit reached (#{@policy.batch_limit}); more may qualify")
   end
 
   # find, not find_by: a typo'd id in the console should raise, not silently
