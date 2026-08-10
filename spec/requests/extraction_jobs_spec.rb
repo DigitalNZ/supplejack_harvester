@@ -61,6 +61,43 @@ RSpec.describe 'ExtractionJobs' do
         end
       end
 
+      # A block after the first in the chain has no records of its own to start from, so
+      # running it alone means naming the run whose pre-processed output it works from.
+      describe 'for a block that consumes the previous block\'s output' do
+        let!(:second_block) do
+          create(:harvest_definition, pipeline:, kind: :preprocess, position: 1, source_id: 'second',
+                                      extraction_definition: create(:extraction_definition, pipeline:))
+        end
+        let!(:source_run) { create(:pipeline_job, pipeline:, destination: create(:destination)) }
+
+        def post_run(params = {})
+          post pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+            pipeline, second_block, second_block.extraction_definition, kind: 'sample', **params
+          )
+        end
+
+        it 'records the nominated run and the position it reads' do
+          allow(ExtractionWorker).to receive(:perform_async)
+
+          expect { post_run(pipeline_job_id: source_run.id) }.to change(ExtractionJob, :count).by(1)
+
+          job = ExtractionJob.order(:id).last
+
+          expect(job.source_pipeline_job_id).to eq source_run.id
+          expect(job.source_position).to eq 0
+          expect(job).to be_iterates_preprocess_output
+          expect(job).to be_is_sample
+        end
+
+        it 'refuses to start without one, rather than extracting from nothing' do
+          expect { post_run }.not_to change(ExtractionJob, :count)
+
+          expect(response).to redirect_to pipeline_path(pipeline)
+          follow_redirect!
+          expect(response.body).to include 'Choose which run'
+        end
+      end
+
       describe 'is not successful' do
         before do
           expect_any_instance_of(ExtractionJob).to receive(:save).and_return(false)

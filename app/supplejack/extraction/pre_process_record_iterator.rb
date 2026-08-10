@@ -11,8 +11,11 @@ module Extraction
   # actually exist, in embedded-page-number order, and yield each with a dense
   # sequential index — which is what the consumer's page_from_index math needs.
   class PreProcessRecordIterator
-    def initialize(folder)
+    # @param pages [Integer, nil] how many stored pages to yield, nil for all of them.
+    #   A sample extraction takes the first page only.
+    def initialize(folder, pages: nil)
       @folder = folder
+      @pages = pages
     end
 
     def each
@@ -24,7 +27,8 @@ module Extraction
     private
 
     def document_paths
-      Dir.glob("#{@folder}/**/*.json").sort_by { |path| embedded_page_number(path) }
+      paths = Dir.glob("#{@folder}/**/*.json").sort_by { |path| embedded_page_number(path) }
+      @pages.present? ? paths.first(@pages) : paths
     end
 
     def embedded_page_number(path)

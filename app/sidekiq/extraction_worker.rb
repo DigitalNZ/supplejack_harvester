@@ -24,8 +24,13 @@ class ExtractionWorker < ApplicationWorker
     TextExtractionWorker.perform_async_with_priority(job_priority, extraction_job.id)
   end
 
+  # Whether this job works from records it is handed rather than seeding its own
+  # extraction: an enrichment iterates the destination API, a block in the middle of a
+  # chain iterates the previous block's output - either its own run's, or an earlier
+  # run's when it was started on its own from the block's dropdown.
   def iterate_previous?
     return true if @job.extraction_definition.enrichment?
+    return true if @job.iterates_preprocess_output?
 
     definition = @job.harvest_job&.harvest_definition
     definition.present? && definition.position.positive?

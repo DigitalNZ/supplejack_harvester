@@ -36,6 +36,18 @@ class HarvestDefinition < ApplicationRecord
     @completed_harvest_jobs ||= harvest_jobs.completed.any?
   end
 
+  # A block after the first in the chain works from the records the block before it
+  # wrote, rather than seeding its own extraction. Enrichments are never in the chain:
+  # they iterate records back out of the destination API.
+  def consumes_preprocess_output?
+    !enrichment? && position.to_i.positive?
+  end
+
+  # The block position whose output this block reads.
+  def preceding_position
+    position.to_i - 1
+  end
+
   def ready_to_run?
     return false if extraction_definition.blank?
     return false if transformation_definition.blank?

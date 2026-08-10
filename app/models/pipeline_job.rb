@@ -69,6 +69,13 @@ class PipelineJob < ApplicationRecord
     end
   end
 
+  # How this run is named wherever one has to be picked out of a list: the request
+  # preview's run selector, the Run modal's input choices, and the dropdown that runs a
+  # single block against an earlier run's pre-processed data.
+  def run_label
+    "Job ##{id} - #{created_at.strftime('%-d %b %Y, %H:%M')}"
+  end
+
   # The next block of the chain that this run is actually configured to run. Blocks
   # the user unticked are stepped over: their data comes from whatever the following
   # block's input nominates (see RunConfiguration#validate_chain_inputs).

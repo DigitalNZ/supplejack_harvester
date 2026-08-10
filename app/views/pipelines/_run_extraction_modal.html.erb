@@ -1,0 +1,46 @@
+<%# Runs one block's extraction on its own, the way the request preview does it: a
+    block after the first in the chain has no records of its own to start from, so it
+    works from the records an earlier run produced, and the run is chosen here.
+
+    Both dropdown entries open this modal; the Sample and Full buttons carry the kind,
+    so there is one modal per block rather than one per kind.
+
+    Locals:
+      pipeline:         the pipeline
+      block_definition: the HarvestDefinition whose extraction is being run %>
+
+<% runs = pipeline.runs_with_output_at(block_definition.preceding_position) %>
+
+<%= render layout: 'shared/create_modal',
+           locals: {
+             id: "run-extraction-#{block_definition.id}",
+             modal_heading: "Run #{block_definition.source_id} extraction",
+             modal_subheading: 'This block works from the records the block before it produced, ' \
+                               'so choose which run to take them from.'
+           } do %>
+  <% if runs.any? %>
+    <%= form_with url: pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+                    pipeline, block_definition, block_definition.extraction_definition
+                  ),
+                  method: :post do %>
+      <%= label_tag "run_extraction_#{block_definition.id}_pipeline_job_id",
+                    'Pre-processed data', class: 'form-label' %>
+
+      <%= select_tag :pipeline_job_id,
+                     options_from_collection_for_select(runs, :id, :run_label),
+                     class: 'form-select mb-4',
+                     id: "run_extraction_#{block_definition.id}_pipeline_job_id" %>
+
+      <div class='d-grid gap-2'>
+        <%= button_tag 'Run sample extraction', type: 'submit', name: 'kind', value: 'sample',
+                                                class: 'btn btn-outline-primary' %>
+        <%= button_tag 'Run full extraction', type: 'submit', name: 'kind', value: 'full',
+                                              class: 'btn btn-primary' %>
+      </div>
+    <% end %>
+  <% else %>
+    <p class='mb-0'>
+      This block has no pre-processed data to work from yet. Run the block before it, then come back.
+    </p>
+  <% end %>
+<% end %>

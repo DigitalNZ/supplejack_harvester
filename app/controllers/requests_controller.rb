@@ -106,7 +106,7 @@ class RequestsController < ApplicationController
       response: preprocess_response(input_record),
       total_pages: documents.total_pages,
       total_records: records.count,
-      runs: runs.map { |job| { id: job.id, label: run_label(job) } },
+      runs: runs.map { |job| { id: job.id, label: job.run_label } },
       current_run_id: run.id
     }
   end
@@ -124,10 +124,7 @@ class RequestsController < ApplicationController
   end
 
   def preprocess_runs
-    pipeline.pipeline_jobs
-            .where(id: PreProcess::Output.pipeline_job_ids_with_output(preceding_position))
-            .order(created_at: :desc)
-            .to_a
+    pipeline.runs_with_output_at(preceding_position).to_a
   end
 
   def chosen_run(runs)
@@ -154,10 +151,6 @@ class RequestsController < ApplicationController
 
   def preceding_position
     harvest_definition.position.to_i - 1
-  end
-
-  def run_label(job)
-    "Job ##{job.id} - #{job.created_at.strftime('%-d %b %Y, %H:%M')}"
   end
 
   def pipeline

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_30_093000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_10_120000) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -138,7 +138,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_093000) do
     t.string "stop_condition_type"
     t.string "stop_condition_name"
     t.text "stop_condition_content"
+    t.bigint "source_pipeline_job_id"
+    t.integer "source_position"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
+    t.index ["source_pipeline_job_id"], name: "index_extraction_jobs_on_source_pipeline_job_id"
     t.index ["status"], name: "index_extraction_jobs_on_status"
   end
 

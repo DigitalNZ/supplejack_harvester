@@ -42,15 +42,27 @@ module Extraction
     private
 
     def iterator
-      definition = @harvest_job&.harvest_definition
-      position = definition&.position || 0
-      return SjApiEnrichmentIterator.new(@extraction_job) if position.zero?
+      folder = preprocess_folder
+      return SjApiEnrichmentIterator.new(@extraction_job) if folder.blank?
 
-      # Usually this run's own output from the preceding block, but a run configured
-      # to reuse pre-processed data prepared earlier reads another run's folder.
-      pipeline_job = @harvest_job.pipeline_job
-      folder = PreProcess::Output.folder(pipeline_job.preprocess_source_job_id(definition), position - 1)
-      PreProcessRecordIterator.new(folder)
+      # A sample takes the first page of stored records rather than all of them.
+      PreProcessRecordIterator.new(folder, pages: (1 if @extraction_job.is_sample?))
+    end
+
+    # The folder of records this extraction works from, or nil when it seeds itself
+    # from the destination API.
+    def preprocess_folder
+      # Started on its own from the block's dropdown: it was told which earlier run to
+      # work from, because there is no run of its own to take it from.
+      return @extraction_job.preprocess_output_folder if @extraction_job.iterates_preprocess_output?
+
+      definition = @harvest_job&.harvest_definition
+      return if definition.blank? || !definition.consumes_preprocess_output?
+
+      # Usually this run's own output from the preceding block, but a run configured to
+      # reuse pre-processed data prepared earlier reads another run's folder.
+      source_job_id = @harvest_job.pipeline_job.preprocess_source_job_id(definition)
+      PreProcess::Output.folder(source_job_id, definition.preceding_position)
     end
 
     def extract_and_save_enrichment_documents(api_records)

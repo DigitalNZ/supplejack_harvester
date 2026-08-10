@@ -27,5 +27,11 @@
              delete_path:
                pipeline_harvest_definition_extraction_definition_path(
                  pipeline, block_definition, block_definition.extraction_definition
-               )
+               ),
+             run_extraction_modal_id:
+               ("run-extraction-#{block_definition.id}" if block_definition.consumes_preprocess_output?)
            } %>
+
+<% if block_definition.consumes_preprocess_output? %>
+  <%= render 'pipelines/run_extraction_modal', pipeline:, block_definition: %>
+<% end %>
