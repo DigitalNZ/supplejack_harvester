@@ -20,8 +20,8 @@
            } do %>
   <% if runs.any? %>
     <%= form_with url: pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
-                    pipeline, block_definition, block_definition.extraction_definition
-                  ),
+          pipeline, block_definition, block_definition.extraction_definition
+        ),
                   method: :post do %>
       <%= label_tag "run_extraction_#{block_definition.id}_pipeline_job_id",
                     'Pre-processed data', class: 'form-label' %>
