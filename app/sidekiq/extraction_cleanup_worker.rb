@@ -7,16 +7,21 @@ class ExtractionCleanupWorker
 
   sidekiq_options retry: 0, queue: 'low_priority'
 
-  def perform
+  # Pass a pipeline id to clean one pipeline only (console use); nil sweeps
+  # everything. Returns the logged lines so a console run can `puts` them.
+  def perform(pipeline_id = nil)
     @policy = ExtractionRetentionPolicy.load
+    @report = []
     @examined = 0
     @examined_bytes = 0
     @purged = 0
     @purged_bytes = 0
 
-    purge_extraction_jobs
-
+    log_scope(pipeline_id)
+    purge_extraction_jobs(pipeline_id)
     log(summary_message)
+
+    @report.join("\n")
   end
 
   private
@@ -24,8 +29,8 @@ class ExtractionCleanupWorker
   # The `rescue` below is attached to this `do...end` block, not to a method -
   # Ruby allows that without a `begin`. It keeps one bad folder from aborting
   # the batch: a failed purge leaves purged_at null so the next run retries it.
-  def purge_extraction_jobs
-    ExtractionJob.purge_candidates(@policy).each do |job|
+  def purge_extraction_jobs(pipeline_id)
+    ExtractionJob.purge_candidates(@policy, pipeline_id:).each do |job|
       bytes = examine(job)
       next if @policy.dry_run?
 
@@ -64,7 +69,9 @@ class ExtractionCleanupWorker
   end
 
   def report_failure(job, error)
-    Rails.logger.error("[extraction_cleanup] failed extraction_job=#{job.id} #{error.class}: #{error.message}")
+    line = "failed extraction_job=#{job.id} #{error.class}: #{error.message}"
+    @report << line
+    Rails.logger.error("[extraction_cleanup] #{line}")
     Airbrake.notify(error)
   end
 
@@ -74,7 +81,19 @@ class ExtractionCleanupWorker
     "finished purged=#{@purged} bytes=#{@purged_bytes} examined=#{@examined} dry_run=false"
   end
 
+  # find, not find_by: a typo'd id in the console should raise, not silently
+  # sweep nothing.
+  def log_scope(pipeline_id)
+    return unless pipeline_id
+
+    log("scoped to pipeline=#{pipeline_id} (#{Pipeline.find(pipeline_id).name})")
+  end
+
+  # Report lines carry the dry-run marker; the worker tag is only added on the
+  # logger line, where the reader lacks the console's context.
   def log(message)
-    Rails.logger.info("[extraction_cleanup]#{@policy.dry_run? ? ' [dry run]' : ''} #{message}")
+    line = "#{'[dry run] ' if @policy.dry_run?}#{message}"
+    @report << line
+    Rails.logger.info("[extraction_cleanup] #{line}")
   end
 end

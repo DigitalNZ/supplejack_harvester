@@ -43,6 +43,37 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
       expect(Dir.exist?(recent.extraction_folder)).to be true
     end
 
+    it 'returns the lines it logged as one string' do
+      report = described_class.new.perform
+
+      expect(report).to include("extraction_job=#{old_job.id}")
+      expect(report).to match(/finished purged=1 /)
+    end
+
+    context 'when scoped to a pipeline' do
+      let!(:other_job) do
+        create(:extraction_job, extraction_definition: create(:extraction_definition),
+                                status: 'completed', created_at: 7.months.ago)
+      end
+
+      it 'names the scope in the first report line' do
+        report = described_class.new.perform(pipeline.id)
+
+        expect(report.lines.first).to include("scoped to pipeline=#{pipeline.id} (#{pipeline.name})")
+      end
+
+      it 'purges the scoped pipeline and leaves other pipelines alone' do
+        described_class.new.perform(pipeline.id)
+
+        expect(old_job.reload.purged_at).to be_present
+        expect(other_job.reload.purged_at).to be_nil
+      end
+
+      it 'raises for an unknown pipeline id' do
+        expect { described_class.new.perform(-1) }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+    end
+
     context 'when dry_run is on' do
       let(:policy_attributes) { super().merge(dry_run: true) }
 
@@ -73,6 +104,12 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
 
         expect(Rails.logger).to have_received(:info)
           .with(a_string_matching(/finished examined=1 would_free_bytes=\d+ dry_run=true/))
+      end
+
+      it 'marks every report line as a dry run' do
+        report = described_class.new.perform
+
+        expect(report.lines).to all(start_with('[dry run] '))
       end
     end
 
@@ -160,6 +197,12 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
         described_class.new.perform
 
         expect(Airbrake).to have_received(:notify).with(instance_of(Errno::EACCES))
+      end
+
+      it 'includes the failure in the report' do
+        report = described_class.new.perform
+
+        expect(report).to include("failed extraction_job=#{other_job.id} Errno::EACCES")
       end
     end
   end
