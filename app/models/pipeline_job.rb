@@ -32,8 +32,11 @@ class PipelineJob < ApplicationRecord
   # folders", not "the newest N runs". Plain Ruby rather than a SQL window
   # function because the set is at most a few folders per pipeline once the
   # sweep is live.
-  def self.preprocess_sweep_candidates(policy, ids_on_disk)
-    where(id: ids_on_disk)
+  def self.preprocess_sweep_candidates(policy, ids_on_disk, pipeline_id: nil)
+    scope = where(id: ids_on_disk)
+    scope = scope.where(pipeline_id:) if pipeline_id
+
+    scope
       .order(created_at: :desc, id: :desc)
       .group_by(&:pipeline_id)
       .values

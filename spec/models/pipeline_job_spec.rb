@@ -186,5 +186,20 @@ RSpec.describe PipelineJob do
 
       expect(candidates).to eq [first]
     end
+
+    it 'only returns runs for the given pipeline when scoped' do
+      other_pipeline = create(:pipeline)
+      old_ours = run(pipeline, 5.days.ago)
+      run(pipeline, 4.days.ago)
+      run(pipeline, 3.days.ago)
+      run(other_pipeline, 6.days.ago)
+      run(other_pipeline, 4.days.ago)
+      run(other_pipeline, 3.days.ago)
+
+      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id),
+                                                               pipeline_id: pipeline.id)
+
+      expect(candidates).to eq [old_ours]
+    end
   end
 end
