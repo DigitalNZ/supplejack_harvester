@@ -34,6 +34,25 @@ RSpec.describe 'ExtractionJobs' do
     end
   end
 
+  # Documents#[] hands out a stand-in document for a page with no file behind it, so the
+  # page has to fall through to why the file is missing rather than rendering the
+  # stand-in's "File does not exist in filesystem" body over the top of the reason.
+  describe '#show when the job wrote no documents' do
+    let(:failed_job) do
+      create(:extraction_job, extraction_definition:, status: 'errored',
+                              error_message: 'http://example.com/"#{oops}" could not be extracted: bad URI')
+    end
+
+    it 'shows why the job produced nothing' do
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(
+        pipeline, harvest_definition, extraction_definition, failed_job
+      )
+
+      expect(response.body).to include 'could not be extracted'
+      expect(response.body).not_to include 'File does not exist in filesystem'
+    end
+  end
+
   describe '#create' do
     context 'when the format is HTML' do
       describe 'is successful' do

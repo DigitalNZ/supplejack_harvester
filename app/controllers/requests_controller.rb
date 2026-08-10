@@ -145,8 +145,23 @@ class RequestsController < ApplicationController
   def preprocess_response(input_record)
     return {} if input_record.body.blank?
 
-    document = Extraction::EnrichmentExtraction.new(@request, input_record).extract
+    extraction = Extraction::EnrichmentExtraction.new(@request, input_record)
+    document = extraction.extract
+
+    return failed_response(extraction) if extraction.extraction_error.present?
+
     document.respond_to?(:to_hash) ? document.to_hash : {}
+  end
+
+  # Shaped like a document so the preview shows the URL it tried and why it failed,
+  # rather than an empty panel. The usual cause is a parameter that was not evaluated -
+  # a dynamic expression left as a static parameter - leaving its #{...} in the URL.
+  def failed_response(extraction)
+    {
+      url: extraction.attempted_url,
+      method: @request.http_method,
+      body: { error: extraction.extraction_error.message }.to_json
+    }
   end
 
   def preceding_position
