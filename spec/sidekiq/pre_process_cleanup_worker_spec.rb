@@ -123,6 +123,49 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
         .with(a_string_matching(/finished swept=1 examined=1 dry_run=false\z/))
     end
 
+    it 'returns the lines it logged as one string' do
+      run_with_output(pipeline, created_at: 5.days.ago)
+      run_with_output(pipeline, created_at: 4.days.ago)
+      run_with_output(pipeline, created_at: 3.days.ago)
+
+      report = described_class.new.perform
+
+      expect(report).to match(/pipeline_job=\d+/)
+      expect(report).to match(/finished swept=1 examined=1 dry_run=false\z/)
+    end
+
+    context 'when scoped to a pipeline' do
+      it 'sweeps the scoped pipeline and leaves other pipelines alone' do
+        other_pipeline = create(:pipeline)
+        ours_old = run_with_output(pipeline, created_at: 5.days.ago)
+        run_with_output(pipeline, created_at: 4.days.ago)
+        run_with_output(pipeline, created_at: 3.days.ago)
+        theirs_old = run_with_output(other_pipeline, created_at: 6.days.ago)
+        run_with_output(other_pipeline, created_at: 4.days.ago)
+        run_with_output(other_pipeline, created_at: 3.days.ago)
+
+        described_class.new.perform(pipeline.id)
+
+        expect(Dir.exist?(ours_old)).to be false
+        expect(Dir.exist?(theirs_old)).to be true
+      end
+
+      it 'leaves orphan folders alone' do
+        folder = preprocess_folder(999_999)
+        FileUtils.touch(folder, mtime: 2.days.ago.to_time)
+
+        described_class.new.perform(pipeline.id)
+
+        expect(Dir.exist?(folder)).to be true
+      end
+
+      it 'names the scope in the first report line' do
+        report = described_class.new.perform(pipeline.id)
+
+        expect(report.lines.first).to include("scoped to pipeline=#{pipeline.id} (#{pipeline.name})")
+      end
+    end
+
     context 'when dry_run is on' do
       let(:policy_attributes) { super().merge(dry_run: true) }
 

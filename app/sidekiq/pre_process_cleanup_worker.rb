@@ -15,16 +15,22 @@ class PreProcessCleanupWorker
   # only just created.
   ORPHAN_WINDOW = 1.day
 
-  def perform
+  # Pass a pipeline id to clean one pipeline only (console use); nil sweeps
+  # everything. Returns the logged lines so a console run can `puts` them.
+  def perform(pipeline_id = nil)
     @policy = PreProcessRetentionPolicy.load
+    @report = []
     @examined = 0
     @swept = 0
 
+    log_scope(pipeline_id)
     ids_on_disk = PreProcess::Output.pipeline_job_ids_on_disk
-    sweep_out_ranked(ids_on_disk)
-    sweep_orphans(ids_on_disk)
-
+    sweep_out_ranked(ids_on_disk, pipeline_id)
+    # Orphans belong to no pipeline, so a scoped run never touches them.
+    sweep_orphans(ids_on_disk) unless pipeline_id
     log(summary_message)
+
+    @report.join("\n")
   end
 
   private
@@ -32,8 +38,8 @@ class PreProcessCleanupWorker
   # Each rescue is attached to its loop block, not a method - one bad folder
   # (vanished between listing and stat, undeletable, ...) must not abort the
   # batch or swallow the summary log.
-  def sweep_out_ranked(ids_on_disk)
-    PipelineJob.preprocess_sweep_candidates(@policy, ids_on_disk).each do |pipeline_job|
+  def sweep_out_ranked(ids_on_disk, pipeline_id)
+    PipelineJob.preprocess_sweep_candidates(@policy, ids_on_disk, pipeline_id:).each do |pipeline_job|
       sweep(PreProcess::Output.job_folder(pipeline_job.id), "pipeline_job=#{pipeline_job.id}")
     rescue StandardError => e
       report_failure(pipeline_job.id, e)
@@ -65,9 +71,9 @@ class PreProcessCleanupWorker
   end
 
   def report_failure(pipeline_job_id, error)
-    Rails.logger.error(
-      "[preprocess_cleanup] failed pipeline_job=#{pipeline_job_id} #{error.class}: #{error.message}"
-    )
+    line = "failed pipeline_job=#{pipeline_job_id} #{error.class}: #{error.message}"
+    @report << line
+    Rails.logger.error("[preprocess_cleanup] #{line}")
     Airbrake.notify(error)
   end
 
@@ -77,7 +83,19 @@ class PreProcessCleanupWorker
     "finished swept=#{@swept} examined=#{@examined} dry_run=false"
   end
 
+  # find, not find_by: a typo'd id in the console should raise, not silently
+  # sweep nothing.
+  def log_scope(pipeline_id)
+    return unless pipeline_id
+
+    log("scoped to pipeline=#{pipeline_id} (#{Pipeline.find(pipeline_id).name})")
+  end
+
+  # Report lines carry the dry-run marker; the worker tag is only added on the
+  # logger line, where the reader lacks the console's context.
   def log(message)
-    Rails.logger.info("[preprocess_cleanup]#{@policy.dry_run? ? ' [dry run]' : ''} #{message}")
+    line = "#{'[dry run] ' if @policy.dry_run?}#{message}"
+    @report << line
+    Rails.logger.info("[preprocess_cleanup] #{line}")
   end
 end
