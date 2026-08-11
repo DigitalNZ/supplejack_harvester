@@ -7,6 +7,7 @@
 # wrote each folder rather than a purge timestamp.
 class PreProcessCleanupWorker
   include Sidekiq::Job
+  include CleanupReport
 
   sidekiq_options retry: 0, queue: 'low_priority'
 
@@ -42,7 +43,7 @@ class PreProcessCleanupWorker
     PipelineJob.preprocess_sweep_candidates(@policy, ids_on_disk, pipeline_id:).each do |pipeline_job|
       sweep(PreProcess::Output.job_folder(pipeline_job.id), "pipeline_job=#{pipeline_job.id}")
     rescue StandardError => e
-      report_failure(pipeline_job.id, e)
+      report_failure("pipeline_job=#{pipeline_job.id}", e)
     end
   end
 
@@ -53,7 +54,7 @@ class PreProcessCleanupWorker
 
       sweep(folder, "pipeline_job=#{pipeline_job_id} (orphan)")
     rescue StandardError => e
-      report_failure(pipeline_job_id, e)
+      report_failure("pipeline_job=#{pipeline_job_id}", e)
     end
   end
 
@@ -70,32 +71,13 @@ class PreProcessCleanupWorker
     @swept += 1
   end
 
-  def report_failure(pipeline_job_id, error)
-    line = "failed pipeline_job=#{pipeline_job_id} #{error.class}: #{error.message}"
-    @report << line
-    Rails.logger.error("[preprocess_cleanup] #{line}")
-    Airbrake.notify(error)
-  end
-
   def summary_message
     return "finished would_sweep=#{@examined} dry_run=true" if @policy.dry_run?
 
     "finished swept=#{@swept} examined=#{@examined} dry_run=false"
   end
 
-  # find, not find_by: a typo'd id in the console should raise, not silently
-  # sweep nothing.
-  def log_scope(pipeline_id)
-    return unless pipeline_id
-
-    log("scoped to pipeline=#{pipeline_id} (#{Pipeline.find(pipeline_id).name})")
-  end
-
-  # Report lines carry the dry-run marker; the worker tag is only added on the
-  # logger line, where the reader lacks the console's context.
-  def log(message)
-    line = "#{'[dry run] ' if @policy.dry_run?}#{message}"
-    @report << line
-    Rails.logger.info("[preprocess_cleanup] #{line}")
+  def log_tag
+    '[preprocess_cleanup]'
   end
 end

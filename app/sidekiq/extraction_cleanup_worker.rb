@@ -4,6 +4,7 @@
 # Folders are deleted; the job rows stay so run history survives.
 class ExtractionCleanupWorker
   include Sidekiq::Job
+  include CleanupReport
 
   sidekiq_options retry: 0, queue: 'low_priority'
 
@@ -41,7 +42,7 @@ class ExtractionCleanupWorker
 
       purge(job, bytes)
     rescue StandardError => e
-      report_failure(job, e)
+      report_failure("extraction_job=#{job.id}", e)
     end
   end
 
@@ -73,13 +74,6 @@ class ExtractionCleanupWorker
     @purged_bytes += bytes
   end
 
-  def report_failure(job, error)
-    line = "failed extraction_job=#{job.id} #{error.class}: #{error.message}"
-    @report << line
-    Rails.logger.error("[extraction_cleanup] #{line}")
-    Airbrake.notify(error)
-  end
-
   def summary_message
     return "finished examined=#{@examined} would_free_bytes=#{@examined_bytes} dry_run=true" if @policy.dry_run?
 
@@ -95,19 +89,7 @@ class ExtractionCleanupWorker
     log("batch_limit reached (#{@policy.batch_limit}); more may qualify")
   end
 
-  # find, not find_by: a typo'd id in the console should raise, not silently
-  # sweep nothing.
-  def log_scope(pipeline_id)
-    return unless pipeline_id
-
-    log("scoped to pipeline=#{pipeline_id} (#{Pipeline.find(pipeline_id).name})")
-  end
-
-  # Report lines carry the dry-run marker; the worker tag is only added on the
-  # logger line, where the reader lacks the console's context.
-  def log(message)
-    line = "#{'[dry run] ' if @policy.dry_run?}#{message}"
-    @report << line
-    Rails.logger.info("[extraction_cleanup] #{line}")
+  def log_tag
+    '[extraction_cleanup]'
   end
 end
