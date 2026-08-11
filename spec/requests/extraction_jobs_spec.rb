@@ -108,6 +108,33 @@ RSpec.describe 'ExtractionJobs' do
           expect(job).to be_is_sample
         end
 
+        # The editor's "Run sample and transform data" has nowhere to ask which run, so it
+        # takes the most recent one holding output - the one being worked on.
+        it 'falls back to the most recent run when the editor asks for a sample' do
+          allow(ExtractionWorker).to receive(:perform_async)
+          allow(PreProcess::Output).to receive(:pipeline_job_ids_with_output).with(0).and_return([source_run.id])
+
+          post pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+            pipeline, second_block, second_block.extraction_definition, kind: 'sample', format: :json
+          )
+
+          job = ExtractionJob.order(:id).last
+
+          expect(job.source_pipeline_job_id).to eq source_run.id
+          expect(job.source_position).to eq 0
+          expect(response.parsed_body['location']).to include 'transformation_definitions'
+        end
+
+        it 'sends the editor to the pipeline when nothing has been pre-processed yet' do
+          expect do
+            post pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+              pipeline, second_block, second_block.extraction_definition, kind: 'sample', format: :json
+            )
+          end.not_to change(ExtractionJob, :count)
+
+          expect(response.parsed_body['location']).to eq pipeline_path(pipeline)
+        end
+
         it 'refuses to start without one, rather than extracting from nothing' do
           expect { post_run }.not_to change(ExtractionJob, :count)
 

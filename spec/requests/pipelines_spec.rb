@@ -100,6 +100,20 @@ RSpec.describe 'Pipelines' do
       expect(response.body).not_to include 'Pages to transform'
     end
 
+    # The harvest block's card is rendered through a different route than the
+    # pre-processing and enrichment ones, and a harvest sitting after a pre-processing
+    # block works from its records just the same - so it has to be asked which run to
+    # take them from rather than being fired off with nothing to read.
+    it 'asks a harvest block placed after a pre-processing block which run to work from' do
+      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
+      harvest_definition.update!(position: 1, source_id: 'harvest-block')
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include "run-extraction-#{harvest_definition.id}"
+      expect(response.body).to include 'choose which run to take them from'
+    end
+
     it 'offers "Add Pre-processing" in the add-block dropdown before any blocks exist' do
       empty_pipeline = create(:pipeline, name: 'Empty pipeline')
 
