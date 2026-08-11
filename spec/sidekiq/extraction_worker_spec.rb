@@ -91,6 +91,28 @@ RSpec.describe ExtractionWorker, type: :job do
         expect(harvest_report.transformation_status).to eq 'completed'
         expect(harvest_report.load_status).to eq 'completed'
       end
+
+      # Finishing the report is not enough: a pre-processing block exists to feed the next
+      # one, and the transformation workers that stood aside are also the ones that would
+      # normally step the chain forward.
+      context 'and the block is a pre-processing one with a block after it' do
+        let(:preprocess_block) { create(:harvest_definition, pipeline:, kind: :preprocess, position: 0) }
+        let!(:next_block)      { create(:harvest_definition, pipeline:, kind: :preprocess, position: 1) }
+        let(:harvest_job)      { create(:harvest_job, harvest_definition: preprocess_block, pipeline_job:) }
+        let(:pipeline_job) do
+          create(:pipeline_job, pipeline:, destination:,
+                                harvest_definitions_to_run: [preprocess_block.id.to_s, next_block.id.to_s])
+        end
+
+        it 'starts the next block' do
+          allow(HarvestWorker).to receive(:perform_async_with_priority)
+
+          expect { subject.perform(extraction_job.id, harvest_report.id) }
+            .to change { pipeline_job.harvest_jobs.where(harvest_definition: next_block).count }.by(1)
+
+          expect(HarvestWorker).to have_received(:perform_async_with_priority)
+        end
+      end
     end
 
     context 'when the extraction is for a block that iterates the previous block (position > 0)' do
