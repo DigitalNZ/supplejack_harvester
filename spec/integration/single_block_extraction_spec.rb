@@ -71,15 +71,35 @@ RSpec.describe 'Extracting a single block from stored records', type: :integrati
       .not_to have_been_made
   end
 
-  it 'takes only the first stored page for a sample' do
+  it 'makes a single request for a sample' do
     stored_output(1, 'history', 'science')
     stored_output(2, 'art')
 
     ExtractionWorker.new.perform(extraction_job(kind: 'sample').id)
 
     expect(a_request(:get, 'https://data.example.com/category/history')).to have_been_made.once
-    expect(a_request(:get, 'https://data.example.com/category/science')).to have_been_made.once
+    expect(a_request(:get, 'https://data.example.com/category/science')).not_to have_been_made
     expect(a_request(:get, 'https://data.example.com/category/art')).not_to have_been_made
+  end
+
+  # A block working from stored records makes one request per record, so its page limit
+  # counts requests - not the pages of records they came from. Both of these records sit on
+  # the same stored page, and a limit of one stops after the first.
+  it "stops at the run's page limit for this block" do
+    stored_output(1, 'history', 'science')
+
+    pipeline_job = create(:pipeline_job, pipeline:, destination:,
+                                         block_settings: {
+                                           block.id.to_s => { 'run' => true, 'pages' => 1,
+                                                              'input' => "preprocess_output:#{source_run.id}" }
+                                         })
+    harvest_job = create(:harvest_job, harvest_definition: block, pipeline_job:)
+    job = create(:extraction_job, extraction_definition:, harvest_job:, kind: 'full')
+
+    ExtractionWorker.new.perform(job.id)
+
+    expect(a_request(:get, 'https://data.example.com/category/history')).to have_been_made.once
+    expect(a_request(:get, 'https://data.example.com/category/science')).not_to have_been_made
   end
 
   # The first block of a chain has no records to be given: it seeds itself, and must

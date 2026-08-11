@@ -10,11 +10,13 @@ module Extraction
       @harvest_job = extraction_job.harvest_job
       @harvest_report = @harvest_job.harvest_report if @harvest_job.present?
       @records_consumed = 0
+      @requests_made = 0
     end
 
     def call
       iterator.each do |api_document, page|
         break if api_document.body.blank?
+        break if request_limit_reached?
 
         process_enrichment_page(api_document, page)
       end
@@ -45,13 +47,39 @@ module Extraction
       folder = preprocess_folder
       return SjApiEnrichmentIterator.new(@extraction_job) if folder.blank?
 
-      # A sample takes the first page of stored records rather than all of them.
-      PreProcessRecordIterator.new(folder, pages: (1 if @extraction_job.is_sample?))
+      PreProcessRecordIterator.new(folder)
+    end
+
+    # A block working from stored records makes one request per record, so its page limit
+    # counts those requests rather than the pages of records it reads through: a limit of
+    # one means one request, whichever page of records it came from. A sample is a limit of
+    # one. nil makes a request for every record.
+    #
+    # Only for that path: an enrichment iterating the destination API keeps its own
+    # meaning of a page, a page of records from that API, handled by
+    # SjApiEnrichmentIterator.
+    def request_limit
+      return if preprocess_folder.blank?
+      return 1 if @extraction_job.is_sample?
+
+      @harvest_job&.pipeline_job&.pages_for(@harvest_job.harvest_definition)
+    end
+
+    def request_limit_reached?
+      limit = request_limit
+
+      limit.present? && @requests_made >= limit
     end
 
     # The folder of records this extraction works from, or nil when it seeds itself
-    # from the destination API.
+    # from the destination API. Asked for once per record now, so it is remembered.
     def preprocess_folder
+      return @preprocess_folder if defined?(@preprocess_folder)
+
+      @preprocess_folder = resolve_preprocess_folder
+    end
+
+    def resolve_preprocess_folder
       # Started on its own from the block's dropdown: it was told which earlier run to
       # work from, because there is no run of its own to take it from.
       return @extraction_job.preprocess_output_folder if @extraction_job.iterates_preprocess_output?
@@ -67,15 +95,18 @@ module Extraction
 
     def extract_and_save_enrichment_documents(api_records)
       api_records.each_with_index do |api_record, index|
-        enrichment_params = ExtractionParams.new(@extraction_definition.id,
-                                                 @extraction_job.id,
-                                                 @harvest_job&.id,
-                                                 api_record,
-                                                 page_from_index(index))
-        process_enrichment(enrichment_params)
+        break if request_limit_reached?
+
+        process_enrichment(extraction_params_for(api_record, index))
+        @requests_made += 1
 
         break if extraction_cancelled?
       end
+    end
+
+    def extraction_params_for(api_record, index)
+      ExtractionParams.new(@extraction_definition.id, @extraction_job.id, @harvest_job&.id,
+                           api_record, page_from_index(index))
     end
 
     def extraction_cancelled?
