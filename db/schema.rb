@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_10_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_13_120000) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -173,7 +173,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_10_120000) do
     t.bigint "extraction_definition_id"
     t.bigint "transformation_definition_id"
     t.string "source_id"
-    t.integer "kind", default: 0
+    t.integer "kind", default: 0, null: false
     t.integer "priority", default: 0
     t.boolean "required_for_active_record", default: false
     t.bigint "pipeline_id"
