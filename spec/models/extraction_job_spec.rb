@@ -205,6 +205,18 @@ RSpec.describe ExtractionJob do
     end
   end
 
+  describe '#retained?' do
+    it 'is false by default' do
+      expect(subject.retained?).to be false
+    end
+
+    it 'is true once retained_at is stamped' do
+      subject.update(retained_at: Time.zone.now)
+
+      expect(subject.retained?).to be true
+    end
+  end
+
   describe '.not_purged' do
     it 'excludes jobs whose data has been purged' do
       purged = create(:extraction_job, extraction_definition:, purged_at: Time.zone.now)

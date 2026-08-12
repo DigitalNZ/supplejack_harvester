@@ -115,6 +115,12 @@ class ExtractionJob < ApplicationRecord
     purged_at.present?
   end
 
+  # True while a user is retaining this job: the nightly cleanup never
+  # deletes its data, however old it gets.
+  def retained?
+    retained_at.present?
+  end
+
   # Extraction jobs whose data is old enough to delete under the retention
   # policy, oldest first.
   #

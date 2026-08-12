@@ -59,6 +59,12 @@ class PipelineJob < ApplicationRecord
     !status.in?(Job::FINISHED_STATUSES) && created_at > PREPROCESS_WRITING_WINDOW.ago
   end
 
+  # True while a user is retaining this run: the preprocess sweep never
+  # deletes its output folder, however old it gets.
+  def retained?
+    retained_at.present?
+  end
+
   # Trigger the next step in the automation if this job is from an automation and has completed
   def trigger_next_automation_step
     return unless from_automation? && harvest_reports.all?(&:completed?)

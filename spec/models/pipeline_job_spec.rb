@@ -110,6 +110,18 @@ RSpec.describe PipelineJob do
     end
   end
 
+  describe '#retained?' do
+    it 'is false by default' do
+      expect(create(:pipeline_job).retained?).to be false
+    end
+
+    it 'is true once retained_at is stamped' do
+      job = create(:pipeline_job, retained_at: Time.zone.now)
+
+      expect(job.retained?).to be true
+    end
+  end
+
   describe '.preprocess_sweep_candidates' do
     let(:pipeline) { create(:pipeline) }
     # The real PreProcessRetentionPolicy gains keep_latest in a later commit;

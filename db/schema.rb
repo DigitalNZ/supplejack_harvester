@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_31_044519) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_12_042409) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -139,6 +139,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_31_044519) do
     t.string "stop_condition_name"
     t.text "stop_condition_content"
     t.datetime "purged_at"
+    t.datetime "retained_at"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
     t.index ["purged_at"], name: "index_extraction_jobs_on_purged_at"
     t.index ["status"], name: "index_extraction_jobs_on_status"
@@ -301,6 +302,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_31_044519) do
     t.bigint "automation_step_id"
     t.string "job_priority"
     t.boolean "skip_previously_enriched", default: false
+    t.datetime "retained_at"
     t.index ["automation_step_id"], name: "index_pipeline_jobs_on_automation_step_id"
     t.index ["destination_id"], name: "index_pipeline_jobs_on_destination_id"
     t.index ["extraction_job_id"], name: "index_pipeline_jobs_on_extraction_job_id"
