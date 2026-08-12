@@ -69,5 +69,16 @@ RSpec.describe Load::Execution do
         expect(described_class.new([record], harvest_job, 'record_id').call.status).to eq 200
       end
     end
+
+    context 'when the harvest definition cannot be loaded' do
+      let(:harvest_definition) { create(:harvest_definition, pipeline:, kind: 'preprocess', source_id: 'test') }
+      let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
+      let(:harvest_job)        { create(:harvest_job, harvest_definition:, pipeline_job:) }
+
+      it 'raises instead of returning nil for handle_response to trip over' do
+        expect { described_class.new([record], harvest_job).call }
+          .to raise_error(StandardError, 'preprocess definitions cannot be loaded')
+      end
+    end
   end
 end

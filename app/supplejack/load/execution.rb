@@ -17,11 +17,16 @@ module Load
       handle_load_error(e)
     end
 
+    # A preprocess block feeds the next block from disk and never reaches the load
+    # stage, so any other kind arriving here is a misconfiguration. Raise rather than
+    # returning nil, which handle_response turns into a NoMethodError on #status.
     def determine_request_type
       if @harvest_definition.harvest?
         harvest_request
       elsif @harvest_definition.enrichment?
         enrichment_request
+      else
+        raise StandardError, "#{@harvest_definition.kind} definitions cannot be loaded"
       end
     end
 

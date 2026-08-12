@@ -96,6 +96,18 @@ RSpec.describe HarvestJob do
         harvest_job.execute_delete_previous_records
       end
 
+      it 'does not tell the destination to delete previously harvested records when the block loads at a non-zero priority' do
+        harvest_definition.update(priority: -1)
+
+        pipeline_job = create(:pipeline_job, pipeline:, destination:, page_type: 'all_available_pages', harvest_definitions_to_run: [pipeline.harvest.id], delete_previous_records: true, status: 'completed')
+        harvest_job = create(:harvest_job, :completed, harvest_definition:, pipeline_job:)
+        create(:harvest_report, harvest_job:, records_loaded: 100, extraction_status: 'completed', transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+
+        expect(DeletePreviousRecords::Execution).to receive(:new).exactly(0).times.and_call_original
+
+        harvest_job.execute_delete_previous_records
+      end
+
       it 'does not tell the destination to delete previously harvested records from an enrichment' do
         pipeline_job = create(:pipeline_job, pipeline:, destination:, page_type: 'all_available_pages', harvest_definitions_to_run: [pipeline.harvest.id], delete_previous_records: true, status: 'cancelled')
 

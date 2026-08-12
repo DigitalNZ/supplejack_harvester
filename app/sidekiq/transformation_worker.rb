@@ -145,7 +145,7 @@ class TransformationWorker
 
   def notify_harvesting_api
     ::Retriable.retriable(on_retry: log_retry_attempt) do
-      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
+      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if notify_harvesting?
     end
   rescue StandardError => e
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
@@ -156,6 +156,10 @@ class TransformationWorker
                                                                          })
   end
 
+  def notify_harvesting?
+    source_id.present? && @harvest_report.load_workers_queued.zero?
+  end
+
   def queue_delete_worker(records)
     return if records.empty?
 
@@ -164,8 +168,12 @@ class TransformationWorker
     @harvest_report.increment_delete_workers_queued!
   end
 
+  # The source whose records this run is touching, which is what the API flags as
+  # harvesting so it does not de-index them mid-run. That is the pipeline's harvest
+  # block, not `harvest_definitions.first` - blocks are ordered by id, so a pipeline
+  # whose preprocess block was created before its harvest flagged the wrong source.
   def source_id
-    @pipeline_job.pipeline.harvest_definitions.first.source_id
+    @pipeline_job.pipeline.harvest&.source_id
   end
 
   def destination

@@ -26,9 +26,7 @@ class HarvestJob < ApplicationRecord
   end
 
   def execute_delete_previous_records
-    return unless harvest_definition.harvest?
-    return unless pipeline_job.delete_previous_records? && !pipeline_job.cancelled?
-    return unless harvest_report.ready_to_delete_previous_records?
+    return unless flush_previous_records?
 
     DeletePreviousRecords::Execution.new(harvest_definition.source_id, name, pipeline_job.destination).call
   end
@@ -63,6 +61,20 @@ class HarvestJob < ApplicationRecord
   end
 
   private
+
+  # A block that loads at a non-zero priority writes to its own fragment on records owned
+  # by other sources, so it must never flush. FlushOldRecordsWorker in the API matches on
+  # 'fragments.source_id' and 'fragments.priority': 0 without wrapping them in $elemMatch,
+  # so the priority clause is satisfied by the ORIGINAL harvest's primary fragment -
+  # flushing on such a block marks the whole record deleted rather than dropping this
+  # block's fragment.
+  def flush_previous_records?
+    return false unless harvest_definition.harvest?
+    return false unless harvest_definition.priority.zero?
+    return false unless pipeline_job.delete_previous_records? && !pipeline_job.cancelled?
+
+    harvest_report.ready_to_delete_previous_records?
+  end
 
   # The order of arguments is important to sidekiq workers as they do not support keyword arguments
   # If the order of arguments change in the TransformationWorker, LoadWorker, or DeleteWorker
