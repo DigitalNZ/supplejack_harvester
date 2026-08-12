@@ -414,6 +414,14 @@ RSpec.describe ExtractionJob do
       expect(candidates).not_to include(retained)
     end
 
+    it 'never purges a retained job out-ranked past keep_latest' do
+      job_created(2.months.ago)
+      job_created(3.months.ago)
+      retained = job_created(4.months.ago, retained_at: Time.zone.now)
+
+      expect(described_class.purge_candidates(policy)).not_to include(retained)
+    end
+
     it 'ignores already-purged jobs when ranking' do
       job_created(2.months.ago, purged_at: Time.zone.now)
       job_created(3.months.ago, purged_at: Time.zone.now)

@@ -146,7 +146,7 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
           <button
             className="btn btn-outline-primary me-2"
             onClick={handleRetentionToggle}
-            disabled={loading || runs.length == 0}
+            disabled={loading || !selectedRun}
             title={
               selectedRun?.retained
                 ? "Stop retaining this run's pre-processed data"
