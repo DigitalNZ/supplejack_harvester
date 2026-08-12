@@ -36,6 +36,10 @@ RSpec.describe 'ExtractionJobs' do
     it 'labels the destructive button for what it removes: the job' do
       expect(response.body).to include('Delete job')
     end
+
+    it 'offers to retain the job' do
+      expect(response.body).to include('Retain job')
+    end
   end
 
   describe '#show when the extracted data has been purged' do
@@ -60,6 +64,26 @@ RSpec.describe 'ExtractionJobs' do
 
     it 'does not render the result viewer' do
       expect(response.body).not_to include('extraction-result-viewer')
+    end
+
+    it 'does not offer to retain the job' do
+      expect(response.body).not_to include('Retain job')
+    end
+  end
+
+  describe '#show when the job is retained' do
+    before do
+      subject.update(status: 'completed', retained_at: Time.zone.now)
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(pipeline, harvest_definition,
+                                                                                extraction_definition, subject)
+    end
+
+    it 'shows the Retained badge' do
+      expect(response.body).to include('Retained')
+    end
+
+    it 'offers to stop retaining' do
+      expect(response.body).to include('Stop retaining')
     end
   end
 
