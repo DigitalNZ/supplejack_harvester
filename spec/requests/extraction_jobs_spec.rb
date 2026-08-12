@@ -100,6 +100,20 @@ RSpec.describe 'ExtractionJobs' do
     end
   end
 
+  describe '#index' do
+    it 'lists retained jobs first and badges them' do
+      retained = create(:extraction_job, extraction_definition:, retained_at: Time.zone.now)
+      retained.update_column(:updated_at, 2.days.ago)
+      newer = create(:extraction_job, extraction_definition:)
+
+      get pipeline_harvest_definition_extraction_definition_extraction_jobs_path(pipeline, harvest_definition,
+                                                                                 extraction_definition)
+
+      expect(response.body).to include('Retained')
+      expect(response.body.index(">#{retained.name}<")).to be < response.body.index(">#{newer.name}<")
+    end
+  end
+
   describe '#create' do
     context 'when the format is HTML' do
       describe 'is successful' do

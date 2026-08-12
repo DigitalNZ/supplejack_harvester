@@ -7,7 +7,11 @@ class ExtractionJobsController < ApplicationController
   before_action :find_extraction_job, only: %i[show destroy cancel]
 
   def index
-    @extraction_jobs = paginate_and_filter_jobs(@extraction_definition.extraction_jobs)
+    # Retained jobs first (IS NULL sorts the null, un-retained rows after),
+    # then paginate_and_filter_jobs appends its usual newest-first order.
+    @extraction_jobs = paginate_and_filter_jobs(
+      @extraction_definition.extraction_jobs.order(Arel.sql('retained_at IS NULL'))
+    )
   end
 
   def show
