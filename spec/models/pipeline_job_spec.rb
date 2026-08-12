@@ -199,6 +199,18 @@ RSpec.describe PipelineJob do
       expect(candidates).to eq [first]
     end
 
+    it 'skips retained runs, which still hold their keep_latest slot' do
+      oldest = run(pipeline, 5.days.ago)
+      retained = run(pipeline, 4.days.ago)
+      retained.update(retained_at: Time.zone.now)
+      run(pipeline, 3.days.ago)
+      run(pipeline, 2.days.ago)
+
+      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
+
+      expect(candidates).to eq [oldest]
+    end
+
     it 'only returns runs for the given pipeline when scoped' do
       other_pipeline = create(:pipeline)
       old_ours = run(pipeline, 5.days.ago)

@@ -42,6 +42,7 @@ class PipelineJob < ApplicationRecord
       .values
       .flat_map { |jobs| jobs.drop(policy.keep_latest) }
       .reject(&:maybe_still_writing?)
+      .reject(&:retained?)
   end
 
   # Check if this job is part of an automation
