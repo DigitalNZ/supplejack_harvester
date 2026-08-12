@@ -62,6 +62,28 @@ RSpec.describe HarvestDefinition do
     end
   end
 
+  describe '#load_kind' do
+    it 'is the kind of the load definition when the block has one' do
+      load_definition = create(:load_definition, pipeline:, kind: 'secondary_fragment')
+
+      expect(create(:harvest_definition, pipeline:, load_definition:).load_kind).to eq 'secondary_fragment'
+    end
+
+    context 'when the block has no load definition' do
+      it 'derives writing the primary fragment from a harvest block' do
+        expect(create(:harvest_definition, pipeline:, kind: :harvest).load_kind).to eq 'primary_fragment'
+      end
+
+      it 'derives an enrichment from an enrichment block' do
+        expect(create(:harvest_definition, pipeline:, kind: :enrichment).load_kind).to eq 'enrichment'
+      end
+
+      it 'derives writing to disk from a preprocess block' do
+        expect(create(:harvest_definition, pipeline:, kind: :preprocess).load_kind).to eq 'file'
+      end
+    end
+  end
+
   describe '#ready_to_run?' do
     it 'returns false if it has no extraction definition' do
       pipeline = create(:pipeline)
@@ -128,35 +150,53 @@ RSpec.describe HarvestDefinition do
       expect(cloned_harvest_definition.extraction_definition).to eq harvest_definition.extraction_definition
       expect(cloned_harvest_definition.transformation_definition).to eq harvest_definition.transformation_definition
     end
+
+    it 'points the clone at the same load definition' do
+      harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment'))
+
+      cloned_harvest_definition = harvest_definition.clone(pipeline_two)
+
+      expect(cloned_harvest_definition.load_definition).to eq harvest_definition.load_definition
+    end
   end
 
   describe "#destroy" do
     let(:pipeline)                  { create(:pipeline)}
-    let!(:harvest_definition)       { create(:harvest_definition, pipeline:, extraction_definition:, transformation_definition:) }
+    let!(:harvest_definition)       { create(:harvest_definition, pipeline:, extraction_definition:, transformation_definition:, load_definition:) }
     let(:extraction_definition)     { create(:extraction_definition) }
     let(:transformation_definition) { create(:transformation_definition) }
+    let(:load_definition)           { create(:load_definition, pipeline:) }
 
     context 'when the associated Extraction Definition and Transformation Definition were not shared' do
       it 'destroys the Extraction Definition' do
-       expect { harvest_definition.destroy }.to change(ExtractionDefinition, :count).by(-1) 
+       expect { harvest_definition.destroy }.to change(ExtractionDefinition, :count).by(-1)
       end
 
       it 'destroys the Transformation Definition' do
         expect { harvest_definition.destroy }.to change(TransformationDefinition, :count).by(-1)
       end
+
+      it 'destroys the Load Definition' do
+        expect { harvest_definition.destroy }.to change(LoadDefinition, :count).by(-1)
+      end
     end
 
     context 'when the associated Extraction Definition and Transformation Definition were shared' do
-      let!(:harvest_definition_two) { create(:harvest_definition, pipeline:, extraction_definition:, transformation_definition:) }
-      
+      let!(:harvest_definition_two) { create(:harvest_definition, pipeline:, extraction_definition:, transformation_definition:, load_definition:) }
+
       it 'does not destroy the Extraction Definition' do
-        expect(extraction_definition.shared?).to eq true 
+        expect(extraction_definition.shared?).to eq true
         expect { harvest_definition.destroy }.to change(ExtractionDefinition, :count).by(0)
       end
 
       it 'does not destroy the Transformation Definition' do
         expect(transformation_definition.shared?).to eq true
         expect { harvest_definition.destroy }.to change(TransformationDefinition, :count).by(0)
+      end
+
+      it 'does not destroy the Load Definition' do
+        expect(load_definition.shared?).to eq true
+        expect { harvest_definition.destroy }.to change(LoadDefinition, :count).by(0)
       end
     end
 

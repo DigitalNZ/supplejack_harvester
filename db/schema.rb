@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_10_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_12_120000) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -179,8 +179,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_10_120000) do
     t.bigint "pipeline_id"
     t.bigint "harvest_report_id"
     t.integer "position", default: 0, null: false
+    t.bigint "load_definition_id"
     t.index ["extraction_definition_id"], name: "index_harvest_definitions_on_extraction_definition_id"
     t.index ["harvest_report_id"], name: "index_harvest_definitions_on_harvest_report_id"
+    t.index ["load_definition_id"], name: "index_harvest_definitions_on_load_definition_id"
     t.index ["pipeline_id"], name: "index_harvest_definitions_on_pipeline_id"
     t.index ["transformation_definition_id"], name: "index_harvest_definitions_on_transformation_definition_id"
   end
@@ -272,6 +274,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_10_120000) do
     t.index ["job_id"], name: "index_job_errors_on_job_id"
     t.index ["job_type"], name: "index_job_errors_on_job_type"
     t.index ["process_type"], name: "index_job_errors_on_process_type"
+  end
+
+  create_table "load_definitions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.text "name"
+    t.integer "kind", default: 0, null: false
+    t.integer "priority", default: 0, null: false
+    t.boolean "required_for_active_record", default: false, null: false
+    t.bigint "pipeline_id"
+    t.bigint "last_edited_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["last_edited_by_id"], name: "index_load_definitions_on_last_edited_by_id"
+    t.index ["name"], name: "index_load_definitions_on_name", unique: true, length: 255
+    t.index ["pipeline_id"], name: "index_load_definitions_on_pipeline_id"
   end
 
   create_table "parameters", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

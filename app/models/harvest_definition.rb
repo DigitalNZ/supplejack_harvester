@@ -8,6 +8,7 @@ class HarvestDefinition < ApplicationRecord
   belongs_to :extraction_job, optional: true
 
   belongs_to :transformation_definition, optional: true
+  belongs_to :load_definition, optional: true
 
   # the before_destroy needs to be here (before any other dependent: :destroy statements)
   before_destroy :destroy_associated_definitions, prepend: true
@@ -30,6 +31,15 @@ class HarvestDefinition < ApplicationRecord
   def destroy_associated_definitions
     destroy_definition(extraction_definition)
     destroy_definition(transformation_definition)
+    destroy_definition(load_definition)
+  end
+
+  # How this block writes its records. Blocks predating load definitions, and any created
+  # between the backfill and the editor learning to make them, have none - fall back to the
+  # kind the block would have loaded as before load definitions existed. Falls away once
+  # load_definition_id is made non-null.
+  def load_kind
+    load_definition&.kind || LoadDefinition::KIND_FOR_BLOCK_KIND[kind]
   end
 
   def completed_harvest_jobs?
