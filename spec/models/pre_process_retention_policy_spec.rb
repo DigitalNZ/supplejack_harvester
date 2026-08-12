@@ -17,8 +17,8 @@ RSpec.describe PreProcessRetentionPolicy do
       expect(described_class.load.keep_latest).to eq 4
     end
 
-    it 'ships with dry_run switched on' do
-      expect(described_class.load.dry_run?).to be true
+    it 'ships armed - dry_run is off' do
+      expect(described_class.load.dry_run?).to be false
     end
 
     it 'has no age cutoffs - a leftover age key would change nothing here' do

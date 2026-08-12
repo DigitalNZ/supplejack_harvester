@@ -25,8 +25,8 @@ RSpec.describe ExtractionRetentionPolicy do
       expect(loaded.max_age_months).to eq 6
     end
 
-    it 'ships with dry_run switched on' do
-      expect(described_class.load.dry_run?).to be true
+    it 'ships armed - dry_run is off' do
+      expect(described_class.load.dry_run?).to be false
     end
   end
 

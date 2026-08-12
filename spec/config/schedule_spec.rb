@@ -2,22 +2,21 @@
 
 require 'rails_helper'
 
-# The schedule is parked as schedule.disabled.yml while the retention policy
-# is verified by hand — sidekiq-cron only auto-loads config/schedule.yml.
-# These examples keep pinning the content that goes live when it is renamed
-# back.
-RSpec.describe 'config/schedule.disabled.yml' do
+# Pins the live cleanup schedule. sidekiq-cron auto-loads config/schedule.yml
+# on Sidekiq server startup; both jobs still honour dry_run in
+# config/retention.yml.
+RSpec.describe 'config/schedule.yml' do
   subject(:schedule) do
-    YAML.safe_load(ERB.new(Rails.root.join('config/schedule.disabled.yml').read).result)
+    YAML.safe_load(ERB.new(Rails.root.join('config/schedule.yml').read).result)
   end
 
-  it 'schedules the extraction cleanup nightly' do
+  it 'schedules the extraction cleanup daily' do
     cron_string = schedule.dig('extraction_cleanup', 'cron')
     cron = Fugit::Cron.parse(cron_string)
     # Check frequency is daily (86400 seconds in a day)
     expect(cron.rough_frequency).to eq 86400
-    # Check time is 2 AM (hour 2, minute 0)
-    expect(cron_string).to start_with('0 2 ')
+    # Check time is 9:15 AM (hour 9, minute 15)
+    expect(cron_string).to start_with('15 9 ')
   end
 
   it 'maps to the extraction cleanup worker' do
@@ -36,14 +35,14 @@ RSpec.describe 'config/schedule.disabled.yml' do
     expect(schedule.dig('extraction_cleanup', 'queue')).to eq 'low_priority'
   end
 
-  it 'schedules the preprocess cleanup nightly' do
+  it 'schedules the preprocess cleanup daily' do
     cron_string = schedule.dig('preprocess_cleanup', 'cron')
     cron = Fugit::Cron.parse(cron_string)
     # Check frequency is daily (86400 seconds in a day)
     expect(cron.rough_frequency).to eq 86400
-    # Check time is 2:30 AM (hour 2, minute 30) - offset from extraction
-    # cleanup so the two nightly sweeps don't start at the same moment.
-    expect(cron_string).to start_with('30 2 ')
+    # Check time is 9:45 AM (hour 9, minute 45) - offset from extraction
+    # cleanup so the two daily sweeps don't start at the same moment.
+    expect(cron_string).to start_with('45 9 ')
   end
 
   it 'maps to the preprocess cleanup worker' do
@@ -60,5 +59,11 @@ RSpec.describe 'config/schedule.disabled.yml' do
 
   it 'uses the low_priority queue for preprocess cleanup' do
     expect(schedule.dig('preprocess_cleanup', 'queue')).to eq 'low_priority'
+  end
+
+  it 'lists low_priority in the staging Sidekiq queues' do
+    sidekiq = YAML.safe_load(ERB.new(Rails.root.join('config/sidekiq.yml').read).result,
+                             permitted_classes: [Symbol])
+    expect(sidekiq.dig('staging', :queues)).to include('low_priority')
   end
 end

@@ -61,12 +61,12 @@
 # exclusion only holds for a day - see the writing window above.
 shared:
   extraction:
-    dry_run: true
+    dry_run: false
     batch_limit: 200
     min_age_months: 1
     keep_latest: 24
     max_age_months: 6
     excluded_extraction_definition_ids: []
   preprocess:
-    dry_run: true
+    dry_run: false
     keep_latest: 4
