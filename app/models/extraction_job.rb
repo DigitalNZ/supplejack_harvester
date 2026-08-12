@@ -101,7 +101,9 @@ class ExtractionJob < ApplicationRecord
   #
   # Refuses busy and retained jobs and returns false: the nightly batch's busy
   # list is a snapshot, so work that starts mid-batch is only caught by
-  # re-checking here, just before the folder goes.
+  # re-checking here, just before the folder goes. The retained check is the
+  # same idea: the lock must hold for any caller, even one that never
+  # consulted purge_candidates.
   def purge!
     return false if busy? || retained?
 

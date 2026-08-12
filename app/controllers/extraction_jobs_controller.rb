@@ -10,7 +10,7 @@ class ExtractionJobsController < ApplicationController
     # Retained jobs first (IS NULL sorts the null, un-retained rows after),
     # then paginate_and_filter_jobs appends its usual newest-first order.
     @extraction_jobs = paginate_and_filter_jobs(
-      @extraction_definition.extraction_jobs.order(Arel.sql('retained_at IS NULL'))
+      @extraction_definition.extraction_jobs.order(Arel.sql('extraction_jobs.retained_at IS NULL'))
     )
   end
 

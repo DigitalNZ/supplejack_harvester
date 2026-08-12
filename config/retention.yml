@@ -17,7 +17,9 @@
 # older than min_age_months AND either it is no longer among the newest
 # keep_latest extractions for its extraction definition, or it is older than
 # max_age_months. It stamps purged_at on the job and the UI then shows a
-# "Data removed" badge.
+# "Data removed" badge. A job a user has retained (retained_at stamped via the
+# UI padlock) is never purged, however old it gets or however far out of the
+# keep_latest window it falls.
 #
 # Sample extractions take slots in the keep_latest count just like full ones:
 # one shared count per definition, by deliberate choice. On a definition that
@@ -40,10 +42,11 @@
 # PreProcessCleanupWorker reads `preprocess`. Each pipeline keeps its newest
 # keep_latest runs that still have output on disk; every older folder is
 # swept. Nothing is recorded in the database because no row owns the folder.
-# Two safety rules live in code, not here: an out-ranked run that is
-# unfinished and less than a day old is kept (it may still be writing), and
-# a folder whose pipeline job row is gone is only swept once it has sat
-# untouched for a day.
+# Three safety rules live in code, not here: an out-ranked run that is
+# unfinished and less than a day old is kept (it may still be writing), a
+# folder whose pipeline job row is gone is only swept once it has sat
+# untouched for a day, and a run a user has retained (retained_at stamped via
+# the UI padlock) is never swept, whatever its age.
 #
 #   With the numbers below:
 #     - a pipeline has 10 runs with output on disk: the oldest 6 folders go,

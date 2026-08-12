@@ -46,13 +46,14 @@ class ExtractionCleanupWorker
     end
   end
 
-  # purge! backs out with false when the job turned busy mid-batch; that skip
-  # is logged but never counted as a purge.
+  # purge! backs out with false when the job turned busy mid-batch, or when it
+  # was retained after the candidate list was built; either skip is logged but
+  # never counted as a purge.
   def purge(job, bytes)
     if job.purge!
       record_purge(bytes)
     else
-      log("skipped busy extraction_job=#{job.id}")
+      log("skipped #{job.retained? ? 'retained' : 'busy'} extraction_job=#{job.id}")
     end
   end
 
