@@ -99,11 +99,11 @@ class ExtractionJob < ApplicationRecord
   # history and anything pointing at this job survive. Safe to call when the
   # folder is already missing.
   #
-  # Refuses busy jobs and returns false: the nightly batch's busy list is a
-  # snapshot, so work that starts mid-batch is only caught by re-checking
-  # here, just before the folder goes.
+  # Refuses busy and retained jobs and returns false: the nightly batch's busy
+  # list is a snapshot, so work that starts mid-batch is only caught by
+  # re-checking here, just before the folder goes.
   def purge!
-    return false if busy?
+    return false if busy? || retained?
 
     delete_folder
     update!(purged_at: Time.zone.now)
@@ -150,6 +150,7 @@ class ExtractionJob < ApplicationRecord
     def eligible_for_purge(policy)
       from(ranked_by_recency, :extraction_jobs)
         .where(status: Job::FINISHED_STATUSES)
+        .where(retained_at: nil)
         .where.not(extraction_definition_id: policy.excluded_extraction_definition_ids)
         .where.not(id: busy_ids)
         .where(created_at: ...policy.min_age_cutoff)
