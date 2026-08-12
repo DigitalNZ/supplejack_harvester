@@ -106,7 +106,7 @@ class RequestsController < ApplicationController
       response: preprocess_response(input_record),
       total_pages: documents.total_pages,
       total_records: records.count,
-      runs: runs.map { |job| { id: job.id, label: run_label(job) } },
+      runs: runs.map { |job| { id: job.id, label: run_label(job), retained: job.retained? } },
       current_run_id: run.id
     }
   end
