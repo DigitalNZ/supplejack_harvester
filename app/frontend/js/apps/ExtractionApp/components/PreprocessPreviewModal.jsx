@@ -23,6 +23,7 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [currentRecord, setCurrentRecord] = useState(1);
   const [currentRunId, setCurrentRunId] = useState(null);
+  const [retentionError, setRetentionError] = useState(false);
 
   const { loading } = useSelector((state) =>
     selectUiRequestById(state, requestId)
@@ -84,20 +85,24 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
       ? request.delete(path)
       : request.post(path);
 
-    toggle.then(() => {
-      dispatch(setLoading(requestId));
-      dispatch(
-        previewRequest({
-          pipelineId: appDetails.pipeline.id,
-          harvestDefinitionId: appDetails.harvestDefinition.id,
-          extractionDefinitionId: appDetails.extractionDefinition.id,
-          id: requestId,
-          page: currentPage,
-          record: currentRecord,
-          pipelineJobId: selectedRunId,
-        })
-      );
-    });
+    setRetentionError(false);
+    dispatch(setLoading(requestId));
+
+    toggle
+      .catch(() => setRetentionError(true))
+      .then(() => {
+        dispatch(
+          previewRequest({
+            pipelineId: appDetails.pipeline.id,
+            harvestDefinitionId: appDetails.harvestDefinition.id,
+            extractionDefinitionId: appDetails.extractionDefinition.id,
+            id: requestId,
+            page: currentPage,
+            record: currentRecord,
+            pipelineJobId: selectedRunId,
+          })
+        );
+      });
   };
 
   const canNotClickPreviousRecord = () =>
@@ -168,6 +173,12 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
         </div>
       </Modal.Header>
       <Modal.Body>
+        {retentionError && (
+          <div className="alert alert-danger" role="alert">
+            Could not update the retained state. Please try again.
+          </div>
+        )}
+
         {loading && runs.length == 0 && (
           <div className="d-flex justify-content-center">
             <div className="spinner-border text-primary" role="status">
