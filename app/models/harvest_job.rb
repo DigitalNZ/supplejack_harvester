@@ -11,6 +11,7 @@ class HarvestJob < ApplicationRecord
 
   delegate :extraction_definition, to: :harvest_definition
   delegate :transformation_definition, to: :harvest_definition
+  delegate :load_kind, to: :harvest_definition
 
   PROCESSES = %w[TransformationWorker LoadWorker DeleteWorker].freeze
 
@@ -63,11 +64,12 @@ class HarvestJob < ApplicationRecord
   private
 
   def flush_previous_records?
-    return false unless harvest_definition.harvest?
-    return false unless writes_primary_fragment?
-    return false unless pipeline_job.delete_previous_records? && !pipeline_job.cancelled?
+    harvest_definition.harvest? && writes_primary_fragment? &&
+      run_asked_to_flush? && harvest_report.ready_to_delete_previous_records?
+  end
 
-    harvest_report.ready_to_delete_previous_records?
+  def run_asked_to_flush?
+    pipeline_job.delete_previous_records? && !pipeline_job.cancelled?
   end
 
   # Only a block replacing a source's own records may flush. A block writing its own

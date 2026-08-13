@@ -2,7 +2,7 @@
 
 class LoadDefinitionsController < ApplicationController
   include LastEditedBy
-  include DefinitionAttachment
+  include DefinitionActions
 
   before_action :find_pipeline, :find_harvest_definition
   before_action :find_load_definition, only: %i[show update destroy clone]
@@ -10,19 +10,7 @@ class LoadDefinitionsController < ApplicationController
   def show; end
 
   def create
-    @load_definition = LoadDefinition.new(load_definition_params)
-
-    if @load_definition.save
-      attach_to_block(@load_definition, 'load')
-
-      redirect_to pipeline_harvest_definition_load_definition_path(
-        @pipeline, @harvest_definition, @load_definition
-      ), notice: t('.success')
-    else
-      flash.alert = t('.failure')
-
-      redirect_to pipeline_path(@pipeline)
-    end
+    create_definition('load')
   end
 
   def update
@@ -47,16 +35,7 @@ class LoadDefinitionsController < ApplicationController
   end
 
   def clone
-    clone = @load_definition.clone(@pipeline, load_definition_params['name'])
-
-    if clone.save
-      @harvest_definition.update(load_definition: clone)
-      flash.notice = t('.success')
-      redirect_to pipeline_harvest_definition_load_definition_path(@pipeline, @harvest_definition, clone)
-    else
-      flash.alert = t('.failure')
-      redirect_to pipeline_path(@pipeline)
-    end
+    clone_definition('load', @load_definition)
   end
 
   private

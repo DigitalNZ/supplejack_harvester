@@ -84,7 +84,12 @@ class BlockConfiguration
   end
 
   def sets_internal_identifier?
-    transformation_definition.fields.any? { |field| field.field? && field.name == 'internal_identifier' }
+    value_field_names.include?('internal_identifier')
+  end
+
+  # Only the fields that set a value - a reject_if or delete_if rule has a name too.
+  def value_field_names
+    transformation_definition.fields.select(&:field?).map(&:name)
   end
 
   def file_problems

@@ -43,16 +43,12 @@ class TransformationWorker
 
     update_harvest_report(transformed_records.count, rejected_records.count)
 
-    if load_kind == 'file'
+    if @harvest_job.load_kind == 'file'
       feed_forward(valid_records)
     else
       queue_load_worker(valid_records)
       queue_delete_worker(deleted_records)
     end
-  end
-
-  def load_kind
-    @load_kind ||= @harvest_job.harvest_definition.load_kind
   end
 
   def feed_forward(records)
@@ -170,7 +166,7 @@ class TransformationWorker
   # Blocks that do own their records (a harvest, an enrichment) delete as they always have.
   def queue_delete_worker(records)
     return if records.empty?
-    return if load_kind == 'secondary_fragment'
+    return if @harvest_job.load_kind == 'secondary_fragment'
 
     DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
                                              @harvest_report.id)
