@@ -153,6 +153,27 @@ RSpec.describe 'Pipelines' do
       expect(response.body).not_to include '+ Add harvest load'
     end
 
+    it 'says why a block whose definitions contradict each other cannot run' do
+      harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment'))
+      create(:field, name: 'title', transformation_definition: harvest_definition.transformation_definition)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include CGI.escapeHTML(
+        "#{harvest_definition.source_id} cannot run: it writes a secondary fragment, " \
+        'so its transformation has to set internal_identifier.'
+      )
+    end
+
+    it 'stays quiet about a block that is merely unfinished, which its empty cards already show' do
+      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'half-built',
+                                  extraction_definition: nil, transformation_definition: nil)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).not_to include 'cannot run:'
+    end
+
     it 'offers to clone a load definition shared with another block' do
       load_definition = create(:load_definition, pipeline:)
       harvest_definition.update(load_definition:)

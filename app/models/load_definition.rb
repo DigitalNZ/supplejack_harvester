@@ -29,6 +29,9 @@ class LoadDefinition < ApplicationRecord
   }.freeze
 
   validates :name, uniqueness: true
+  validates :priority, numericality: { only_integer: true }
+
+  validate :priority_agrees_with_kind
 
   after_create do
     if name.blank?
@@ -52,5 +55,23 @@ class LoadDefinition < ApplicationRecord
 
   def clone(pipeline, name)
     LoadDefinition.new(dup.attributes.merge(name:, pipeline:))
+  end
+
+  private
+
+  # Priority is how the destination decides which fragment to write, so it cannot disagree
+  # with the fragment this definition says it writes. Enrichments are deliberately left
+  # alone: an enrichment at priority 0 writes the primary fragment through the fragments
+  # endpoint, which is a thing they have always been able to do.
+  def priority_agrees_with_kind
+    return if priority.blank?
+
+    if secondary_fragment? && priority.zero?
+      errors.add(:priority, 'must not be 0 for a secondary fragment - at 0 the destination ' \
+                            'writes the primary fragment instead, blanking every field this ' \
+                            'block does not set')
+    elsif primary_fragment? && !priority.zero?
+      errors.add(:priority, 'must be 0 to write the primary fragment')
+    end
   end
 end

@@ -73,11 +73,17 @@ class HarvestDefinition < ApplicationRecord
   end
 
   def ready_to_run?
-    return false if extraction_definition.blank?
-    return false if transformation_definition.blank?
-    return false if transformation_definition.fields.empty?
+    configuration_problems.empty?
+  end
 
-    true
+  # Why this block cannot run, in words, so that whatever disables it can also say why.
+  def configuration_problems
+    BlockConfiguration.new(self).problems
+  end
+
+  # Only the contradictions between this block's definitions - see BlockConfiguration.
+  def load_configuration_problems
+    BlockConfiguration.new(self).load_problems
   end
 
   def to_h

@@ -116,6 +116,80 @@ RSpec.describe HarvestDefinition do
     end
   end
 
+  describe '#configuration_problems' do
+    let(:pipeline) { create(:pipeline) }
+    let(:block) do
+      definition = create(:harvest_definition, pipeline:)
+      create(:field, name: 'internal_identifier', block: "JsonPath.new('id').on(record).first",
+                     transformation_definition: definition.transformation_definition)
+      definition
+    end
+
+    it 'says nothing about a coherently configured block' do
+      expect(block.configuration_problems).to be_empty
+    end
+
+    it 'lists what is missing' do
+      definition = create(:harvest_definition, pipeline:, extraction_definition: nil)
+
+      expect(definition.configuration_problems).to contain_exactly(
+        'it has no extraction definition', 'its transformation has no fields'
+      )
+    end
+
+    context 'when the block writes a secondary fragment' do
+      before { block.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1)) }
+
+      it 'accepts a transformation that sets internal_identifier' do
+        expect(block.configuration_problems).to be_empty
+      end
+
+      it 'requires internal_identifier, which is how the record is found' do
+        block.transformation_definition.fields.find_by(name: 'internal_identifier').destroy
+        create(:field, name: 'tag', block: '"CEISMIC"', transformation_definition: block.transformation_definition)
+
+        expect(block.reload.configuration_problems).to include(
+          'it writes a secondary fragment, so its transformation has to set internal_identifier'
+        )
+      end
+
+      it 'rejects delete_if rules it cannot honour' do
+        create(:field, kind: 'delete_if', name: 'gone', block: 'false',
+                       transformation_definition: block.transformation_definition)
+
+        expect(block.reload.configuration_problems.join).to include 'delete_if rules cannot be'
+      end
+    end
+
+    it 'does not second-guess an enrichment against its extraction' do
+      # ExtractionWorker#iterate_previous? hands an api_record to more blocks than just those
+      # with an enrichment extraction, so requiring one here would ground working pipelines.
+      block.update(load_definition: create(:load_definition, pipeline:, kind: 'enrichment', priority: -1))
+
+      expect(block.configuration_problems).to be_empty
+    end
+
+    context 'when the block writes a file' do
+      let(:load_definition) { create(:load_definition, pipeline:, kind: 'file') }
+
+      it 'is only allowed on a pre-processing block' do
+        block.update(load_definition:)
+
+        expect(block.configuration_problems).to include(
+          'only a pre-processing block can write a file for the next block to read'
+        )
+      end
+
+      it 'is what a pre-processing block has to do' do
+        block.update(kind: :preprocess, load_definition: create(:load_definition, pipeline:))
+
+        expect(block.configuration_problems).to include(
+          'it is a pre-processing block, so it has to write a file for the next block to read'
+        )
+      end
+    end
+  end
+
   describe '#clone' do
     let(:pipeline)                  { create(:pipeline) }
     let(:pipeline_two)              { create(:pipeline) }

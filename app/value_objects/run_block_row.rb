@@ -7,7 +7,8 @@ class RunBlockRow
   include ActionView::Helpers::FormOptionsHelper
 
   delegate :pipeline, :subject, :settings, :offers_latest?, to: :@blocks
-  delegate :id, :source_id, :position, :enrichment?, :preprocess?, :ready_to_run?, to: :@definition
+  delegate :id, :source_id, :position, :enrichment?, :preprocess?, :ready_to_run?,
+           :configuration_problems, to: :@definition
 
   def initialize(blocks, definition)
     @blocks = blocks

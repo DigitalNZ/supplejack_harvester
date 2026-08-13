@@ -11,13 +11,13 @@ RSpec.describe LoadDefinition do
     end
 
     it 'can write a secondary fragment instead' do
-      expect(described_class.create(pipeline:, kind: 'secondary_fragment')).to be_secondary_fragment
+      expect(described_class.create(pipeline:, kind: 'secondary_fragment', priority: -1)).to be_secondary_fragment
     end
   end
 
   describe '#name' do
     it 'automatically generates a sensible name' do
-      load_definition = described_class.create(pipeline:, kind: 'secondary_fragment')
+      load_definition = described_class.create(pipeline:, kind: 'secondary_fragment', priority: -1)
 
       expect(load_definition.name).to eq "#{load_definition.id}_secondary_fragment-load"
     end
@@ -30,6 +30,35 @@ RSpec.describe LoadDefinition do
       described_class.create(pipeline:, name: 'tag CEISMIC')
 
       expect(described_class.create(pipeline:, name: 'tag CEISMIC')).not_to be_valid
+    end
+  end
+
+  describe '#priority' do
+    it 'refuses a secondary fragment at 0, which would write the primary fragment instead' do
+      load_definition = described_class.new(pipeline:, kind: 'secondary_fragment', priority: 0)
+
+      expect(load_definition).not_to be_valid
+      expect(load_definition.errors[:priority].join).to include 'must not be 0 for a secondary fragment'
+    end
+
+    it 'accepts a secondary fragment at a non-zero priority' do
+      expect(described_class.new(pipeline:, kind: 'secondary_fragment', priority: -1)).to be_valid
+    end
+
+    it 'refuses the primary fragment at a non-zero priority' do
+      load_definition = described_class.new(pipeline:, kind: 'primary_fragment', priority: -1)
+
+      expect(load_definition).not_to be_valid
+      expect(load_definition.errors[:priority].join).to include 'must be 0 to write the primary fragment'
+    end
+
+    it 'leaves an enrichment free to write either fragment' do
+      expect(described_class.new(pipeline:, kind: 'enrichment', priority: 0)).to be_valid
+      expect(described_class.new(pipeline:, kind: 'enrichment', priority: -2)).to be_valid
+    end
+
+    it 'refuses a blank priority rather than failing on the database constraint' do
+      expect(described_class.new(pipeline:, kind: 'primary_fragment', priority: nil)).not_to be_valid
     end
   end
 

@@ -104,10 +104,19 @@ RSpec.describe 'Load Definitions' do
 
     it 'stores the user who edited it' do
       patch pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition), params: {
-        load_definition: { priority: -3 }
+        load_definition: { kind: 'secondary_fragment', priority: -3 }
       }
 
       expect(load_definition.reload.last_edited_by).to eq user
+    end
+
+    it 'refuses a secondary fragment at priority 0 and says why' do
+      patch pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition), params: {
+        load_definition: { kind: 'secondary_fragment', priority: 0 }
+      }
+
+      expect(load_definition.reload.kind).to eq 'primary_fragment'
+      expect(response.body).to include 'must not be 0 for a secondary fragment'
     end
   end
 
