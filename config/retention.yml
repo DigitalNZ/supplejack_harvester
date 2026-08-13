@@ -42,11 +42,10 @@
 # PreProcessCleanupWorker reads `preprocess`. Each pipeline keeps its newest
 # keep_latest runs that still have output on disk; every older folder is
 # swept. Nothing is recorded in the database because no row owns the folder.
-# Three safety rules live in code, not here: an out-ranked run that is
-# unfinished and less than a day old is kept (it may still be writing), a
+# Two safety rules live in code, not here: an out-ranked run that is
+# unfinished and less than a day old is kept (it may still be writing), and a
 # folder whose pipeline job row is gone is only swept once it has sat
-# untouched for a day, and a run a user has retained (retained_at stamped via
-# the UI padlock) is never swept, whatever its age.
+# untouched for a day.
 #
 #   With the numbers below:
 #     - a pipeline has 10 runs with output on disk: the oldest 6 folders go,

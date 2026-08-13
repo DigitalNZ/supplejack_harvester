@@ -110,18 +110,6 @@ RSpec.describe PipelineJob do
     end
   end
 
-  describe '#retained?' do
-    it 'is false by default' do
-      expect(create(:pipeline_job).retained?).to be false
-    end
-
-    it 'is true once retained_at is stamped' do
-      job = create(:pipeline_job, retained_at: Time.zone.now)
-
-      expect(job.retained?).to be true
-    end
-  end
-
   describe '.preprocess_sweep_candidates' do
     let(:pipeline) { create(:pipeline) }
     # The real PreProcessRetentionPolicy gains keep_latest in a later commit;
@@ -197,30 +185,6 @@ RSpec.describe PipelineJob do
       candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
 
       expect(candidates).to eq [first]
-    end
-
-    it 'skips retained runs, which still hold their keep_latest slot' do
-      oldest = run(pipeline, 5.days.ago)
-      retained = run(pipeline, 4.days.ago)
-      retained.update(retained_at: Time.zone.now)
-      run(pipeline, 3.days.ago)
-      run(pipeline, 2.days.ago)
-
-      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
-
-      expect(candidates).to eq [oldest]
-    end
-
-    it 'never lets a retained run free a keep_latest slot for an older run' do
-      retained = run(pipeline, 1.day.ago)
-      retained.update(retained_at: Time.zone.now)
-      run(pipeline, 2.days.ago)
-      third = run(pipeline, 3.days.ago)
-      fourth = run(pipeline, 4.days.ago)
-
-      candidates = described_class.preprocess_sweep_candidates(policy, described_class.pluck(:id))
-
-      expect(candidates).to eq [third, fourth]
     end
 
     it 'only returns runs for the given pipeline when scoped' do

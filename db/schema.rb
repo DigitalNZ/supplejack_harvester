@@ -302,7 +302,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_12_042409) do
     t.bigint "automation_step_id"
     t.string "job_priority"
     t.boolean "skip_previously_enriched", default: false
-    t.datetime "retained_at"
     t.index ["automation_step_id"], name: "index_pipeline_jobs_on_automation_step_id"
     t.index ["destination_id"], name: "index_pipeline_jobs_on_destination_id"
     t.index ["extraction_job_id"], name: "index_pipeline_jobs_on_extraction_job_id"

@@ -42,7 +42,6 @@ class PipelineJob < ApplicationRecord
       .values
       .flat_map { |jobs| jobs.drop(policy.keep_latest) }
       .reject(&:maybe_still_writing?)
-      .reject(&:retained?)
   end
 
   # Check if this job is part of an automation
@@ -58,12 +57,6 @@ class PipelineJob < ApplicationRecord
   # completes, so "unfinished" stops protecting a run once it is a day old.
   def maybe_still_writing?
     !status.in?(Job::FINISHED_STATUSES) && created_at > PREPROCESS_WRITING_WINDOW.ago
-  end
-
-  # True while a user is retaining this run: the preprocess sweep never
-  # deletes its output folder, however old it gets.
-  def retained?
-    retained_at.present?
   end
 
   # Trigger the next step in the automation if this job is from an automation and has completed
