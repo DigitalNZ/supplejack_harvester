@@ -197,20 +197,6 @@ RSpec.describe 'Requests' do
         expect(preview['current_run_id']).to eq pipeline_job.id
       end
 
-      it 'flags retained runs' do
-        older = create(:pipeline_job, pipeline:, created_at: 2.days.ago, retained_at: Time.zone.now)
-        write_output(older, [{ 'id' => 'old' }])
-        write_output(pipeline_job, [{ 'id' => 'new' }])
-
-        get pipeline_harvest_definition_extraction_definition_request_path(
-          pipeline, harvest_definition, extraction_definition, request_one
-        )
-
-        runs = response.parsed_body['preview']['runs']
-        expect(runs.find { |run| run['id'] == older.id }['retained']).to be true
-        expect(runs.find { |run| run['id'] == pipeline_job.id }['retained']).to be false
-      end
-
       it 'previews the run named by pipeline_job_id' do
         other = create(:pipeline_job, pipeline:)
         write_output(other, [{ 'id' => 'other' }])

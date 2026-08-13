@@ -14,7 +14,6 @@ import {
   setLoading,
   selectUiRequestById,
 } from "~/js/features/ExtractionApp/UiRequestsSlice";
-import { request } from "~/js/utils/request";
 
 const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
   const dispatch = useDispatch();
@@ -23,7 +22,6 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [currentRecord, setCurrentRecord] = useState(1);
   const [currentRunId, setCurrentRunId] = useState(null);
-  const [retentionError, setRetentionError] = useState(false);
 
   const { loading } = useSelector((state) =>
     selectUiRequestById(state, requestId)
@@ -36,7 +34,6 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
   const totalPages = preview?.total_pages || 0;
   const totalRecords = preview?.total_records || 0;
   const selectedRunId = currentRunId ?? preview?.current_run_id ?? "";
-  const selectedRun = runs.find((run) => run.id === selectedRunId);
 
   useEffect(() => {
     if (!showModal) return;
@@ -79,32 +76,6 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
     setCurrentRecord(1);
   };
 
-  const handleRetentionToggle = () => {
-    const path = `/pipelines/${appDetails.pipeline.id}/jobs/${selectedRunId}/retention`;
-    const toggle = selectedRun?.retained
-      ? request.delete(path)
-      : request.post(path);
-
-    setRetentionError(false);
-    dispatch(setLoading(requestId));
-
-    toggle
-      .catch(() => setRetentionError(true))
-      .then(() => {
-        dispatch(
-          previewRequest({
-            pipelineId: appDetails.pipeline.id,
-            harvestDefinitionId: appDetails.harvestDefinition.id,
-            extractionDefinitionId: appDetails.extractionDefinition.id,
-            id: requestId,
-            page: currentPage,
-            record: currentRecord,
-            pipelineJobId: selectedRunId,
-          })
-        );
-      });
-  };
-
   const canNotClickPreviousRecord = () =>
     loading || (currentPage == 1 && currentRecord == 1);
 
@@ -137,29 +108,10 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
           >
             {runs.map((run) => (
               <option key={run.id} value={run.id}>
-                {run.retained ? "🔒 " : ""}
                 {run.label}
               </option>
             ))}
           </select>
-
-          <button
-            className="btn btn-outline-primary me-2"
-            onClick={handleRetentionToggle}
-            disabled={loading || !selectedRun}
-            title={
-              selectedRun?.retained
-                ? "Stop retaining this run's pre-processed data"
-                : "Retain this run's pre-processed data. The nightly cleanup will keep it."
-            }
-          >
-            <i
-              className={
-                selectedRun?.retained ? "bi bi-lock-fill" : "bi bi-unlock"
-              }
-              aria-hidden="true"
-            ></i>
-          </button>
 
           <button
             className="btn btn-outline-primary"
@@ -173,12 +125,6 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
         </div>
       </Modal.Header>
       <Modal.Body>
-        {retentionError && (
-          <div className="alert alert-danger" role="alert">
-            Could not update the retained state. Please try again.
-          </div>
-        )}
-
         {loading && runs.length == 0 && (
           <div className="d-flex justify-content-center">
             <div className="spinner-border text-primary" role="status">
