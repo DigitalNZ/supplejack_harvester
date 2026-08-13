@@ -136,6 +136,16 @@ RSpec.describe 'Transformation Definitions' do
       expect(response).to be_successful
       expect(response.body).to include 'Preview Data:'
     end
+
+    it 'padlocks retained jobs in the Preview Data select' do
+      retained = create(:extraction_job, extraction_definition: harvest_definition.extraction_definition,
+                                         status: 'completed', retained_at: Time.zone.now)
+
+      get pipeline_harvest_definition_transformation_definition_path(pipeline, harvest_definition,
+                                                                     transformation_definition)
+
+      expect(response.body).to include("🔒 #{retained.name}")
+    end
   end
 
   describe '#update' do

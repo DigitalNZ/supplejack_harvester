@@ -57,7 +57,10 @@
               <% if extraction_jobs.any? %>
                 <%= form.select(
                       :extraction_job_id,
-                      options_from_collection_for_select(extraction_jobs, 'id', 'name', model.extraction_job_id),
+                      options_for_select(
+                        extraction_jobs.map { |job| ["#{'🔒 ' if job.retained?}#{job.name}", job.id] },
+                        model.extraction_job_id
+                      ),
                       {}, class: 'form-select'
                     ) %>
               <% else %>
