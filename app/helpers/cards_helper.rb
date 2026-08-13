@@ -15,10 +15,14 @@ module CardsHelper
     ].compact.join(' | ')
   end
 
+  # The bare kind, not the sentence the editor's select spells out: on a card it sits beside
+  # two other subtitles and only has to say which of the four this is. The priority goes with
+  # it because the pair is what decides which fragment gets written.
   def load_card_subtitle(definition)
     [
       last_edited_by(definition),
-      load_kind_label(definition.kind)
+      definition.kind,
+      "priority #{definition.priority}"
     ].compact.join(' | ')
   end
 end
