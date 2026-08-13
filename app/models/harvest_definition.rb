@@ -19,11 +19,13 @@ class HarvestDefinition < ApplicationRecord
 
   enum :kind, { harvest: 0, enrichment: 1, preprocess: 2 }
 
-  # A block with no kind cannot be run: TransformationWorker reads preprocess? as false and
-  # queues a load for it, and Load::Execution then finds neither a harvest nor an enrichment
-  # to post, so it returns nil and dies on nil.status - which is what happened to a block on
-  # UAT whose kind was null. An invalid kind never gets this far, because the enum raises on
-  # assignment, but nil does: "" casts to nil silently, and the column allows it.
+  # A block with no kind cannot be run: nothing maps nil onto a load kind, so
+  # TransformationWorker does not take it for a block writing to disk and queues a load for
+  # it, and Load::Execution then has no fragment it could be writing and raises. A block on
+  # UAT whose kind was null is how this was found - at the time by returning nil and dying on
+  # nil.status, before that path learnt to raise. An invalid kind never gets this far, because
+  # the enum raises on assignment, but nil does: "" casts to nil silently, and the column
+  # allows it.
   validates :kind, presence: true
 
   after_create do
