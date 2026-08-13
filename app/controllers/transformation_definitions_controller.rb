@@ -16,25 +16,11 @@ class TransformationDefinitionsController < ApplicationController
   end
 
   def update
-    if @transformation_definition.update(transformation_definition_params)
-      redirect_to pipeline_harvest_definition_transformation_definition_path(
-        @pipeline, @harvest_definition, @transformation_definition
-      ), notice: t('.success')
-    else
-      flash.alert = t('.failure')
-
-      render :show
-    end
+    update_definition('transformation', @transformation_definition)
   end
 
   def destroy
-    if @transformation_definition.destroy
-      redirect_to pipeline_path(@pipeline), notice: t('.success')
-    else
-      flash.alert = t('.failure')
-      redirect_to pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition,
-                                                                             @transformation_definition)
-    end
+    destroy_definition('transformation', @transformation_definition)
   end
 
   def test

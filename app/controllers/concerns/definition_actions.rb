@@ -26,6 +26,23 @@ module DefinitionActions
     redirect_to definition_path(type, definition), notice: t('.success')
   end
 
+  # The one failure that stays on the page it came from, so the form can show its errors.
+  def update_definition(type, definition)
+    unless definition.update(send(:"#{type}_definition_params"))
+      flash.alert = t('.failure')
+
+      return render :show
+    end
+
+    redirect_to definition_path(type, definition), notice: t('.success')
+  end
+
+  def destroy_definition(type, definition)
+    return definition_failure(definition_path(type, definition)) unless definition.destroy
+
+    redirect_to pipeline_path(@pipeline), notice: t('.success')
+  end
+
   def clone_definition(type, definition)
     clone = definition.clone(@pipeline, send(:"#{type}_definition_params")['name'])
 
@@ -37,12 +54,14 @@ module DefinitionActions
     redirect_to definition_path(type, clone)
   end
 
+  # Back to the pipeline unless the caller has somewhere better to send them.
+  #
   # t('.success') and t('.failure') resolve against the running controller and action rather
   # than where they are written, so each controller still gets its own messages.
-  def definition_failure
+  def definition_failure(path = nil)
     flash.alert = t('.failure')
 
-    redirect_to pipeline_path(@pipeline)
+    redirect_to(path || pipeline_path(@pipeline))
   end
 
   def definition_path(type, definition)

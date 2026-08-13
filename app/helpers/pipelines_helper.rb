@@ -32,6 +32,17 @@ module PipelinesHelper
     LOAD_KIND_LABELS[kind]
   end
 
+  # Nothing at all when a block is fine, rather than an empty element, so the caller does not
+  # have to ask twice. Named where the block it belongs to is not already obvious from where
+  # the notice appears.
+  def cannot_run_notice(problems, subject = nil)
+    return if problems.empty?
+
+    lead = subject.present? ? "#{subject} cannot run" : 'Cannot run'
+
+    tag.small("#{lead}: #{problems.to_sentence}.", class: 'd-block text-danger')
+  end
+
   def load_kind_options
     LOAD_KIND_LABELS.map { |kind, label| [label, kind] }
   end

@@ -14,24 +14,11 @@ class LoadDefinitionsController < ApplicationController
   end
 
   def update
-    if @load_definition.update(load_definition_params)
-      redirect_to pipeline_harvest_definition_load_definition_path(
-        @pipeline, @harvest_definition, @load_definition
-      ), notice: t('.success')
-    else
-      flash.alert = t('.failure')
-
-      render :show
-    end
+    update_definition('load', @load_definition)
   end
 
   def destroy
-    if @load_definition.destroy
-      redirect_to pipeline_path(@pipeline), notice: t('.success')
-    else
-      flash.alert = t('.failure')
-      redirect_to pipeline_harvest_definition_load_definition_path(@pipeline, @harvest_definition, @load_definition)
-    end
+    destroy_definition('load', @load_definition)
   end
 
   def clone

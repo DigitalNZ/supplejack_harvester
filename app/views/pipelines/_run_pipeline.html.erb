@@ -11,13 +11,8 @@
 <%# A block whose definitions contradict each other looks complete on this page - every card
     is filled in - so the Run button just stops working with nothing to say. The Run modal
     gives each block its reasons, but it is only built when something can actually run. %>
-<% blocked = @pipeline.harvest_definitions.reject { |definition| definition.load_configuration_problems.empty? } %>
-<% if blocked.any? %>
-  <div class='text-danger small mt-2'>
-    <% blocked.each do |definition| %>
-      <div><%= definition.source_id %> cannot run: <%= definition.load_configuration_problems.to_sentence %>.</div>
-    <% end %>
-  </div>
+<% @pipeline.harvest_definitions.each do |definition| %>
+  <%= cannot_run_notice(definition.load_configuration_problems, definition.source_id) %>
 <% end %>
 
 <% if @pipeline.ready_to_run? %>

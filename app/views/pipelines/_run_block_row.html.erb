@@ -26,11 +26,7 @@
 
       <%# A disabled checkbox on its own does not say what is wrong, and some of the reasons
           are a disagreement between two definitions rather than something missing. %>
-      <% if row.configuration_problems.any? %>
-        <small class='d-block text-danger'>
-          Cannot run: <%= row.configuration_problems.to_sentence %>.
-        </small>
-      <% end %>
+      <%= cannot_run_notice(row.configuration_problems) %>
     </div>
   </div>
 
