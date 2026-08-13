@@ -6,8 +6,6 @@
 class RunBlockRow
   include ActionView::Helpers::FormOptionsHelper
 
-  TIME_FORMAT = '%-d %b %Y %H:%M'
-
   delegate :pipeline, :subject, :settings, :offers_latest?, to: :@blocks
   delegate :id, :source_id, :position, :enrichment?, :preprocess?, :ready_to_run?, to: :@definition
 
@@ -17,9 +15,7 @@ class RunBlockRow
   end
 
   def label
-    return source_id if enrichment?
-
-    "#{position + 1}. #{source_id}"
+    source_id
   end
 
   def kind_label
@@ -28,6 +24,11 @@ class RunBlockRow
 
   def run?
     settings.run?(id)
+  end
+
+  # nil renders an empty field, which reads as "all of them" next to the placeholder.
+  def pages
+    settings.pages_for(id)
   end
 
   def field_name(attribute)
@@ -75,15 +76,12 @@ class RunBlockRow
   end
 
   def stored_output_option(pipeline_job)
-    ["Job ##{pipeline_job.id} · #{pipeline_job.created_at.strftime(TIME_FORMAT)}",
-     "#{BlockInput::PREPROCESS_OUTPUT}:#{pipeline_job.id}"]
+    [pipeline_job.run_label, "#{BlockInput::PREPROCESS_OUTPUT}:#{pipeline_job.id}"]
   end
 
   # The runs holding output for the position this block consumes.
   def runs_with_output
-    pipeline.pipeline_jobs
-            .where(id: PreProcess::Output.pipeline_job_ids_with_output(position - 1))
-            .order(created_at: :desc)
+    pipeline.runs_with_output_at(position - 1)
   end
 
   def extraction_job_options

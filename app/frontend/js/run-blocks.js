@@ -1,7 +1,12 @@
 // Behaviour for the "Blocks to run" rows (app/views/pipelines/_run_blocks.html.erb).
 //
-// Two rules, both of which the server also enforces (RunConfiguration#validate_chain_inputs):
-//   - a block that is not running has no input to choose, so its select is disabled
+// Three rules, all of which the server also enforces (RunConfiguration#validate_chain_inputs):
+//   - a run covers one unbroken stretch of the chain. It may start late and it may
+//     stop early, but it cannot skip a block and run a later one. Unticking a block
+//     therefore stops the run there, unticking the blocks after it, and ticking one
+//     fills in any blocks it would otherwise have skipped over
+//   - a block that is not running has no input or page limit to choose, so both of
+//     its fields are disabled
 //   - a block whose preceding block is not running cannot take "output of previous
 //     block": it needs data prepared by an earlier run, so that option is removed
 //     from the choices and a pre-processed-data option is selected instead
@@ -15,6 +20,8 @@ const rowsIn = (root) =>
 const checkboxIn = (row) => row.querySelector('[data-js="run-block-checkbox"]');
 
 const inputIn = (row) => row.querySelector('[data-js="run-block-input"]');
+
+const pagesIn = (row) => row.querySelector('[data-js="run-block-pages"]');
 
 const firstPreprocessOption = (select) =>
   Array.from(select.options).find((option) =>
@@ -49,10 +56,12 @@ const setFeedback = (select, message) => {
 const refreshRow = (row, previousRow) => {
   const checkbox = checkboxIn(row);
   const select = inputIn(row);
+  const pages = pagesIn(row);
 
   if (!checkbox || !select) return;
 
   select.disabled = checkbox.disabled || !checkbox.checked;
+  if (pages) pages.disabled = select.disabled;
 
   const freshOption = Array.from(select.options).find(
     (option) => option.value === FRESH
@@ -79,6 +88,38 @@ const refreshRow = (row, previousRow) => {
   );
 };
 
+// A block that cannot run at all is left alone: its checkbox is disabled, so there
+// is nothing to set either way.
+const setChecked = (row, checked) => {
+  const checkbox = checkboxIn(row);
+
+  if (checkbox && !checkbox.disabled) checkbox.checked = checked;
+};
+
+const isTicked = (row) => Boolean(checkboxIn(row)?.checked);
+
+// Keeps the ticked blocks in one unbroken stretch. Unticking a block stops the run
+// there, so the blocks after it come off too; ticking one that sits away from the
+// stretch fills in the blocks it would otherwise skip over, since those would have
+// nothing to read.
+const closeGaps = (rows, index) => {
+  if (!isTicked(rows[index])) {
+    // With nothing ticked before it, the run simply starts later and the blocks after
+    // it are untouched. Otherwise the run stops here, so they come off.
+    if (rows.slice(0, index).some(isTicked)) {
+      rows.slice(index + 1).forEach((row) => setChecked(row, false));
+    }
+
+    return;
+  }
+
+  const ticked = rows.filter(isTicked);
+  const first = rows.indexOf(ticked[0]);
+  const last = rows.indexOf(ticked[ticked.length - 1]);
+
+  rows.slice(first, last + 1).forEach((row) => setChecked(row, true));
+};
+
 export const initRunBlocks = (root) => {
   const container = root || document;
   const rows = rowsIn(container);
@@ -90,8 +131,12 @@ export const initRunBlocks = (root) => {
       refreshRow(row, index > 0 ? rows[index - 1] : null)
     );
 
-  rows.forEach((row) => {
-    checkboxIn(row)?.addEventListener("change", refresh);
+  rows.forEach((row, index) => {
+    checkboxIn(row)?.addEventListener("change", () => {
+      closeGaps(rows, index);
+      refresh();
+    });
+
     inputIn(row)?.addEventListener("change", refresh);
   });
 

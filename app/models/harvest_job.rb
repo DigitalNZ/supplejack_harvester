@@ -38,6 +38,28 @@ class HarvestJob < ApplicationRecord
   def trigger_following_processes
     pipeline_job.enqueue_enrichment_jobs(name) unless harvest_definition.preprocess?
     execute_delete_previous_records
+    advance_chain
+  end
+
+  # A pre-processing block exists to feed the next one, so the chain steps forward when it
+  # finishes - which for such a block means its transformation finishing, since it queues
+  # no loads or deletes.
+  #
+  # Either worker can be the one to see that happen: normally the last transformation
+  # worker does, but when they all finish while the extraction is still running they stand
+  # aside and the extraction worker completes the report instead. Asking the report rather
+  # than the caller means the chain moves on in both cases, and never before the block is
+  # actually done. PipelineJob#advance_to_next_block is idempotent, so being asked twice
+  # costs nothing.
+  # Only when there is a block to advance to: with none, PipelineJob#advance_to_next_block
+  # falls through to the enrichments, and a pre-processing block finishing is no reason to
+  # enrich - the harvest it would enrich has not run.
+  def advance_chain
+    return unless harvest_definition.preprocess?
+    return unless harvest_report&.reload&.transformation_completed?
+    return if pipeline_job.next_block_to_run(harvest_definition).blank?
+
+    pipeline_job.advance_to_next_block(harvest_definition)
   end
 
   private

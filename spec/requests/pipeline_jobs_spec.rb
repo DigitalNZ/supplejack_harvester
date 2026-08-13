@@ -91,6 +91,31 @@ RSpec.describe 'PipelineJobs' do
       let!(:harvest)    { create(:harvest_definition, pipeline:, position: 1) }
       let(:extraction_job) { create(:extraction_job, extraction_definition: harvest.extraction_definition) }
 
+      # harvest_definition is the pipeline's other position 0 block (created by the
+      # outer harvest_report), so it has to run too or the chain has a hole in it and
+      # nothing is created - which would leave PipelineJob.last pointing at the outer
+      # job and quietly pass. Hence the count assertion.
+      it 'stores a page limit per block' do
+        expect do
+          post pipeline_pipeline_jobs_path(pipeline), params: {
+            pipeline_job: {
+              destination_id: destination.id,
+              pipeline_id: pipeline.id,
+              block_settings: {
+                harvest_definition.id.to_s => { run: '1', input: 'fresh', pages: '' },
+                preprocess.id.to_s => { run: '1', input: 'fresh', pages: '5' },
+                harvest.id.to_s => { run: '1', input: 'fresh', pages: '' }
+              }
+            }
+          }
+        end.to change(PipelineJob, :count).by(1)
+
+        job = PipelineJob.last
+
+        expect(job.pages_for(preprocess)).to eq 5
+        expect(job.pages_for(harvest)).to be_nil
+      end
+
       it 'stores what runs and what feeds each block' do
         post pipeline_pipeline_jobs_path(pipeline), params: {
           pipeline_job: {

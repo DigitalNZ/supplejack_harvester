@@ -120,6 +120,20 @@
                           {},
                           class: 'form-select mb-3' %>
 
+          <%= form.label :run_enrichment_concurrently, class: 'form-label' do %>
+              Run Enrichments Concurrently
+
+              <span
+                data-bs-toggle="tooltip"
+                data-bs-title="Selecting this option will run the extractions within an enrichment in parallel"><i class="bi bi-question-circle" aria-label="helper text"></i>
+              </span>
+            <% end %>
+
+          <%= form.select :run_enrichment_concurrently,
+                          options_for_select([['Yes', true], ['No', false]], @schedule.run_enrichment_concurrently),
+                          {},
+                          class: 'form-select mb-3' %>
+
           <%= form.label :skip_previously_enriched, class: 'form-label' do %>
               Skip Previously Enriched
 

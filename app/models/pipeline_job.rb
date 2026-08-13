@@ -27,6 +27,16 @@ class PipelineJob < ApplicationRecord
     automation_step.present?
   end
 
+  # Called by this run's blocks as each of them finishes - see RunCompletion for why the
+  # run has to work this out for itself.
+  def finish_if_complete
+    completion = RunCompletion.new(self)
+    return unless completion.finished?
+
+    completion.errored? ? errored! : completed!
+    update(end_time: Time.zone.now) if end_time.blank?
+  end
+
   # Trigger the next step in the automation if this job is from an automation and has completed
   def trigger_next_automation_step
     return unless from_automation? && harvest_reports.all?(&:completed?)
@@ -69,6 +79,13 @@ class PipelineJob < ApplicationRecord
     end
   end
 
+  # How this run is named wherever one has to be picked out of a list: the request
+  # preview's run selector, the Run modal's input choices, and the dropdown that runs a
+  # single block against an earlier run's pre-processed data.
+  def run_label
+    "Job ##{id} - #{created_at.strftime('%-d %b %Y, %H:%M')}"
+  end
+
   # The next block of the chain that this run is actually configured to run. Blocks
   # the user unticked are stepped over: their data comes from whatever the following
   # block's input nominates (see RunConfiguration#validate_chain_inputs).
@@ -96,6 +113,15 @@ class PipelineJob < ApplicationRecord
     harvest_reports.all?(&:finished?)
   end
 
+  # Whether this enrichment is one this run still has to queue - asked by RunCompletion as
+  # well as when they are queued.
+  def should_queue_enrichment?(enrichment)
+    enrichment_id = enrichment.id
+
+    should_run?(enrichment_id) && enrichment.ready_to_run? &&
+      !harvest_jobs.exists?(pipeline_job_id: id, harvest_definition_id: enrichment_id)
+  end
+
   private
 
   # For a schedule-driven run, 'latest' means the most recent *other* run of this
@@ -121,13 +147,6 @@ class PipelineJob < ApplicationRecord
   def should_queue_enrichments?
     reload
     !cancelled? && pipeline.enrichments.present? && harvest_completed?
-  end
-
-  def should_queue_enrichment?(enrichment)
-    enrichment_id = enrichment.id
-    should_run?(enrichment_id) &&
-      enrichment.ready_to_run? &&
-      !harvest_jobs.exists?(pipeline_job_id: id, harvest_definition_id: enrichment_id)
   end
 
   def harvest_completed?

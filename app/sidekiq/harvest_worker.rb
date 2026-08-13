@@ -45,7 +45,8 @@ class HarvestWorker < ApplicationWorker
 
   private
 
+  # nil means every available page, and never equals a page number.
   def page_number_reached?(page)
-    @pipeline_job.set_number? && page == @pipeline_job.pages
+    page == @pipeline_job.pages_for(@harvest_job.harvest_definition)
   end
 end
