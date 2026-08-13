@@ -25,9 +25,9 @@
   </div>
 </div>
 
-<%= render layout: 'shared/delete_modal',
-           locals: { path: pipeline_harvest_definition_load_definition_path(@pipeline, @harvest_definition,
-                                                                           @load_definition) } do %>
+<% delete_path = pipeline_harvest_definition_load_definition_path(@pipeline, @harvest_definition, @load_definition) %>
+
+<%= render layout: 'shared/delete_modal', locals: { path: delete_path } do %>
   <p>Are you sure you want to delete "<%= @load_definition.name %>"?</p>
 
   <p>The block will fall back to writing the way its kind implies until you give it another one.</p>
