@@ -60,7 +60,7 @@ module Load
     end
 
     def enrichment_request
-      required_fragments = [@harvest_definition.source_id] if @harvest_definition.required_for_active_record?
+      required_fragments = [@harvest_definition.source_id] if @harvest_definition.load_required_for_active_record?
 
       Api::Harvester::Fragment.new(@destination).post(
         @api_record_id,
@@ -77,7 +77,7 @@ module Load
       record.transform_values! { |value| [value].flatten(1) }
 
       record['source_id'] = @harvest_definition.source_id
-      record['priority']  = @harvest_definition.priority
+      record['priority']  = @harvest_definition.load_priority
       record['job_id']    = @harvest_job.name
 
       record

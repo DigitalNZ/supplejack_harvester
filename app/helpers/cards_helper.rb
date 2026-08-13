@@ -14,4 +14,11 @@ module CardsHelper
       last_edited_by(definition)
     ].compact.join(' | ')
   end
+
+  def load_card_subtitle(definition)
+    [
+      last_edited_by(definition),
+      load_kind_label(definition.kind)
+    ].compact.join(' | ')
+  end
 end

@@ -135,6 +135,49 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to match(/value="1"[^>]*name="harvest_definition\[position\]"/)
     end
 
+    it 'offers to add a load definition to a block that has none' do
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include '+ Add harvest load'
+    end
+
+    it 'shows the load definition of a block that has one' do
+      load_definition = create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1)
+      harvest_definition.update(load_definition:)
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include load_definition.name
+      expect(response.body).not_to include '+ Add harvest load'
+    end
+
+    it 'offers to clone a load definition shared with another block' do
+      load_definition = create(:load_definition, pipeline:)
+      harvest_definition.update(load_definition:)
+      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'enrich-one', load_definition:)
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include 'Edit shared Load'
+      expect(response.body).to include CGI.escapeHTML(
+        clone_pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
+      )
+    end
+
+    it 'renders the load column on enrichment and pre-processing blocks too' do
+      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'enrich-one')
+      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include '+ Add enrichment load'
+      expect(response.body).to include '+ Add pre-processing load'
+    end
+
     it 'offers "Add Harvest" when the pipeline has blocks but no harvest yet' do
       preprocess_pipeline = create(:pipeline, name: 'Preprocess only')
       create(:harvest_definition, pipeline: preprocess_pipeline, kind: :preprocess, position: 0,

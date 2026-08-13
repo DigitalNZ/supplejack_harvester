@@ -4,7 +4,9 @@
    run_full_extraction_path ||= ''
    type = definition.class.name.gsub(/Definition$/, '').downcase
    delete_path ||= ''
-   position = type == 'extraction' ? 'first' : 'last'
+
+   # The load card ends a block, so everything before it points on to the next card.
+   position = type == 'load' ? 'last' : 'first'
 
    # A block that works from the records the block before it produced cannot simply be
    # fired off: it has to be told which run to take them from. Deciding that here rather
@@ -173,8 +175,11 @@
                      heading_text: "Delete #{type.capitalize} definition" } do %>
   <p>Are you sure you want to delete "<%= definition.name %>"?</p>
 
-  <% if type == 'transformation' %>
+  <% case type %>
+  <% when 'transformation' %>
     <p>This will also delete all the fields associated with it.</p>
+  <% when 'load' %>
+    <p>The block will fall back to writing the way its kind implies until you give it another one.</p>
   <% else %>
     <p>This will also delete the extracted data associated with it.</p>
   <% end %>

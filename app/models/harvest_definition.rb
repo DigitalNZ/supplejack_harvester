@@ -42,6 +42,20 @@ class HarvestDefinition < ApplicationRecord
     load_definition&.kind || LoadDefinition::KIND_FOR_BLOCK_KIND[kind]
   end
 
+  # Which fragment the destination writes to, and whether the record counts as active
+  # without one. Both describe the write rather than the block, so the load definition owns
+  # them; the columns on this table are only read for a block that has no load definition
+  # yet, and go away with #load_kind's fallback.
+  def load_priority
+    load_definition&.priority || priority
+  end
+
+  def load_required_for_active_record?
+    return required_for_active_record? if load_definition.nil?
+
+    load_definition.required_for_active_record?
+  end
+
   def completed_harvest_jobs?
     @completed_harvest_jobs ||= harvest_jobs.completed.any?
   end

@@ -1,0 +1,34 @@
+<%= content_for(:title) { @load_definition.name_in_database } %>
+<% breadcrumb :load_definition, @pipeline, @load_definition %>
+
+<%= content_for(:header) do %>
+  <h1 class='header__title'><%= @load_definition.name %></h1>
+
+  <div class="header__actions">
+    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
+      <i class="bi bi-trash" aria-hidden="true"></i> Delete
+    </button>
+  </div>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<div class='card'>
+  <div class='card-body'>
+    <%= vertical_form_with model: [@pipeline, @harvest_definition, @load_definition] do |form| %>
+      <%= render 'load_definitions/fields', form: %>
+
+      <div class='float-end mt-4'>
+        <button type="submit" class="btn btn-primary">Update load definition</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<%= render layout: 'shared/delete_modal',
+           locals: { path: pipeline_harvest_definition_load_definition_path(@pipeline, @harvest_definition,
+                                                                           @load_definition) } do %>
+  <p>Are you sure you want to delete "<%= @load_definition.name %>"?</p>
+
+  <p>The block will fall back to writing the way its kind implies until you give it another one.</p>
+<% end %>

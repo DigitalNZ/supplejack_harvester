@@ -75,11 +75,10 @@ class HarvestJob < ApplicationRecord
   # matches 'fragments.source_id' and 'fragments.priority': 0 without wrapping either in
   # $elemMatch, so the priority clause is satisfied by the ORIGINAL harvest's primary
   # fragment, and flushing marks the whole record deleted rather than dropping this block's
-  # fragment. The priority check is belt and braces while priority still lives on the block
-  # as well as on the load definition: a block claiming to write the primary fragment at a
-  # non-zero priority is misconfigured, and this is too destructive to guess at.
+  # fragment. The priority check is belt and braces: a block claiming to write the primary
+  # fragment at a non-zero priority is misconfigured, and this is too destructive to guess at.
   def writes_primary_fragment?
-    harvest_definition.load_kind == 'primary_fragment' && harvest_definition.priority.zero?
+    harvest_definition.load_kind == 'primary_fragment' && harvest_definition.load_priority.zero?
   end
 
   # The order of arguments is important to sidekiq workers as they do not support keyword arguments
