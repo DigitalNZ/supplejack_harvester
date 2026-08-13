@@ -62,18 +62,24 @@ class HarvestJob < ApplicationRecord
 
   private
 
-  # A block that loads at a non-zero priority writes to its own fragment on records owned
-  # by other sources, so it must never flush. FlushOldRecordsWorker in the API matches on
-  # 'fragments.source_id' and 'fragments.priority': 0 without wrapping them in $elemMatch,
-  # so the priority clause is satisfied by the ORIGINAL harvest's primary fragment -
-  # flushing on such a block marks the whole record deleted rather than dropping this
-  # block's fragment.
   def flush_previous_records?
     return false unless harvest_definition.harvest?
-    return false unless harvest_definition.priority.zero?
+    return false unless writes_primary_fragment?
     return false unless pipeline_job.delete_previous_records? && !pipeline_job.cancelled?
 
     harvest_report.ready_to_delete_previous_records?
+  end
+
+  # Only a block replacing a source's own records may flush. A block writing its own
+  # fragment onto records owned by other sources must not: FlushOldRecordsWorker in the API
+  # matches 'fragments.source_id' and 'fragments.priority': 0 without wrapping either in
+  # $elemMatch, so the priority clause is satisfied by the ORIGINAL harvest's primary
+  # fragment, and flushing marks the whole record deleted rather than dropping this block's
+  # fragment. The priority check is belt and braces while priority still lives on the block
+  # as well as on the load definition: a block claiming to write the primary fragment at a
+  # non-zero priority is misconfigured, and this is too destructive to guess at.
+  def writes_primary_fragment?
+    harvest_definition.load_kind == 'primary_fragment' && harvest_definition.priority.zero?
   end
 
   # The order of arguments is important to sidekiq workers as they do not support keyword arguments

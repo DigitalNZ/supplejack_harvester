@@ -158,6 +158,18 @@ RSpec.describe TransformationWorker do
         include_examples 'expects transformation completion'
       end
 
+      context "when the block writes a secondary fragment" do
+        before do
+          harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1))
+        end
+
+        subject { TransformationWorker.new.perform(harvest_job.id) }
+
+        include_examples 'expects worker to be queued', LoadWorker
+        include_examples 'expects worker not to be queued', DeleteWorker
+        include_examples 'expects harvest report attribute', :delete_workers_queued, 0
+      end
+
       context "when the transformation has errors" do
         before do
           allow(Transformation::Execution).to receive(:new).and_raise("Error")

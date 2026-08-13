@@ -17,16 +17,18 @@ module Load
       handle_load_error(e)
     end
 
-    # A preprocess block feeds the next block from disk and never reaches the load
-    # stage, so any other kind arriving here is a misconfiguration. Raise rather than
-    # returning nil, which handle_response turns into a NoMethodError on #status.
+    # Which fragment of the destination record this block writes decides how it is
+    # addressed. Both fragment kinds go through create_batch, which finds the record by
+    # internal_identifier and picks the fragment by priority; an enrichment already holds
+    # the record's id, so it posts straight to that record's fragments. A block writing to
+    # disk feeds the next block and never reaches the load stage, so it can only be a
+    # misconfiguration here - raise rather than returning nil, which handle_response turns
+    # into a NoMethodError on #status.
     def determine_request_type
-      if @harvest_definition.harvest?
-        harvest_request
-      elsif @harvest_definition.enrichment?
-        enrichment_request
-      else
-        raise StandardError, "#{@harvest_definition.kind} definitions cannot be loaded"
+      case @harvest_definition.load_kind
+      when 'primary_fragment', 'secondary_fragment' then harvest_request
+      when 'enrichment' then enrichment_request
+      else raise StandardError, "a #{@harvest_definition.load_kind} definition cannot be loaded"
       end
     end
 

@@ -43,12 +43,16 @@ class TransformationWorker
 
     update_harvest_report(transformed_records.count, rejected_records.count)
 
-    if @harvest_job.harvest_definition.preprocess?
+    if load_kind == 'file'
       feed_forward(valid_records)
     else
       queue_load_worker(valid_records)
       queue_delete_worker(deleted_records)
     end
+  end
+
+  def load_kind
+    @load_kind ||= @harvest_job.harvest_definition.load_kind
   end
 
   def feed_forward(records)
@@ -160,8 +164,13 @@ class TransformationWorker
     source_id.present? && @harvest_report.load_workers_queued.zero?
   end
 
+  # A block writing a secondary fragment does not own the records it touches, so a delete_if
+  # on it must not mark the whole record deleted - the most it can honestly mean is that
+  # this block's fragment no longer applies, and there is no way to remove just a fragment.
+  # Blocks that do own their records (a harvest, an enrichment) delete as they always have.
   def queue_delete_worker(records)
     return if records.empty?
+    return if load_kind == 'secondary_fragment'
 
     DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
                                              @harvest_report.id)
