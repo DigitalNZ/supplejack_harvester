@@ -21,6 +21,30 @@ RSpec.describe HarvestDefinition do
   let(:extraction_job)              { create(:extraction_job, extraction_definition:) }
   let(:transformation_definition)   { create(:transformation_definition, extraction_job:) }
 
+  # A block with no kind gets as far as being run and then fails obscurely: the
+  # transformation queues a load for it, and the load finds nothing it can post.
+  describe 'kind' do
+    it 'is required' do
+      definition = build(:harvest_definition, pipeline:, kind: nil)
+
+      expect(definition).not_to be_valid
+      expect(definition.errors[:kind]).to include "can't be blank"
+    end
+
+    # The enum casts an empty value to nil rather than refusing it, which is how one gets
+    # in without anybody assigning nil on purpose.
+    it 'rejects an empty one, which casts to nil' do
+      expect(build(:harvest_definition, pipeline:, kind: '')).not_to be_valid
+    end
+
+    it 'defaults to harvest, so a block created without one is still valid' do
+      definition = build(:harvest_definition, pipeline:)
+
+      expect(definition.kind).to eq 'harvest'
+      expect(definition).to be_valid
+    end
+  end
+
   describe '#attributes' do
     it 'belongs to a pipeline' do
       expect(subject.pipeline).to eq pipeline
