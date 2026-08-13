@@ -43,8 +43,8 @@
 # keep_latest runs that still have output on disk; every older folder is
 # swept. Nothing is recorded in the database because no row owns the folder.
 # Two safety rules live in code, not here: an out-ranked run that is
-# unfinished and less than a day old is kept (it may still be writing), and a
-# folder whose pipeline job row is gone is only swept once it has sat
+# unfinished and less than a day old is kept (it may still be writing), and
+# a folder whose pipeline job row is gone is only swept once it has sat
 # untouched for a day.
 #
 #   With the numbers below:

@@ -75,10 +75,9 @@
 <% else %>
 
 <div class="my-4">
-  <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span>
-  <% if @extraction_job.retained? %>
-    <span class="badge bg-secondary me-1"><i class="bi bi-lock-fill" aria-hidden="true"></i> Retained</span>
-  <% end %>|
+  <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span><% if @extraction_job.retained? %>
+    <span class="badge bg-secondary me-1"><i class="bi bi-lock-fill" aria-hidden="true"></i> Retained</span>|
+  <% else %>|<% end %>
   <%- if @extraction_job.duration_seconds.present? %>
     <span class="ms-1 me-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>|
   <% end %>

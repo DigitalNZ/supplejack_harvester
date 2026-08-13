@@ -274,6 +274,14 @@ RSpec.describe ExtractionJob do
       expect(Dir.exist?(subject.extraction_folder)).to be true
     end
 
+    it 'refuses a job retained after it was loaded' do
+      stale = described_class.find(subject.id)
+      described_class.find(subject.id).update!(retained_at: Time.zone.now)
+
+      expect(stale.purge!).to be false
+      expect(Dir.exist?(subject.extraction_folder)).to be true
+    end
+
     it 'returns true once the data is purged' do
       expect(subject.purge!).to be true
     end

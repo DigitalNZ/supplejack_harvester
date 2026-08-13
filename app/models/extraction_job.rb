@@ -105,7 +105,7 @@ class ExtractionJob < ApplicationRecord
   # same idea: the lock must hold for any caller, even one that never
   # consulted purge_candidates.
   def purge!
-    return false if busy? || retained?
+    return false if busy? || reload.retained?
 
     delete_folder
     update!(purged_at: Time.zone.now)
