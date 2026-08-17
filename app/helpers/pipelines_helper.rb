@@ -19,18 +19,14 @@ module PipelinesHelper
     ENV['JOB_PRIORITIES'].split(',').map { |priority| [priority.humanize, priority] }
   end
 
-  # Named for what the block does to the destination record rather than for the enum value,
-  # which only means something if you already know how fragments merge.
+  # A name and then what it does to the destination record, because the enum value on its own
+  # only means something if you already know how fragments merge. Wording from the PO.
   LOAD_KIND_LABELS = {
-    'primary_fragment' => 'The record itself (primary fragment)',
-    'secondary_fragment' => 'The fragment based on source_id and priority (secondary fragment)',
-    'enrichment' => 'A fragment on records fetched from the destination (enrichment)',
-    'file' => 'A file for the next block to read (pre-processing)'
+    'primary_fragment' => 'Standard – Writes to the primary fragment',
+    'secondary_fragment' => 'Secondary fragment – Writes to a secondary fragment (not the primary fragment)',
+    'enrichment' => 'Enrichment – Writes to a secondary fragment (not the primary fragment)',
+    'file' => 'Preprocessing – Gathers data for the next block (without writing records)'
   }.freeze
-
-  def load_kind_label(kind)
-    LOAD_KIND_LABELS[kind]
-  end
 
   # Nothing at all when a block is fine, rather than an empty element, so the caller does not
   # have to ask twice. Named where the block it belongs to is not already obvious from where
