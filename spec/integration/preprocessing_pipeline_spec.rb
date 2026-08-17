@@ -167,5 +167,10 @@ RSpec.describe 'Pre-processing pipeline (3 blocks)', type: :integration do
     block2_report = pipeline_job.harvest_reports.find_by(definition_name: block2.name)
     expect(block2_report.load_workers_queued).to eq(4)
     expect(block2_report.records_loaded).to eq(4)
+
+    # And the run itself has ended, rather than sitting on "running" with every one of its
+    # blocks finished.
+    expect(pipeline_job.reload).to be_completed
+    expect(pipeline_job.end_time).to be_present
   end
 end

@@ -2,6 +2,7 @@
 
 class PipelineJob < ApplicationRecord
   include Job
+  include RunConfiguration
 
   serialize :harvest_definitions_to_run, type: Array, coder: YAML
 
@@ -59,6 +60,16 @@ class PipelineJob < ApplicationRecord
     !status.in?(Job::FINISHED_STATUSES) && created_at > PREPROCESS_WRITING_WINDOW.ago
   end
 
+  # Called by this run's blocks as each of them finishes - see RunCompletion for why the
+  # run has to work this out for itself.
+  def finish_if_complete
+    completion = RunCompletion.new(self)
+    return unless completion.finished?
+
+    completion.errored? ? errored! : completed!
+    update(end_time: Time.zone.now) if end_time.blank?
+  end
+
   # Trigger the next step in the automation if this job is from an automation and has completed
   def trigger_next_automation_step
     return unless from_automation? && harvest_reports.all?(&:completed?)
@@ -80,7 +91,7 @@ class PipelineJob < ApplicationRecord
     reload
     return if cancelled?
 
-    next_definition = pipeline.next_block(completed_definition)
+    next_definition = next_block_to_run(completed_definition)
     return enqueue_enrichment_jobs(completed_definition.name) if next_definition.blank?
 
     job = create_next_block_job(next_definition)
@@ -101,6 +112,32 @@ class PipelineJob < ApplicationRecord
     end
   end
 
+  # How this run is named wherever one has to be picked out of a list: the request
+  # preview's run selector, the Run modal's input choices, and the dropdown that runs a
+  # single block against an earlier run's pre-processed data.
+  def run_label
+    "Job ##{id} - #{created_at.strftime('%-d %b %Y, %H:%M')}"
+  end
+
+  # The next block of the chain that this run is actually configured to run. Blocks
+  # the user unticked are stepped over: their data comes from whatever the following
+  # block's input nominates (see RunConfiguration#validate_chain_inputs).
+  def next_block_to_run(completed_definition)
+    pipeline.ordered_blocks
+            .where(position: (completed_definition.position + 1)..)
+            .find { |definition| should_run?(definition.id) }
+  end
+
+  # Which run's pre-processed output this block reads from. Its own, unless the user
+  # nominated an earlier run's data in the Run modal.
+  def preprocess_source_job_id(definition)
+    input = input_for(definition)
+    return id unless input.preprocess_output?
+    return input.pipeline_job_id unless input.latest?
+
+    latest_source_job_id(definition) || id
+  end
+
   def harvest_report
     harvest_reports.find_by(kind: 'harvest')
   end
@@ -109,7 +146,26 @@ class PipelineJob < ApplicationRecord
     harvest_reports.all?(&:finished?)
   end
 
+  # Whether this enrichment is one this run still has to queue - asked by RunCompletion as
+  # well as when they are queued.
+  def should_queue_enrichment?(enrichment)
+    enrichment_id = enrichment.id
+
+    should_run?(enrichment_id) && enrichment.ready_to_run? &&
+      !harvest_jobs.exists?(pipeline_job_id: id, harvest_definition_id: enrichment_id)
+  end
+
   private
+
+  # For a schedule-driven run, 'latest' means the most recent *other* run of this
+  # pipeline that has output for the position this block consumes.
+  def latest_source_job_id(definition)
+    pipeline.pipeline_jobs
+            .where(id: PreProcess::Output.pipeline_job_ids_with_output(definition.position - 1))
+            .where.not(id:)
+            .order(created_at: :desc)
+            .pick(:id)
+  end
 
   # The transformation-completion gate can fire more than once for a single
   # block under concurrent workers. The unique index on
@@ -124,13 +180,6 @@ class PipelineJob < ApplicationRecord
   def should_queue_enrichments?
     reload
     !cancelled? && pipeline.enrichments.present? && harvest_completed?
-  end
-
-  def should_queue_enrichment?(enrichment)
-    enrichment_id = enrichment.id
-    should_run?(enrichment_id) &&
-      enrichment.ready_to_run? &&
-      !harvest_jobs.exists?(pipeline_job_id: id, harvest_definition_id: enrichment_id)
   end
 
   def harvest_completed?

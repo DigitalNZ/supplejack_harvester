@@ -9,7 +9,9 @@
       'aria-labelledby': 'Create',
       'aria-hidden': 'true'
     ) do %>
-  <div class="modal-dialog">
+  <%# local_assigns rather than a plain local: existing callers do not pass a size, and
+      an undefined local would raise in their compiled templates. %>
+  <div class="<%= class_names('modal-dialog', local_assigns[:modal_size]) %>">
     <div class="modal-content">
       <div class="modal-header modal-header--with-subheader">
         <h5 class="modal-title" id="create-modal-label"><%= modal_heading %></h5>

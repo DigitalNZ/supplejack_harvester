@@ -21,13 +21,13 @@ class ScheduleWorker
 
   def create_pipeline_job(schedule)
     PipelineJob.create(
-      pipeline_id: schedule.pipeline.id,
+      pipeline_id: schedule.pipeline.id, destination_id: schedule.destination.id,
+      schedule_id: schedule.id, page_type: :all_available_pages,
       harvest_definitions_to_run: schedule.harvest_definitions_to_run,
-      destination_id: schedule.destination.id,
-      page_type: :all_available_pages,
-      schedule_id: schedule.id, delete_previous_records: schedule.delete_previous_records,
-      job_priority: schedule.job_priority,
-      skip_previously_enriched: schedule.skip_previously_enriched
+      block_settings: schedule.block_settings, job_priority: schedule.job_priority,
+      delete_previous_records: schedule.delete_previous_records,
+      skip_previously_enriched: schedule.skip_previously_enriched,
+      run_enrichment_concurrently: schedule.run_enrichment_concurrently
     )
   end
 end

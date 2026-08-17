@@ -106,7 +106,7 @@ class RequestsController < ApplicationController
       response: preprocess_response(input_record),
       total_pages: documents.total_pages,
       total_records: records.count,
-      runs: runs.map { |job| { id: job.id, label: run_label(job) } },
+      runs: runs.map { |job| { id: job.id, label: job.run_label } },
       current_run_id: run.id
     }
   end
@@ -124,10 +124,7 @@ class RequestsController < ApplicationController
   end
 
   def preprocess_runs
-    pipeline.pipeline_jobs
-            .where(id: PreProcess::Output.pipeline_job_ids_with_output(preceding_position))
-            .order(created_at: :desc)
-            .to_a
+    pipeline.runs_with_output_at(preceding_position).to_a
   end
 
   def chosen_run(runs)
@@ -148,16 +145,27 @@ class RequestsController < ApplicationController
   def preprocess_response(input_record)
     return {} if input_record.body.blank?
 
-    document = Extraction::EnrichmentExtraction.new(@request, input_record).extract
+    extraction = Extraction::EnrichmentExtraction.new(@request, input_record)
+    document = extraction.extract
+
+    return failed_response(extraction) if extraction.extraction_error.present?
+
     document.respond_to?(:to_hash) ? document.to_hash : {}
+  end
+
+  # Shaped like a document so the preview shows the URL it tried and why it failed,
+  # rather than an empty panel. The usual cause is a parameter that was not evaluated -
+  # a dynamic expression left as a static parameter - leaving its #{...} in the URL.
+  def failed_response(extraction)
+    {
+      url: extraction.attempted_url,
+      method: @request.http_method,
+      body: { error: extraction.extraction_error.message }.to_json
+    }
   end
 
   def preceding_position
     harvest_definition.position.to_i - 1
-  end
-
-  def run_label(job)
-    "Job ##{job.id} - #{job.created_at.strftime('%-d %b %Y, %H:%M')}"
   end
 
   def pipeline

@@ -4,7 +4,15 @@
    run_full_extraction_path ||= ''
    type = definition.class.name.gsub(/Definition$/, '').downcase
    delete_path ||= ''
-   position = type == 'extraction' ? 'first' : 'last' %>
+   position = type == 'extraction' ? 'first' : 'last'
+
+   # A block that works from the records the block before it produced cannot simply be
+   # fired off: it has to be told which run to take them from. Deciding that here rather
+   # than at each render site means every card gets it - the pre-processing, enrichment
+   # and harvest blocks all come through this partial by different routes.
+   block = local_assigns[:block_definition]
+   needs_run_picker = run_sample_extraction_path.present? && block&.consumes_preprocess_output?
+   run_extraction_modal_id = ("run-extraction-#{block.id}" if needs_run_picker) %>
 
 <div class="card harvest-card card--clickable h-100">
   <div class='card-body'>
@@ -96,20 +104,30 @@
               </li>
             <% end %>
 
-            <% if run_sample_extraction_path.present? %>
-              <li>
-                <%= button_to run_sample_extraction_path, class: 'dropdown-item harvest-card__action' do %>
-                  <i class="bi bi-play me-2"></i> Run Sample Extraction
-                <% end %>
-              </li>
-            <% end %>
+            <%# A block that works from the previous block's records cannot just be
+                fired off: it needs to be told which run to take them from, so both
+                entries open the picker instead of posting (pipelines/_run_extraction_modal). %>
+            <% if run_extraction_modal_id.present? %>
+              <% ['Run Sample Extraction', 'Run Full Extraction'].each do |label| %>
+                <li>
+                  <%= button_tag type: 'button', class: 'dropdown-item harvest-card__action',
+                                 data: { 'bs-toggle' => 'modal',
+                                         'bs-target' => "##{run_extraction_modal_id}" } do %>
+                    <i class="bi bi-play me-2"></i> <%= label %>
+                  <% end %>
+                </li>
+              <% end %>
+            <% else %>
+              <% { 'Run Sample Extraction' => run_sample_extraction_path,
+                   'Run Full Extraction' => run_full_extraction_path }.each do |label, path| %>
+                <% next if path.blank? %>
 
-            <% if run_full_extraction_path.present? %>
-              <li>
-                <%= button_to run_full_extraction_path, class: 'dropdown-item harvest-card__action' do %>
-                  <i class="bi bi-play me-2"></i> Run Full Extraction
-                <% end %>
-              </li>
+                <li>
+                  <%= button_to path, class: 'dropdown-item harvest-card__action' do %>
+                    <i class="bi bi-play me-2"></i> <%= label %>
+                  <% end %>
+                </li>
+              <% end %>
             <% end %>
           </ul>
         </div>
@@ -192,3 +210,9 @@
     </div>
   </div>
 </div>
+
+<%# Rendered outside the card: the card is clickable, and a modal nested inside it would
+    sit under that click target. %>
+<% if needs_run_picker %>
+  <%= render 'pipelines/run_extraction_modal', pipeline: local_assigns[:pipeline], block_definition: block %>
+<% end %>

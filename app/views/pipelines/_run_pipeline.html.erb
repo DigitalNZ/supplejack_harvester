@@ -9,86 +9,25 @@
 <% end %>
 
 <% if @pipeline.ready_to_run? %>
-  <%= render layout: 'shared/create_modal', locals: { modal_heading: 'Run Settings', id: 'run-settings' } do %>
+  <%= render layout: 'shared/create_modal',
+             locals: { modal_heading: 'Run Settings', id: 'run-settings', modal_size: 'modal-lg' } do %>
     <%= vertical_form_with(model: [@pipeline, PipelineJob.new]) do |form| %>
       <div class='row gy-3 align-items-center'>
         <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
 
-        <% if @pipeline.harvest_definitions.length == 1 %>
-          <%- @pipeline.harvest_definitions.each do |harvest_definition| %>
-            <%= check_box('pipeline_job', 'harvest_definitions_to_run', {
-                            multiple: true,
-                            checked: true,
-                            class: "form-check-input js-pipeline-#{harvest_definition.kind}-checkbox d-none",
-                            disabled: !harvest_definition.ready_to_run?
-                          }, harvest_definition.id, nil) %>
-          <% end %>
-        <% else %>
-          <div class='col-5'>
-            <%= form.label :harvest_definitions_to_run, class: 'form-label' do %>
-              Blocks to run
-
-              <span
-                data-bs-toggle="tooltip"
-                data-bs-title="Please select the parts of your pipeline that you wish to run."><i class="bi bi-question-circle" aria-label="helper text"></i>
-              </span>
-            <% end %>
-          </div>
-
-          <div class='col-7'>
-            <%- @pipeline.harvest_definitions.each do |harvest_definition| %>
-              <div class='form-check'>
-                <%= label_tag do %>
-
-                  <%= check_box('pipeline_job', 'harvest_definitions_to_run', {
-                                  multiple: true,
-                                  checked: harvest_definition.ready_to_run?,
-                                  class: "form-check-input js-pipeline-#{harvest_definition.kind}-checkbox",
-                                  disabled: !harvest_definition.ready_to_run?
-                                }, harvest_definition.id, nil) %>
-
-                  <%= harvest_definition.source_id %>
-                <% end %>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
-
-        <% if @extraction_jobs %>
-          <div class="col-5 js-transformation-input">
-            <%= form.label :extraction_job_id, class: 'form-label' do %>
-              Transformation input
-
-              <span
-                data-bs-toggle="tooltip"
-                data-bs-title="Choose to either perform fresh extraction or use existing extracted data."><i class="bi bi-question-circle" aria-label="helper text"></i>
-              </span>
-            <% end %>
-          </div>
-
-          <div class='col-7 js-transformation-input'>
-            <%= form.collection_select(:extraction_job_id, @extraction_jobs, :id, :name,
-                                       { include_blank: 'Fresh extraction' }, class: 'form-select') %>
-          </div>
-        <% end %>
-
-        <div class="col-5">
-          <%= form.label :page_type, class: 'form-label' do %>
-            Pages to transform
-          <% end %>
+        <div class='col-12 mb-2'>
+          <%# A run starts from the default selection - every block that can run, each
+              on its own input. A failed create redirects, so there is no submitted
+              selection to restore here. %>
+          <%= render 'pipelines/run_blocks',
+                     pipeline: @pipeline,
+                     subject: 'pipeline_job',
+                     settings: RunSettings.default_for(@pipeline) %>
         </div>
 
-        <div id='js-pipeline-page-type' class='col-7'>
-          <%= form.select :page_type, options_for_select(
-                PipelineJob.page_types.map do |key, _value|
-                  [key.humanize, key]
-                end
-              ), {}, id: 'js-pipeline-page-type-select', class: 'form-select' %>
-        </div>
-
-        <div id='js-pipeline-pages' class='col-3 d-none'>
-          <%= form.number_field :pages, class: 'form-control' %>
-        </div>
+        <%# "Pages to transform" is per block now - see the Pages column above. The
+            job-wide page_type/pages columns remain for the API and automation paths,
+            which still post them. %>
 
         <div class="col-5">
           <%= form.label :destination, class: 'form-label' do %>

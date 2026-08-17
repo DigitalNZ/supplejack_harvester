@@ -71,13 +71,14 @@ module Extraction
       [set_number_reached?, extraction_failed?, duplicate_document_extracted?, custom_stop_conditions_met?].any?(true)
     end
 
+    # The page limit is set per block in the Run modal, so ask the run about this
+    # block rather than reading a job-wide number. nil means every available page,
+    # and never equals a page number.
     def set_number_reached?
       return false if @harvest_job.blank?
 
-      pipeline_job = @harvest_job.pipeline_job
-      return false unless pipeline_job.set_number?
-
-      return false unless pipeline_job.pages == @extraction_definition.page
+      page_limit = @harvest_job.pipeline_job.pages_for(@harvest_job.harvest_definition)
+      return false unless page_limit == @extraction_definition.page
 
       log_stop_condition_hit(stop_condition_type: 'system', stop_condition_name: 'Set number reached',
                              stop_condition_content: '')

@@ -25,6 +25,11 @@ class HarvestReport < ApplicationRecord
   delegate :extraction_definition, to: :harvest_job, allow_nil: true
   delegate :transformation_definition, to: :harvest_job, allow_nil: true
 
+  # Every worker that finishes part of a block writes one of these four statuses, so this
+  # is the one place that sees a run's blocks finish, whichever route they took. The run
+  # decides for itself whether that was the last of them.
+  after_update :report_to_pipeline_job, if: :saved_change_to_status?
+
   enum :kind, { harvest: 0, enrichment: 1, preprocess: 2 }
 
   METRICS = %w[
@@ -114,6 +119,14 @@ class HarvestReport < ApplicationRecord
   end
 
   private
+
+  def saved_change_to_status?
+    saved_changes.keys.any? { |attribute| attribute.end_with?('_status') }
+  end
+
+  def report_to_pipeline_job
+    pipeline_job&.finish_if_complete
+  end
 
   def considered_cancelled?
     statuses.any?('cancelled') || harvest_job&.cancelled? || pipeline_job.cancelled?

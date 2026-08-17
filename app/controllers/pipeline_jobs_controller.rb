@@ -47,9 +47,14 @@ class PipelineJobsController < ApplicationController
     @pipeline_job = PipelineJob.find(params[:id])
   end
 
+  # block_settings is an arbitrary hash keyed by harvest definition id, so it cannot
+  # be enumerated here. RunSettings coerces every key and value it contains, and the
+  # ids are only ever used to look blocks up within this pipeline, so unexpected keys
+  # are inert rather than dangerous.
   def pipeline_job_params
     params.expect(pipeline_job: [:pipeline_id, :key, :extraction_job_id, :destination_id,
                                  :page_type, :pages, :delete_previous_records, :run_enrichment_concurrently,
-                                 :skip_previously_enriched, :job_priority, { harvest_definitions_to_run: [] }])
+                                 :skip_previously_enriched, :job_priority, { harvest_definitions_to_run: [],
+                                                                             block_settings: {} }])
   end
 end

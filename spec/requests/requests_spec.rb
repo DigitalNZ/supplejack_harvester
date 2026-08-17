@@ -222,6 +222,24 @@ RSpec.describe 'Requests' do
         expect(preview['current_run_id']).to be_nil
       end
 
+      # A dynamic expression left as a static parameter is never evaluated, so its
+      # #{...} ends up in the URL and the request layer cannot parse it. The preview has
+      # to say so: an empty panel sends you looking anywhere but at the parameter.
+      it 'reports the URL it tried and why it failed' do
+        create(:parameter, kind: 'slug', content_type: 'static', request: request_one,
+                           content: %("\#{response['transformed_record']['slug']}/seasons"))
+        write_output(pipeline_job, [{ 'transformed_record' => { 'slug' => 'a-show' } }])
+
+        get pipeline_harvest_definition_extraction_definition_request_path(
+          pipeline, harvest_definition, extraction_definition, request_one
+        )
+
+        response_preview = response.parsed_body['preview']['response']
+
+        expect(response_preview['url']).to include "\#{response['transformed_record']['slug']}"
+        expect(JSON.parse(response_preview['body'])['error']).to include 'bad URI'
+      end
+
       it 'does not error when a page file on disk is corrupt' do
         write_output(pipeline_job, [{ 'id' => '123' }])
         page_path = "#{PreProcess::Output.folder(pipeline_job.id, 0)}/1/preprocess__000000001.json"

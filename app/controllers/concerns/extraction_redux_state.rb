@@ -64,7 +64,10 @@ module ExtractionReduxState
   end
 
   def ui_parameters_slice
-    parameter_entities = @parameters.map { |parameter| ui_parameter_entity(parameter) }
+    # The id of the request to compare against is the same for every parameter, so it is
+    # read once here rather than per parameter inside the loop.
+    first_request_id = @extraction_definition.requests.first&.id
+    parameter_entities = @parameters.map { |parameter| ui_parameter_entity(parameter, first_request_id) }
 
     {
       ids: @parameters.pluck(:id),
@@ -73,29 +76,39 @@ module ExtractionReduxState
   end
 
   def ui_stop_conditions_slice
-    stop_condition_entities = @extraction_definition.stop_conditions.map do |condition|
-      ui_stop_condition_entity(condition)
+    # Ordered explicitly: #last on the relation used to order by primary key, and reading
+    # the rows into an array would otherwise leave the order up to the database.
+    conditions = @extraction_definition.stop_conditions.order(:id).to_a
+    last_condition_id = conditions.last&.id
+
+    stop_condition_entities = conditions.map do |condition|
+      ui_stop_condition_entity(condition, last_condition_id)
     end
 
     {
-      ids: @extraction_definition.stop_conditions.pluck(:id),
+      ids: conditions.map(&:id),
       entities: stop_condition_entities.index_by { |condition| condition[:id] }
     }
   end
 
-  def ui_stop_condition_entity(condition)
+  # As with the parameters above, the condition to compare against is read once and
+  # compared by id, rather than re-reading the association for every condition.
+  def ui_stop_condition_entity(condition, last_condition_id)
     {
       id: condition[:id], saved: true,
       saving: false, deleting: false,
-      active: false, displayed: condition == @extraction_definition.stop_conditions.last
+      active: false, displayed: condition.id == last_condition_id
     }
   end
 
-  def ui_parameter_entity(parameter)
+  # Compares request ids rather than the requests themselves: the parameter's row already
+  # carries request_id, so asking it which request it belongs to costs a query per
+  # parameter and loads a Request only to throw it away.
+  def ui_parameter_entity(parameter, first_request_id)
     {
       id: parameter[:id], saved: true,
       saving: false, deleting: false,
-      active: false, displayed: parameter.request == @extraction_definition.requests.first
+      active: false, displayed: parameter.request_id == first_request_id
     }
   end
 
