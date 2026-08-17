@@ -16,10 +16,11 @@ class BlockConfiguration
     missing_definitions + load_problems
   end
 
-  # Just the ways this block's definitions contradict each other. A missing extraction or
-  # transformation already shows on the pipeline page as an "+ Add ..." card, so repeating it
-  # would only add noise to a pipeline that is still being built; a load definition
-  # disagreeing with a transformation shows nowhere at all.
+  private
+
+  attr_reader :definition
+
+  # The ways this block's definitions contradict each other, as opposed to simply being absent.
   def load_problems
     problems = []
 
@@ -29,10 +30,6 @@ class BlockConfiguration
 
     problems + problems_for_load_kind
   end
-
-  private
-
-  attr_reader :definition
 
   delegate :extraction_definition, :transformation_definition, :load_kind, :preprocess?, to: :definition
 

@@ -104,11 +104,6 @@ class HarvestDefinition < ApplicationRecord
     BlockConfiguration.new(self).problems
   end
 
-  # Only the contradictions between this block's definitions - see BlockConfiguration.
-  def load_configuration_problems
-    BlockConfiguration.new(self).load_problems
-  end
-
   def to_h
     {
       id:,

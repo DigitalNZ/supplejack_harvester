@@ -29,14 +29,11 @@ module PipelinesHelper
   }.freeze
 
   # Nothing at all when a block is fine, rather than an empty element, so the caller does not
-  # have to ask twice. Named where the block it belongs to is not already obvious from where
-  # the notice appears.
-  def cannot_run_notice(problems, subject = nil)
+  # have to ask twice. Unnamed: it is rendered in the block's own row, next to its name.
+  def cannot_run_notice(problems)
     return if problems.empty?
 
-    lead = subject.present? ? "#{subject} cannot run" : 'Cannot run'
-
-    tag.small("#{lead}: #{problems.to_sentence}.", class: 'd-block text-danger')
+    tag.small("Cannot run: #{problems.to_sentence}.", class: 'd-block text-danger')
   end
 
   # Only what this block can actually do, so the form cannot offer a choice the model will then

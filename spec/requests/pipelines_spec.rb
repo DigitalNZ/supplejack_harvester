@@ -153,25 +153,62 @@ RSpec.describe 'Pipelines' do
       expect(response.body).not_to include '+ Add harvest load'
     end
 
-    it 'says why a block whose definitions contradict each other cannot run' do
+    # The reasons live in the Run modal, in the row of the block they belong to.
+    it 'says in the Run modal why a block whose definitions contradict each other cannot run' do
       harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment'))
       create(:field, name: 'title', transformation_definition: harvest_definition.transformation_definition)
 
       get pipeline_path(pipeline)
 
       expect(response.body).to include CGI.escapeHTML(
-        "#{harvest_definition.source_id} cannot run: it writes a secondary fragment, " \
-        'so its transformation has to set internal_identifier.'
+        'Cannot run: it writes a secondary fragment, so its transformation has to set internal_identifier.'
       )
     end
 
-    it 'stays quiet about a block that is merely unfinished, which its empty cards already show' do
+    it 'says why a block is merely unfinished too, the modal being where a block is chosen' do
       create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'half-built',
                                   extraction_definition: nil, transformation_definition: nil)
 
       get pipeline_path(pipeline)
 
-      expect(response.body).not_to include 'cannot run:'
+      expect(response.body).to include CGI.escapeHTML(
+        'Cannot run: it has no extraction definition and it has no transformation definition.'
+      )
+    end
+
+    # Opening it is how the reasons get read, so it must open even when nothing can run.
+    it 'offers the Run modal while the pipeline has blocks, runnable or not' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include 'run-settings'
+      expect(response.body).not_to match(/<button[^>]*disabled[^>]*bs-target="#run-settings"/)
+    end
+
+    it 'refuses to start a run when no block can run, and says so' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include 'No block in this pipeline can run yet.'
+      expect(response.body).to match(/<button[^>]*disabled[^>]*>Run<\/button>/)
+    end
+
+    it 'lets a run start when a block can, even alongside one that cannot' do
+      create(:field, name: 'title', transformation_definition: harvest_definition.transformation_definition)
+      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'half-built',
+                                  extraction_definition: nil, transformation_definition: nil)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).not_to include 'No block in this pipeline can run yet.'
+      expect(response.body).to match(/<button[^>]*>Run<\/button>/)
+      expect(response.body).not_to match(/<button[^>]*disabled[^>]*>Run<\/button>/)
+    end
+
+    it 'has nothing to open on a pipeline with no blocks at all' do
+      empty = create(:pipeline, name: 'No blocks')
+
+      get pipeline_path(empty)
+
+      expect(response.body).to match(/<button[^>]*disabled[^>]*bs-target="#run-settings"/)
     end
 
     # Sharing arises from cloning a pipeline, which points the clone's blocks at the same
