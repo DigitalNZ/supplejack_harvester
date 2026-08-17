@@ -23,7 +23,13 @@ module DefinitionActions
 
     return definition_failure(definition) unless definition.save
 
-    attach_to_block(definition, type)
+    # Nothing for it to belong to, so it should not be left lying around. The block is the one
+    # with the complaint, so it is the block's errors the user needs to read.
+    unless attach_to_block(definition, type)
+      definition.destroy
+
+      return definition_failure(@harvest_definition)
+    end
 
     redirect_to success_path || definition_path(type, definition), notice: t('.success')
   end

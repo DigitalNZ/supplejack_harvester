@@ -1,7 +1,9 @@
 <%# The settings that describe how a block writes its records. Shared by the create modal
     and the edit page so the two cannot drift.
     locals:
-      form: the form builder for a LoadDefinition %>
+      form:               the form builder for a LoadDefinition
+      harvest_definition: the block this load definition belongs to, which decides what it
+                          is allowed to do %>
 <div class="row gy-3 align-items-center">
   <% if form.object.persisted? %>
     <div class="col-4">
@@ -23,7 +25,8 @@
   </div>
 
   <div class='col-8'>
-    <%= form.select :kind, options_for_select(load_kind_options, form.object.kind), {}, class: 'form-select' %>
+    <%= form.select :kind, options_for_select(load_kind_options(harvest_definition), form.object.kind), {},
+                    class: 'form-select' %>
   </div>
 
   <div class="col-4">

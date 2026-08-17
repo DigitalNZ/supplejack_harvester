@@ -89,6 +89,36 @@ RSpec.describe 'Load Definitions' do
         expect(flash[:alert]).to include 'must not be 0'
       end
     end
+
+    # The kind is chosen from a select that only offers what the block can do, so getting here
+    # means going around the form. It still must not leave a definition nothing can use.
+    context 'when the kind is not something the block can do' do
+      let!(:preprocess_definition) do
+        create(:harvest_definition, kind: :preprocess, pipeline:, source_id: 'pre-0')
+      end
+
+      def post_enrichment_load
+        post pipeline_harvest_definition_load_definitions_path(pipeline, preprocess_definition), params: {
+          load_definition: { pipeline_id: pipeline.id, kind: 'enrichment', priority: -1 }
+        }
+      end
+
+      it 'leaves no load definition behind' do
+        expect { post_enrichment_load }.not_to change(LoadDefinition, :count)
+      end
+
+      it 'leaves the block without one' do
+        post_enrichment_load
+
+        expect(preprocess_definition.reload.load_definition).to be_nil
+      end
+
+      it 'says what the block objected to' do
+        post_enrichment_load
+
+        expect(flash[:alert]).to include 'cannot be a enrichment load on a preprocess block'
+      end
+    end
   end
 
   describe '#show' do

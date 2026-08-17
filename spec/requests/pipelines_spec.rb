@@ -174,10 +174,13 @@ RSpec.describe 'Pipelines' do
       expect(response.body).not_to include 'cannot run:'
     end
 
+    # Sharing arises from cloning a pipeline, which points the clone's blocks at the same
+    # definitions. Both blocks have to be a kind that can do this load, so they are both
+    # harvests - which is also what a cloned pipeline gives you.
     it 'offers to clone a load definition shared with another block' do
       load_definition = create(:load_definition, pipeline:)
       harvest_definition.update(load_definition:)
-      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'enrich-one', load_definition:)
+      create(:harvest_definition, pipeline: create(:pipeline), kind: :harvest, source_id: 'cloned', load_definition:)
 
       get pipeline_path(pipeline)
 

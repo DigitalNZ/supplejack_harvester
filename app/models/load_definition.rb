@@ -20,18 +20,32 @@ class LoadDefinition < ApplicationRecord
   # file               - write to disk for the next block instead of to the API.
   enum :kind, { primary_fragment: 0, secondary_fragment: 1, enrichment: 2, file: 3 }
 
-  # The kind a block would load as if it had no load definition of its own. Only used
-  # while load_definition_id is still nullable - see HarvestDefinition#load_kind.
-  KIND_FOR_BLOCK_KIND = {
-    'harvest' => 'primary_fragment',
-    'enrichment' => 'enrichment',
-    'preprocess' => 'file'
+  # What a block of each kind is allowed to do with its records, most typical first. Only a
+  # harvest has a choice: write the record itself, or add its own fragment to records other
+  # sources own. An enrichment posts to records it fetched from the destination and nothing
+  # else, and a pre-processing block only ever writes a file for the next block to read -
+  # anything else and the block after it gets nothing.
+  KINDS_FOR_BLOCK_KIND = {
+    'harvest' => %w[primary_fragment secondary_fragment],
+    'enrichment' => %w[enrichment],
+    'preprocess' => %w[file]
   }.freeze
+
+  def self.kinds_for_block_kind(block_kind)
+    KINDS_FOR_BLOCK_KIND.fetch(block_kind, [])
+  end
+
+  # The kind a block loads as when it has no load definition of its own. Only used while
+  # load_definition_id is still nullable - see HarvestDefinition#load_kind.
+  def self.default_kind_for_block_kind(block_kind)
+    kinds_for_block_kind(block_kind).first
+  end
 
   validates :name, uniqueness: true
   validates :priority, numericality: { only_integer: true }
 
   validate :priority_agrees_with_kind
+  validate :kind_suits_the_blocks_loading_through_it
 
   after_create do
     if name.blank?
@@ -67,15 +81,39 @@ class LoadDefinition < ApplicationRecord
   def priority_agrees_with_kind
     return if priority.blank?
 
-    if writes_secondary_fragment? && priority.zero?
+    zero = priority.zero?
+
+    if writes_secondary_fragment? && zero
       errors.add(:priority, 'must not be 0 - at 0 the destination writes the primary fragment ' \
                             'instead, blanking every field this block does not set')
-    elsif primary_fragment? && !priority.zero?
+    elsif primary_fragment? && !zero
       errors.add(:priority, 'must be 0 to write the primary fragment')
     end
   end
 
   def writes_secondary_fragment?
     secondary_fragment? || enrichment?
+  end
+
+  # Editing a load definition must not take it somewhere its blocks cannot follow. On create
+  # there are no blocks yet, and HarvestDefinition validates the pairing from its side as the
+  # block picks the definition up.
+  #
+  # Asked of the database rather than the association, which caches whatever it held the last
+  # time this record was validated - for a definition created and then attached to, that is an
+  # empty collection, and the check would pass on a stale answer.
+  def kind_suits_the_blocks_loading_through_it
+    named = blocks_that_cannot_follow.map { |block| "the #{block.kind} block #{block.source_id}" }
+    return if named.empty?
+
+    errors.add(:kind, "is not something #{named.to_sentence} can do")
+  end
+
+  def blocks_that_cannot_follow
+    return [] if id.blank?
+
+    HarvestDefinition.where(load_definition_id: id).reject do |block|
+      self.class.kinds_for_block_kind(block.kind).include?(kind)
+    end
   end
 end

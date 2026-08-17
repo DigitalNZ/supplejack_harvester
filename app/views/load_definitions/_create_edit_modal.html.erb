@@ -26,7 +26,7 @@
         <%= vertical_form_with model: [@pipeline, harvest_definition, model] do |form| %>
           <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
 
-          <%= render 'load_definitions/fields', form: %>
+          <%= render 'load_definitions/fields', form:, harvest_definition: %>
 
           <div class='float-end mt-4'>
             <button type="button" class="btn btn-outline-danger me-2" data-bs-dismiss="modal" aria-label="Close">Cancel</button>

@@ -28,6 +28,8 @@ class HarvestDefinition < ApplicationRecord
   # allows it.
   validates :kind, presence: true
 
+  validate :load_definition_is_something_this_block_can_do
+
   after_create do
     self.name = "#{id}_#{kind}"
     save!
@@ -48,7 +50,19 @@ class HarvestDefinition < ApplicationRecord
   # kind the block would have loaded as before load definitions existed. Falls away once
   # load_definition_id is made non-null.
   def load_kind
-    load_definition&.kind || LoadDefinition::KIND_FOR_BLOCK_KIND[kind]
+    load_definition&.kind || LoadDefinition.default_kind_for_block_kind(kind)
+  end
+
+  # See LoadDefinition::KINDS_FOR_BLOCK_KIND for which kinds go with which. Checked from both
+  # sides: here as a block picks a definition up, and on the definition as it is edited.
+  def load_definition_is_something_this_block_can_do
+    return if load_definition.blank?
+
+    block_kind = kind
+    definition_kind = load_definition.kind
+    return if LoadDefinition.kinds_for_block_kind(block_kind).include?(definition_kind)
+
+    errors.add(:load_definition, "cannot be a #{definition_kind} load on a #{block_kind} block")
   end
 
   # Which fragment the destination writes to, and whether the record counts as active

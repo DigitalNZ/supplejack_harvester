@@ -39,14 +39,16 @@ module PipelinesHelper
     tag.small("#{lead}: #{problems.to_sentence}.", class: 'd-block text-danger')
   end
 
-  def load_kind_options
-    LOAD_KIND_LABELS.map { |kind, label| [label, kind] }
+  # Only what this block can actually do, so the form cannot offer a choice the model will then
+  # refuse. A block with one option still gets a select, which says the choice is made for it.
+  def load_kind_options(harvest_definition)
+    LoadDefinition.kinds_for_block_kind(harvest_definition.kind).map { |kind| [LOAD_KIND_LABELS[kind], kind] }
   end
 
   # What a block of this kind used to load as before it could be told, so adding a load
   # definition to an existing block does not silently change how it writes.
   def default_load_kind(harvest_definition)
-    LoadDefinition::KIND_FOR_BLOCK_KIND.fetch(harvest_definition.kind, 'primary_fragment')
+    LoadDefinition.default_kind_for_block_kind(harvest_definition.kind) || 'primary_fragment'
   end
 
   # A fragment that is not the primary one needs a priority of its own: fragments merge

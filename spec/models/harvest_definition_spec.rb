@@ -193,24 +193,61 @@ RSpec.describe HarvestDefinition do
       expect(block.configuration_problems).to be_empty
     end
 
-    context 'when the block writes a file' do
-      let(:load_definition) { create(:load_definition, pipeline:, kind: 'file') }
+    # These two pairings cannot be saved any more - see the load definition validation below.
+    # The checks stay because rows written before that validation existed are still out there,
+    # and a block in that state runs and misbehaves rather than refusing to save. update_columns
+    # is how the state gets built here, being the only way left to produce it.
+    context 'when the block and its load definition disagree' do
+      it 'reports a file load on a block that is not pre-processing' do
+        block.update_columns(load_definition_id: create(:load_definition, pipeline:, kind: 'file').id)
 
-      it 'is only allowed on a pre-processing block' do
-        block.update(load_definition:)
-
-        expect(block.configuration_problems).to include(
+        expect(block.reload.configuration_problems).to include(
           'only a pre-processing block can write a file for the next block to read'
         )
       end
 
-      it 'is what a pre-processing block has to do' do
-        block.update(kind: :preprocess, load_definition: create(:load_definition, pipeline:))
+      it 'reports a pre-processing block that writes something other than a file' do
+        block.update_columns(kind: HarvestDefinition.kinds[:preprocess],
+                             load_definition_id: create(:load_definition, pipeline:).id)
 
-        expect(block.configuration_problems).to include(
+        expect(block.reload.configuration_problems).to include(
           'it is a pre-processing block, so it has to write a file for the next block to read'
         )
       end
+    end
+  end
+
+  describe 'the load definition a block is allowed' do
+    let(:pipeline) { create(:pipeline) }
+
+    {
+      harvest: %w[primary_fragment secondary_fragment],
+      enrichment: %w[enrichment],
+      preprocess: %w[file]
+    }.each do |block_kind, allowed|
+      (LoadDefinition.kinds.keys - allowed).each do |refused|
+        it "refuses a #{refused} load on a #{block_kind} block" do
+          definition = build(:harvest_definition, pipeline:, kind: block_kind, source_id: 'a-block',
+                                                  load_definition: create(:load_definition, pipeline:, kind: refused))
+
+          expect(definition).not_to be_valid
+          expect(definition.errors[:load_definition].join)
+            .to eq "cannot be a #{refused} load on a #{block_kind} block"
+        end
+      end
+
+      allowed.each do |kind|
+        it "accepts a #{kind} load on a #{block_kind} block" do
+          definition = build(:harvest_definition, pipeline:, kind: block_kind, source_id: 'a-block',
+                                                  load_definition: create(:load_definition, pipeline:, kind:))
+
+          expect(definition).to be_valid
+        end
+      end
+    end
+
+    it 'accepts a block with no load definition, which falls back to the kind its block implies' do
+      expect(build(:harvest_definition, pipeline:, kind: :preprocess, source_id: 'a-block')).to be_valid
     end
   end
 

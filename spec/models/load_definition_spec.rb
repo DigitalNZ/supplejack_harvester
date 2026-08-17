@@ -67,6 +67,42 @@ RSpec.describe LoadDefinition do
     end
   end
 
+  # The block validates the pairing as it picks a definition up; this is the other direction,
+  # editing a definition to something the blocks already using it cannot do.
+  describe '#kind, against the blocks loading through it' do
+    let(:load_definition) { create(:load_definition, pipeline:) }
+
+    it 'cannot become a kind its block does not do' do
+      create(:harvest_definition, pipeline:, kind: :harvest, source_id: 'a-harvest', load_definition:)
+
+      load_definition.kind = 'file'
+
+      expect(load_definition).not_to be_valid
+      expect(load_definition.errors[:kind].join).to eq 'is not something the harvest block a-harvest can do'
+    end
+
+    it 'names every block that cannot follow it' do
+      create(:harvest_definition, pipeline:, kind: :harvest, source_id: 'one', load_definition:)
+      create(:harvest_definition, pipeline: create(:pipeline), kind: :harvest, source_id: 'two', load_definition:)
+
+      load_definition.kind = 'enrichment'
+      load_definition.valid?
+
+      expect(load_definition.errors[:kind].join)
+        .to eq 'is not something the harvest block one and the harvest block two can do'
+    end
+
+    it 'can still move between the kinds its block does do' do
+      create(:harvest_definition, pipeline:, kind: :harvest, source_id: 'a-harvest', load_definition:)
+
+      expect(load_definition.update(kind: 'secondary_fragment', priority: -1)).to be true
+    end
+
+    it 'is free to be any kind while no block uses it' do
+      expect(load_definition.update(kind: 'file')).to be true
+    end
+  end
+
   describe '#shared?' do
     let(:load_definition) { create(:load_definition, pipeline:) }
 

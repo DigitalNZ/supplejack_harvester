@@ -16,7 +16,7 @@
 <div class='card'>
   <div class='card-body'>
     <%= vertical_form_with model: [@pipeline, @harvest_definition, @load_definition] do |form| %>
-      <%= render 'load_definitions/fields', form: %>
+      <%= render 'load_definitions/fields', form:, harvest_definition: @harvest_definition %>
 
       <div class='float-end mt-4'>
         <button type="submit" class="btn btn-primary">Update load definition</button>
