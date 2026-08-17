@@ -27,6 +27,22 @@ RSpec.describe ScheduleWorker, type: :job do
       end
     end
 
+    context "when scheduling a Pipeline with the run settings enabled" do
+      let(:schedule) do
+        create(:schedule, pipeline:, destination:, harvest_definitions_to_run: [harvest_definition.id],
+                          run_enrichment_concurrently: true, skip_previously_enriched: true)
+      end
+
+      it "creates a Pipeline Job with those settings" do
+        described_class.new.perform(schedule.id)
+
+        expect(PipelineJob.last).to have_attributes(
+          run_enrichment_concurrently: true,
+          skip_previously_enriched: true
+        )
+      end
+    end
+
     context "when scheduling an Automation Template" do
       let(:automation_template) { create(:automation_template) }
       let(:schedule) { create(:schedule, automation_template:, destination:) }

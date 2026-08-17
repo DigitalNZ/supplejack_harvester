@@ -11,6 +11,7 @@ class ExtractionJob < ApplicationRecord
   enum :kind, { full: 0, sample: 1 }, prefix: :is
 
   belongs_to :extraction_definition
+  belongs_to :source_pipeline_job, class_name: 'PipelineJob', optional: true
   has_one :harvest_job, dependent: :destroy
 
   # Jobs whose extracted data is still on disk. Anything offering a job to
@@ -29,6 +30,20 @@ class ExtractionJob < ApplicationRecord
 
   delegate :format, to: :extraction_definition
   delegate :json?, to: :extraction_definition
+
+  # A job started on its own, from a block's dropdown rather than a pipeline run, that
+  # was given an earlier run's pre-processed records to work from. A job belonging to a
+  # pipeline run gets its records through its harvest job instead.
+  def iterates_preprocess_output?
+    source_pipeline_job_id.present? && source_position.present?
+  end
+
+  # The folder holding the records this job iterates.
+  def preprocess_output_folder
+    return unless iterates_preprocess_output?
+
+    PreProcess::Output.folder(source_pipeline_job_id, source_position)
+  end
 
   # Returns the fullpath to the extraction folder for this job
   #

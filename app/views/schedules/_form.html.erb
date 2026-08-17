@@ -8,8 +8,11 @@
       <%= form.hidden_field :pipeline_id, id: 'js-pipeline-id', value: params[:pipeline_id] || @schedule.pipeline_id %>
 
       <%= form.hidden_field :automation_template_id, id: 'js-automation-template-id' %>
-      <%= form.hidden_field :existing_blocks_to_run, id: 'js-existing-blocks-to-run', multiple: true,
-                                                     value: @schedule.harvest_definitions_to_run %>
+
+      <%# The block rows are fetched from the pipeline once one is selected, and the
+          server renders the schedule's current selection into them - see
+          app/frontend/js/ScheduleSelect.js. %>
+      <%= hidden_field_tag :schedule_id, @schedule.id, id: 'js-schedule-id' %>
 
       <%= form.label :schedulable_item_id, 'Pipeline or Automation', class: 'form-label' %>
 
@@ -114,6 +117,20 @@
 
           <%= form.select :delete_previous_records,
                           options_for_select([['Yes', true], ['No', false]], @schedule.delete_previous_records),
+                          {},
+                          class: 'form-select mb-3' %>
+
+          <%= form.label :run_enrichment_concurrently, class: 'form-label' do %>
+              Run Enrichments Concurrently
+
+              <span
+                data-bs-toggle="tooltip"
+                data-bs-title="Selecting this option will run the extractions within an enrichment in parallel"><i class="bi bi-question-circle" aria-label="helper text"></i>
+              </span>
+            <% end %>
+
+          <%= form.select :run_enrichment_concurrently,
+                          options_for_select([['Yes', true], ['No', false]], @schedule.run_enrichment_concurrently),
                           {},
                           class: 'form-select mb-3' %>
 

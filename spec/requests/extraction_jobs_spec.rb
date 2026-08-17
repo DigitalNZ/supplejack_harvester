@@ -114,6 +114,25 @@ RSpec.describe 'ExtractionJobs' do
     end
   end
 
+  # Documents#[] hands out a stand-in document for a page with no file behind it, so the
+  # page has to fall through to why the file is missing rather than rendering the
+  # stand-in's "File does not exist in filesystem" body over the top of the reason.
+  describe '#show when the job wrote no documents' do
+    let(:failed_job) do
+      create(:extraction_job, extraction_definition:, status: 'errored',
+                              error_message: 'http://example.com/"#{oops}" could not be extracted: bad URI')
+    end
+
+    it 'shows why the job produced nothing' do
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(
+        pipeline, harvest_definition, extraction_definition, failed_job
+      )
+
+      expect(response.body).to include 'could not be extracted'
+      expect(response.body).not_to include 'File does not exist in filesystem'
+    end
+  end
+
   describe '#create' do
     context 'when the format is HTML' do
       describe 'is successful' do
@@ -138,6 +157,70 @@ RSpec.describe 'ExtractionJobs' do
 
           post pipeline_harvest_definition_extraction_definition_extraction_jobs_path(pipeline, harvest_definition, extraction_definition,
                                                                                       kind: 'full')
+        end
+      end
+
+      # A block after the first in the chain has no records of its own to start from, so
+      # running it alone means naming the run whose pre-processed output it works from.
+      describe 'for a block that consumes the previous block\'s output' do
+        let!(:second_block) do
+          create(:harvest_definition, pipeline:, kind: :preprocess, position: 1, source_id: 'second',
+                                      extraction_definition: create(:extraction_definition, pipeline:))
+        end
+        let!(:source_run) { create(:pipeline_job, pipeline:, destination: create(:destination)) }
+
+        def post_run(params = {})
+          post pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+            pipeline, second_block, second_block.extraction_definition, kind: 'sample', **params
+          )
+        end
+
+        it 'records the nominated run and the position it reads' do
+          allow(ExtractionWorker).to receive(:perform_async)
+
+          expect { post_run(pipeline_job_id: source_run.id) }.to change(ExtractionJob, :count).by(1)
+
+          job = ExtractionJob.order(:id).last
+
+          expect(job.source_pipeline_job_id).to eq source_run.id
+          expect(job.source_position).to eq 0
+          expect(job).to be_iterates_preprocess_output
+          expect(job).to be_is_sample
+        end
+
+        # The editor's "Run sample and transform data" has nowhere to ask which run, so it
+        # takes the most recent one holding output - the one being worked on.
+        it 'falls back to the most recent run when the editor asks for a sample' do
+          allow(ExtractionWorker).to receive(:perform_async)
+          allow(PreProcess::Output).to receive(:pipeline_job_ids_with_output).with(0).and_return([source_run.id])
+
+          post pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+            pipeline, second_block, second_block.extraction_definition, kind: 'sample', format: :json
+          )
+
+          job = ExtractionJob.order(:id).last
+
+          expect(job.source_pipeline_job_id).to eq source_run.id
+          expect(job.source_position).to eq 0
+          expect(response.parsed_body['location']).to include 'transformation_definitions'
+        end
+
+        it 'sends the editor to the pipeline when nothing has been pre-processed yet' do
+          expect do
+            post pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+              pipeline, second_block, second_block.extraction_definition, kind: 'sample', format: :json
+            )
+          end.not_to change(ExtractionJob, :count)
+
+          expect(response.parsed_body['location']).to eq pipeline_path(pipeline)
+        end
+
+        it 'refuses to start without one, rather than extracting from nothing' do
+          expect { post_run }.not_to change(ExtractionJob, :count)
+
+          expect(response).to redirect_to pipeline_path(pipeline)
+          follow_redirect!
+          expect(response.body).to include 'Choose which run'
         end
       end
 

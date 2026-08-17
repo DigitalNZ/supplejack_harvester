@@ -55,6 +55,14 @@ RSpec.describe "Schedules", type: :request do
         expect(response.body).to include 'Schedule created successfully'
       end
 
+      it 'saves the run enrichments concurrently setting' do
+        post schedules_path, params: {
+          schedule: attributes_for(:schedule, pipeline_id: pipeline.id, destination_id: destination.id, run_enrichment_concurrently: true)
+        }
+
+        expect(Schedule.last.run_enrichment_concurrently).to be true
+      end
+
       it 'creates a Sidekiq::Cron::Job' do
         expect(Sidekiq::Cron::Job).to receive(:create).with(
           name: anything,

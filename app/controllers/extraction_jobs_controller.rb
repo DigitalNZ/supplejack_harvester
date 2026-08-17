@@ -53,27 +53,54 @@ class ExtractionJobsController < ApplicationController
   private
 
   def html_create
-    @extraction_job = ExtractionJob.new(extraction_definition: @extraction_definition, kind: params[:kind])
+    return redirect_with_missing_source if preprocess_source.missing?
 
+    @extraction_job = ExtractionJob.new(extraction_definition: @extraction_definition, kind: params[:kind],
+                                        **preprocess_source.attributes)
+    start_extraction_job
+
+    redirect_to pipeline_harvest_definition_extraction_definition_extraction_jobs_path(@pipeline, @harvest_definition,
+                                                                                       @extraction_definition)
+  end
+
+  def start_extraction_job
     if @extraction_job.save
       ExtractionWorker.perform_async(@extraction_job.id)
       flash.notice = t('.success')
     else
       flash.alert = t('.failure')
     end
+  end
 
-    redirect_to pipeline_harvest_definition_extraction_definition_extraction_jobs_path(@pipeline, @harvest_definition,
-                                                                                       @extraction_definition)
+  # Which run's pre-processed records this block works from - see PreprocessSource.
+  def preprocess_source
+    @preprocess_source ||= PreprocessSource.new(pipeline: @pipeline, harvest_definition: @harvest_definition,
+                                                nominated_run_id: params[:pipeline_job_id])
+  end
+
+  def redirect_with_missing_source
+    redirect_to missing_source_location
   end
 
   def json_create
-    @extraction_job = ExtractionJob.create(extraction_definition: @extraction_definition, kind: params[:kind])
+    return render json: { location: missing_source_location } if preprocess_source.missing?
+
+    @extraction_job = ExtractionJob.create(extraction_definition: @extraction_definition, kind: params[:kind],
+                                           **preprocess_source.attributes)
     ExtractionWorker.perform_async(@extraction_job.id)
 
     render json: {
       location: pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition,
                                                                            create_or_update_transformation_definition)
     }
+  end
+
+  # The pipeline, with the reason in the flash. The editor redirects to whatever location
+  # comes back from the JSON response, so it needs somewhere to go rather than nowhere.
+  def missing_source_location
+    flash[:alert] = t('.missing_preprocess_source')
+
+    pipeline_path(@pipeline)
   end
 
   def create_or_update_transformation_definition

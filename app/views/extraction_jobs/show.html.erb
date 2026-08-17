@@ -81,7 +81,7 @@
   <%- if @extraction_job.duration_seconds.present? %>
     <span class="ms-1 me-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>|
   <% end %>
-  <% if @document.present? %>
+  <% if @document.present? && !@document.missing? %>
     <span class="ms-1 me-1">File size: <%= number_to_human_size(@document.size_in_bytes) %></span>|
   <% end %>
   <span class="ms-1 me-1">Folder size: <%= number_to_human_size(@extraction_job.extraction_folder_size_in_bytes) %></span>|
@@ -89,7 +89,10 @@
   <%= render 'shared/pagination_above_table', items: @documents %>
 </div>
 
-<% if @document.blank? %>
+<%# A missing document carries no result to show, so fall through to the reason the
+    page is not there - the job errored, or has not run yet. Rendering the stand-in
+    instead would show "File does not exist in filesystem" and hide the error. %>
+<% if @document.blank? || @document.missing? %>
   <% if @extraction_job.errored? %>
     <div class="alert alert-danger" role="alert">
       <h4 class="alert-heading">Error</h4>

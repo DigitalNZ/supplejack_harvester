@@ -22,6 +22,13 @@ module Extraction
       status >= 200 && status < 300
     end
 
+    # A stand-in for a page with no file behind it, handed out by Documents#[] so
+    # callers always get an object back. There is nothing to show for one, and showing
+    # it hides why the file is missing - the job may have failed, or not run yet.
+    def missing?
+      file_path.blank?
+    end
+
     def save(file_path)
       # Create the directory if it doesn't exist
       FileUtils.mkdir_p(File.dirname(file_path))

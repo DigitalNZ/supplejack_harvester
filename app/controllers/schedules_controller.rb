@@ -82,6 +82,7 @@ class SchedulesController < ApplicationController
     params.expect(schedule: [:frequency, :time, :day, :day_of_the_month, :bi_monthly_day_one,
                              :bi_monthly_day_two, :delete_previous_records, :pipeline_id,
                              :destination_id, :automation_template_id, :job_priority, :skip_previously_enriched,
-                             { harvest_definitions_to_run: [] }])
+                             :run_enrichment_concurrently,
+                             { harvest_definitions_to_run: [], block_settings: {} }])
   end
 end

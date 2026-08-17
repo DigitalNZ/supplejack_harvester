@@ -24,8 +24,13 @@ class ExtractionWorker < ApplicationWorker
     TextExtractionWorker.perform_async_with_priority(job_priority, extraction_job.id)
   end
 
+  # Whether this job works from records it is handed rather than seeding its own
+  # extraction: an enrichment iterates the destination API, a block in the middle of a
+  # chain iterates the previous block's output - either its own run's, or an earlier
+  # run's when it was started on its own from the block's dropdown.
   def iterate_previous?
     return true if @job.extraction_definition.enrichment?
+    return true if @job.iterates_preprocess_output?
 
     definition = @job.harvest_job&.harvest_definition
     definition.present? && definition.position.positive?
@@ -68,6 +73,16 @@ class ExtractionWorker < ApplicationWorker
 
   def update_harvest_report!
     @harvest_report.extraction_completed! unless file_extraction_pending?
+
+    # Transformation workers run while the extraction is still going, and each of them
+    # declines to finish the report while it is (transformation_workers_completed? is
+    # false until the extraction completes), leaving that to this worker. Their counters
+    # therefore have to be re-read now that the extraction is marked completed: one that
+    # finished between the reload in #update_harvest_report and the line above would
+    # otherwise be invisible here, and neither side would finish the report - leaving a
+    # block's transformation stuck on running with every worker accounted for.
+    @harvest_report.reload
+
     @harvest_report.transformation_completed! if @harvest_report.transformation_workers_completed?
     @harvest_report.load_completed! if @harvest_report.load_workers_completed?
     @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?

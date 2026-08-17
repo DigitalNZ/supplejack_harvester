@@ -75,6 +75,7 @@ Rails.application.routes.draw do
 
     scope module: :pipelines do
       resources :schedules
+      resource :run_blocks, only: %i[show]
     end
 
     resources :harvest_definitions, only: %i[create update destroy] do

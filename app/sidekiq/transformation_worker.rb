@@ -109,13 +109,9 @@ class TransformationWorker
     @harvest_report.transformation_completed!
 
     # A preprocess block completes when its transformation completes (it queues no
-    # loads/deletes), so this is where we step the chain forward. This method is
-    # reached once per block via the transformation-completion gate in #job_end;
-    # advance_to_next_block is idempotent as a further safeguard.
-    definition = @harvest_job.harvest_definition
-    return unless definition.preprocess?
-
-    @pipeline_job.advance_to_next_block(definition)
+    # loads/deletes), so the chain can step forward from here. HarvestJob#advance_chain
+    # decides, because the extraction worker reaches the same point by another route.
+    @harvest_job.advance_chain
   end
 
   def transform_records
