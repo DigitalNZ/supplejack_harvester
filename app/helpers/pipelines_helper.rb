@@ -45,6 +45,17 @@ module PipelinesHelper
     LoadDefinition.kinds_for_block_kind(harvest_definition.kind).map { |kind| [LOAD_KIND_LABELS[kind], kind] }
   end
 
+  # A block writing a file posts nothing, so there is no fragment for a priority to pick.
+  def load_asks_for_priority?(harvest_definition)
+    LoadDefinition.kinds_for_block_kind(harvest_definition.kind).exclude?('file')
+  end
+
+  # Only an enrichment can leave a record partial by not arriving: Load::Execution sends
+  # required_fragments on that path alone, so nothing else has any use for the answer.
+  def load_asks_for_required_fragment?(harvest_definition)
+    LoadDefinition.kinds_for_block_kind(harvest_definition.kind).include?('enrichment')
+  end
+
   # What a block of this kind used to load as before it could be told, so adding a load
   # definition to an existing block does not silently change how it writes.
   def default_load_kind(harvest_definition)

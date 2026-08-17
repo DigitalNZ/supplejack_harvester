@@ -130,6 +130,58 @@ RSpec.describe 'Load Definitions' do
       expect(response).to have_http_status :ok
       expect(response.body).to include load_definition.name
     end
+
+    # Only the settings that mean something for what this block can do - see PipelinesHelper.
+    it 'asks a harvest block for a priority but not for a required fragment' do
+      get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
+
+      expect(response.body).to include 'load_definition[priority]'
+      expect(response.body).not_to include 'load_definition[required_for_active_record]'
+    end
+
+    # The attribute order Rails emits is not something to depend on, so the whole input is
+    # picked out and asked whether it is readonly.
+    def priority_input
+      response.body[/<input[^>]*name="load_definition\[priority\]"[^>]*>/]
+    end
+
+    it 'leaves the priority editable for a secondary fragment' do
+      get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
+
+      expect(priority_input).not_to include 'readonly'
+      expect(priority_input).to include 'form-control"'
+    end
+
+    # Readonly and styled as plain text, the number being 0 by definition rather than a choice.
+    it 'fixes the priority for the primary fragment, which is always 0' do
+      load_definition.update!(kind: 'primary_fragment', priority: 0)
+
+      get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
+
+      expect(priority_input).to include 'readonly'
+      expect(priority_input).to include 'form-control-plaintext'
+    end
+
+    it 'asks an enrichment for both' do
+      enrichment = create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'an-enrichment',
+                                               load_definition: create(:load_definition, pipeline:,
+                                                                                         kind: 'enrichment'))
+
+      get pipeline_harvest_definition_load_definition_path(pipeline, enrichment, enrichment.load_definition)
+
+      expect(response.body).to include 'load_definition[priority]'
+      expect(response.body).to include 'load_definition[required_for_active_record]'
+    end
+
+    it 'asks a pre-processing block for neither, having no fragment to write' do
+      preprocess = create(:harvest_definition, pipeline:, kind: :preprocess, source_id: 'a-preprocess',
+                                               load_definition: create(:load_definition, pipeline:, kind: 'file'))
+
+      get pipeline_harvest_definition_load_definition_path(pipeline, preprocess, preprocess.load_definition)
+
+      expect(response.body).not_to include 'load_definition[priority]'
+      expect(response.body).not_to include 'load_definition[required_for_active_record]'
+    end
   end
 
   describe '#update' do

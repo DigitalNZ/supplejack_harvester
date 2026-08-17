@@ -26,28 +26,43 @@
 
   <div class='col-8'>
     <%= form.select :kind, options_for_select(load_kind_options(harvest_definition), form.object.kind), {},
-                    class: 'form-select' %>
+                    class: 'form-select', data: { js: 'load-kind' } %>
   </div>
 
-  <div class="col-4">
-    <%= form.label :priority, class: 'form-label' do %>
-      Priority
-      <span
-        data-bs-toggle="tooltip"
-        data-bs-title="Fragments are merged lowest priority first, so a lower number wins for any single-value field. A block writing a secondary fragment must not use 0 - that is the primary fragment's priority, and writing it would blank the fields this block does not set."><i class="bi bi-question-circle" aria-label="helper text"></i>
-      </span>
-    <% end %>
-  </div>
+  <%# Left out rather than hidden, because which settings apply follows from the block's kind
+      and cannot change while the form is open - see PipelinesHelper. The one thing that can is
+      a harvest choosing between the two fragments, and only the primary one fixes the priority
+      at 0 (js/load-definition-fields keeps up with that). %>
+  <% if load_asks_for_priority?(harvest_definition) %>
+    <div class="col-4">
+      <%= form.label :priority, class: 'form-label' do %>
+        Priority
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="Fragments are merged lowest priority first, so a lower number wins for any single-value field. A block writing a secondary fragment must not use 0 - that is the primary fragment's priority, and writing it would blank the fields this block does not set."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
+    </div>
 
-  <div class='col-8'>
-    <%= form.number_field :priority, class: 'form-control' %>
-  </div>
+    <%# The primary fragment is 0 by definition, so the number is shown as plain text rather
+        than as a field inviting an edit that would be refused. Readonly rather than disabled
+        because a disabled input submits nothing, and a definition moving off a secondary
+        fragment would keep the non-zero priority it is no longer allowed. %>
+    <% fixed = form.object.primary_fragment? %>
 
-  <div class="col-4">
-    <%= form.label :required_for_active_record, 'Required for active record', class: 'form-check-label' %>
-  </div>
+    <div class='col-8'>
+      <%= form.number_field :priority, class: fixed ? 'form-control-plaintext' : 'form-control',
+                                       readonly: fixed, data: { js: 'load-priority' } %>
+    </div>
+  <% end %>
 
-  <div class='col-8'>
-    <%= form.check_box :required_for_active_record, class: 'form-check-input' %>
-  </div>
+  <% if load_asks_for_required_fragment?(harvest_definition) %>
+    <div class="col-4">
+      <%= form.label :required_for_active_record, 'Required for active record', class: 'form-check-label' %>
+    </div>
+
+    <div class='col-8'>
+      <%= form.check_box :required_for_active_record, class: 'form-check-input' %>
+    </div>
+  <% end %>
 </div>
