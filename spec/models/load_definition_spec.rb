@@ -34,15 +34,19 @@ RSpec.describe LoadDefinition do
   end
 
   describe '#priority' do
-    it 'refuses a secondary fragment at 0, which would write the primary fragment instead' do
-      load_definition = described_class.new(pipeline:, kind: 'secondary_fragment', priority: 0)
+    # Both kinds that say they write a secondary fragment have to mean it: at 0 the API selects
+    # the primary fragment and nils every mutable field the payload does not carry.
+    %w[secondary_fragment enrichment].each do |kind|
+      it "refuses a #{kind.humanize.downcase} at 0, which would write the primary fragment instead" do
+        load_definition = described_class.new(pipeline:, kind:, priority: 0)
 
-      expect(load_definition).not_to be_valid
-      expect(load_definition.errors[:priority].join).to include 'must not be 0 for a secondary fragment'
-    end
+        expect(load_definition).not_to be_valid
+        expect(load_definition.errors[:priority].join).to include 'must not be 0'
+      end
 
-    it 'accepts a secondary fragment at a non-zero priority' do
-      expect(described_class.new(pipeline:, kind: 'secondary_fragment', priority: -1)).to be_valid
+      it "accepts a #{kind.humanize.downcase} at a non-zero priority" do
+        expect(described_class.new(pipeline:, kind:, priority: -1)).to be_valid
+      end
     end
 
     it 'refuses the primary fragment at a non-zero priority' do
@@ -52,9 +56,10 @@ RSpec.describe LoadDefinition do
       expect(load_definition.errors[:priority].join).to include 'must be 0 to write the primary fragment'
     end
 
-    it 'leaves an enrichment free to write either fragment' do
-      expect(described_class.new(pipeline:, kind: 'enrichment', priority: 0)).to be_valid
-      expect(described_class.new(pipeline:, kind: 'enrichment', priority: -2)).to be_valid
+    # A block writing to disk posts nothing, so there is no fragment for a priority to pick.
+    it 'leaves a preprocessing load alone, which writes no fragment at all' do
+      expect(described_class.new(pipeline:, kind: 'file', priority: 0)).to be_valid
+      expect(described_class.new(pipeline:, kind: 'file', priority: -2)).to be_valid
     end
 
     it 'refuses a blank priority rather than failing on the database constraint' do

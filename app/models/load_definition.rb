@@ -60,18 +60,22 @@ class LoadDefinition < ApplicationRecord
   private
 
   # Priority is how the destination decides which fragment to write, so it cannot disagree
-  # with the fragment this definition says it writes. Enrichments are deliberately left
-  # alone: an enrichment at priority 0 writes the primary fragment through the fragments
-  # endpoint, which is a thing they have always been able to do.
+  # with the fragment this definition says it writes. Only the standard load writes the
+  # primary fragment; the two that write a secondary one need a priority of their own, and an
+  # enrichment is no exception - at 0 it writes the primary fragment through the fragments
+  # endpoint, which is what it says it does not do.
   def priority_agrees_with_kind
     return if priority.blank?
 
-    if secondary_fragment? && priority.zero?
-      errors.add(:priority, 'must not be 0 for a secondary fragment - at 0 the destination ' \
-                            'writes the primary fragment instead, blanking every field this ' \
-                            'block does not set')
+    if writes_secondary_fragment? && priority.zero?
+      errors.add(:priority, 'must not be 0 - at 0 the destination writes the primary fragment ' \
+                            'instead, blanking every field this block does not set')
     elsif primary_fragment? && !priority.zero?
       errors.add(:priority, 'must be 0 to write the primary fragment')
     end
+  end
+
+  def writes_secondary_fragment?
+    secondary_fragment? || enrichment?
   end
 end

@@ -116,7 +116,7 @@ RSpec.describe 'Load Definitions' do
       }
 
       expect(load_definition.reload.kind).to eq 'primary_fragment'
-      expect(response.body).to include 'must not be 0 for a secondary fragment'
+      expect(response.body).to include 'must not be 0'
     end
   end
 
