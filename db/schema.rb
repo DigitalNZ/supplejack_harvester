@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_13_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_13_140000) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -364,6 +364,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_13_120000) do
     t.string "job_priority"
     t.boolean "skip_previously_enriched", default: false
     t.text "block_settings"
+    t.boolean "run_enrichment_concurrently", default: false, null: false
     t.index ["automation_template_id"], name: "index_schedules_on_automation_template_id"
     t.index ["destination_id"], name: "index_schedules_on_destination_id"
     t.index ["pipeline_id"], name: "index_schedules_on_pipeline_id"
