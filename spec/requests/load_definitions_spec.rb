@@ -35,12 +35,12 @@ RSpec.describe 'Load Definitions' do
         expect(LoadDefinition.last.last_edited_by).to eq user
       end
 
-      it 'redirects to the load definition' do
+      # Nothing left to configure once the form is submitted, so the user goes back to the
+      # pipeline rather than to a page that only repeats what they just filled in.
+      it 'goes back to the pipeline' do
         post pipeline_harvest_definition_load_definitions_path(pipeline, harvest_definition), params: valid_params
 
-        expect(response).to redirect_to pipeline_harvest_definition_load_definition_path(
-          pipeline, harvest_definition, LoadDefinition.last
-        )
+        expect(response).to redirect_to pipeline_path(pipeline)
       end
     end
 
@@ -76,6 +76,17 @@ RSpec.describe 'Load Definitions' do
         }
 
         expect(response).to redirect_to pipeline_path(pipeline)
+      end
+
+      # The redirect leaves the unsaved definition behind, so the alert is the only place the
+      # reason can survive to.
+      it 'says why in the alert, not just that it failed' do
+        post pipeline_harvest_definition_load_definitions_path(pipeline, harvest_definition), params: {
+          load_definition: { pipeline_id: pipeline.id, kind: 'secondary_fragment', priority: 0 }
+        }
+
+        expect(flash[:alert]).to include 'There was an issue creating your Load Definition'
+        expect(flash[:alert]).to include 'must not be 0'
       end
     end
   end

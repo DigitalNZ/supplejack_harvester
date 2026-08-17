@@ -9,8 +9,10 @@ class LoadDefinitionsController < ApplicationController
 
   def show; end
 
+  # Straight back to the pipeline: unlike an extraction or a transformation, a load definition
+  # is fully configured by the form that creates it, so its own page has nothing to add.
   def create
-    create_definition('load')
+    create_definition('load', success_path: pipeline_path(@pipeline))
   end
 
   def update
