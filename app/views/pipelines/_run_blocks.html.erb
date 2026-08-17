@@ -1,0 +1,46 @@
+<%# Per-block run configuration: one row per block, in the order they run, each with
+    its own input. Rendered into the Run modal and (via Pipelines::RunBlocksController)
+    into the schedule form, so both places offer the same choices.
+
+    Locals:
+      pipeline - the pipeline whose blocks are being configured
+      subject  - form param prefix, 'pipeline_job' or 'schedule'
+      settings - RunSettings holding the current selection %>
+
+<% blocks = RunBlocks.new(pipeline:, subject:, settings:) %>
+<% chain = blocks.chain %>
+
+<div id='js-run-blocks'>
+  <label class='form-label'>
+    Blocks to run
+
+    <span
+      data-bs-toggle="tooltip"
+      data-bs-title="Select the blocks you want to run, and where each one takes its input from. Untick a pre-processing block and give the block after it some data you prepared earlier."><i class="bi bi-question-circle" aria-label="helper text"></i>
+    </span>
+  </label>
+
+  <div class='border rounded'>
+    <div class='row gx-2 px-2 pt-2 small text-muted'>
+      <div class='col-4'>Block</div>
+      <div class='col-5'>Input</div>
+      <div class='col-3'>
+        Pages
+
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="How many pages of this block to process. Leave empty to process every available page."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      </div>
+    </div>
+
+    <% chain.each_with_index do |row, index| %>
+      <%= render 'pipelines/run_block_row',
+                 row:, row_class: ('border-bottom' if index < chain.size - 1) %>
+    <% end %>
+
+    <% blocks.enrichments.each do |row| %>
+      <%= render 'pipelines/run_block_row', row:, row_class: 'border-top' %>
+    <% end %>
+  </div>
+</div>

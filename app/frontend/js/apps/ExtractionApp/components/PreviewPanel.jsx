@@ -3,7 +3,12 @@ import { map } from "lodash";
 
 import CodeEditor from "~/js/components/CodeEditor";
 
-const PreviewPanel = ({ preview, format, loading = false, view = "accordion" }) => {
+const PreviewPanel = ({
+  preview,
+  format,
+  loading = false,
+  view = "accordion",
+}) => {
   const formattedPayload = () => {
     return (
       <>

@@ -53,7 +53,7 @@
       "check_name": "Evaluation",
       "message": "Dynamic code evaluation",
       "file": "app/models/parameter.rb",
-      "line": 24,
+      "line": 29,
       "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
       "code": "eval(content)",
       "render_path": null,
@@ -71,13 +71,32 @@
       "note": ""
     },
     {
+      "warning_type": "Unmaintained Dependency",
+      "warning_code": 122,
+      "fingerprint": "21ab0fe00fdd5899ffc405cff75aadb91b805ee996a614f7e27b08a287e9062d",
+      "check_name": "EOLRails",
+      "message": "Support for Rails 8.0.5.1 ends on 2026-10-07",
+      "file": "Gemfile.lock",
+      "line": 352,
+      "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
+      "code": null,
+      "render_path": null,
+      "location": null,
+      "user_input": null,
+      "confidence": "Weak",
+      "cwe_id": [
+        1104
+      ],
+      "note": ""
+    },
+    {
       "warning_type": "Dangerous Eval",
       "warning_code": 13,
       "fingerprint": "2720c6d8496212c1ff4dab602221d52ec76a28ce4b3a2d06f91ab6ea025cb711",
       "check_name": "Evaluation",
       "message": "Dynamic code evaluation",
       "file": "app/models/stop_condition.rb",
-      "line": 9,
+      "line": 12,
       "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
       "code": "eval(content)",
       "render_path": null,
@@ -101,7 +120,7 @@
       "check_name": "UnscopedFind",
       "message": "Unscoped call to `Request#find`",
       "file": "app/controllers/requests_controller.rb",
-      "line": 17,
+      "line": 18,
       "link": "https://brakemanscanner.org/docs/warning_types/unscoped_find/",
       "code": "Request.find(params[:id])",
       "render_path": null,
@@ -124,7 +143,7 @@
       "check_name": "ForceSSL",
       "message": "The application does not force use of HTTPS: `config.force_ssl` is not enabled",
       "file": "config/environments/production.rb",
-      "line": 1,
+      "line": 96,
       "link": "https://brakemanscanner.org/docs/warning_types/missing_encryption/",
       "code": null,
       "render_path": null,
@@ -135,25 +154,6 @@
         311
       ],
       "note": ""
-    },
-    {
-      "warning_type": "Unmaintained Dependency",
-      "warning_code": 122,
-      "fingerprint": "98b26f60d776fd41ee6f088c833725145be9aac2d7c5b33780241c273622db42",
-      "check_name": "EOLRails",
-      "message": "Support for Rails 7.2.3.1 ends on 2026-08-09",
-      "file": "Gemfile.lock",
-      "line": 356,
-      "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
-      "code": null,
-      "render_path": null,
-      "location": null,
-      "user_input": null,
-      "confidence": "Medium",
-      "cwe_id": [
-        1104
-      ],
-      "note": "Rails 7.2 EOL 2026-08-09 - upgrade planned, ignore for now"
     },
     {
       "warning_type": "Unscoped Find",
@@ -185,9 +185,9 @@
       "check_name": "Evaluation",
       "message": "Dynamic code evaluation",
       "file": "app/supplejack/transformation/field_execution.rb",
-      "line": 27,
+      "line": 28,
       "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
-      "code": "eval(@field.block)",
+      "code": "eval(field.block)",
       "render_path": null,
       "location": {
         "type": "method",
@@ -199,29 +199,6 @@
       "cwe_id": [
         913,
         95
-      ],
-      "note": ""
-    },
-    {
-      "warning_type": "Mass Assignment",
-      "warning_code": 105,
-      "fingerprint": "f5e669317bee950124a897fa88bf46c1390150265b6b6d4c7c294c09766e8298",
-      "check_name": "PermitAttributes",
-      "message": "Potentially dangerous key allowed for mass assignment",
-      "file": "app/controllers/users_controller.rb",
-      "line": 44,
-      "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params.require(:user).permit(:username, :role, :enforce_two_factor)",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "UsersController",
-        "method": "user_params"
-      },
-      "user_input": ":role",
-      "confidence": "Medium",
-      "cwe_id": [
-        915
       ],
       "note": ""
     }

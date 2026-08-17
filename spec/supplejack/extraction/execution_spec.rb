@@ -152,6 +152,25 @@ RSpec.describe Extraction::Execution do
         end
       end
 
+      context 'when the block has its own page limit' do
+        let(:pipeline_job) do
+          create(:pipeline_job, destination:, pipeline:,
+                                block_settings: {
+                                  harvest_definition.id.to_s => { 'run' => true, 'input' => 'fresh', 'pages' => 2 }
+                                })
+        end
+        let!(:harvest_job) do
+          create(:harvest_job, extraction_job:, harvest_definition:, pipeline_job:)
+        end
+        let(:subject) { described_class.new(extraction_job, extraction_definition) }
+
+        it "stops at that block's number of pages" do
+          expect(TransformationWorker).to receive(:perform_async).exactly(2).times.and_call_original
+
+          subject.call
+        end
+      end
+
       context 'when the document has failed to be extracted' do
         before do
           stub_failed_figshare_harvest_requests(request_one)

@@ -52,6 +52,69 @@ RSpec.describe ExtractionWorker, type: :job do
       end
     end
 
+    # Transformation workers run while the extraction is still going, and decline to
+    # finish the report until the extraction completes. If the last of them finishes in
+    # the window between this worker reading the report and marking the extraction
+    # completed, both sides used to stand aside and the block sat on "running" with every
+    # worker accounted for.
+    context 'when the transformation workers finish while the extraction is still running' do
+      let(:destination)   { create(:destination) }
+      let(:pipeline_job)  { create(:pipeline_job, pipeline:, destination:) }
+      let(:harvest_job)   { create(:harvest_job, harvest_definition: pipeline.harvest, pipeline_job:) }
+      let(:extraction_job) do
+        create(:extraction_job, extraction_definition:, harvest_job:, status: 'queued')
+      end
+      let!(:harvest_report) do
+        create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running',
+                                transformation_workers_queued: 1, transformation_workers_completed: 0)
+      end
+
+      before do
+        allow_any_instance_of(Extraction::Execution).to receive(:call)
+
+        # Drops the last transformation worker's increment into the window that used to
+        # lose it: after this worker has read the report, before it decides whether the
+        # transformation is finished.
+        allow_any_instance_of(HarvestReport).to receive(:extraction_completed!).and_wrap_original do |original, *args|
+          HarvestReport.where(id: harvest_report.id)
+                       .update_all('transformation_workers_completed = transformation_workers_queued')
+          original.call(*args)
+        end
+      end
+
+      it 'finishes the report rather than leaving the transformation running' do
+        subject.perform(extraction_job.id, harvest_report.id)
+
+        harvest_report.reload
+
+        expect(harvest_report.extraction_status).to eq 'completed'
+        expect(harvest_report.transformation_status).to eq 'completed'
+        expect(harvest_report.load_status).to eq 'completed'
+      end
+
+      # Finishing the report is not enough: a pre-processing block exists to feed the next
+      # one, and the transformation workers that stood aside are also the ones that would
+      # normally step the chain forward.
+      context 'and the block is a pre-processing one with a block after it' do
+        let(:preprocess_block) { create(:harvest_definition, pipeline:, kind: :preprocess, position: 0) }
+        let!(:next_block)      { create(:harvest_definition, pipeline:, kind: :preprocess, position: 1) }
+        let(:harvest_job)      { create(:harvest_job, harvest_definition: preprocess_block, pipeline_job:) }
+        let(:pipeline_job) do
+          create(:pipeline_job, pipeline:, destination:,
+                                harvest_definitions_to_run: [preprocess_block.id.to_s, next_block.id.to_s])
+        end
+
+        it 'starts the next block' do
+          allow(HarvestWorker).to receive(:perform_async_with_priority)
+
+          expect { subject.perform(extraction_job.id, harvest_report.id) }
+            .to change { pipeline_job.harvest_jobs.where(harvest_definition: next_block).count }.by(1)
+
+          expect(HarvestWorker).to have_received(:perform_async_with_priority)
+        end
+      end
+    end
+
     context 'when the extraction is for a block that iterates the previous block (position > 0)' do
       let(:destination) { create(:destination) }
       let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }

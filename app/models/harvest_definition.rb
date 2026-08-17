@@ -18,6 +18,13 @@ class HarvestDefinition < ApplicationRecord
 
   enum :kind, { harvest: 0, enrichment: 1, preprocess: 2 }
 
+  # A block with no kind cannot be run: TransformationWorker reads preprocess? as false and
+  # queues a load for it, and Load::Execution then finds neither a harvest nor an enrichment
+  # to post, so it returns nil and dies on nil.status - which is what happened to a block on
+  # UAT whose kind was null. An invalid kind never gets this far, because the enum raises on
+  # assignment, but nil does: "" casts to nil silently, and the column allows it.
+  validates :kind, presence: true
+
   after_create do
     self.name = "#{id}_#{kind}"
     save!
@@ -34,6 +41,18 @@ class HarvestDefinition < ApplicationRecord
 
   def completed_harvest_jobs?
     @completed_harvest_jobs ||= harvest_jobs.completed.any?
+  end
+
+  # A block after the first in the chain works from the records the block before it
+  # wrote, rather than seeding its own extraction. Enrichments are never in the chain:
+  # they iterate records back out of the destination API.
+  def consumes_preprocess_output?
+    !enrichment? && position.to_i.positive?
+  end
+
+  # The block position whose output this block reads.
+  def preceding_position
+    position.to_i - 1
   end
 
   def ready_to_run?

@@ -15,7 +15,20 @@
                   report.harvest_definition.extraction_definition.id,
                   report.harvest_job.extraction_job_id
                 ),
-                class: 'btn btn-outline-primary text-nowrap' %>
+                class: class_names('btn btn-outline-primary text-nowrap', 'me-2' => report.preprocess?) %>
+
+    <%# A pre-processing block's transformed records are written to disk for the next
+        block to read, rather than loaded to a destination, so this is the only place
+        they can be viewed. Other kinds load their records to the destination API. %>
+    <% if report.preprocess? %>
+      <%= link_to 'View transformed data',
+                  pipeline_harvest_definition_preprocess_output_path(
+                    pipeline_job.pipeline.id,
+                    report.harvest_definition.id,
+                    pipeline_job.id
+                  ),
+                  class: 'btn btn-outline-primary text-nowrap' %>
+    <% end %>
   </div>
 </div>
 

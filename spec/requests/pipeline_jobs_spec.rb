@@ -24,6 +24,30 @@ RSpec.describe 'PipelineJobs' do
     end
   end
 
+  describe 'GET /show' do
+    it "links to a pre-processing block's transformed data" do
+      preprocess_definition = create(:harvest_definition, :preprocess, pipeline:, position: 0)
+      preprocess_job = create(:harvest_job, harvest_definition: preprocess_definition, pipeline_job:)
+      create(:harvest_report, pipeline_job:, harvest_job: preprocess_job, kind: 'preprocess')
+
+      get pipeline_pipeline_job_path(pipeline, pipeline_job)
+
+      expect(response.body).to include 'View transformed data'
+      expect(response.body).to include pipeline_harvest_definition_preprocess_output_path(
+        pipeline, preprocess_definition, pipeline_job
+      )
+    end
+
+    # Every other kind loads its records to the destination, so there is nothing on
+    # disk to link to.
+    it 'does not offer transformed data for a harvest block' do
+      get pipeline_pipeline_job_path(pipeline, pipeline_job)
+
+      expect(response.body).to include 'View extracted data'
+      expect(response.body).not_to include 'View transformed data'
+    end
+  end
+
   describe 'GET /harvest_jobs/:harvest_job_id/errors' do
     it 'displays grouped errors for extraction, transformation and load' do
       extraction_summary = create(:job_completion_summary,
@@ -62,6 +86,73 @@ RSpec.describe 'PipelineJobs' do
   end
 
   describe 'POST /create' do
+    context 'with per-block run settings' do
+      let!(:preprocess) { create(:harvest_definition, :preprocess, pipeline:, position: 0) }
+      let!(:harvest)    { create(:harvest_definition, pipeline:, position: 1) }
+      let(:extraction_job) { create(:extraction_job, extraction_definition: harvest.extraction_definition) }
+
+      # harvest_definition is the pipeline's other position 0 block (created by the
+      # outer harvest_report), so it has to run too or the chain has a hole in it and
+      # nothing is created - which would leave PipelineJob.last pointing at the outer
+      # job and quietly pass. Hence the count assertion.
+      it 'stores a page limit per block' do
+        expect do
+          post pipeline_pipeline_jobs_path(pipeline), params: {
+            pipeline_job: {
+              destination_id: destination.id,
+              pipeline_id: pipeline.id,
+              block_settings: {
+                harvest_definition.id.to_s => { run: '1', input: 'fresh', pages: '' },
+                preprocess.id.to_s => { run: '1', input: 'fresh', pages: '5' },
+                harvest.id.to_s => { run: '1', input: 'fresh', pages: '' }
+              }
+            }
+          }
+        end.to change(PipelineJob, :count).by(1)
+
+        job = PipelineJob.last
+
+        expect(job.pages_for(preprocess)).to eq 5
+        expect(job.pages_for(harvest)).to be_nil
+      end
+
+      it 'stores what runs and what feeds each block' do
+        post pipeline_pipeline_jobs_path(pipeline), params: {
+          pipeline_job: {
+            destination_id: destination.id,
+            pipeline_id: pipeline.id,
+            block_settings: {
+              preprocess.id.to_s => { run: '0', input: 'fresh' },
+              harvest.id.to_s => { run: '1', input: "extraction_job:#{extraction_job.id}" }
+            }
+          }
+        }
+
+        job = PipelineJob.last
+
+        expect(job.harvest_definitions_to_run).to eq [harvest.id.to_s]
+        expect(job.existing_extraction_job_for(harvest)).to eq extraction_job
+      end
+
+      it 'rejects a run whose skipped block leaves the next one with no input' do
+        expect do
+          post pipeline_pipeline_jobs_path(pipeline), params: {
+            pipeline_job: {
+              destination_id: destination.id,
+              pipeline_id: pipeline.id,
+              block_settings: {
+                preprocess.id.to_s => { run: '0', input: 'fresh' },
+                harvest.id.to_s => { run: '1', input: 'fresh' }
+              }
+            }
+          }
+        end.not_to change(PipelineJob, :count)
+
+        follow_redirect!
+        expect(response.body).to include 'There was an issue creating your pipeline job'
+      end
+    end
+
     context 'with valid parameters' do
       it 'creates a new PipelineJob' do
         expect do

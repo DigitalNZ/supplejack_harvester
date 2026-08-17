@@ -101,19 +101,15 @@ RSpec.describe Pipeline do
       expect(pipeline.preprocesses.to_a).to eq([pre_zero, pre_one])
     end
 
-    it 'exposes the first block and the next block by position' do
-      expect(pipeline.first_block).to eq(pre_zero)
-      expect(pipeline.next_block(pre_zero)).to eq(pre_one)
-      expect(pipeline.next_block(pre_one)).to eq(harvest)
-      expect(pipeline.next_block(harvest)).to be_nil
+    it 'returns the chain in position order' do
+      expect(pipeline.ordered_blocks.to_a).to eq([pre_zero, pre_one, harvest])
     end
 
-    it 'excludes enrichment definitions from the chain accessors' do
+    it 'excludes enrichment definitions from the chain' do
       enrichment = create(:harvest_definition, pipeline:, kind: :enrichment, position: 0)
 
       expect(pipeline.ordered_blocks).not_to include(enrichment)
-      expect(pipeline.first_block).to eq(pre_zero)
-      expect(pipeline.next_block(pre_one)).to eq(harvest)
+      expect(pipeline.ordered_blocks.to_a).to eq([pre_zero, pre_one, harvest])
     end
   end
 end

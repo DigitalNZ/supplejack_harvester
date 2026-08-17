@@ -17,17 +17,21 @@ class PipelineWorker < ApplicationWorker
 
   private
 
-  # We are running the processing chain when its first block (the lowest-position
-  # preprocess/harvest definition) is included in this run. In that case only the
-  # first block is started here; the chain steps itself forward on completion via
-  # PipelineJob#advance_to_next_block. Otherwise (e.g. an enrichment-only run) we
-  # fall back to the legacy behaviour of starting the requested definitions.
+  # We are running the processing chain when any of its blocks (the preprocess and
+  # harvest definitions, in position order) is included in this run. Only the first
+  # selected block is started here; the chain steps itself forward on completion via
+  # PipelineJob#advance_to_next_block. Otherwise (an enrichment-only run) we fall
+  # back to the legacy behaviour of starting the requested definitions.
+  #
+  # The first selected block is not necessarily the first block of the pipeline: a
+  # run that reuses earlier pre-processed data starts part-way down the chain, and
+  # that block's input tells it which run's output to read (PipelineJob#preprocess_source_job_id).
   def running_the_chain?
-    first_block.present? && definitions_to_run.include?(first_block.id)
+    first_selected_block.present?
   end
 
   def start_chain
-    job = HarvestJob.create(pipeline_job: @pipeline_job, harvest_definition: first_block)
+    job = HarvestJob.create(pipeline_job: @pipeline_job, harvest_definition: first_selected_block)
     HarvestWorker.perform_async_with_priority(@pipeline_job.job_priority, job.id)
   end
 
@@ -45,8 +49,8 @@ class PipelineWorker < ApplicationWorker
     end
   end
 
-  def first_block
-    @first_block ||= @pipeline.first_block
+  def first_selected_block
+    @first_selected_block ||= @pipeline.ordered_blocks.find { |block| definitions_to_run.include?(block.id) }
   end
 
   def definitions_to_run

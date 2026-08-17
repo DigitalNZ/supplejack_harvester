@@ -48,18 +48,20 @@ class Pipeline < ApplicationRecord
     harvest_definitions.where.not(kind: :enrichment).order(:position, :id)
   end
 
-  def first_block
-    ordered_blocks.first
-  end
-
-  def next_block(definition)
-    ordered_blocks.where('position > ?', definition.position).first
-  end
-
   def ready_to_run?
     return false if harvest_definitions.empty?
 
     harvest_definitions.any?(&:ready_to_run?)
+  end
+
+  # This pipeline's runs that wrote pre-processed output for a block position, most
+  # recent first. The one thing a block at position > 0 can be fed from: the Run
+  # modal's input choices, the request preview, and a standalone extraction all pick
+  # from this list.
+  def runs_with_output_at(position)
+    pipeline_jobs
+      .where(id: PreProcess::Output.pipeline_job_ids_with_output(position))
+      .order(created_at: :desc)
   end
 
   def to_h
