@@ -17,12 +17,16 @@ module CardsHelper
 
   # The bare kind, not the sentence the editor's select spells out: on a card it sits beside
   # two other subtitles and only has to say which of the four this is. The priority goes with
-  # it because the pair is what decides which fragment gets written.
+  # it because the pair is what decides which fragment gets written - except on a
+  # preprocessing load, which writes no fragment, so saying its priority would imply the
+  # number does something.
   def load_card_subtitle(definition)
+    priority = "priority #{definition.priority}" unless definition.file?
+
     [
       last_edited_by(definition),
       definition.kind,
-      "priority #{definition.priority}"
+      priority
     ].compact.join(' | ')
   end
 end
