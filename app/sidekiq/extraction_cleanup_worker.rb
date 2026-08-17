@@ -8,11 +8,18 @@ class ExtractionCleanupWorker
 
   sidekiq_options retry: 0, queue: 'low_priority'
 
+  def initialize
+    @policy = ExtractionRetentionPolicy.load
+    @report = []
+    @examined = 0
+    @examined_bytes = 0
+    @purged = 0
+    @purged_bytes = 0
+  end
+
   # Pass a pipeline id to clean one pipeline only (console use); nil sweeps
   # everything. Returns the logged lines so a console run can `puts` them.
   def perform(pipeline_id = nil)
-    reset_state
-
     log_scope(pipeline_id)
     purge_extraction_jobs(pipeline_id)
     log_batch_limit_reached
@@ -22,15 +29,6 @@ class ExtractionCleanupWorker
   end
 
   private
-
-  def reset_state
-    @policy = ExtractionRetentionPolicy.load
-    @report = []
-    @examined = 0
-    @examined_bytes = 0
-    @purged = 0
-    @purged_bytes = 0
-  end
 
   # The `rescue` below is attached to this `do...end` block, not to a method -
   # Ruby allows that without a `begin`. It keeps one bad folder from aborting
@@ -84,9 +82,10 @@ class ExtractionCleanupWorker
   # may still qualify next run. Flag it so a reader doesn't mistake the batch
   # for the full picture.
   def log_batch_limit_reached
-    return unless @examined == @policy.batch_limit
+    limit = @policy.batch_limit
+    return unless @examined == limit
 
-    log("batch_limit reached (#{@policy.batch_limit}); more may qualify")
+    log("batch_limit reached (#{limit}); more may qualify")
   end
 
   def log_tag

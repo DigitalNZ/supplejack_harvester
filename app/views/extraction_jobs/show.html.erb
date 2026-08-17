@@ -43,7 +43,7 @@
     <span class="badge bg-secondary me-1">Data removed</span>|
     <span class="ms-1 me-1"><%= job_status_text(@extraction_job) %></span>
     <%- if @extraction_job.duration_seconds.present? %>
-      |<span class="ms-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>
+      |<span class="ms-1">Duration: <%= job_duration(@extraction_job) %></span>
     <% end %>
   </div>
 
@@ -62,7 +62,7 @@
 <div class="my-4">
   <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span>|
   <%- if @extraction_job.duration_seconds.present? %>
-    <span class="ms-1 me-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>|
+    <span class="ms-1 me-1">Duration: <%= job_duration(@extraction_job) %></span>|
   <% end %>
   <% if @document.present? && !@document.missing? %>
     <span class="ms-1 me-1">File size: <%= number_to_human_size(@document.size_in_bytes) %></span>|
