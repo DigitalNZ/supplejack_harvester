@@ -46,7 +46,7 @@ RSpec.describe ExtractionCleanupWorker, type: :worker do
     it 'returns the lines it logged as one string' do
       report = described_class.new.perform
 
-      expect(report).to include("extraction_job=#{old_job.id}")
+      expect(report).to include("pipeline=#{pipeline.id} extraction_job=#{old_job.id}")
       expect(report).to match(/finished purged=1 /)
     end
 
