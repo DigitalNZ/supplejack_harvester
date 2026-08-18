@@ -112,4 +112,71 @@ RSpec.describe Pipeline do
       expect(pipeline.ordered_blocks.to_a).to eq([pre_zero, pre_one, harvest])
     end
   end
+
+  # The hand-repair AutomationWorker reaches for while it waits on a step
+  # (AutomationWorker#schedule_job_check), and what the "anti stick" automation templates
+  # were built around: a report left showing running with all of its workers accounted for.
+  describe '#complete_finished_jobs!' do
+    let(:destination) { create(:destination) }
+    let(:pipeline)    { create(:pipeline) }
+    let!(:block)      { create(:harvest_definition, pipeline:, kind: :harvest, position: 0) }
+    let(:pipeline_job) do
+      create(:pipeline_job, pipeline:, destination:, status: 'running', start_time: Time.zone.now,
+                            harvest_definitions_to_run: [block.id.to_s])
+    end
+    let(:harvest_job) { create(:harvest_job, harvest_definition: block, pipeline_job:) }
+    let!(:harvest_report) do
+      create(:harvest_report, pipeline_job:, harvest_job:, kind: 'harvest',
+                              extraction_status: 'completed', transformation_status: 'running',
+                              load_status: 'running', delete_status: 'queued',
+                              transformation_workers_queued: 1, transformation_workers_completed: 1,
+                              load_workers_queued: 1, load_workers_completed: 1)
+    end
+
+    it 'completes a report whose workers have all finished' do
+      pipeline.complete_finished_jobs!
+
+      expect(harvest_report.reload.status).to eq 'completed'
+    end
+
+    # Repairing the report is only half of it: the run reads as running until something ends
+    # it, which is the disagreement the anti stick templates were chasing.
+    it 'ends the run the report belongs to' do
+      pipeline.complete_finished_jobs!
+
+      expect(pipeline_job.reload).to be_completed
+    end
+
+    it 'leaves a report whose workers are still outstanding alone' do
+      harvest_report.update(transformation_workers_queued: 2)
+
+      pipeline.complete_finished_jobs!
+
+      expect(harvest_report.reload.transformation_status).to eq 'running'
+    end
+
+    # Why the anti stick templates could not rescue the harvests they were built for: this
+    # only ever looks at reports showing running, so a run left running behind a report that
+    # already reads completed is invisible to it. Those runs need the completion to have
+    # worked in the first place (RunCompletion), or a backfill.
+    # Why the anti stick templates could not rescue the harvests they were built for: this
+    # only ever looks at reports showing running, so a run left running behind a report that
+    # already reads completed is invisible to it. Those runs need the completion to have
+    # worked in the first place (RunCompletion), or a backfill.
+    context 'when the report already reads completed' do
+      let!(:harvest_report) do
+        create(:harvest_report, pipeline_job:, harvest_job:, kind: 'harvest',
+                                extraction_status: 'completed', transformation_status: 'completed',
+                                load_status: 'completed', delete_status: 'completed',
+                                transformation_workers_queued: 1, transformation_workers_completed: 1,
+                                load_workers_queued: 1, load_workers_completed: 1)
+      end
+
+      it 'cannot end the run it belongs to' do
+        pipeline.complete_finished_jobs!
+
+        expect(pipeline_job.reload).to be_running
+      end
+    end
+  end
 end
