@@ -130,7 +130,7 @@ RSpec.describe PreProcessCleanupWorker, type: :worker do
 
       report = described_class.new.perform
 
-      expect(report).to match(/pipeline_job=\d+/)
+      expect(report).to match(/pipeline=#{pipeline.id} pipeline_job=\d+/)
       expect(report).to match(/finished swept=1 examined=1 dry_run=false\z/)
     end
 

@@ -33,8 +33,11 @@ class ExtractionCleanupWorker
   # The `rescue` below is attached to this `do...end` block, not to a method -
   # Ruby allows that without a `begin`. It keeps one bad folder from aborting
   # the batch: a failed purge leaves purged_at null so the next run retries it.
+  # Not find_each: it would drop the oldest-first order and the batch limit,
+  # and the batch is already capped small enough to load whole.
+  # rubocop:disable Rails/FindEach
   def purge_extraction_jobs(pipeline_id)
-    ExtractionJob.purge_candidates(@policy, pipeline_id:).each do |job|
+    ExtractionJob.purge_candidates(@policy, pipeline_id:).includes(:extraction_definition).each do |job|
       bytes = examine(job)
       next if @policy.dry_run?
 
@@ -43,6 +46,7 @@ class ExtractionCleanupWorker
       report_failure("extraction_job=#{job.id}", e)
     end
   end
+  # rubocop:enable Rails/FindEach
 
   # purge! backs out with false when the job turned busy mid-batch; that skip
   # is logged but never counted as a purge.
@@ -60,8 +64,9 @@ class ExtractionCleanupWorker
     bytes = job.extraction_folder_size_in_bytes
     @examined += 1
     @examined_bytes += bytes
-    log("extraction_job=#{job.id} definition=#{job.extraction_definition_id} " \
-        "created_at=#{job.created_at.iso8601} index=#{job.extraction_index} bytes=#{bytes}")
+    log("pipeline=#{job.extraction_definition.pipeline_id} extraction_job=#{job.id} " \
+        "definition=#{job.extraction_definition_id} created_at=#{job.created_at.iso8601} " \
+        "index=#{job.extraction_index} bytes=#{bytes}")
     bytes
   end
 

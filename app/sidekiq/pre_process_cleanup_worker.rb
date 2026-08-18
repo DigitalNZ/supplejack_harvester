@@ -44,7 +44,7 @@ class PreProcessCleanupWorker
   def sweep_out_ranked(ids_on_disk, pipeline_id)
     PipelineJob.preprocess_sweep_candidates(@policy, ids_on_disk, pipeline_id:).each do |pipeline_job|
       id = pipeline_job.id
-      sweep(PreProcess::Output.job_folder(id), "pipeline_job=#{id}")
+      sweep(PreProcess::Output.job_folder(id), "pipeline=#{pipeline_job.pipeline_id} pipeline_job=#{id}")
     rescue StandardError => e
       report_failure("pipeline_job=#{id}", e)
     end
