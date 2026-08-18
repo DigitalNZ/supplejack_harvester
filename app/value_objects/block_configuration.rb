@@ -24,7 +24,7 @@ class BlockConfiguration
   def load_problems
     problems = []
 
-    if preprocess? && load_kind != 'file'
+    if preprocess? && load_kind != 'preprocessed_data'
       problems << 'it is a pre-processing block, so it has to write a file for the next block to read'
     end
 
@@ -55,7 +55,7 @@ class BlockConfiguration
   def problems_for_load_kind
     case load_kind
     when 'secondary_fragment' then secondary_fragment_problems
-    when 'file' then file_problems
+    when 'preprocessed_data' then preprocessed_data_problems
     else []
     end
   end
@@ -89,7 +89,7 @@ class BlockConfiguration
     transformation_definition.fields.select(&:field?).map(&:name)
   end
 
-  def file_problems
+  def preprocessed_data_problems
     return [] if preprocess?
 
     ['only a pre-processing block can write a file for the next block to read']

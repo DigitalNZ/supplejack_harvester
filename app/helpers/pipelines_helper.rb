@@ -25,7 +25,7 @@ module PipelinesHelper
     'primary_fragment' => 'Standard – Writes to the primary fragment',
     'secondary_fragment' => 'Secondary fragment – Writes to a secondary fragment (not the primary fragment)',
     'enrichment' => 'Enrichment – Writes to a secondary fragment (not the primary fragment)',
-    'file' => 'Preprocessing – Gathers data for the next block (without writing records)'
+    'preprocessed_data' => 'Preprocessing – Gathers data for the next block (without writing records)'
   }.freeze
 
   # Nothing at all when a block is fine, rather than an empty element, so the caller does not
@@ -44,7 +44,7 @@ module PipelinesHelper
 
   # A block writing a file posts nothing, so there is no fragment for a priority to pick.
   def load_asks_for_priority?(harvest_definition)
-    LoadDefinition.kinds_for_block_kind(harvest_definition.kind).exclude?('file')
+    LoadDefinition.kinds_for_block_kind(harvest_definition.kind).exclude?('preprocessed_data')
   end
 
   # Only an enrichment can leave a record partial by not arriving: Load::Execution sends
@@ -64,7 +64,7 @@ module PipelinesHelper
   # where the default the "Add enrichment" form used to carry now lives. The primary
   # fragment is 0 by definition, and a block writing to disk has no fragment at all.
   def default_load_priority(harvest_definition)
-    return 0 if %w[primary_fragment file].include?(default_load_kind(harvest_definition))
+    return 0 if %w[primary_fragment preprocessed_data].include?(default_load_kind(harvest_definition))
 
     (LoadDefinition.where(pipeline_id: harvest_definition.pipeline_id).minimum(:priority) || 0) - 1
   end

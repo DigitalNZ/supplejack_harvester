@@ -103,7 +103,7 @@ RSpec.describe HarvestDefinition do
       end
 
       it 'derives writing to disk from a preprocess block' do
-        expect(create(:harvest_definition, pipeline:, kind: :preprocess).load_kind).to eq 'file'
+        expect(create(:harvest_definition, pipeline:, kind: :preprocess).load_kind).to eq 'preprocessed_data'
       end
     end
   end
@@ -199,7 +199,7 @@ RSpec.describe HarvestDefinition do
     # is how the state gets built here, being the only way left to produce it.
     context 'when the block and its load definition disagree' do
       it 'reports a file load on a block that is not pre-processing' do
-        block.update_columns(load_definition_id: create(:load_definition, pipeline:, kind: 'file').id)
+        block.update_columns(load_definition_id: create(:load_definition, pipeline:, kind: 'preprocessed_data').id)
 
         expect(block.reload.configuration_problems).to include(
           'only a pre-processing block can write a file for the next block to read'
@@ -223,7 +223,7 @@ RSpec.describe HarvestDefinition do
     {
       harvest: %w[primary_fragment secondary_fragment],
       enrichment: %w[enrichment],
-      preprocess: %w[file]
+      preprocess: %w[preprocessed_data]
     }.each do |block_kind, allowed|
       (LoadDefinition.kinds.keys - allowed).each do |refused|
         it "refuses a #{refused} load on a #{block_kind} block" do

@@ -21,7 +21,7 @@ module CardsHelper
   # preprocessing load, which writes no fragment, so saying its priority would imply the
   # number does something.
   def load_card_subtitle(definition)
-    priority = "priority #{definition.priority}" unless definition.file?
+    priority = "priority #{definition.priority}" unless definition.preprocessed_data?
 
     [
       last_edited_by(definition),
