@@ -244,6 +244,8 @@ RSpec.describe TransformationWorker do
         let!(:harvest_report) { create(:harvest_report, extraction_status: 'completed', harvest_job:, transformation_status: 'running', load_status: 'running', delete_status: 'running', load_workers_queued: 0, load_workers_completed: 1, delete_workers_queued: 0, delete_workers_completed: 1) }
 
         it "marks the load and delete completed if the load worker and the delete worker have completed after the transformation worker" do
+          stub_notify_harvesting(pipeline_job.destination, false)
+
           TransformationWorker.new.perform(harvest_job.id)
           harvest_report.reload
 

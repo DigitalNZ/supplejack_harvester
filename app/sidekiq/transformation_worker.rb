@@ -100,7 +100,7 @@ class TransformationWorker
 
   def handle_transformation_completion
     @harvest_report.transformation_completed!
-    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
+    @harvest_job.complete_load(@harvest_report)
     @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
 
     if @harvest_report.delete_workers_queued.zero?

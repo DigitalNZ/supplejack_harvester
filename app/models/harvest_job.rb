@@ -82,7 +82,49 @@ class HarvestJob < ApplicationRecord
     pipeline_job.enqueue_enrichment_jobs(name)
   end
 
+  # This block's last load finishing, asked by whichever worker saw it happen - all three
+  # of them can be the one, so all three ask here.
+  #
+  # The destination flags a source as harvesting when the block queues its first load
+  # (TransformationWorker#notify_harvesting), and leaves its records alone while that flag
+  # is set, so clearing it belongs with the load completing. LoadWorker used to be the only
+  # one that cleared it, and it only gets the chance when the loads finish after the
+  # extraction: load_workers_completed? requires transformation_completed?, so on a harvest
+  # whose loads keep up with its pages every load worker stands aside, another worker marks
+  # the load completed, and the source was left on harvesting: true for good - never
+  # de-indexed, and needing a hand-run harvest to clear it.
+  #
+  # A caller that finds the load already completed says nothing, so the destination is not
+  # told again by the next worker through here.
+  def complete_load(report)
+    return unless report.load_workers_completed?
+    return if report.load_completed?
+
+    report.load_completed!
+
+    # Only the worker that queued the block's first load told the destination harvesting had
+    # begun (TransformationWorker#notify_harvesting?), so a block that queued none - a
+    # pre-processing block feeding a file, a harvest that matched no records - has nothing
+    # to take back.
+    return if report.load_workers_queued.zero?
+
+    notify_harvesting_finished
+  end
+
   private
+
+  # See TransformationWorker#source_id - the pipeline's harvest block, not whichever
+  # definition happens to have the lowest id.
+  def notify_harvesting_finished
+    harvested_source_id = pipeline_job.pipeline.harvest&.source_id
+    return if harvested_source_id.blank?
+
+    ::Retriable.retriable do
+      Api::Utils::NotifyHarvesting.new(pipeline_job.destination, harvested_source_id, false).call
+    end
+  rescue StandardError => e
+    Rails.logger.info "HarvestJob#complete_load: API Utils NotifyHarvesting error: #{e.message}"
+  end
 
   def flush_previous_records?
     harvest_definition.harvest? && writes_primary_fragment? &&
