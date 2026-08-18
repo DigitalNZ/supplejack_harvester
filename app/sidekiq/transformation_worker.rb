@@ -103,15 +103,19 @@ class TransformationWorker
     @harvest_report.load_completed! if @harvest_report.load_workers_completed?
     @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
 
-    return unless @harvest_report.delete_workers_queued.zero?
-
-    @harvest_report.delete_completed!
-    @harvest_report.transformation_completed!
+    if @harvest_report.delete_workers_queued.zero?
+      @harvest_report.delete_completed!
+      @harvest_report.transformation_completed!
+    end
 
     # A preprocess block completes when its transformation completes (it queues no
     # loads/deletes), so the chain can step forward from here. HarvestJob#advance_chain
     # decides, because the extraction worker reaches the same point by another route.
     @harvest_job.advance_chain
+
+    # And a harvest block that queued no loads is complete here too, so this is the only
+    # worker left to queue its enrichments. HarvestJob#queue_enrichments decides.
+    @harvest_job.queue_enrichments
   end
 
   def transform_records

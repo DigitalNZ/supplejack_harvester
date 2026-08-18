@@ -53,6 +53,23 @@ RSpec.describe RunCompletion do
     expect(described_class.new(job)).to be_finished
   end
 
+  # HarvestReport#report_to_pipeline_job asks this question once per status it writes, and
+  # every one of those calls goes through the same report's `pipeline_job`. If the reports
+  # were answered from what that object already held, the first call would fill the cache
+  # and the last one - the one that ends the run - would be reading a stale copy of the
+  # very report whose status had just changed.
+  it 'sees a report that finished after the run last looked at it' do
+    report = report_for(first_block, delete_status: 'queued')
+    report_for(second_block)
+
+    completion = described_class.new(pipeline_job)
+    expect(completion).not_to be_finished
+
+    HarvestReport.find(report.id).delete_completed!
+
+    expect(described_class.new(pipeline_job)).to be_finished
+  end
+
   it 'is unfinished before anything has started' do
     expect(described_class.new(pipeline_job)).not_to be_finished
   end

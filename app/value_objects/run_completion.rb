@@ -30,8 +30,16 @@ class RunCompletion
 
   private
 
+  # Read from the database rather than from whatever the run is already holding.
+  # HarvestReport#report_to_pipeline_job asks this question once per status it writes, and
+  # all four of those calls go through the same report's `pipeline_job` - so the first of
+  # them loads the reports onto it and the rest would be answered from that cache, seeing
+  # a stale copy of the very report whose status just changed. The last status of the last
+  # block is the one that ends a run, so that is precisely the call that has to be right.
+  #
+  # Remembered per instance: one RunCompletion answers about one moment.
   def reports
-    @reports ||= @pipeline_job.harvest_reports.to_a
+    @reports ||= @pipeline_job.harvest_reports.reload.to_a
   end
 
   # Two things start a block: the chain steps forward as each one finishes, and the

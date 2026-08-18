@@ -61,6 +61,27 @@ class HarvestJob < ApplicationRecord
     pipeline_job.advance_to_next_block(harvest_definition)
   end
 
+  # The enrichments this run has to queue off the back of this block, asked by whichever
+  # worker completed its report - the same reasoning as #advance_chain.
+  #
+  # #trigger_following_processes already asks on the extraction worker's behalf, but that
+  # runs while this block's transformation workers are still going, so the report is not
+  # complete yet and there is nothing to queue. Normally the last load worker asks again
+  # once it is (LoadWorker#job_end), and a harvest that loads records is carried that way.
+  # One that loads none - the source answered, but no record matched the transformation's
+  # selector - has no load worker to carry it, and its enrichments were never queued:
+  # RunCompletion#enrichments_pending? then keeps the run on "running" for good, waiting
+  # for a block that nothing will ever start.
+  #
+  # PipelineJob#enqueue_enrichment_jobs only queues an enrichment that has no job on this
+  # run yet, so being asked from more than one route costs nothing.
+  def queue_enrichments
+    return if harvest_definition.preprocess?
+    return unless harvest_report&.reload&.completed?
+
+    pipeline_job.enqueue_enrichment_jobs(name)
+  end
+
   private
 
   def flush_previous_records?
