@@ -35,8 +35,8 @@ RSpec.describe BackfillStatuses do
       expect(described_class.new(described_class::DEFAULTS)).not_to be_apply
     end
 
-    it 'refuses an abandoned status the enum does not have' do
-      expect { config('ABANDONED_STATUS' => 'abandoned').validate! }.to raise_error(ArgumentError)
+    it 'refuses to exist with an abandoned status a run cannot hold' do
+      expect { config('ABANDONED_STATUS' => 'abandoned') }.to raise_error(ArgumentError)
     end
   end
 
@@ -120,6 +120,21 @@ RSpec.describe BackfillStatuses do
 
       expect(job.reload).to be_running
       expect(tally.count(:would_completed)).to eq 1
+    end
+
+    # LIMIT is there to take a smaller first bite, so it has to bound what is written rather
+    # than what is looked at.
+    it 'stops after the limit, leaving the rest for a later run' do
+      jobs = Array.new(3) do
+        job = run(status: 'running')
+        report_for(job, extraction_status: 'completed', transformation_status: 'completed',
+                        load_status: 'completed', delete_status: 'completed')
+        job
+      end
+
+      described_class.new(config('LIMIT' => '2')).call
+
+      expect(jobs.map { |job| job.reload.status }).to eq %w[completed completed running]
     end
 
     # A historical run's configuration must survive the repair: saving through the model would

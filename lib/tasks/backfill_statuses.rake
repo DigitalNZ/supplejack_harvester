@@ -27,7 +27,6 @@ namespace :backfill_statuses do
   desc 'Repair run and block statuses left behind by the status defects. Dry run unless APPLY=true.'
   task execute: :environment do
     config = BackfillStatuses::Config.new
-    config.validate!
 
     puts config.apply? ? 'Applying repairs.' : 'Dry run - nothing will be written. Set APPLY=true to write.'
     puts "Leaving anything touched since #{config.cutoff.iso8601} alone."

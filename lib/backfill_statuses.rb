@@ -29,6 +29,8 @@ module BackfillStatuses
   COMPLETED = 'completed'
   STEPS = %w[transformation load delete].freeze
 
+  # What the run was asked for, read off the environment. Refuses to exist with an abandoned
+  # status a run cannot hold, so a typo cannot reach seventeen hundred rows.
   class Config
     DEFAULTS = {
       'APPLY' => 'false',
@@ -38,37 +40,40 @@ module BackfillStatuses
       'LIMIT' => ''
     }.freeze
 
-    attr_reader :abandoned_status, :only
-
-    def apply? = @apply
+    TRUTHY = %w[1 true TRUE yes YES on ON].freeze
 
     def initialize(env = ENV)
-      @apply            = truthy?(fetch(env, 'APPLY'))
-      @min_age_hours    = fetch(env, 'MIN_AGE_HOURS').to_i
-      @abandoned_status = fetch(env, 'ABANDONED_STATUS')
-      @only             = fetch(env, 'ONLY')
-      @limit            = fetch(env, 'LIMIT')
+      @settings = DEFAULTS.merge(env.slice(*DEFAULTS.keys))
+      ensure_known_abandoned_status
     end
 
-    def cutoff = @min_age_hours.hours.ago
+    def apply? = TRUTHY.include?(fetch('APPLY'))
 
-    def limit = @limit.presence&.to_i
+    def cutoff = fetch('MIN_AGE_HOURS').to_i.hours.ago
 
-    def reports? = @only.blank? || @only == 'reports'
+    def abandoned_status = fetch('ABANDONED_STATUS')
 
-    def runs? = @only.blank? || @only == 'runs'
+    def limit = fetch('LIMIT').presence&.to_i
 
-    def validate!
-      return if PipelineJob.statuses.key?(@abandoned_status)
+    def reports? = only?('reports')
 
-      raise ArgumentError, "ABANDONED_STATUS must be one of #{PipelineJob.statuses.keys.join(', ')}"
-    end
+    def runs? = only?('runs')
 
     private
 
-    def fetch(env, key) = env.fetch(key, DEFAULTS.fetch(key))
+    def fetch(key) = @settings.fetch(key)
 
-    def truthy?(value) = %w[1 true TRUE yes YES on ON].include?(value)
+    # Nothing asked for means both passes.
+    def only?(pass)
+      asked = fetch('ONLY')
+      asked.blank? || asked == pass
+    end
+
+    def ensure_known_abandoned_status
+      return if PipelineJob.statuses.key?(abandoned_status)
+
+      raise ArgumentError, "ABANDONED_STATUS #{abandoned_status.inspect} is not a status a run can hold"
+    end
   end
 
   # Tallies what was seen, so a dry run and a real run report the same way.
@@ -94,28 +99,37 @@ module BackfillStatuses
   # Walks a set of candidates, asking each subclass what to make of one and what to do about
   # it. #examine returns nil for a record there is nothing to do about, having recorded why.
   class Sweep
-    def initialize(config) = @config = config
+    def initialize(config)
+      @config = config
+      @tally = Tally.new
+      @applied = 0
+    end
 
     def call
-      tally = Tally.new
-      applied = 0
-
-      candidates.find_each do |record|
-        outcome = examine(record, tally)
-        next if outcome.nil?
-        break if over_limit?(applied += 1)
-
-        tally.record(commit(record, outcome))
-      end
-
+      candidates.find_each { |record| break unless consider(record) }
       tally
     end
 
     private
 
-    def over_limit?(count)
-      limit = @config.limit
-      limit.present? && count > limit
+    # Read rather than reached for, so a subclass does not have to know which instance variables
+    # this one keeps.
+    attr_reader :config, :tally
+
+    # Falsey stops the sweep, which is how LIMIT takes its bite.
+    def consider(record)
+      outcome = examine(record, tally)
+      return true unless outcome
+      return false unless room_for_another?
+
+      tally.record(commit(record, outcome))
+    end
+
+    # Counts this one against LIMIT as it lets it through.
+    def room_for_another?
+      limit = config.limit
+      @applied += 1
+      limit.blank? || @applied <= limit
     end
   end
 
@@ -140,16 +154,12 @@ module BackfillStatuses
     # reads a non-numeric string in a numeric comparison as 0 - which would quietly have asked
     # for the reports that are not all *queued*.
     def candidates
+      all_completed = (['extraction'] + STEPS).map { |step| "#{step}_status = :completed" }.join(' AND ')
+
       HarvestReport.joins(:pipeline_job)
-                   .where(pipeline_jobs: { updated_at: ...@config.cutoff })
-                   .where.not(all_statuses_completed, completed: completed_value)
+                   .where(pipeline_jobs: { updated_at: ...config.cutoff })
+                   .where.not(all_completed, completed: HarvestReport.extraction_statuses.fetch(COMPLETED))
     end
-
-    def all_statuses_completed
-      (['extraction'] + STEPS).map { |step| "#{step}_status = :completed" }.join(' AND ')
-    end
-
-    def completed_value = HarvestReport.extraction_statuses.fetch(COMPLETED)
 
     # Each step is asked in order, because load_workers_completed? and
     # delete_workers_completed? both want the transformation completed - so the answer for one
@@ -178,7 +188,7 @@ module BackfillStatuses
     def finished_at(report) = report.last_updated || report.updated_at
 
     def commit(report, repairs)
-      return :would_repair unless @config.apply?
+      return :would_repair unless config.apply?
 
       report.update_columns(repairs) # rubocop:disable Rails/SkipsModelValidations
       :repaired
@@ -201,7 +211,7 @@ module BackfillStatuses
     # one that is genuinely under way.
     def candidates
       PipelineJob.where(status: [nil, PipelineJob.statuses['running']])
-                 .where(updated_at: ...@config.cutoff)
+                 .where(updated_at: ...config.cutoff)
     end
 
     # RunCompletion is asked rather than reimplemented, so a run is only ended here on the same
@@ -221,7 +231,7 @@ module BackfillStatuses
     end
 
     def commit(job, outcome)
-      return :"would_#{outcome}" unless @config.apply?
+      return :"would_#{outcome}" unless config.apply?
 
       job.update_columns(attributes_for(job, outcome)) # rubocop:disable Rails/SkipsModelValidations
       outcome
@@ -235,7 +245,7 @@ module BackfillStatuses
     end
 
     def status_for(outcome)
-      outcome == :abandoned ? @config.abandoned_status : outcome.to_s
+      outcome == :abandoned ? config.abandoned_status : outcome.to_s
     end
 
     # The last thing any of its blocks recorded, never earlier than the run started. An

@@ -32,12 +32,17 @@ class HarvestJob < ApplicationRecord
     DeletePreviousRecords::Execution.new(harvest_definition.source_id, name, pipeline_job.destination).call
   end
 
-  # Runs after this job's extraction completes. A preprocess block must not
-  # queue enrichments — the harvest it enriches has not run yet.
+  # Runs after this job's extraction completes.
   def trigger_following_processes
-    pipeline_job.enqueue_enrichment_jobs(name) unless harvest_definition.preprocess?
+    pipeline_job.enqueue_enrichment_jobs(name) if enriches_when_finished?
     execute_delete_previous_records
     advance_chain
+  end
+
+  # Whether the enrichments follow this block finishing. A pre-processing block feeds the next
+  # block instead: the harvest its run's enrichments would enrich has not run when it finishes.
+  def enriches_when_finished?
+    !harvest_definition.preprocess?
   end
 
   # A pre-processing block exists to feed the next one, so the chain steps forward when it
@@ -76,55 +81,19 @@ class HarvestJob < ApplicationRecord
   # PipelineJob#enqueue_enrichment_jobs only queues an enrichment that has no job on this
   # run yet, so being asked from more than one route costs nothing.
   def queue_enrichments
-    return if harvest_definition.preprocess?
+    return unless enriches_when_finished?
     return unless harvest_report&.reload&.completed?
 
     pipeline_job.enqueue_enrichment_jobs(name)
   end
 
-  # This block's last load finishing, asked by whichever worker saw it happen - all three
-  # of them can be the one, so all three ask here.
-  #
-  # The destination flags a source as harvesting when the block queues its first load
-  # (TransformationWorker#notify_harvesting), and leaves its records alone while that flag
-  # is set, so clearing it belongs with the load completing. LoadWorker used to be the only
-  # one that cleared it, and it only gets the chance when the loads finish after the
-  # extraction: load_workers_completed? requires transformation_completed?, so on a harvest
-  # whose loads keep up with its pages every load worker stands aside, another worker marks
-  # the load completed, and the source was left on harvesting: true for good - never
-  # de-indexed, and needing a hand-run harvest to clear it.
-  #
-  # A caller that finds the load already completed says nothing, so the destination is not
-  # told again by the next worker through here.
+  # This block's last load finishing, asked by whichever worker saw it happen - all three of
+  # them can be the one, so all three ask here. Load::Completion holds why that matters.
   def complete_load(report)
-    return unless report.load_workers_completed?
-    return if report.load_completed?
-
-    report.load_completed!
-
-    # Only the worker that queued the block's first load told the destination harvesting had
-    # begun (TransformationWorker#notify_harvesting?), so a block that queued none - a
-    # pre-processing block feeding a file, a harvest that matched no records - has nothing
-    # to take back.
-    return if report.load_workers_queued.zero?
-
-    notify_harvesting_finished
+    Load::Completion.new(self, report).call
   end
 
   private
-
-  # See TransformationWorker#source_id - the pipeline's harvest block, not whichever
-  # definition happens to have the lowest id.
-  def notify_harvesting_finished
-    harvested_source_id = pipeline_job.pipeline.harvest&.source_id
-    return if harvested_source_id.blank?
-
-    ::Retriable.retriable do
-      Api::Utils::NotifyHarvesting.new(pipeline_job.destination, harvested_source_id, false).call
-    end
-  rescue StandardError => e
-    Rails.logger.info "HarvestJob#complete_load: API Utils NotifyHarvesting error: #{e.message}"
-  end
 
   def flush_previous_records?
     harvest_definition.harvest? && writes_primary_fragment? &&
