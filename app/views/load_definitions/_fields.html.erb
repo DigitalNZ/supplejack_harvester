@@ -16,7 +16,7 @@
 
   <div class="col-4">
     <%= form.label :kind, class: 'form-label' do %>
-      Writes
+      Type
       <span
         data-bs-toggle="tooltip"
         data-bs-title="Which part of the destination record this block writes to"><i class="bi bi-question-circle" aria-label="helper text"></i>
@@ -39,7 +39,7 @@
         Priority
         <span
           data-bs-toggle="tooltip"
-          data-bs-title="Fragments are merged lowest priority first, so a lower number wins for any single-value field. A block writing a secondary fragment must not use 0 - that is the primary fragment's priority, and writing it would blank the fields this block does not set."><i class="bi bi-question-circle" aria-label="helper text"></i>
+          data-bs-title="Fragments are merged lowest priority first, so a lower number wins for any single-value field. A block writing a secondary fragment must not use 0 - that is the primary fragment's priority."><i class="bi bi-question-circle" aria-label="helper text"></i>
         </span>
       <% end %>
     </div>
