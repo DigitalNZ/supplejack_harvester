@@ -16,14 +16,16 @@ class PreProcessCleanupWorker
   # only just created.
   ORPHAN_WINDOW = 1.day
 
-  # Pass a pipeline id to clean one pipeline only (console use); nil sweeps
-  # everything. Returns the logged lines so a console run can `puts` them.
-  def perform(pipeline_id = nil)
+  def initialize
     @policy = PreProcessRetentionPolicy.load
     @report = []
     @examined = 0
     @swept = 0
+  end
 
+  # Pass a pipeline id to clean one pipeline only (console use); nil sweeps
+  # everything. Returns the logged lines so a console run can `puts` them.
+  def perform(pipeline_id = nil)
     log_scope(pipeline_id)
     ids_on_disk = PreProcess::Output.pipeline_job_ids_on_disk
     sweep_out_ranked(ids_on_disk, pipeline_id)
@@ -41,9 +43,10 @@ class PreProcessCleanupWorker
   # batch or swallow the summary log.
   def sweep_out_ranked(ids_on_disk, pipeline_id)
     PipelineJob.preprocess_sweep_candidates(@policy, ids_on_disk, pipeline_id:).each do |pipeline_job|
-      sweep(PreProcess::Output.job_folder(pipeline_job.id), "pipeline_job=#{pipeline_job.id}")
+      id = pipeline_job.id
+      sweep(PreProcess::Output.job_folder(id), "pipeline_job=#{id}")
     rescue StandardError => e
-      report_failure("pipeline_job=#{pipeline_job.id}", e)
+      report_failure("pipeline_job=#{id}", e)
     end
   end
 
