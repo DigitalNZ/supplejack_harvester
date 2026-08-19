@@ -17,8 +17,8 @@ class LoadDefinition < ApplicationRecord
   #                      the primary fragment and nils every mutable field the payload does
   #                      not carry.
   # enrichment         - post a fragment to a record already fetched from the destination.
-  # file               - write to disk for the next block instead of to the API.
-  enum :kind, { primary_fragment: 0, secondary_fragment: 1, enrichment: 2, file: 3 }
+  # preprocessed_data  - write to disk for the next block instead of to the API.
+  enum :kind, { primary_fragment: 0, secondary_fragment: 1, enrichment: 2, preprocessed_data: 3 }
 
   # What a block of each kind is allowed to do with its records, most typical first. Only a
   # harvest has a choice: write the record itself, or add its own fragment to records other
@@ -28,7 +28,7 @@ class LoadDefinition < ApplicationRecord
   KINDS_FOR_BLOCK_KIND = {
     'harvest' => %w[primary_fragment secondary_fragment],
     'enrichment' => %w[enrichment],
-    'preprocess' => %w[file]
+    'preprocess' => %w[preprocessed_data]
   }.freeze
 
   def self.kinds_for_block_kind(block_kind)

@@ -58,8 +58,8 @@ RSpec.describe LoadDefinition do
 
     # A block writing to disk posts nothing, so there is no fragment for a priority to pick.
     it 'leaves a preprocessing load alone, which writes no fragment at all' do
-      expect(described_class.new(pipeline:, kind: 'file', priority: 0)).to be_valid
-      expect(described_class.new(pipeline:, kind: 'file', priority: -2)).to be_valid
+      expect(described_class.new(pipeline:, kind: 'preprocessed_data', priority: 0)).to be_valid
+      expect(described_class.new(pipeline:, kind: 'preprocessed_data', priority: -2)).to be_valid
     end
 
     it 'refuses a blank priority rather than failing on the database constraint' do
@@ -75,7 +75,7 @@ RSpec.describe LoadDefinition do
     it 'cannot become a kind its block does not do' do
       create(:harvest_definition, pipeline:, kind: :harvest, source_id: 'a-harvest', load_definition:)
 
-      load_definition.kind = 'file'
+      load_definition.kind = 'preprocessed_data'
 
       expect(load_definition).not_to be_valid
       expect(load_definition.errors[:kind].join).to eq 'is not something the harvest block a-harvest can do'
@@ -99,7 +99,7 @@ RSpec.describe LoadDefinition do
     end
 
     it 'is free to be any kind while no block uses it' do
-      expect(load_definition.update(kind: 'file')).to be true
+      expect(load_definition.update(kind: 'preprocessed_data')).to be true
     end
   end
 

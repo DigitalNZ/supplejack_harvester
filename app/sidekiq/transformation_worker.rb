@@ -43,7 +43,7 @@ class TransformationWorker
 
     update_harvest_report(transformed_records.count, rejected_records.count)
 
-    if @harvest_job.load_kind == 'file'
+    if @harvest_job.load_kind == 'preprocessed_data'
       feed_forward(valid_records)
     else
       queue_load_worker(valid_records)

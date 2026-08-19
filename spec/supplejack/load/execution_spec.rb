@@ -53,7 +53,7 @@ RSpec.describe Load::Execution do
       before do
         stub_request(:post, 'http://www.localhost:3000/harvester/records/record_id/fragments')
           .with(
-            body: "{\"fragment\":{\"title\":[\"title\"],\"description\":[\"description\"],\"source_id\":\"test\",\"priority\":0,\"job_id\":\"#{harvest_job.name}\"},\"required_fragments\":null}",
+            body: "{\"fragment\":{\"title\":[\"title\"],\"description\":[\"description\"],\"source_id\":\"test\",\"priority\":-1,\"job_id\":\"#{harvest_job.name}\"},\"required_fragments\":null}",
             headers: {
               'Accept' => '*/*',
               'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
@@ -92,7 +92,7 @@ RSpec.describe Load::Execution do
     end
 
     context 'when the block writes to disk rather than the API' do
-      let(:load_definition)    { create(:load_definition, pipeline:, kind: 'file') }
+      let(:load_definition)    { create(:load_definition, pipeline:, kind: 'preprocessed_data') }
       let(:harvest_definition) do
         create(:harvest_definition, pipeline:, kind: 'preprocess', source_id: 'test', load_definition:)
       end
@@ -101,7 +101,7 @@ RSpec.describe Load::Execution do
 
       it 'raises instead of returning nil for handle_response to trip over' do
         expect { described_class.new([record], harvest_job).call }
-          .to raise_error(StandardError, 'a file definition cannot be loaded')
+          .to raise_error(StandardError, 'a preprocessed_data definition cannot be loaded')
       end
     end
   end

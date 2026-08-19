@@ -24,9 +24,7 @@
         <span class='badge bg-light text-dark fw-normal'><%= row.kind_label %></span>
       <% end %>
 
-      <%# A disabled checkbox on its own does not say what is wrong, and some of the reasons
-          are a disagreement between two definitions rather than something missing. %>
-      <%= cannot_run_notice(row.configuration_problems) %>
+      <%= row.cannot_run_notice %>
     </div>
   </div>
 

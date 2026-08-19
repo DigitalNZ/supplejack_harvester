@@ -308,7 +308,13 @@ RSpec.describe TransformationWorker do
     context "when the block is a preprocess block" do
       subject { TransformationWorker.new.perform(harvest_job.id) }
 
-      before { harvest_definition.update!(kind: :preprocess, position: 0) }
+      # The load definition has to change with the kind: LoadDefinition::KINDS_FOR_BLOCK_KIND
+      # refuses a primary-fragment load on a pre-processing block.
+      before do
+        harvest_definition.update!(kind: :preprocess, position: 0,
+                                   load_definition: create(:load_definition, pipeline:,
+                                                                             kind: 'preprocessed_data'))
+      end
 
       after { FileUtils.rm_rf(PreProcess::Output.folder(pipeline_job.id, 0)) }
 

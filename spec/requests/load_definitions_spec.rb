@@ -51,7 +51,7 @@ RSpec.describe 'Load Definitions' do
 
       it 'auto-names the definition after the pre-processing block' do
         post pipeline_harvest_definition_load_definitions_path(pipeline, preprocess_definition), params: {
-          load_definition: { pipeline_id: pipeline.id, kind: 'file' }
+          load_definition: { pipeline_id: pipeline.id, kind: 'preprocessed_data' }
         }
 
         definition = LoadDefinition.order(:id).last
@@ -107,10 +107,12 @@ RSpec.describe 'Load Definitions' do
         expect { post_enrichment_load }.not_to change(LoadDefinition, :count)
       end
 
-      it 'leaves the block without one' do
+      it 'leaves the block with the one it had' do
+        had = preprocess_definition.load_definition
+
         post_enrichment_load
 
-        expect(preprocess_definition.reload.load_definition).to be_nil
+        expect(preprocess_definition.reload.load_definition).to eq had
       end
 
       it 'says what the block objected to' do
@@ -175,7 +177,7 @@ RSpec.describe 'Load Definitions' do
 
     it 'asks a pre-processing block for neither, having no fragment to write' do
       preprocess = create(:harvest_definition, pipeline:, kind: :preprocess, source_id: 'a-preprocess',
-                                               load_definition: create(:load_definition, pipeline:, kind: 'file'))
+                                               load_definition: create(:load_definition, pipeline:, kind: 'preprocessed_data'))
 
       get pipeline_harvest_definition_load_definition_path(pipeline, preprocess, preprocess.load_definition)
 

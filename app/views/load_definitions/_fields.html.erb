@@ -3,7 +3,9 @@
     locals:
       form:               the form builder for a LoadDefinition
       harvest_definition: the block this load definition belongs to, which decides what it
-                          is allowed to do %>
+                          is allowed to do - see LoadOptions %>
+<% load_options = LoadOptions.new(harvest_definition) %>
+
 <div class="row gy-3 align-items-center">
   <% if form.object.persisted? %>
     <div class="col-4">
@@ -16,7 +18,7 @@
 
   <div class="col-4">
     <%= form.label :kind, class: 'form-label' do %>
-      Writes
+      Type
       <span
         data-bs-toggle="tooltip"
         data-bs-title="Which part of the destination record this block writes to"><i class="bi bi-question-circle" aria-label="helper text"></i>
@@ -25,21 +27,21 @@
   </div>
 
   <div class='col-8'>
-    <%= form.select :kind, options_for_select(load_kind_options(harvest_definition), form.object.kind), {},
+    <%= form.select :kind, options_for_select(load_options.kind_options, form.object.kind), {},
                     class: 'form-select', data: { js: 'load-kind' } %>
   </div>
 
   <%# Left out rather than hidden, because which settings apply follows from the block's kind
-      and cannot change while the form is open - see PipelinesHelper. The one thing that can is
+      and cannot change while the form is open - see LoadOptions. The one thing that can is
       a harvest choosing between the two fragments, and only the primary one fixes the priority
       at 0 (js/load-definition-fields keeps up with that). %>
-  <% if load_asks_for_priority?(harvest_definition) %>
+  <% if load_options.asks_for_priority? %>
     <div class="col-4">
       <%= form.label :priority, class: 'form-label' do %>
         Priority
         <span
           data-bs-toggle="tooltip"
-          data-bs-title="Fragments are merged lowest priority first, so a lower number wins for any single-value field. A block writing a secondary fragment must not use 0 - that is the primary fragment's priority, and writing it would blank the fields this block does not set."><i class="bi bi-question-circle" aria-label="helper text"></i>
+          data-bs-title="Fragments are merged lowest priority first, so a lower number wins for any single-value field. A block writing a secondary fragment must not use 0 - that is the primary fragment's priority."><i class="bi bi-question-circle" aria-label="helper text"></i>
         </span>
       <% end %>
     </div>
@@ -56,7 +58,7 @@
     </div>
   <% end %>
 
-  <% if load_asks_for_required_fragment?(harvest_definition) %>
+  <% if load_options.asks_for_required_fragment? %>
     <div class="col-4">
       <%= form.label :required_for_active_record, 'Required for active record', class: 'form-check-label' %>
     </div>

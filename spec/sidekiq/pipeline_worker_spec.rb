@@ -5,8 +5,16 @@ require 'rails_helper'
 RSpec.describe PipelineWorker, type: :job do
   let(:destination)            { create(:destination) }
   let(:pipeline)               { create(:pipeline, :figshare) }
-  let(:harvest_definition)     { pipeline.harvest }
-  let(:enrichment_definitions) { create_list(:harvest_definition, 2, kind: 'enrichment', pipeline:) }
+  let(:harvest_definition)     { runnable(pipeline.harvest) }
+  let(:enrichment_definitions) { create_list(:harvest_definition, 2, kind: 'enrichment', pipeline:).map { runnable(it) } }
+
+  # PipelineWorker refuses to start a block that cannot run, and a transformation with no
+  # fields is one of the reasons a block cannot - see BlockConfiguration. The factory leaves
+  # one empty, so a block this spec means to see started needs a field of its own.
+  def runnable(definition)
+    create(:field, transformation_definition: definition.transformation_definition)
+    definition
+  end
   let(:harvest_and_enrichment_pipeline_job) do
     create(:pipeline_job, pipeline:, destination:,
                           harvest_definitions_to_run: [harvest_definition.id, enrichment_definitions.map(&:id)].flatten,
@@ -53,9 +61,46 @@ RSpec.describe PipelineWorker, type: :job do
       end
     end
 
+    # The Run modal will not tick a block that cannot run, but a schedule saved before the
+    # block broke, an API post naming every block, and a definition deleted while the run
+    # waited in the queue all get here anyway.
+    context 'when a block the run asked for cannot run' do
+      let(:broken_run) do
+        create(:pipeline_job, pipeline:, destination:, job_priority: 'high_priority',
+                              harvest_definitions_to_run: [harvest_definition.id])
+      end
+
+      before { harvest_definition.update!(load_definition: nil) }
+
+      it 'starts nothing' do
+        expect { described_class.new.perform(broken_run.id) }.not_to change(HarvestJob, :count)
+      end
+
+      it 'queues no worker' do
+        expect(HarvestWorker).not_to receive(:perform_async_with_priority)
+
+        described_class.new.perform(broken_run.id)
+      end
+
+      # Left running, the run would sit in the jobs table looking like it was still going.
+      it 'ends the run as errored' do
+        described_class.new.perform(broken_run.id)
+
+        expect(broken_run.reload).to have_attributes(status: 'errored', end_time: be_present)
+      end
+    end
+
+    it 'starts a run whose own blocks are fine while another block of the pipeline is broken' do
+      create(:harvest_definition, pipeline:, kind: 'enrichment', source_id: 'broken', load_definition: nil)
+      run = create(:pipeline_job, pipeline:, destination:, job_priority: 'high_priority',
+                                  harvest_definitions_to_run: [harvest_definition.id])
+
+      expect { described_class.new.perform(run.id) }.to change(HarvestJob, :count).by(1)
+    end
+
     context 'when the pipeline has a preprocess chain' do
-      let!(:pre_zero) { create(:harvest_definition, :preprocess, pipeline:, position: 0) }
-      let!(:pre_one)  { create(:harvest_definition, :preprocess, pipeline:, position: 1) }
+      let!(:pre_zero) { runnable(create(:harvest_definition, :preprocess, pipeline:, position: 0)) }
+      let!(:pre_one)  { runnable(create(:harvest_definition, :preprocess, pipeline:, position: 1)) }
       let(:chain_pipeline_job) do
         create(:pipeline_job, pipeline:, destination:, job_priority: 'high_priority',
                               harvest_definitions_to_run: [pre_zero.id, pre_one.id, harvest_definition.id])

@@ -24,14 +24,15 @@ class BlockConfiguration
   def load_problems
     problems = []
 
-    if preprocess? && load_kind != 'file'
+    if preprocess? && load_kind != 'preprocessed_data'
       problems << 'it is a pre-processing block, so it has to write a file for the next block to read'
     end
 
     problems + problems_for_load_kind
   end
 
-  delegate :extraction_definition, :transformation_definition, :load_kind, :preprocess?, to: :definition
+  delegate :extraction_definition, :transformation_definition, :load_definition, :load_kind, :preprocess?,
+           to: :definition
 
   def missing_definitions
     problems = []
@@ -44,6 +45,12 @@ class BlockConfiguration
       problems << 'its transformation has no fields'
     end
 
+    # A block without one would fall back to the kind its block kind implies, which for a
+    # harvest is a primary-fragment write at priority 0 - the one kind allowed to overwrite
+    # another source's record and to flush. A tagger losing its load definition would quietly
+    # become that, so the block stops rather than guessing. See HarvestDefinition#load_kind.
+    problems << 'it has no load definition' if load_definition.blank?
+
     problems
   end
 
@@ -55,7 +62,7 @@ class BlockConfiguration
   def problems_for_load_kind
     case load_kind
     when 'secondary_fragment' then secondary_fragment_problems
-    when 'file' then file_problems
+    when 'preprocessed_data' then preprocessed_data_problems
     else []
     end
   end
@@ -89,7 +96,7 @@ class BlockConfiguration
     transformation_definition.fields.select(&:field?).map(&:name)
   end
 
-  def file_problems
+  def preprocessed_data_problems
     return [] if preprocess?
 
     ['only a pre-processing block can write a file for the next block to read']

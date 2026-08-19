@@ -18,6 +18,11 @@ class PipelineJob < ApplicationRecord
 
   enum :page_type, { all_available_pages: 0, set_number: 1 }
 
+  # Runs that have not begun. Having reported nothing is not enough on its own: PipelineWorker
+  # refuses to start a run whose blocks cannot run, which leaves it over with nothing to report,
+  # and such a run must not read as one that is still coming. status is nullable, hence the nil.
+  scope :not_started, -> { where.missing(:harvest_reports).where(status: [nil, *Job::UNFINISHED_STATUSES]) }
+
   with_options if: :set_number? do
     validates :pages, presence: true
   end
@@ -113,6 +118,12 @@ class PipelineJob < ApplicationRecord
     harvest_reports.all?(&:finished?)
   end
 
+  # Whether this block is one this run was asked to run. Asked by PipelineWorker before it
+  # starts anything, as well as when the chain steps forward.
+  def should_run?(id)
+    harvest_definitions_to_run.map(&:to_i).include?(id)
+  end
+
   # Whether this enrichment is one this run still has to queue - asked by RunCompletion as
   # well as when they are queued.
   def should_queue_enrichment?(enrichment)
@@ -153,9 +164,5 @@ class PipelineJob < ApplicationRecord
     return true if harvest_report.blank?
 
     harvest_report.completed?
-  end
-
-  def should_run?(id)
-    harvest_definitions_to_run.map(&:to_i).include?(id)
   end
 end
