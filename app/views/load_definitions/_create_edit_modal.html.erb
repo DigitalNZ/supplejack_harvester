@@ -1,8 +1,8 @@
 <% id ||= 'create-load-modal' %>
 <% modal_heading ||= 'Create load definition' %>
 <% modal_subheading ||= 'Define where this block writes its records' %>
-<% model ||= LoadDefinition.new(kind: default_load_kind(harvest_definition),
-                                priority: default_load_priority(harvest_definition)) %>
+<% load_options = LoadOptions.new(harvest_definition) %>
+<% model ||= LoadDefinition.new(kind: load_options.default_kind, priority: load_options.default_priority) %>
 <% confirmation_button_text ||= 'Create load definition' %>
 
 <%= tag.div(

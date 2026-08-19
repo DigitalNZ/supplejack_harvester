@@ -249,7 +249,7 @@
         <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
         <%= form.hidden_field :kind, value: 'enrichment' %>
         <%# The priority the enrichment writes at is chosen when its load definition is
-            created - see PipelinesHelper#default_load_priority. %>
+            created - see LoadOptions#default_priority. %>
 
         <div class="col-4">
           <%= form.label :source_id, class: 'form-label' do %>
