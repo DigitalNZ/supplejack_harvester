@@ -87,6 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TZ: 'Pacific/Auckland'
+      APT_PACKAGES: 'mysql-client libmysqlclient-dev ocrmypdf tesseract-ocr'
 
     services:
       mysql:
@@ -114,9 +115,40 @@ jobs:
         with:
           bundler-cache: true
 
+      # Bump the version suffix when APT_PACKAGES changes. ImageVersion is in the key
+      # because the cached .debs have to match the apt indexes baked into the image.
+      - name: Compute the system packages cache key
+        id: apt-key
+        run: echo "key=apt-${ImageVersion}-v1" >> "$GITHUB_OUTPUT"
+
+      # Downloading ocrmypdf and its dependencies is ~70MB from the Ubuntu mirrors,
+      # which took 4m45s on a bad day, so cache the .debs instead.
+      - name: Cache system packages
+        id: apt-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-archives
+          key: ${{ steps.apt-key.outputs.key }}
+
+      - name: Install system packages
+        run: |
+          mkdir -p ~/apt-archives
+
+          if [ "${{ steps.apt-cache.outputs.cache-hit }}" != 'true' ]; then
+            sudo apt-get update
+            sudo apt-get install -y --download-only $APT_PACKAGES
+            cp /var/cache/apt/archives/*.deb ~/apt-archives/ 2>/dev/null || true
+          fi
+
+          sudo cp ~/apt-archives/*.deb /var/cache/apt/archives/ 2>/dev/null || true
+          sudo apt-get install -y --no-download $APT_PACKAGES || {
+            echo 'The cached packages are stale, downloading them again'
+            sudo apt-get update
+            sudo apt-get install -y $APT_PACKAGES
+          }
+
       - name: Verify MySQL connection from host
         run: |
-          sudo apt-get install -y mysql-client libmysqlclient-dev
           mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -proot -e "SHOW GRANTS FOR 'root'@'localhost'"
           mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -proot mysql
 
@@ -137,6 +169,4 @@ jobs:
           MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: |
-          sudo apt-get update 
-          sudo apt-get install -y ocrmypdf tesseract-ocr
           bundle exec rspec spec --fail-fast --format=progress
