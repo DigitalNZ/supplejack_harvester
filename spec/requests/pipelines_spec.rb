@@ -18,6 +18,28 @@ RSpec.describe 'Pipelines' do
       expect(response).to have_http_status :ok
       expect(response.body).to include CGI.escapeHTML(pipeline.name)
     end
+
+    context 'when asked for the queued runs' do
+      let(:destination) { create(:destination) }
+
+      it 'lists a pipeline whose run has not begun' do
+        create(:pipeline_job, pipeline:, destination:, status: 'queued')
+
+        get pipelines_path(status: 'queued')
+
+        expect(response.body).to include CGI.escapeHTML(pipeline.name)
+      end
+
+      # PipelineWorker refuses to start a run whose blocks cannot run, which leaves it over
+      # with nothing to report. Nothing about it is still coming.
+      it 'leaves out one whose run is over without having reported anything' do
+        create(:pipeline_job, pipeline:, destination:, status: 'errored')
+
+        get pipelines_path(status: 'queued')
+
+        expect(response.body).not_to include CGI.escapeHTML(pipeline.name)
+      end
+    end
   end
 
   describe 'POST /create' do
