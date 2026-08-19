@@ -31,7 +31,8 @@ class BlockConfiguration
     problems + problems_for_load_kind
   end
 
-  delegate :extraction_definition, :transformation_definition, :load_kind, :preprocess?, to: :definition
+  delegate :extraction_definition, :transformation_definition, :load_definition, :load_kind, :preprocess?,
+           to: :definition
 
   def missing_definitions
     problems = []
@@ -43,6 +44,12 @@ class BlockConfiguration
     elsif transformation_definition.fields.empty?
       problems << 'its transformation has no fields'
     end
+
+    # A block without one would fall back to the kind its block kind implies, which for a
+    # harvest is a primary-fragment write at priority 0 - the one kind allowed to overwrite
+    # another source's record and to flush. A tagger losing its load definition would quietly
+    # become that, so the block stops rather than guessing. See HarvestDefinition#load_kind.
+    problems << 'it has no load definition' if load_definition.blank?
 
     problems
   end

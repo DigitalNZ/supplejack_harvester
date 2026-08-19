@@ -65,17 +65,15 @@ RSpec.describe HarvestDefinition do
     end
   end
 
+  # Built rather than mutated: a block's kind and its load definition's kind have to agree,
+  # so changing one on its own is refused now - see 'the load definition a block is allowed'.
   describe '#kinds' do
     it 'can be for a harvest' do
-      subject.update(kind: :harvest)
-      subject.reload
-      expect(subject.harvest?).to be true
+      expect(create(:harvest_definition, pipeline:, kind: :harvest).harvest?).to be true
     end
 
     it 'can be for an enrichment' do
-      subject.update(kind: :enrichment)
-      subject.reload
-      expect(subject.enrichment?).to be true
+      expect(create(:harvest_definition, pipeline:, kind: :enrichment).enrichment?).to be true
     end
   end
 
@@ -93,17 +91,23 @@ RSpec.describe HarvestDefinition do
       expect(create(:harvest_definition, pipeline:, load_definition:).load_kind).to eq 'secondary_fragment'
     end
 
+    # load_definition: nil has to be asked for: the factory attaches one, because a block
+    # without one cannot run. These cover the fallback that keeps blocks predating load
+    # definitions working - see HarvestDefinition#load_kind.
     context 'when the block has no load definition' do
       it 'derives writing the primary fragment from a harvest block' do
-        expect(create(:harvest_definition, pipeline:, kind: :harvest).load_kind).to eq 'primary_fragment'
+        expect(create(:harvest_definition, pipeline:, kind: :harvest, load_definition: nil).load_kind)
+          .to eq 'primary_fragment'
       end
 
       it 'derives an enrichment from an enrichment block' do
-        expect(create(:harvest_definition, pipeline:, kind: :enrichment).load_kind).to eq 'enrichment'
+        expect(create(:harvest_definition, pipeline:, kind: :enrichment, load_definition: nil).load_kind)
+          .to eq 'enrichment'
       end
 
       it 'derives writing to disk from a preprocess block' do
-        expect(create(:harvest_definition, pipeline:, kind: :preprocess).load_kind).to eq 'preprocessed_data'
+        expect(create(:harvest_definition, pipeline:, kind: :preprocess, load_definition: nil).load_kind)
+          .to eq 'preprocessed_data'
       end
     end
   end
@@ -159,6 +163,16 @@ RSpec.describe HarvestDefinition do
       expect(definition.configuration_problems).to contain_exactly(
         'it has no extraction definition', 'its transformation has no fields'
       )
+    end
+
+    # Deleting a load definition leaves the block falling back to the kind its block kind
+    # implies, which for a harvest is a primary-fragment write at priority 0 - a tagger would
+    # quietly become the thing it was built not to be. The block stops instead.
+    it 'counts a missing load definition among them' do
+      block.update_columns(load_definition_id: nil)
+
+      expect(block.reload.configuration_problems).to contain_exactly 'it has no load definition'
+      expect(block.ready_to_run?).to be false
     end
 
     context 'when the block writes a secondary fragment' do

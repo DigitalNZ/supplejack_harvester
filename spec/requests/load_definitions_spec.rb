@@ -107,10 +107,12 @@ RSpec.describe 'Load Definitions' do
         expect { post_enrichment_load }.not_to change(LoadDefinition, :count)
       end
 
-      it 'leaves the block without one' do
+      it 'leaves the block with the one it had' do
+        had = preprocess_definition.load_definition
+
         post_enrichment_load
 
-        expect(preprocess_definition.reload.load_definition).to be_nil
+        expect(preprocess_definition.reload.load_definition).to eq had
       end
 
       it 'says what the block objected to' do

@@ -136,6 +136,8 @@ RSpec.describe 'Pipelines' do
     end
 
     it 'offers to add a load definition to a block that has none' do
+      harvest_definition.update_columns(load_definition_id: nil)
+
       get pipeline_path(pipeline)
 
       expect(response).to have_http_status :ok
@@ -229,8 +231,9 @@ RSpec.describe 'Pipelines' do
     end
 
     it 'renders the load column on enrichment and pre-processing blocks too' do
-      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'enrich-one')
-      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one')
+      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'enrich-one', load_definition: nil)
+      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one',
+                                  load_definition: nil)
 
       get pipeline_path(pipeline)
 

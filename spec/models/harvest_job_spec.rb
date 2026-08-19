@@ -108,8 +108,10 @@ RSpec.describe HarvestJob do
         harvest_job.execute_delete_previous_records
       end
 
+      # The block's own priority column is only read by a block that has no load definition -
+      # see HarvestDefinition#load_priority.
       it 'does not tell the destination to delete previously harvested records when the block loads at a non-zero priority' do
-        harvest_definition.update(priority: -1)
+        harvest_definition.update(priority: -1, load_definition: nil)
 
         pipeline_job = create(:pipeline_job, pipeline:, destination:, page_type: 'all_available_pages', harvest_definitions_to_run: [pipeline.harvest.id], delete_previous_records: true, status: 'completed')
         harvest_job = create(:harvest_job, :completed, harvest_definition:, pipeline_job:)
