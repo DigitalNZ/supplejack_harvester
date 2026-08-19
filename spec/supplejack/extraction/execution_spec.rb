@@ -222,6 +222,45 @@ RSpec.describe Extraction::Execution do
         end
       end
 
+      context 'when the extraction_definition format is ARCHIVE_JSON' do
+        let(:extraction_definition) do
+          create(:extraction_definition, format: 'ARCHIVE_JSON', page: 1)
+        end
+        let(:request_one) { create(:request, extraction_definition:) }
+        let(:request_two) { create(:request, extraction_definition:) }
+        let(:subject)     { described_class.new(extraction_job, extraction_definition) }
+
+        let(:archive_body) do
+          records = Array.new(3) { |index| { 'id' => index }.to_json }
+          io = StringIO.new
+          Minitar::Writer.open(io) do |tar|
+            records.each_with_index do |record, index|
+              tar.add_file_simple("record-#{index}.json", mode: 0o644, size: record.bytesize) do |entry|
+                entry.write(record)
+              end
+            end
+          end
+          io.string
+        end
+
+        before do
+          stub_request(:get, request_one.url).to_return(status: 200, body: archive_body, headers: {})
+        end
+
+        it 'enqueues a TransformationWorker for every record saved from the archive' do
+          expect(TransformationWorker).to receive(:perform_async).exactly(3).times.and_call_original
+
+          subject.call
+        end
+
+        it 'counts the archive records on the harvest report' do
+          subject.call
+
+          expect(harvest_report.reload.pages_extracted).to eq 3
+          expect(harvest_report.reload.transformation_workers_queued).to eq 3
+        end
+      end
+
       context 'when the extraction_definition format is XML' do
         let(:subject) { described_class.new(extraction_job, extraction_definition) }
 
