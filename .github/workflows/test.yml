@@ -115,14 +115,17 @@ jobs:
         with:
           bundler-cache: true
 
-      # Bump the version suffix when APT_PACKAGES changes. ImageVersion is in the key
-      # because the cached .debs have to match the apt indexes baked into the image.
+      # The key is the versions apt would install, so the cache is reused for as
+      # long as it holds the right packages, no matter which runner image we land
+      # on. Bump the suffix when APT_PACKAGES changes.
       - name: Compute the system packages cache key
         id: apt-key
-        run: echo "key=apt-${ImageVersion}-v1" >> "$GITHUB_OUTPUT"
+        run: |
+          versions=$(apt-cache policy $APT_PACKAGES | grep Candidate | sha256sum | cut -c1-16)
+          echo "key=apt-$versions-v1" >> "$GITHUB_OUTPUT"
 
       # Downloading ocrmypdf and its dependencies is ~70MB from the Ubuntu mirrors,
-      # which took 4m45s on a bad day, so cache the .debs instead.
+      # which has taken anywhere from 30s to 18 minutes, so cache the .debs.
       - name: Cache system packages
         id: apt-cache
         uses: actions/cache@v4
@@ -130,22 +133,25 @@ jobs:
           path: ~/apt-archives
           key: ${{ steps.apt-key.outputs.key }}
 
+      # The cached .debs are installed with dpkg rather than apt so that they are
+      # used as they are, without apt insisting on the versions its indexes point
+      # at. The mirrors are only touched if that left something uninstalled.
       - name: Install system packages
         run: |
-          mkdir -p ~/apt-archives
-
-          if [ "${{ steps.apt-cache.outputs.cache-hit }}" != 'true' ]; then
-            sudo apt-get update
-            sudo apt-get install -y --download-only $APT_PACKAGES
-            cp /var/cache/apt/archives/*.deb ~/apt-archives/ 2>/dev/null || true
+          if [ -n "$(ls ~/apt-archives/*.deb 2> /dev/null)" ]; then
+            sudo dpkg --install --auto-deconfigure ~/apt-archives/*.deb || true
           fi
 
-          sudo cp ~/apt-archives/*.deb /var/cache/apt/archives/ 2>/dev/null || true
-          sudo apt-get install -y --no-download $APT_PACKAGES || {
-            echo 'The cached packages are stale, downloading them again'
+          if dpkg-query --show --showformat='${Status}\n' $APT_PACKAGES 2>&1 |
+            grep -qv 'install ok installed'; then
+            echo 'Installing the packages from the mirrors'
             sudo apt-get update
-            sudo apt-get install -y $APT_PACKAGES
-          }
+            sudo apt-get install -y --download-only $APT_PACKAGES
+            rm -rf ~/apt-archives
+            mkdir -p ~/apt-archives
+            cp /var/cache/apt/archives/*.deb ~/apt-archives/
+            sudo apt-get install -y --fix-broken $APT_PACKAGES
+          fi
 
       - name: Verify MySQL connection from host
         run: |
