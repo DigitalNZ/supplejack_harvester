@@ -32,7 +32,7 @@
 <% end %>
 
 <% if params['status'].nil? %>
-  <%= form_with url: '/pipelines', method: :get, class: 'row mb-5' do |form| %>
+  <%= form_with url: '/pipelines', method: :get, class: 'row gy-2 mb-5' do |form| %>
     <div class="col-auto pe-2">
       <div class="search">
         <%= form.text_field(
@@ -55,11 +55,11 @@
       </div>
     </div>
 
-    <div class="col-4 ps-0">
+    <div class="col-auto ps-0">
       <button class="btn btn-primary" type="submit">Search</button>
     </div>
 
-    <div class="col-auto pe-0">
+    <div class="col-auto pe-0 ms-auto">
       <%= form.label :format, 'Format:', class: 'col-form-label' %>
     </div>
     <div class="col-auto">
