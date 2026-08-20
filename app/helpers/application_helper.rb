@@ -3,6 +3,28 @@
 module ApplicationHelper
   include ActiveSupport::NumberHelper
 
+  # How much of a list its filters left: '40 of 331 pipelines match'. The collection knows
+  # its own filtered total, but not the total it is a subset of, so that comes from the
+  # caller. With nothing filtered out there is nothing to compare against, so it just
+  # says how many there are.
+  def list_summary(collection, total, noun)
+    return "#{total} #{noun.pluralize(total)}" if collection.total_count == total
+
+    "#{collection.total_count} of #{total} #{noun.pluralize(total)} match"
+  end
+
+  # Where a page sits in the list it came from: 'Showing 1-20 of 40 pipelines'. Counted
+  # against the filtered total rather than everything there is, because the filtered list
+  # is the one being paged through. An empty list has no page to describe.
+  def page_summary(collection, noun)
+    return if collection.total_count.zero?
+
+    first = collection.offset_value + 1
+    last = collection.offset_value + collection.length
+
+    "Showing #{first}–#{last} of #{collection.total_count} #{noun.pluralize(collection.total_count)}"
+  end
+
   def last_edited_by(resource)
     return if resource&.last_edited_by.nil?
 

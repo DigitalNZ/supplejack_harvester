@@ -4,10 +4,10 @@ module TagsHelper
   # The filters a list can already be under, which a tag filter has to leave alone.
   FILTER_PARAMS = %i[search format sort_by status destination run_by pipeline_id].freeze
 
-  # A tag as a Bootstrap badge. Dark, so that a tag stays distinct from the status badges
-  # beside it - green for completed and scheduled, red for failed, grey for queued.
+  # A tag as a hollow Bootstrap badge: an outline rather than a fill, so that a row of
+  # tags stays quiet next to the status badges beside it.
   def tag_badge(tag, css_class: nil)
-    content_tag :span, tag.name, class: class_names('badge', 'text-bg-dark', css_class)
+    content_tag :span, tag.name, class: class_names('badge', 'border', 'text-secondary', css_class)
   end
 
   # The names the editor offers as suggestions, as JSON for PipelineTags.js - the same
