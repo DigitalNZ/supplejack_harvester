@@ -43,18 +43,17 @@ RSpec.describe Extraction::Execution do
 
     context 'when the extraction definition has a throttle' do
       let(:extraction_job) { create(:extraction_job) }
-      let(:extraction_definition) { create(:extraction_definition, :figshare, extraction_jobs: [extraction_job]) }
+      let(:extraction_definition) do
+        create(:extraction_definition, :figshare, throttle: 1000, extraction_jobs: [extraction_job])
+      end
       let(:subject) { described_class.new(extraction_job, extraction_definition) }
 
       it 'respects the throttle set in the extraction_definition' do
-        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        allow(subject).to receive(:sleep)
 
         subject.call
 
-        end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-        total_time = end_time - start_time
-
-        expect(total_time.ceil).to be >= 6
+        expect(subject).to have_received(:sleep).with(1.0).exactly(6).times
       end
     end
 

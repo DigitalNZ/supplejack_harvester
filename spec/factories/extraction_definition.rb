@@ -14,7 +14,7 @@ FactoryBot.define do
       name     { 'api.figshare.com' }
       format   { 'JSON' }
       base_url { 'https://api.figshare.com' }
-      throttle { 1000 }
+      throttle { 0 }
       page { 1 }
       paginated { true }
     end

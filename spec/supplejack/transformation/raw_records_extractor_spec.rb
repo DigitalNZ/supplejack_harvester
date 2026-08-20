@@ -51,6 +51,17 @@ RSpec.describe Transformation::RawRecordsExtractor do
       end
     end
 
+    context 'when the page file on disk is not valid JSON' do
+      before do
+        file_path = Dir.glob("#{extraction_job.extraction_folder}/**/*__000000001.json").first
+        File.write(file_path, "\x89PNG binary junk", mode: 'wb')
+      end
+
+      it 'returns an empty array instead of raising' do
+        expect(subject.records(1)).to eq []
+      end
+    end
+
     context 'when the page exceeds the maximum parseable size' do
       let(:body)      { { items: [{ id: 1 }] }.to_json }
       let(:document)  { instance_double(Extraction::Document, body:, size_in_bytes: 200.megabytes) }
