@@ -199,12 +199,19 @@ RSpec.describe HarvestDefinition do
       end
     end
 
+    # ExtractionWorker#iterate_previous? hands an api_record to more blocks than just those with
+    # an enrichment extraction, so requiring one here would ground working pipelines.
+    #
+    # On an enrichment block, not by moving an enrichment load onto the harvest one above: that
+    # pairing is refused now, and an update the model rejects would leave the block writing its
+    # primary fragment and the example asserting nothing.
     it 'does not second-guess an enrichment against its extraction' do
-      # ExtractionWorker#iterate_previous? hands an api_record to more blocks than just those
-      # with an enrichment extraction, so requiring one here would ground working pipelines.
-      block.update(load_definition: create(:load_definition, pipeline:, kind: 'enrichment', priority: -1))
+      enrichment = create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'an-enrichment')
+      create(:field, name: 'title', transformation_definition: enrichment.transformation_definition)
 
-      expect(block.configuration_problems).to be_empty
+      expect(enrichment.load_kind).to eq 'enrichment'
+      expect(enrichment.extraction_definition).not_to be_enrichment
+      expect(enrichment.configuration_problems).to be_empty
     end
 
     # These two pairings cannot be saved any more - see the load definition validation below.
