@@ -17,7 +17,9 @@
 # older than min_age_months AND either it is no longer among the newest
 # keep_latest extractions for its extraction definition, or it is older than
 # max_age_months. It stamps purged_at on the job and the UI then shows a
-# "Data removed" badge.
+# "Data removed" badge. A job a user has retained (retained_at stamped via the
+# UI padlock) is never purged, however old it gets or however far out of the
+# keep_latest window it falls.
 #
 # Sample extractions take slots in the keep_latest count just like full ones:
 # one shared count per definition, by deliberate choice. On a definition that

@@ -68,6 +68,12 @@ en:
     cancel:
       success: Job cancelled successfully
       failure: There was an issue cancelling the job
+    retentions:
+      create:
+        success: Job retained. The nightly cleanup will keep its data.
+        failure: This job's data was already removed, so it can't be retained
+      destroy:
+        success: Job no longer retained
 
   harvest_definitions:
     create:

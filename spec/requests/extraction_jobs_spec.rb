@@ -36,6 +36,10 @@ RSpec.describe 'ExtractionJobs' do
     it 'labels the destructive button for what it removes: the job' do
       expect(response.body).to include('Delete job')
     end
+
+    it 'offers to retain the job' do
+      expect(response.body).to include('Retain job')
+    end
   end
 
   describe '#show when the extracted data has been purged' do
@@ -61,6 +65,26 @@ RSpec.describe 'ExtractionJobs' do
     it 'does not render the result viewer' do
       expect(response.body).not_to include('extraction-result-viewer')
     end
+
+    it 'does not offer to retain the job' do
+      expect(response.body).not_to include('Retain job')
+    end
+  end
+
+  describe '#show when the job is retained' do
+    before do
+      subject.update(status: 'completed', retained_at: Time.zone.now)
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(pipeline, harvest_definition,
+                                                                                extraction_definition, subject)
+    end
+
+    it 'shows the Retained badge' do
+      expect(response.body).to include('Retained')
+    end
+
+    it 'offers to stop retaining' do
+      expect(response.body).to include('Stop retaining')
+    end
   end
 
   describe '#show when purged extracted data had errored' do
@@ -73,6 +97,20 @@ RSpec.describe 'ExtractionJobs' do
 
     it 'still shows why the job failed' do
       expect(response.body).to include('Connection refused by host')
+    end
+  end
+
+  describe '#index' do
+    it 'lists retained jobs first and badges them' do
+      retained = create(:extraction_job, extraction_definition:, retained_at: Time.zone.now)
+      retained.update_column(:updated_at, 2.days.ago)
+      newer = create(:extraction_job, extraction_definition:)
+
+      get pipeline_harvest_definition_extraction_definition_extraction_jobs_path(pipeline, harvest_definition,
+                                                                                 extraction_definition)
+
+      expect(response.body).to include('Retained')
+      expect(response.body.index(">#{retained.name}<")).to be < response.body.index(">#{newer.name}<")
     end
   end
 

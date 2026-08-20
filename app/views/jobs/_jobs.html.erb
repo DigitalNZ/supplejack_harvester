@@ -16,6 +16,9 @@
             <% if job.purged? %>
               <span class="badge bg-secondary">Data removed</span>
             <% end %>
+            <% if job.retained? %>
+              <span class="badge bg-secondary"><i class="bi bi-lock-fill" aria-hidden="true"></i> Retained</span>
+            <% end %>
           </div>
         <% end %>
 

@@ -11,6 +11,21 @@
   </div>
 
   <div class="float-end">
+    <% unless @extraction_job.purged? %>
+      <% retention_path = pipeline_harvest_definition_extraction_definition_extraction_job_retention_path(
+           @pipeline, @harvest_definition, @extraction_definition, @extraction_job
+         ) %>
+      <% if @extraction_job.retained? %>
+        <%= button_to retention_path, method: :delete, class: 'btn btn-outline-primary me-1', form_class: 'd-inline' do %>
+          <i class="bi bi-unlock" aria-hidden="true"></i> Stop retaining
+        <% end %>
+      <% else %>
+        <%= button_to retention_path, class: 'btn btn-outline-primary me-1', form_class: 'd-inline' do %>
+          <i class="bi bi-lock-fill" aria-hidden="true"></i> Retain job
+        <% end %>
+      <% end %>
+    <% end %>
+
     <% if @extraction_job.queued? || @extraction_job.running? %>
       <%= button_to 'Cancel job',
                     cancel_pipeline_harvest_definition_extraction_definition_extraction_job_path(
@@ -60,7 +75,9 @@
 <% else %>
 
 <div class="my-4">
-  <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span>|
+  <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span><% if @extraction_job.retained? %>
+    <span class="badge bg-secondary me-1"><i class="bi bi-lock-fill" aria-hidden="true"></i> Retained</span>|
+  <% else %>|<% end %>
   <%- if @extraction_job.duration_seconds.present? %>
     <span class="ms-1 me-1">Duration: <%= job_duration(@extraction_job) %></span>|
   <% end %>

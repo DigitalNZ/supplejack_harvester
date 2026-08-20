@@ -205,6 +205,18 @@ RSpec.describe ExtractionJob do
     end
   end
 
+  describe '#retained?' do
+    it 'is false by default' do
+      expect(subject.retained?).to be false
+    end
+
+    it 'is true once retained_at is stamped' do
+      subject.update(retained_at: Time.zone.now)
+
+      expect(subject.retained?).to be true
+    end
+  end
+
   describe '.not_purged' do
     it 'excludes jobs whose data has been purged' do
       purged = create(:extraction_job, extraction_definition:, purged_at: Time.zone.now)
@@ -251,6 +263,22 @@ RSpec.describe ExtractionJob do
 
       expect(subject.purge!).to be false
       expect(subject.reload.purged_at).to be_nil
+      expect(Dir.exist?(subject.extraction_folder)).to be true
+    end
+
+    it 'refuses to purge a retained job' do
+      subject.update(retained_at: Time.zone.now)
+
+      expect(subject.purge!).to be false
+      expect(subject.reload.purged_at).to be_nil
+      expect(Dir.exist?(subject.extraction_folder)).to be true
+    end
+
+    it 'refuses a job retained after it was loaded' do
+      stale = described_class.find(subject.id)
+      described_class.find(subject.id).update!(retained_at: Time.zone.now)
+
+      expect(stale.purge!).to be false
       expect(Dir.exist?(subject.extraction_folder)).to be true
     end
 
@@ -375,6 +403,31 @@ RSpec.describe ExtractionJob do
       ancient = job_created(7.months.ago)
 
       expect(described_class.purge_candidates(policy)).to include(ancient)
+    end
+
+    it 'never purges a retained job, even past max_age' do
+      retained = job_created(7.months.ago, retained_at: Time.zone.now)
+
+      expect(described_class.purge_candidates(policy)).not_to include(retained)
+    end
+
+    it 'leaves other jobs unchanged: a retained job still holds its keep_latest slot' do
+      job_created(2.months.ago)
+      retained = job_created(3.months.ago, retained_at: Time.zone.now)
+      third = job_created(4.months.ago)
+
+      candidates = described_class.purge_candidates(policy)
+
+      expect(candidates).to include(third)
+      expect(candidates).not_to include(retained)
+    end
+
+    it 'never purges a retained job out-ranked past keep_latest' do
+      job_created(2.months.ago)
+      job_created(3.months.ago)
+      retained = job_created(4.months.ago, retained_at: Time.zone.now)
+
+      expect(described_class.purge_candidates(policy)).not_to include(retained)
     end
 
     it 'ignores already-purged jobs when ranking' do
