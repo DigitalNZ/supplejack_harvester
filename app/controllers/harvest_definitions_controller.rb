@@ -101,8 +101,8 @@ class HarvestDefinitionsController < ApplicationController
 
   def harvest_definition_params
     params.expect(
-      harvest_definition: %i[pipeline_id extraction_definition_id job_id transformation_definition_id destination_id
-                             source_id priority kind position required_for_active_record name]
+      harvest_definition: %i[pipeline_id extraction_definition_id job_id transformation_definition_id
+                             load_definition_id destination_id source_id kind position name]
     )
   end
 end

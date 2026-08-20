@@ -1,14 +1,17 @@
+<%# Opens as long as there is a block to talk about, even when none of them can run: the
+    reasons live in the modal beside the block each belongs to, and a button that refuses to
+    open cannot show them. %>
 <%= button_tag(
       type: 'button',
       class: 'btn btn-primary me-1',
-      disabled: !@pipeline.ready_to_run?,
+      disabled: @pipeline.harvest_definitions.empty?,
       data: { 'bs-toggle' => 'modal', 'bs-target' => '#run-settings' }
     ) do %>
   <i class='bi bi-play'></i>
     Run
 <% end %>
 
-<% if @pipeline.ready_to_run? %>
+<% if @pipeline.harvest_definitions.any? %>
   <%= render layout: 'shared/create_modal',
              locals: { modal_heading: 'Run Settings', id: 'run-settings', modal_size: 'modal-lg' } do %>
     <%= vertical_form_with(model: [@pipeline, PipelineJob.new]) do |form| %>
@@ -117,8 +120,15 @@
 
       </div>
 
+      <%# Disabled only when nothing at all can run. A pipeline with one broken block among
+          several can still run the rest - their rows are ticked, the broken one's is not. %>
       <div class='d-grid mt-4'>
-        <button type="submit" class="btn btn-primary">Run</button>
+        <% unless @pipeline.ready_to_run? %>
+          <p class='text-danger small'>No block in this pipeline can run yet. Each one says why above.</p>
+        <% end %>
+
+        <%= button_tag 'Run', type: 'submit', class: 'btn btn-primary',
+                              disabled: !@pipeline.ready_to_run? %>
       </div>
     <% end %>
   <% end %>

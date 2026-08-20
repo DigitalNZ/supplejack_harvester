@@ -106,6 +106,10 @@ Rails.application.routes.draw do
           post :run, on: :collection
         end
       end
+
+      resources :load_definitions, only: %i[create show update destroy] do
+        post :clone, on: :member
+      end
     end
   end
 

@@ -77,7 +77,7 @@ class PipelinesController < ApplicationController
   private
 
   def queued_jobs
-    PipelineJob.includes([pipeline: %i[last_edited_by schedules]]).where.missing(:harvest_reports).map(&:pipeline).uniq
+    PipelineJob.not_started.includes([pipeline: %i[last_edited_by schedules]]).map(&:pipeline).uniq
   end
 
   def running_jobs

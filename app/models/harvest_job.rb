@@ -11,6 +11,7 @@ class HarvestJob < ApplicationRecord
 
   delegate :extraction_definition, to: :harvest_definition
   delegate :transformation_definition, to: :harvest_definition
+  delegate :load_kind, to: :harvest_definition
 
   PROCESSES = %w[TransformationWorker LoadWorker DeleteWorker].freeze
 
@@ -26,19 +27,22 @@ class HarvestJob < ApplicationRecord
   end
 
   def execute_delete_previous_records
-    return unless harvest_definition.harvest?
-    return unless pipeline_job.delete_previous_records? && !pipeline_job.cancelled?
-    return unless harvest_report.ready_to_delete_previous_records?
+    return unless flush_previous_records?
 
     DeletePreviousRecords::Execution.new(harvest_definition.source_id, name, pipeline_job.destination).call
   end
 
-  # Runs after this job's extraction completes. A preprocess block must not
-  # queue enrichments — the harvest it enriches has not run yet.
+  # Runs after this job's extraction completes.
   def trigger_following_processes
-    pipeline_job.enqueue_enrichment_jobs(name) unless harvest_definition.preprocess?
+    pipeline_job.enqueue_enrichment_jobs(name) if enriches_when_finished?
     execute_delete_previous_records
     advance_chain
+  end
+
+  # Whether the enrichments follow this block finishing. A pre-processing block feeds the next
+  # block instead: the harvest its run's enrichments would enrich has not run when it finishes.
+  def enriches_when_finished?
+    !harvest_definition.preprocess?
   end
 
   # A pre-processing block exists to feed the next one, so the chain steps forward when it
@@ -62,7 +66,54 @@ class HarvestJob < ApplicationRecord
     pipeline_job.advance_to_next_block(harvest_definition)
   end
 
+  # The enrichments this run has to queue off the back of this block, asked by whichever
+  # worker completed its report - the same reasoning as #advance_chain.
+  #
+  # #trigger_following_processes already asks on the extraction worker's behalf, but that
+  # runs while this block's transformation workers are still going, so the report is not
+  # complete yet and there is nothing to queue. Normally the last load worker asks again
+  # once it is (LoadWorker#job_end), and a harvest that loads records is carried that way.
+  # One that loads none - the source answered, but no record matched the transformation's
+  # selector - has no load worker to carry it, and its enrichments were never queued:
+  # RunCompletion#enrichments_pending? then keeps the run on "running" for good, waiting
+  # for a block that nothing will ever start.
+  #
+  # PipelineJob#enqueue_enrichment_jobs only queues an enrichment that has no job on this
+  # run yet, so being asked from more than one route costs nothing.
+  def queue_enrichments
+    return unless enriches_when_finished?
+    return unless harvest_report&.reload&.completed?
+
+    pipeline_job.enqueue_enrichment_jobs(name)
+  end
+
+  # This block's last load finishing, asked by whichever worker saw it happen - all three of
+  # them can be the one, so all three ask here. Load::Completion holds why that matters.
+  def complete_load(report)
+    Load::Completion.new(self, report).call
+  end
+
   private
+
+  def flush_previous_records?
+    harvest_definition.harvest? && writes_primary_fragment? &&
+      run_asked_to_flush? && harvest_report.ready_to_delete_previous_records?
+  end
+
+  def run_asked_to_flush?
+    pipeline_job.delete_previous_records? && !pipeline_job.cancelled?
+  end
+
+  # Only a block replacing a source's own records may flush. A block writing its own
+  # fragment onto records owned by other sources must not: FlushOldRecordsWorker in the API
+  # matches 'fragments.source_id' and 'fragments.priority': 0 without wrapping either in
+  # $elemMatch, so the priority clause is satisfied by the ORIGINAL harvest's primary
+  # fragment, and flushing marks the whole record deleted rather than dropping this block's
+  # fragment. The priority check is belt and braces: a block claiming to write the primary
+  # fragment at a non-zero priority is misconfigured, and this is too destructive to guess at.
+  def writes_primary_fragment?
+    harvest_definition.load_kind == 'primary_fragment' && harvest_definition.load_priority.zero?
+  end
 
   # The order of arguments is important to sidekiq workers as they do not support keyword arguments
   # If the order of arguments change in the TransformationWorker, LoadWorker, or DeleteWorker

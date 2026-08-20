@@ -1,10 +1,7 @@
 <%# Shared header for a pipeline block definition (enrichment / pre-processing).
     locals:
-      definition:    the HarvestDefinition for this block
-      label:         noun used in the delete button / modal (e.g. 'Enrichment')
-      show_priority: whether to show the editable priority (defaults to false) %>
-<% show_priority = false unless defined?(show_priority) %>
-
+      definition: the HarvestDefinition for this block
+      label:      noun used in the delete button / modal (e.g. 'Enrichment') %>
 <div class='d-flex'>
   <div class='me-auto'>
     <%= render layout: 'shared/inline_editable_element', locals:
@@ -15,20 +12,6 @@
         url: pipeline_harvest_definition_path(@pipeline, definition)
       } do %>
       <h4><%= definition.source_id %> </h4>
-    <% end %>
-
-    <% if show_priority %>
-      <%= render layout: 'shared/inline_editable_element', locals:
-        {
-          id: "harvest-definition-#{definition.id}-priority",
-          model: definition,
-          attribute: :priority,
-          url: pipeline_harvest_definition_path(@pipeline, definition)
-        } do %>
-        <%= definition.priority %>
-      <% end %>
-
-      <br>
     <% end %>
   </div>
 

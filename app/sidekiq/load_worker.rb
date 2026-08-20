@@ -69,7 +69,7 @@ class LoadWorker
     @harvest_report.increment_load_workers_completed!
     @harvest_report.reload
 
-    finish_load if @harvest_report.load_workers_completed?
+    @harvest_job.complete_load(@harvest_report)
 
     pipeline_job.enqueue_enrichment_jobs(@harvest_job.name)
     @harvest_job.execute_delete_previous_records
@@ -77,25 +77,5 @@ class LoadWorker
     return unless pipeline_job.reload.finished?
 
     pipeline_job.completed!
-  end
-
-  def source_id
-    @harvest_job.pipeline_job.pipeline.harvest_definitions.first.source_id
-  end
-
-  def destination
-    @harvest_job.pipeline_job.destination
-  end
-
-  private
-
-  def finish_load
-    @harvest_report.load_completed!
-
-    ::Retriable.retriable(on_retry: log_retry_attempt) do
-      Api::Utils::NotifyHarvesting.new(destination, source_id, false).call
-    end
-  rescue StandardError => e
-    logger.info "LoadWorker: API Utils NotifyHarvesting error: #{e.message}"
   end
 end

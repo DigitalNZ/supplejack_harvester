@@ -8,6 +8,7 @@ class HarvestDefinition < ApplicationRecord
   belongs_to :extraction_job, optional: true
 
   belongs_to :transformation_definition, optional: true
+  belongs_to :load_definition, optional: true
 
   # the before_destroy needs to be here (before any other dependent: :destroy statements)
   before_destroy :destroy_associated_definitions, prepend: true
@@ -18,12 +19,16 @@ class HarvestDefinition < ApplicationRecord
 
   enum :kind, { harvest: 0, enrichment: 1, preprocess: 2 }
 
-  # A block with no kind cannot be run: TransformationWorker reads preprocess? as false and
-  # queues a load for it, and Load::Execution then finds neither a harvest nor an enrichment
-  # to post, so it returns nil and dies on nil.status - which is what happened to a block on
-  # UAT whose kind was null. An invalid kind never gets this far, because the enum raises on
-  # assignment, but nil does: "" casts to nil silently, and the column allows it.
+  # A block with no kind cannot be run: nothing maps nil onto a load kind, so
+  # TransformationWorker does not take it for a block writing to disk and queues a load for
+  # it, and Load::Execution then has no fragment it could be writing and raises. A block on
+  # UAT whose kind was null is how this was found - at the time by returning nil and dying on
+  # nil.status, before that path learnt to raise. An invalid kind never gets this far, because
+  # the enum raises on assignment, but nil does: "" casts to nil silently, and the column
+  # allows it.
   validates :kind, presence: true
+
+  validate :load_definition_is_something_this_block_can_do
 
   after_create do
     self.name = "#{id}_#{kind}"
@@ -37,6 +42,41 @@ class HarvestDefinition < ApplicationRecord
   def destroy_associated_definitions
     destroy_definition(extraction_definition)
     destroy_definition(transformation_definition)
+    destroy_definition(load_definition)
+  end
+
+  # How this block writes its records. Blocks predating load definitions, and any created
+  # between the backfill and the editor learning to make them, have none - fall back to the
+  # kind the block would have loaded as before load definitions existed. Falls away once
+  # load_definition_id is made non-null.
+  def load_kind
+    load_definition&.kind || LoadDefinition.default_kind_for_block_kind(kind)
+  end
+
+  # See LoadDefinition::KINDS_FOR_BLOCK_KIND for which kinds go with which. Checked from both
+  # sides: here as a block picks a definition up, and on the definition as it is edited.
+  def load_definition_is_something_this_block_can_do
+    return if load_definition.blank?
+
+    block_kind = kind
+    definition_kind = load_definition.kind
+    return if LoadDefinition.kinds_for_block_kind(block_kind).include?(definition_kind)
+
+    errors.add(:load_definition, "cannot be a #{definition_kind} load on a #{block_kind} block")
+  end
+
+  # Which fragment the destination writes to, and whether the record counts as active
+  # without one. Both describe the write rather than the block, so the load definition owns
+  # them; the columns on this table are only read for a block that has no load definition
+  # yet, and go away with #load_kind's fallback.
+  def load_priority
+    load_definition&.priority || priority
+  end
+
+  def load_required_for_active_record?
+    return required_for_active_record? if load_definition.nil?
+
+    load_definition.required_for_active_record?
   end
 
   def completed_harvest_jobs?
@@ -64,11 +104,12 @@ class HarvestDefinition < ApplicationRecord
   end
 
   def ready_to_run?
-    return false if extraction_definition.blank?
-    return false if transformation_definition.blank?
-    return false if transformation_definition.fields.empty?
+    configuration_problems.empty?
+  end
 
-    true
+  # Why this block cannot run, in words, so that whatever disables it can also say why.
+  def configuration_problems
+    BlockConfiguration.new(self).problems
   end
 
   def to_h

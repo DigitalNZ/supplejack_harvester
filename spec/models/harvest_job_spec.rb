@@ -96,6 +96,32 @@ RSpec.describe HarvestJob do
         harvest_job.execute_delete_previous_records
       end
 
+      it 'does not tell the destination to delete previously harvested records when the block writes a secondary fragment' do
+        harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1))
+
+        pipeline_job = create(:pipeline_job, pipeline:, destination:, page_type: 'all_available_pages', harvest_definitions_to_run: [pipeline.harvest.id], delete_previous_records: true, status: 'completed')
+        harvest_job = create(:harvest_job, :completed, harvest_definition:, pipeline_job:)
+        create(:harvest_report, harvest_job:, records_loaded: 100, extraction_status: 'completed', transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+
+        expect(DeletePreviousRecords::Execution).to receive(:new).exactly(0).times.and_call_original
+
+        harvest_job.execute_delete_previous_records
+      end
+
+      # The block's own priority column is only read by a block that has no load definition -
+      # see HarvestDefinition#load_priority.
+      it 'does not tell the destination to delete previously harvested records when the block loads at a non-zero priority' do
+        harvest_definition.update(priority: -1, load_definition: nil)
+
+        pipeline_job = create(:pipeline_job, pipeline:, destination:, page_type: 'all_available_pages', harvest_definitions_to_run: [pipeline.harvest.id], delete_previous_records: true, status: 'completed')
+        harvest_job = create(:harvest_job, :completed, harvest_definition:, pipeline_job:)
+        create(:harvest_report, harvest_job:, records_loaded: 100, extraction_status: 'completed', transformation_status: 'completed', load_status: 'completed', delete_status: 'completed')
+
+        expect(DeletePreviousRecords::Execution).to receive(:new).exactly(0).times.and_call_original
+
+        harvest_job.execute_delete_previous_records
+      end
+
       it 'does not tell the destination to delete previously harvested records from an enrichment' do
         pipeline_job = create(:pipeline_job, pipeline:, destination:, page_type: 'all_available_pages', harvest_definitions_to_run: [pipeline.harvest.id], delete_previous_records: true, status: 'cancelled')
 
@@ -125,6 +151,48 @@ RSpec.describe HarvestJob do
         expect(harvest_job.pipeline_job).not_to receive(:enqueue_enrichment_jobs)
 
         harvest_job.trigger_following_processes
+      end
+    end
+  end
+
+  # The route that carries a harvest which loaded nothing: #trigger_following_processes
+  # runs too early to see the report complete, and there is no load worker to ask again.
+  describe '#queue_enrichments' do
+    let!(:harvest_report) { create(:harvest_report, pipeline_job:, harvest_job:, **statuses) }
+
+    context 'when the block has finished' do
+      let(:statuses) do
+        { extraction_status: 'completed', transformation_status: 'completed',
+          load_status: 'completed', delete_status: 'completed' }
+      end
+
+      it 'enqueues the pipeline enrichment jobs' do
+        expect(harvest_job.pipeline_job).to receive(:enqueue_enrichment_jobs).with(harvest_job.name)
+
+        harvest_job.queue_enrichments
+      end
+
+      context 'when it is a preprocess block' do
+        let(:harvest_definition) { create(:harvest_definition, pipeline:, kind: :preprocess, position: 0) }
+
+        it 'enqueues nothing, because the harvest it would enrich has not run' do
+          expect(harvest_job.pipeline_job).not_to receive(:enqueue_enrichment_jobs)
+
+          harvest_job.queue_enrichments
+        end
+      end
+    end
+
+    context 'when the block is still working' do
+      let(:statuses) do
+        { extraction_status: 'completed', transformation_status: 'completed',
+          load_status: 'running', delete_status: 'queued' }
+      end
+
+      it 'enqueues nothing yet' do
+        expect(harvest_job.pipeline_job).not_to receive(:enqueue_enrichment_jobs)
+
+        harvest_job.queue_enrichments
       end
     end
   end
