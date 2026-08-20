@@ -138,9 +138,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_13_140000) do
     t.string "stop_condition_type"
     t.string "stop_condition_name"
     t.text "stop_condition_content"
+    t.datetime "purged_at"
     t.bigint "source_pipeline_job_id"
     t.integer "source_position"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
+    t.index ["purged_at"], name: "index_extraction_jobs_on_purged_at"
     t.index ["source_pipeline_job_id"], name: "index_extraction_jobs_on_source_pipeline_job_id"
     t.index ["status"], name: "index_extraction_jobs_on_status"
   end

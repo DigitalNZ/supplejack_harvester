@@ -1,0 +1,72 @@
+# Retention numbers for the nightly cleanups. Each worker reads its own section
+# and its own dry_run flag, so the two can be armed independently.
+#
+# Both workers delete FILES ONLY. Database rows always survive, so run history,
+# status, duration and error messages are never lost. These are the two kinds of
+# folder they remove:
+#
+#   extractions/<env>/2026-08-05_12-19-09_-_3/            raw extracted pages,
+#     └── 1/1_pre-processing-extraction__-__000000001.json  one folder per
+#                                                           extraction job
+#
+#   extractions/<env>/preprocess/1/0/1/                   preprocess block
+#     └── preprocess__000000001.json                        output, one folder
+#                                                           per pipeline job
+#
+# ExtractionCleanupWorker reads `extraction`. An extraction is purged when it is
+# older than min_age_months AND either it is no longer among the newest
+# keep_latest extractions for its extraction definition, or it is older than
+# max_age_months. It stamps purged_at on the job and the UI then shows a
+# "Data removed" badge.
+#
+# Sample extractions take slots in the keep_latest count just like full ones:
+# one shared count per definition, by deliberate choice. On a definition that
+# is sampled often but full-harvested rarely, samples can push an old full
+# run out of the kept window.
+#
+#   With the numbers below:
+#     - 30 extractions for one definition, all 2 months old: the oldest 6 go,
+#       the newest 24 stay.
+#     - 24 fresh samples and one full run older than a month: the full run
+#       goes. Re-run the extraction if the data is needed again.
+#     - an extraction from 3 weeks ago: untouched. Nothing under
+#       min_age_months is ever deleted.
+#     - an extraction from 7 months ago: goes, even if a transformation
+#       definition previews from it. The max_age_months clause ignores that
+#       exclusion, so a preview holds data back but never forever.
+#     - 500 qualify at once: the oldest 200 go tonight (batch_limit), the rest
+#       over the following nights.
+#
+# PreProcessCleanupWorker reads `preprocess`. Each pipeline keeps its newest
+# keep_latest runs that still have output on disk; every older folder is
+# swept. Nothing is recorded in the database because no row owns the folder.
+# Two safety rules live in code, not here: an out-ranked run that is
+# unfinished and less than a day old is kept (it may still be writing), and
+# a folder whose pipeline job row is gone is only swept once it has sat
+# untouched for a day.
+#
+#   With the numbers below:
+#     - a pipeline has 10 runs with output on disk: the oldest 6 folders go,
+#       the newest 4 stay.
+#     - a run from this morning, still unfinished and already overtaken by 4
+#       newer runs: kept tonight, swept tomorrow night.
+#     - a preprocess-only pipeline (its runs never reach a finished status):
+#       each run becomes sweepable a day after it starts, once overtaken.
+#     - a folder whose pipeline job row was deleted: swept once the folder
+#       has sat untouched for a day.
+#
+# Safety exclusions (unfinished jobs, jobs referenced by running work,
+# extractions a transformation definition previews from) live in code and are
+# deliberately not configurable here. For preprocess, the unfinished-job
+# exclusion only holds for a day - see the writing window above.
+shared:
+  extraction:
+    dry_run: false
+    batch_limit: 200
+    min_age_months: 1
+    keep_latest: 24
+    max_age_months: 6
+    excluded_extraction_definition_ids: []
+  preprocess:
+    dry_run: false
+    keep_latest: 4

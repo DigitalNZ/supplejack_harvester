@@ -51,6 +51,7 @@ Metrics/ClassLength:
   Exclude:
     - "app/controllers/requests_controller.rb"
     - "app/models/job_completion_summary.rb"
+    - "app/models/pipeline_job.rb"
     - "app/supplejack/extraction/execution.rb"
     - "app/supplejack/job_completion_summary_logger.rb"
 

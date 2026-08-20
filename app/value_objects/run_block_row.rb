@@ -88,7 +88,8 @@ class RunBlockRow
     extraction_jobs.map { |job| [job.name, "#{BlockInput::EXTRACTION_JOB}:#{job.id}"] }
   end
 
+  # Only jobs whose data is still on disk: a purged job has nothing to run against.
   def extraction_jobs
-    @definition.extraction_definition&.extraction_jobs&.order(created_at: :desc) || []
+    @definition.available_extraction_jobs || []
   end
 end
