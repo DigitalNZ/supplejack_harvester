@@ -32,12 +32,17 @@ class HarvestJob < ApplicationRecord
     DeletePreviousRecords::Execution.new(harvest_definition.source_id, name, pipeline_job.destination).call
   end
 
-  # Runs after this job's extraction completes. A preprocess block must not
-  # queue enrichments — the harvest it enriches has not run yet.
+  # Runs after this job's extraction completes.
   def trigger_following_processes
-    pipeline_job.enqueue_enrichment_jobs(name) unless harvest_definition.preprocess?
+    pipeline_job.enqueue_enrichment_jobs(name) if enriches_when_finished?
     execute_delete_previous_records
     advance_chain
+  end
+
+  # Whether the enrichments follow this block finishing. A pre-processing block feeds the next
+  # block instead: the harvest its run's enrichments would enrich has not run when it finishes.
+  def enriches_when_finished?
+    !harvest_definition.preprocess?
   end
 
   # A pre-processing block exists to feed the next one, so the chain steps forward when it
@@ -59,6 +64,33 @@ class HarvestJob < ApplicationRecord
     return if pipeline_job.next_block_to_run(harvest_definition).blank?
 
     pipeline_job.advance_to_next_block(harvest_definition)
+  end
+
+  # The enrichments this run has to queue off the back of this block, asked by whichever
+  # worker completed its report - the same reasoning as #advance_chain.
+  #
+  # #trigger_following_processes already asks on the extraction worker's behalf, but that
+  # runs while this block's transformation workers are still going, so the report is not
+  # complete yet and there is nothing to queue. Normally the last load worker asks again
+  # once it is (LoadWorker#job_end), and a harvest that loads records is carried that way.
+  # One that loads none - the source answered, but no record matched the transformation's
+  # selector - has no load worker to carry it, and its enrichments were never queued:
+  # RunCompletion#enrichments_pending? then keeps the run on "running" for good, waiting
+  # for a block that nothing will ever start.
+  #
+  # PipelineJob#enqueue_enrichment_jobs only queues an enrichment that has no job on this
+  # run yet, so being asked from more than one route costs nothing.
+  def queue_enrichments
+    return unless enriches_when_finished?
+    return unless harvest_report&.reload&.completed?
+
+    pipeline_job.enqueue_enrichment_jobs(name)
+  end
+
+  # This block's last load finishing, asked by whichever worker saw it happen - all three of
+  # them can be the one, so all three ask here. Load::Completion holds why that matters.
+  def complete_load(report)
+    Load::Completion.new(self, report).call
   end
 
   private

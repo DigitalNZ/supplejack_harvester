@@ -33,6 +33,19 @@ def fake_json_headers
   }
 end
 
+# Api::Utils::NotifyHarvesting looks the source up on the destination and then flags it, so
+# both hops need stubbing wherever a worker starts or finishes loading a source's records.
+def stub_notify_harvesting(destination, harvesting)
+  url = Regexp.escape(destination.url)
+
+  stub_request(:get, %r{#{url}/harvester/sources})
+    .to_return(status: 200, body: [{ _id: 1 }].to_json, headers: { 'Content-Type' => 'application/json' })
+
+  stub_request(:put, %r{#{url}/harvester/sources/\d+})
+    .with(body: { source: { harvesting: } }.to_json)
+    .to_return(status: 200, body: '', headers: {})
+end
+
 def stub_figshare_enrichments(ids, fake_response_name)
   ids.each do |article_id|
     stub_request(:get, "https://api.figshare.com/v1/articles/#{article_id}")

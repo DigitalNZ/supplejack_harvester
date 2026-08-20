@@ -1,312 +1,256 @@
 # frozen_string_literal: true
 
+require 'English'
 require 'fileutils'
-require 'aws-sdk-s3'
+require 'open3'
+require 'shellwords'
+require 'tempfile'
 require 'active_support/number_helper'
 
 # ------------------------------------------------------------
-# All logic in one place (RuboCop-friendly, SRP per class)
+# Pulls extraction folders off the production EFS volume, which is mounted into
+# the harvester pods, by streaming a tar over `kubectl exec`.
+#
+# The harvester image ships BusyBox, so anything run inside the pod has to stay
+# POSIX (no `find -printf`, no bashisms). Only the local half of the pipe is GNU.
 # ------------------------------------------------------------
 module Extractions
+  def self.human(bytes) = ActiveSupport::NumberHelper.number_to_human_size(bytes)
+
+  # An empty directory is treated as absent: it is what a failed run leaves behind.
+  def self.downloaded?(dest_root, folder)
+    path = File.join(dest_root, folder)
+    Dir.exist?(path) && Dir.children(path).any?
+  end
+
   # Centralized configuration. All env lookups live here.
   class Config
     DEFAULTS = {
-      'BACKUP_ENV' => 'production',
-      'BACKUP_BUCKET' => 's3-backup',
-      'BACKUP_ROOT_PREFIX' => 'my_backup',
-      'BACKUP_REGION' => 'us-east-1',
-      'VOLUME_NAME' => 'my-volume',
-      'SIZE_CONCURRENCY' => '8',
-      'DOWNLOAD_CONCURRENCY' => '16',
-      'MULTIPART_DOWNLOAD' => 'true',
-      'LOCAL_EXTRACTIONS_DIR' => 'extractions/development'
+      'KUBECTL' => 'kubectl',
+      'NAMESPACE' => 'production',
+      'POD' => '',
+      'POD_PATTERN' => '\Aharvester-(?!sidekiq|redis)',
+      'REMOTE_EXTRACTIONS_DIR' => '/app/extractions/production',
+      'LOCAL_EXTRACTIONS_DIR' => 'extractions/development',
+      'SELECTION' => '',
+      'FORCE' => 'false'
     }.freeze
 
-    attr_reader :backup_env, :bucket, :root_prefix, :region, :volume_name,
-                :size_concurrency, :download_concurrency, :multipart_download,
-                :local_extractions_dir
+    attr_reader :kubectl, :namespace, :pod, :pod_pattern, :remote_dir, :local_dir, :selection
+
+    # Re-download folders that are already present locally.
+    def force? = @force
 
     def initialize(env = ENV)
-      @backup_env            = fetch(env, 'BACKUP_ENV')
-      @bucket                = fetch(env, 'BACKUP_BUCKET')
-      @root_prefix           = fetch(env, 'BACKUP_ROOT_PREFIX')
-      @region                = fetch(env, 'BACKUP_REGION')
-      @volume_name           = fetch(env, 'VOLUME_NAME')
-      @size_concurrency      = integer(fetch(env, 'SIZE_CONCURRENCY'), 1)
-      @download_concurrency  = integer(fetch(env, 'DOWNLOAD_CONCURRENCY'), 1)
-      @multipart_download    = truthy?(fetch(env, 'MULTIPART_DOWNLOAD'))
-      @local_extractions_dir = fetch(env, 'LOCAL_EXTRACTIONS_DIR')
+      @kubectl     = fetch(env, 'KUBECTL')
+      @namespace   = fetch(env, 'NAMESPACE')
+      @pod         = fetch(env, 'POD')
+      @pod_pattern = fetch(env, 'POD_PATTERN')
+      @remote_dir  = fetch(env, 'REMOTE_EXTRACTIONS_DIR')
+      @local_dir   = fetch(env, 'LOCAL_EXTRACTIONS_DIR')
+      @selection   = fetch(env, 'SELECTION')
+      @force       = truthy?(fetch(env, 'FORCE'))
     end
 
     private
 
     def fetch(env, key) = env.fetch(key, DEFAULTS.fetch(key))
 
-    def integer(value, min) = [value.to_i, min].max
-
     def truthy?(value) = %w[1 true TRUE yes YES on ON].include?(value)
   end
 
-  # Minimal TTY-less progress bar.
+  # Thin wrapper over the kubectl binary.
+  class Kubectl
+    Error = Class.new(StandardError)
+
+    def initialize(config)
+      @config = config
+    end
+
+    # @return [String] stdout of the command
+    def capture(*args)
+      out, err, status = Open3.capture3(@config.kubectl, *args)
+      raise Error, "kubectl #{args.first} failed: #{err.strip}" unless status.success?
+
+      out
+    end
+
+    # Runs a shell snippet inside the pod and returns its stdout.
+    def exec_script(pod, script)
+      capture('exec', '-n', @config.namespace, pod, '--', 'sh', '-c', script)
+    end
+
+    # The `kubectl exec` half of a tar pipeline, ready to be embedded in a shell command.
+    def exec_command(pod, *remote_argv)
+      Shellwords.join([@config.kubectl, 'exec', '-n', @config.namespace, pod, '--', *remote_argv])
+    end
+  end
+
+  # Picks a running harvester pod to read the volume from.
+  class PodLocator
+    def initialize(config, kubectl)
+      @config  = config
+      @kubectl = kubectl
+    end
+
+    # @return [String] pod name
+    def call
+      return verify(@config.pod) unless @config.pod.empty?
+
+      pattern = Regexp.new(@config.pod_pattern)
+      pod     = running_pods.find { |name| name.match?(pattern) }
+      raise "No running pod in #{@config.namespace} matching #{@config.pod_pattern}" unless pod
+
+      pod
+    end
+
+    private
+
+    def running_pods
+      @kubectl.capture(
+        'get', 'pods', '-n', @config.namespace,
+        '--field-selector=status.phase=Running',
+        '-o', 'custom-columns=:metadata.name', '--no-headers'
+      ).split
+    end
+
+    def verify(pod)
+      return pod if running_pods.include?(pod)
+
+      raise "Pod #{pod} is not running in #{@config.namespace}"
+    end
+  end
+
+  # Asks the pod for the size and file count of each candidate folder, in one round trip.
+  class FolderInspector
+    Row = Struct.new(:folder, :bytes, :files, :present, :display_index, keyword_init: true)
+
+    def initialize(config, kubectl, pod)
+      @config  = config
+      @kubectl = kubectl
+      @pod     = pod
+    end
+
+    # @param folders [Array<String>]
+    # @return [Array<Row>] sorted by size ascending
+    def inspect_all(folders)
+      puts "Measuring #{folders.size} folder(s) on #{@config.namespace}/#{@pod}…"
+      parse(@kubectl.exec_script(@pod, script(folders))).sort_by(&:bytes)
+    end
+
+    private
+
+    # `du` counts directory blocks, so sizes run slightly high on deeply nested
+    # folders. That is fine: they only exist to help you choose what to pull.
+    def script(folders)
+      <<~SH
+        cd #{Shellwords.escape(@config.remote_dir)} || exit 1
+        for f in #{folders.map { |f| Shellwords.escape(f) }.join(' ')}; do
+          if [ -d "$f" ]; then
+            b=$(du -sb "$f" 2>/dev/null | cut -f1)
+            [ -z "$b" ] && b=$(( $(du -sk "$f" | cut -f1) * 1024 ))
+            n=$(find "$f" -type f | wc -l | tr -d ' ')
+            printf '%s|%s|%s\\n' "$f" "$b" "$n"
+          else
+            printf '%s|-|-\\n' "$f"
+          fi
+        done
+      SH
+    end
+
+    def parse(output)
+      output.each_line.filter_map do |line|
+        folder, bytes, files = line.strip.split('|')
+        next if folder.to_s.empty?
+
+        present = bytes != '-'
+        Row.new(folder: folder, bytes: present ? bytes.to_i : 0,
+                files: present ? files.to_i : 0, present: present)
+      end
+    end
+  end
+
+  # Minimal TTY-less progress bar, ticked once per extracted file.
   class ProgressBar
     BAR_WIDTH = 40
 
-    def initialize(total_bytes:, total_items:)
-      @total_bytes = total_bytes
+    def initialize(total_items:, total_bytes:)
       @total_items = total_items
-      @done_bytes  = 0
+      @total_bytes = total_bytes
       @done_items  = 0
-      @mutex       = Mutex.new
       $stdout.sync = true
     end
 
-    def tick(bytes:, items: 0)
-      @mutex.synchronize do
-        @done_bytes += bytes
-        @done_items += items
-        render
-      end
+    def tick(items: 1)
+      @done_items += items
+      render
     end
 
     def finish
-      @mutex.synchronize { render(final: true) }
+      render
       puts
     end
 
     private
 
-    def render(final: false)
-      ratio = @total_bytes.zero? ? 1.0 : (@done_bytes.to_f / @total_bytes)
-      ratio = ratio.clamp(0.0, 1.0)
+    def render
+      ratio  = @total_items.zero? ? 1.0 : (@done_items.to_f / @total_items).clamp(0.0, 1.0)
       filled = (ratio * BAR_WIDTH).round
-      bar = "[#{'#' * filled}#{'-' * (BAR_WIDTH - filled)}]"
-      pct = (ratio * 100).round
-      print "\r#{bar} #{pct}%  #{human(@done_bytes)}/#{human(@total_bytes)}  (#{@done_items}/#{@total_items} files)"
-      puts if final
-    end
-
-    def human(bytes) = ActiveSupport::NumberHelper.number_to_human_size(bytes)
-  end
-
-  # Finds newest backup prefix containing pvc_pv_mapping.txt and extracts PVC name.
-  class BackupLocator
-    def initialize(config, s3_client: Aws::S3::Client.new(region: config.region))
-      @config = config
-      @s3     = s3_client
-    end
-
-    # @return [Array(String,String)] [backup_prefix, pvc_name]
-    def latest_backup_with_pvc
-      prefixes = list_backup_prefixes_sorted
-      raise "No backups found under #{@config.root_prefix} in #{@config.bucket}" if prefixes.empty?
-
-      prefixes.reverse_each do |prefix|
-        pvc = extract_pvc_name(prefix, @config.volume_name)
-        return [prefix, pvc] if pvc
-      end
-
-      raise 'Could not find pvc_pv_mapping.txt with the expected volume mapping.'
-    end
-
-    private
-
-    def list_backup_prefixes_sorted
-      prefixes = []
-      paginate_prefixes { |batch| prefixes.concat(batch) }
-      prefixes.sort
-    end
-
-    def paginate_prefixes
-      token = nil
-      loop do
-        resp = @s3.list_objects_v2(
-          bucket: @config.bucket,
-          prefix: @config.root_prefix,
-          delimiter: '/',
-          continuation_token: token
-        )
-        yield resp.common_prefixes.map(&:prefix)
-        break unless resp.is_truncated
-
-        token = resp.next_continuation_token
-      end
-    end
-
-    def extract_pvc_name(backup_prefix, volume_name)
-      key = "#{backup_prefix}pvc_pv_mapping.txt"
-      body = @s3.get_object(bucket: @config.bucket, key: key).body.read
-      line = body.each_line.find { |l| l.start_with?(volume_name) }
-      line&.split&.at(1)
-    rescue Aws::S3::Errors::NoSuchKey
-      nil
+      bar    = "[#{'#' * filled}#{'-' * (BAR_WIDTH - filled)}]"
+      print "\r  #{bar} #{(ratio * 100).round}%  #{@done_items}/#{@total_items} files  " \
+            "(#{Extractions.human(@total_bytes)})"
     end
   end
 
-  # Estimates total bytes under each prefix (parallel).
-  class SizeEstimator
-    Result = Struct.new(:folder, :prefix, :bytes, :display_index, keyword_init: true)
-
-    def initialize(config)
-      @config = config
-    end
-
-    # @param prefixes [Array<Hash>] items with :folder, :prefix
-    # @return [Array<Result>]
-    def estimate(prefixes)
-      results = parallel_map(prefixes) { |item, s3| Result.new(**item, bytes: s3_prefix_size(s3, item[:prefix])) }
-      results.sort_by!(&:bytes)
-      results
-    end
-
-    private
-
-    def parallel_map(items)
-      queue = Queue.new
-      items.each { |i| queue << i }
-      results       = []
-      results_mutex = Mutex.new
-      completed     = 0
-      total         = items.size
-
-      puts "Estimating sizes for #{total} folder(s)…"
-      print_bar(total, total) if total.zero?
-
-      threads = Array.new(@config.size_concurrency) do
-        Thread.new do
-          s3 = Aws::S3::Client.new(region: @config.region)
-          loop do
-            item = begin
-              queue.pop(true)
-            rescue StandardError
-              nil
-            end
-            break unless item
-
-            value = yield(item, s3)
-            results_mutex.synchronize { results << value }
-
-            completed += 1
-            print_bar(completed, total)
-          end
-        end
-      end
-
-      threads.each(&:join)
-      puts
-      results
-    end
-
-    def s3_prefix_size(s3_client, prefix)
-      total = 0
-      token = nil
-      loop do
-        resp = s3_client.list_objects_v2(bucket: @config.bucket, prefix: prefix, continuation_token: token)
-        resp.contents.each { |o| total += o.size }
-        break unless resp.is_truncated
-
-        token = resp.next_continuation_token
-      end
-      total
-    end
-
-    def print_bar(done, total)
-      width  = 32
-      ratio  = total.zero? ? 1.0 : (done.to_f / total)
-      filled = (ratio * width).round
-      bar    = "[#{'#' * filled}#{'-' * (width - filled)}]"
-      pct    = (ratio * 100).round
-      print "\r#{bar} #{done}/#{total} (#{pct}%)"
-    end
-  end
-
-  # Downloads all objects under a given prefix into a local directory (parallel).
+  # Streams one folder out of the pod as a tar and unpacks it locally.
   class Downloader
-    def initialize(config)
-      @config = config
+    def initialize(config, kubectl, pod)
+      @config  = config
+      @kubectl = kubectl
+      @pod     = pod
     end
 
-    # Download a single S3 prefix to dest_dir with a bytes progress bar.
-    def download_prefix(prefix:, dest_dir:)
-      objects     = list_objects(prefix)
-      filtered    = objects.reject { |o| o.key == prefix }
-      total_bytes = filtered.sum(&:size)
-      bar         = ProgressBar.new(total_bytes: total_bytes, total_items: filtered.size)
+    def download(row, dest_root)
+      # tar merges into an existing tree, leaving files that production no longer
+      # has. Clearing first makes every download an exact copy of the volume.
+      FileUtils.rm_rf(File.join(dest_root, row.folder))
+      FileUtils.mkdir_p(dest_root)
+      bar = ProgressBar.new(total_items: row.files, total_bytes: row.bytes)
 
-      queue = Queue.new
-      filtered.each { |o| queue << o }
+      Tempfile.create('kubectl-stderr') do |errfile|
+        run_pipeline(row, dest_root, errfile, bar)
+        bar.finish
+        next if $CHILD_STATUS.success?
 
-      threads = build_workers(queue, prefix, dest_dir, bar)
-      threads.each(&:join)
-
-      bar.finish
-      puts "  #{filtered.size} file(s) downloaded."
+        raise Kubectl::Error, "Download of #{row.folder} failed: #{File.read(errfile.path).strip}"
+      end
     end
 
     private
 
-    def list_objects(prefix)
-      s3_client = Aws::S3::Client.new(region: @config.region)
-      objs = []
-      token = nil
-      loop do
-        resp = s3_client.list_objects_v2(bucket: @config.bucket, prefix: prefix, continuation_token: token)
-        objs.concat(resp.contents)
-        break unless resp.is_truncated
-
-        token = resp.next_continuation_token
-      end
-      objs
-    end
-
-    def build_workers(queue, prefix, dest_dir, bar)
-      Array.new(@config.download_concurrency) do
-        Thread.new do
-          client   = Aws::S3::Client.new(region: @config.region)
-          resource = Aws::S3::Resource.new(client: client)
-          bucket   = resource.bucket(@config.bucket)
-
-          loop do
-            obj = begin
-              queue.pop(true)
-            rescue StandardError
-              nil
-            end
-            break unless obj
-
-            process_object(bucket, obj, prefix, dest_dir, bar)
-          end
-        end
+    def run_pipeline(row, dest_root, errfile, bar)
+      IO.popen(['bash', '-c', pipeline(row.folder, dest_root, errfile.path)], 'r') do |io|
+        io.each_line { |line| count(line, row.folder, bar) }
       end
     end
 
-    def process_object(bucket, obj, prefix, dest_dir, bar)
-      rel = obj.key.delete_prefix(prefix)
-      return if rel.empty?
-
-      local_path = File.join(dest_dir, rel)
-      FileUtils.mkdir_p(File.dirname(local_path))
-
-      bytes_written = transfer_object(bucket, obj, local_path)
-      bar.tick(bytes: bytes_written, items: 1)
+    # `tar xzv` names every entry it writes, which is what drives the progress bar.
+    # kubectl's own stderr goes to a file: merging it into the pipe would corrupt the tar.
+    def pipeline(folder, dest_root, errpath)
+      remote = @kubectl.exec_command(@pod, 'tar', 'czf', '-', '-C', @config.remote_dir, folder)
+      local  = Shellwords.join(['tar', 'xzvf', '-', '-C', dest_root])
+      "set -o pipefail; #{remote} 2>#{Shellwords.escape(errpath)} | #{local} 2>&1"
     end
 
-    # Use multipart for large files; otherwise single GET.
-    def transfer_object(bucket, obj, local_path)
-      if multipart?(obj.size)
-        bucket.object(obj.key)
-              .download_file(local_path, thread_count: 4, part_size: 8 * 1024 * 1024)
-        obj.size.to_i
-      else
-        bucket.client.get_object(bucket: bucket.name, key: obj.key, response_target: local_path)
-        File.size(local_path)
+    # tar lists directories too; only files are counted so the bar matches `find -type f`.
+    def count(line, folder, bar)
+      entry = line.chomp
+      unless entry.start_with?(folder)
+        warn "\n  ! #{entry}" unless entry.strip.empty?
+        return
       end
-    rescue StandardError => e
-      warn "  ! Failed #{obj.key}: #{e.class} #{e.message}"
-      0
-    end
 
-    def multipart?(size_bytes)
-      @config.multipart_download && size_bytes.to_i >= (8 * 1024 * 1024)
+      bar.tick unless entry.end_with?('/')
     end
   end
 
@@ -316,8 +260,7 @@ module Extractions
       def parse(input, max:)
         return (1..max).to_a if input.strip.casecmp('all').zero?
 
-        tokens = input.split(',').map!(&:strip)
-        expand_tokens(tokens, max).uniq.sort
+        expand_tokens(input.split(',').map!(&:strip), max).uniq.sort
       end
 
       private
@@ -334,8 +277,7 @@ module Extractions
         when /\A(\d+)\s*-\s*(\d+)\z/
           a = Regexp.last_match(1).to_i
           b = Regexp.last_match(2).to_i
-          range = a <= b ? (a..b) : (b..a)
-          range.select { |n| n.between?(1, max) }
+          (a <= b ? (a..b) : (b..a)).select { |n| n.between?(1, max) }
         else
           []
         end
@@ -349,9 +291,10 @@ end
 # ------------------------------------------------------------
 # rubocop:disable Metrics/BlockLength
 namespace :reset_extractions do
-  desc 'List S3 extraction folders with sizes (parallel), select subset, and download to local.'
+  desc 'List extraction folders on the production volume, select a subset, and download them locally.'
   task execute: :environment do
-    config = Extractions::Config.new
+    config  = Extractions::Config.new
+    kubectl = Extractions::Kubectl.new(config)
 
     # 1) Which extraction folders do we care about (from DB)?
     extraction_folders = ExtractionJob
@@ -361,46 +304,66 @@ namespace :reset_extractions do
                                                        .distinct
                          )
                          .select(:id, :created_at)
-                         .map { |ej| ej.extraction_folder.split('/').last }
+                         .map { |ej| File.basename(ej.extraction_folder) }
                          .uniq
     raise 'No extraction folders resolved from DB.' if extraction_folders.empty?
 
-    # 2) Find newest backup + PVC
-    locator = Extractions::BackupLocator.new(config)
-    backup_prefix, pvc_name = locator.latest_backup_with_pvc
+    # 2) Find a pod with the volume mounted
+    pod = Extractions::PodLocator.new(config, kubectl).call
+    puts "Reading #{config.namespace}/#{pod}:#{config.remote_dir}"
+    puts
 
-    base_prefix = "#{backup_prefix}#{pvc_name}/#{config.backup_env}/" # e.g. .../production/
+    # 3) Measure them (one exec, sorted asc)
+    all_rows = Extractions::FolderInspector.new(config, kubectl, pod).inspect_all(extraction_folders)
+    rows, missing = all_rows.partition(&:present)
 
-    # 3) Estimate sizes in parallel (sorted asc)
-    estimator = Extractions::SizeEstimator.new(config)
-    rows = estimator.estimate(extraction_folders.map { |f| { folder: f, prefix: "#{base_prefix}#{f}/" } })
+    if missing.any?
+      puts "#{missing.size} folder(s) referenced by the DB no longer exist on the volume:"
+      missing.first(10).each { |row| puts "  - #{row.folder}" }
+      puts "  … and #{missing.size - 10} more" if missing.size > 10
+      puts
+    end
 
+    if rows.empty?
+      puts 'Nothing left to download. Exiting.'
+      next
+    end
+
+    dest_root = config.local_dir
     cumulative = 0
     rows.each_with_index do |row, idx|
       cumulative += row.bytes
+      local_note = Extractions.downloaded?(dest_root, row.folder) ? '  [already local]' : ''
       puts format(
-        '%<idx>3d. %<size>12s  cum: %<cum>12s  s3://%<bucket>s/%<prefix>s',
+        '%<idx>3d. %<size>12s  cum: %<cum>12s  %<files>7d files  %<folder>s%<note>s',
         idx: idx + 1,
-        size: human(row.bytes),
-        cum: human(cumulative),
-        bucket: config.bucket,
-        prefix: row.prefix
+        size: Extractions.human(row.bytes),
+        cum: Extractions.human(cumulative),
+        files: row.files,
+        folder: row.folder,
+        note: local_note
       )
-      row[:display_index] = idx + 1
+      row.display_index = idx + 1
     end
     puts
-    puts "TOTAL (all): #{human(cumulative)} (#{cumulative} bytes)"
+    puts "TOTAL (all): #{Extractions.human(cumulative)} (#{cumulative} bytes)"
     puts
 
     # 4) Selection
-    puts <<~HELP
-      Select folders to download:
-        - Use numbers, commas, and ranges, e.g. 1,3-5,12
-        - Or type 'all' to download all
-        - Press Enter to cancel
-    HELP
-    print 'Your selection: '
-    selection = $stdin.gets.to_s.strip
+    if config.selection.empty?
+      puts <<~HELP
+        Select folders to download:
+          - Use numbers, commas, and ranges, e.g. 1,3-5,12
+          - Or type 'all' to download all
+          - Press Enter to cancel
+      HELP
+      print 'Your selection: '
+      selection = $stdin.gets.to_s.strip
+    else
+      selection = config.selection
+      puts "Selection from env: #{selection}"
+    end
+
     if selection.empty?
       puts 'No selection. Exiting.'
       next
@@ -412,39 +375,36 @@ namespace :reset_extractions do
       next
     end
 
-    chosen = rows.select { |r| idxs.include?(r[:display_index]) }
+    chosen       = rows.select { |r| idxs.include?(r.display_index) }
     chosen_bytes = chosen.sum(&:bytes)
     puts
-    puts "Selected #{chosen.size} folder(s), total #{human(chosen_bytes)}"
-    chosen.each do |row|
-      puts format(
-        '  - %<size>12s  s3://%<bucket>s/%<prefix>s',
-        size: human(row.bytes),
-        bucket: config.bucket,
-        prefix: row.prefix
-      )
-    end
+    puts "Selected #{chosen.size} folder(s), total #{Extractions.human(chosen_bytes)}"
     puts
 
-    # 5) Download chosen prefixes (parallel per prefix)
-    dest_root = config.local_extractions_dir
+    # 5) Download, one folder at a time to stay gentle on the production volume
     FileUtils.mkdir_p(dest_root)
-    downloader = Extractions::Downloader.new(config)
+    downloader = Extractions::Downloader.new(config, kubectl, pod)
+    puts "Downloading to: #{File.expand_path(dest_root)}"
 
-    puts "Downloading to: #{File.expand_path(dest_root)} " \
-         "(#{config.download_concurrency} threads, multipart: #{config.multipart_download})"
+    skipped = 0
+    chosen.each_with_index do |row, idx|
+      puts "\n→ [#{idx + 1}/#{chosen.size}] #{row.folder}  (#{Extractions.human(row.bytes)})"
 
-    chosen.each do |row|
-      dest_folder = File.join(dest_root, row.folder)
-      FileUtils.mkdir_p(dest_folder)
-      puts "\n→ #{row.folder}  (#{human(row.bytes)})"
-      downloader.download_prefix(prefix: row.prefix, dest_dir: dest_folder)
+      if !config.force? && Extractions.downloaded?(dest_root, row.folder)
+        puts '  already local, skipping'
+        skipped += 1
+        next
+      end
+
+      downloader.download(row, dest_root)
     end
 
+    puts
+    if skipped.positive?
+      puts "Skipped #{skipped} folder(s) already present locally. " \
+           'Re-run with FORCE=true to replace them.'
+    end
     puts "\nDone."
   end
   # rubocop:enable Metrics/BlockLength
-end
-def human(bytes)
-  ActiveSupport::NumberHelper.number_to_human_size(bytes)
 end
