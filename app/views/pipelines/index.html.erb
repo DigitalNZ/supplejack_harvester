@@ -59,6 +59,11 @@
       <button class="btn btn-primary" type="submit">Search</button>
     </div>
 
+    <div class="col-auto">
+      <%= render 'shared/tag_filter', tags: Tag.ordered, counts: Tag.pipeline_counts,
+                                      heading: 'Filter by tag', path: pipelines_path %>
+    </div>
+
     <div class="col-auto pe-0 ms-auto">
       <%= form.label :format, 'Format:', class: 'col-form-label' %>
     </div>
@@ -85,6 +90,13 @@
   <% end %>
 <% end %>
 
+<% if @pipelines.empty? && tag_filter_slugs.any? %>
+  <div class="alert alert-light border text-center">
+    No pipelines carry all of those tags.
+    <%= link_to 'Clear the tag filter', tag_filter_url(pipelines_path, []) %>
+  </div>
+<% end %>
+
 <%- @pipelines.each do |pipeline| %>
   <%= link_to pipeline, class: 'card card--clickable mb-3' do %>
     <div class="card-body">
@@ -104,6 +116,12 @@
           <span class="badge bg-primary">
             Scheduled
           </span>
+        <% end %>
+
+        <%# Sorted here rather than by the database: the tags are preloaded with the
+            pipelines, and Tag.ordered would go back for them a card at a time. %>
+        <% pipeline.tags.sort_by(&:name).each do |tag| %>
+          <%= tag_badge(tag) %>
         <% end %>
       </div>
     </div>

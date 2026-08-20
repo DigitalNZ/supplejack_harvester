@@ -123,6 +123,52 @@ RSpec.describe 'Jobs' do
       end
     end
 
+    describe 'filtering by the tags on the pipeline' do
+      let(:museum)   { create(:tag, name: 'Museum') }
+      let(:priority) { create(:tag, name: 'High priority') }
+
+      let(:both_tags)   { create(:pipeline, name: 'Auckland Museum').tap { it.tags = [museum, priority] } }
+      let(:museum_only) { create(:pipeline, name: 'Te Papa').tap { it.tags = [museum] } }
+
+      it 'lists the jobs of pipelines carrying the tag' do
+        wanted = create(:pipeline_job, pipeline: museum_only, destination:)
+        create(:pipeline_job, pipeline: other_pipeline, destination:)
+
+        get jobs_path(tags: ['museum'])
+
+        expect(listed_jobs).to contain_exactly wanted
+      end
+
+      # A job has no tags of its own, and every tag narrows the list.
+      it 'lists only the jobs of pipelines carrying all of the tags' do
+        wanted = create(:pipeline_job, pipeline: both_tags, destination:)
+        create(:pipeline_job, pipeline: museum_only, destination:)
+
+        get jobs_path(tags: %w[museum high-priority])
+
+        expect(listed_jobs).to contain_exactly wanted
+      end
+
+      it 'combines with the other filters' do
+        wanted = create(:pipeline_job, pipeline: both_tags, destination:, status: 'completed')
+        create(:pipeline_job, pipeline: both_tags, destination:, status: 'errored')
+        create(:pipeline_job, pipeline: museum_only, destination:, status: 'completed')
+
+        get jobs_path(tags: %w[museum high-priority], status: 'Completed')
+
+        expect(listed_jobs).to contain_exactly wanted
+      end
+
+      it 'lists nothing for a tag no pipeline carries' do
+        create(:pipeline_job, pipeline: museum_only, destination:)
+
+        get jobs_path(tags: ['unknown'])
+
+        expect(listed_jobs).to be_empty
+        expect(response.body).to include 'No jobs belong to a pipeline carrying all of those tags'
+      end
+    end
+
     it 'combines filters with AND' do
       wanted = create(:pipeline_job, pipeline:, destination:, status: 'completed', launched_by: user)
       create(:pipeline_job, pipeline:, destination:, status: 'errored', launched_by: user)
@@ -156,7 +202,7 @@ RSpec.describe 'Jobs' do
 
       get pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
         pipeline, harvest_definition, extraction_definition,
-        destination: 'Production', run_by: 'tim'
+        destination: 'Production', run_by: 'tim', tags: ['museum']
       )
 
       expect(response).to have_http_status :ok

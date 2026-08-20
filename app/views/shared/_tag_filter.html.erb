@@ -1,0 +1,51 @@
+<%# The tag filter for a list: checkboxes in a Bootstrap dropdown, submitted by the form
+    this sits inside, and a chip for each tag the list is already filtered by. Ticking a
+    box filters nothing on its own - Apply submits, which puts the tags in the URL.
+
+    Several tags narrow the list rather than widen it: everything shown carries all of
+    them. %>
+<% selected = tag_filter_slugs %>
+
+<div class="tag-filter d-flex align-items-center flex-wrap gap-2">
+  <div class="dropdown">
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+      Filter by tag<%= " (#{selected.size})" if selected.any? %>
+    </button>
+
+    <div class="dropdown-menu tag-filter__menu p-2">
+      <h6 class="dropdown-header px-2"><%= heading %></h6>
+
+      <% if tags.empty? %>
+        <p class="dropdown-item-text text-body-secondary mb-0">No tags yet.</p>
+      <% end %>
+
+      <% tags.each do |tag| %>
+        <div class="form-check d-flex align-items-center gap-2 ps-2">
+          <%= check_box_tag 'tags[]', tag.slug, selected.include?(tag.slug),
+                            id: "tag-filter-#{tag.slug}", class: 'form-check-input m-0 flex-shrink-0' %>
+          <%= label_tag "tag-filter-#{tag.slug}", class: 'form-check-label d-flex gap-3 flex-grow-1' do %>
+            <span class="flex-grow-1"><%= tag.name %></span>
+            <span class="text-body-secondary"><%= counts.fetch(tag.id, 0) %></span>
+          <% end %>
+        </div>
+      <% end %>
+
+      <hr class="dropdown-divider">
+
+      <div class="d-flex align-items-center gap-2 px-2">
+        <button type="submit" class="btn btn-success btn-sm">Apply</button>
+        <%= link_to 'Clear', tag_filter_url(path, []), class: 'btn btn-link btn-sm' %>
+      </div>
+    </div>
+  </div>
+
+  <% tags.select { |tag| selected.include?(tag.slug) }.each do |tag| %>
+    <span class="badge text-bg-dark d-inline-flex align-items-center gap-1">
+      <%= tag.name %>
+      <%= link_to tag_filter_url(path, selected - [tag.slug]),
+                  class: 'text-reset text-decoration-none lh-1',
+                  aria: { label: "Stop filtering by #{tag.name}" } do %>&times;<% end %>
+    </span>
+  <% end %>
+</div>

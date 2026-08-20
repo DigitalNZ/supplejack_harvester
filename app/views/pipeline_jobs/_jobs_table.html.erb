@@ -8,6 +8,11 @@
     <% klass = 'form-select' %>
     <%= hidden_field_tag :pipeline_id, params[:pipeline_id] %>
 
+    <div class="col-auto">
+      <%= render 'shared/tag_filter', tags: Tag.ordered, counts: Tag.job_counts,
+                                      heading: 'Filter by pipeline tag', path: jobs_path %>
+    </div>
+
     <div class="col-auto pe-0">
       <%= label_tag :run_by, 'Last Run By:', class: 'col-form-label me-1' %>
     </div>
@@ -37,4 +42,9 @@
 <% if jobs.present? %>
   <%= render partial: 'pipeline_jobs/table',
              locals: { jobs: jobs, show_pipeline_col: show_pipeline_col } %>
+<% elsif tag_filter_slugs.any? %>
+  <div class="alert alert-light border text-center">
+    No jobs belong to a pipeline carrying all of those tags.
+    <%= link_to 'Clear the tag filter', tag_filter_url(jobs_path, []) %>
+  </div>
 <% end %>

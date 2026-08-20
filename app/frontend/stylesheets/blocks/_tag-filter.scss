@@ -1,0 +1,7 @@
+.tag-filter {
+  // Wide enough for a tag name and its count to sit either side of the row without the
+  // menu resizing itself as the list is filtered.
+  @include element('menu') {
+    min-width: 15rem;
+  }
+}

@@ -10,6 +10,7 @@ class ApplicationController < ActionController::Base
 
   def paginate_and_filter_jobs(jobs)
     jobs = filter_by_pipeline(jobs)
+    jobs = filter_by_tags(jobs)
     jobs = filter_by_status(jobs)
     jobs = filter_by_destination(jobs)
     jobs = filter_by_run_by(jobs)
@@ -30,6 +31,15 @@ class ApplicationController < ActionController::Base
     return jobs if params[:pipeline_id].blank? || !filterable?(jobs, 'pipeline_id')
 
     jobs.where(pipeline_id: params[:pipeline_id])
+  end
+
+  # A job carries no tags of its own; it inherits the ones on the pipeline that ran it,
+  # so this filters on the pipeline. Several tags narrow rather than widen: the pipeline
+  # behind a listed job has to carry all of them.
+  def filter_by_tags(jobs)
+    return jobs if params[:tags].blank? || !filterable?(jobs, 'pipeline_id')
+
+    jobs.where(pipeline_id: Pipeline.tagged_with_all(params[:tags]))
   end
 
   # Anything the enum does not recognise - 'All', blank, or a value typed into the URL -
