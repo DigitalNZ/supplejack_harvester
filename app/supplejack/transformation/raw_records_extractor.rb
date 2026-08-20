@@ -21,7 +21,9 @@ module Transformation
     # @return Array
     def records(page_number)
       document = @documents[page_number.to_i]
-      return [] if document.nil?
+      # blank? also catches the {} that Document.load_from_file returns for a
+      # page file that is not JSON, e.g. a binary body (PDF, archive) saved raw.
+      return [] if document.blank?
       return [] if too_large_to_parse?(document, page_number)
 
       begin
