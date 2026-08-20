@@ -83,6 +83,14 @@ class HarvestDefinition < ApplicationRecord
     @completed_harvest_jobs ||= harvest_jobs.completed.any?
   end
 
+  # Extraction jobs a picker can offer for this definition: data still on
+  # disk, newest first. Nil when there is no extraction definition yet.
+  def available_extraction_jobs
+    return if extraction_definition.blank?
+
+    extraction_definition.extraction_jobs.not_purged.order(created_at: :desc)
+  end
+
   # A block after the first in the chain works from the records the block before it
   # wrote, rather than seeding its own extraction. Enrichments are never in the chain:
   # they iterate records back out of the destination API.

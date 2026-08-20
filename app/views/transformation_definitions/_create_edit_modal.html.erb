@@ -48,7 +48,7 @@
 
                 <span
                   data-bs-toggle="tooltip"
-                  data-bs-title="The data you wish to use to build your transformation"><i class="bi bi-question-circle" aria-label="helper text"></i>
+                  data-bs-title="The data you wish to use to build your transformation. 🔒 means the job's data is retained and won't be deleted by the nightly cleanup."><i class="bi bi-question-circle" aria-label="helper text"></i>
                 </span>
               <% end %>
             </div>
@@ -57,7 +57,10 @@
               <% if extraction_jobs.any? %>
                 <%= form.select(
                       :extraction_job_id,
-                      options_from_collection_for_select(extraction_jobs, 'id', 'name', model.extraction_job_id),
+                      options_for_select(
+                        extraction_jobs.map { |job| ["#{'🔒 ' if job.retained?}#{job.name}", job.id] },
+                        model.extraction_job_id
+                      ),
                       {}, class: 'form-select'
                     ) %>
               <% else %>

@@ -265,6 +265,22 @@ RSpec.describe HarvestDefinition do
     end
   end
 
+  describe '#available_extraction_jobs' do
+    it 'returns unpurged extraction jobs, newest first' do
+      older = extraction_job
+      newer = create(:extraction_job, extraction_definition:, created_at: DateTime.parse('2000-02-15'))
+      create(:extraction_job, extraction_definition:, purged_at: Time.zone.now)
+
+      expect(subject.available_extraction_jobs).to eq [newer, older]
+    end
+
+    it 'is nil when the definition has no extraction definition' do
+      definition = create(:harvest_definition, pipeline:, extraction_definition: nil)
+
+      expect(definition.available_extraction_jobs).to be_nil
+    end
+  end
+
   describe '#clone' do
     let(:pipeline)                  { create(:pipeline) }
     let(:pipeline_two)              { create(:pipeline) }

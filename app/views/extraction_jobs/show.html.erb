@@ -11,6 +11,21 @@
   </div>
 
   <div class="float-end">
+    <% unless @extraction_job.purged? %>
+      <% retention_path = pipeline_harvest_definition_extraction_definition_extraction_job_retention_path(
+           @pipeline, @harvest_definition, @extraction_definition, @extraction_job
+         ) %>
+      <% if @extraction_job.retained? %>
+        <%= button_to retention_path, method: :delete, class: 'btn btn-outline-primary me-1', form_class: 'd-inline' do %>
+          <i class="bi bi-unlock" aria-hidden="true"></i> Stop retaining
+        <% end %>
+      <% else %>
+        <%= button_to retention_path, class: 'btn btn-outline-primary me-1', form_class: 'd-inline' do %>
+          <i class="bi bi-lock-fill" aria-hidden="true"></i> Retain job
+        <% end %>
+      <% end %>
+    <% end %>
+
     <% if @extraction_job.queued? || @extraction_job.running? %>
       <%= button_to 'Cancel job',
                     cancel_pipeline_harvest_definition_extraction_definition_extraction_job_path(
@@ -24,7 +39,7 @@
     <% end %>
 
     <button type="button" class="btn btn-danger px-2 py-2" data-bs-toggle="modal" data-bs-target="#delete-modal">
-      <i class="bi bi-trash" aria-hidden="true"></i> Delete data
+      <i class="bi bi-trash" aria-hidden="true"></i> Delete job
     </button>
   </div>
 
@@ -38,10 +53,33 @@
   <p>It will delete all the data related to it.</p>
 <% end %>
 
+<% if @extraction_job.purged? %>
+  <div class="my-4">
+    <span class="badge bg-secondary me-1">Data removed</span>|
+    <span class="ms-1 me-1"><%= job_status_text(@extraction_job) %></span>
+    <%- if @extraction_job.duration_seconds.present? %>
+      |<span class="ms-1">Duration: <%= job_duration(@extraction_job) %></span>
+    <% end %>
+  </div>
+
+  <div class="alert alert-secondary" role="alert">
+    <%= t('.purged', date: @extraction_job.purged_at.to_fs(:verbose)) %>
+  </div>
+
+  <% if @extraction_job.errored? %>
+    <div class="alert alert-danger" role="alert">
+      <h4 class="alert-heading">Error</h4>
+      <p class="mb-0"><%= @extraction_job.error_message %></p>
+    </div>
+  <% end %>
+<% else %>
+
 <div class="my-4">
-  <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span>|
+  <span class="badge bg-primary me-1"><%= job_status_text(@extraction_job) %></span><% if @extraction_job.retained? %>
+    <span class="badge bg-secondary me-1"><i class="bi bi-lock-fill" aria-hidden="true"></i> Retained</span>|
+  <% else %>|<% end %>
   <%- if @extraction_job.duration_seconds.present? %>
-    <span class="ms-1 me-1">Duration: <%= ActiveSupport::Duration.build(@extraction_job.duration_seconds).inspect %></span>|
+    <span class="ms-1 me-1">Duration: <%= job_duration(@extraction_job) %></span>|
   <% end %>
   <% if @document.present? && !@document.missing? %>
     <span class="ms-1 me-1">File size: <%= number_to_human_size(@document.size_in_bytes) %></span>|
@@ -163,4 +201,5 @@
   </div>
 </div>
 
+<% end %>
 <% end %>

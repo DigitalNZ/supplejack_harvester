@@ -44,7 +44,7 @@ class TransformationDefinitionsController < ApplicationController
 
     @props = transformation_app_state
 
-    @extraction_jobs = @harvest_definition.extraction_definition&.extraction_jobs&.order(created_at: :desc) || []
+    @extraction_jobs = @harvest_definition.available_extraction_jobs || []
   end
 
   def assign_schema_variables
@@ -78,7 +78,7 @@ class TransformationDefinitionsController < ApplicationController
                              end
 
     @extraction_jobs = extraction_definitions.map do |ed|
-      [ed.name, ed.extraction_jobs.map { |job| [job.name, job.id] }]
+      [ed.name, ed.extraction_jobs.not_purged.map { |job| [job.name, job.id] }]
     end
   end
 

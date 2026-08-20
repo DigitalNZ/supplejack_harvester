@@ -87,7 +87,7 @@
       "cwe_id": [
         1104
       ],
-      "note": ""
+      "note": "Bridge until the Rails 8.1 upgrade (Dependabot PR #232) lands. Remove this entry with the upgrade."
     },
     {
       "warning_type": "Dangerous Eval",

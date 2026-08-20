@@ -90,4 +90,24 @@ RSpec.describe PreProcess::Output do
       expect(described_class.pipeline_job_ids_with_output(position)).to eq([])
     end
   end
+
+  describe '.pipeline_job_ids_on_disk' do
+    after { FileUtils.rm_rf("#{described_class::FOLDER}/not-a-job-id") }
+
+    # This is the first code path the cleanup worker hits on an environment
+    # where nothing has ever preprocessed.
+    it 'returns [] when the preprocess folder does not exist yet' do
+      FileUtils.rm_rf(described_class::FOLDER)
+
+      expect(described_class.pipeline_job_ids_on_disk).to eq([])
+    end
+
+    it 'ignores directories that are not pipeline job ids' do
+      FileUtils.rm_rf(described_class::FOLDER)
+      output.write_page(1, [{ 'url' => '/a' }])
+      FileUtils.mkdir_p("#{described_class::FOLDER}/not-a-job-id")
+
+      expect(described_class.pipeline_job_ids_on_disk).to eq([pipeline_job_id])
+    end
+  end
 end

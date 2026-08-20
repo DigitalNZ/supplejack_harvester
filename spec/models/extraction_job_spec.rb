@@ -89,6 +89,14 @@ RSpec.describe ExtractionJob do
 
       expect { subject.delete_folder }.not_to raise_error
     end
+
+    it 'deletes a folder holding a dotfile' do
+      File.write("#{subject.extraction_folder}/.DS_Store", 'written by macOS Finder')
+
+      subject.delete_folder
+
+      expect(File.exist?(subject.extraction_folder)).to be false
+    end
   end
 
   describe '#documents' do
@@ -182,6 +190,359 @@ RSpec.describe ExtractionJob do
 
     it 'returns false if the job has not finished' do
       expect(unfinished_ej.finished?).to be false
+    end
+  end
+
+  describe '#purged?' do
+    it 'is false when the data is still on disk' do
+      expect(subject.purged?).to be false
+    end
+
+    it 'is true once purged_at is stamped' do
+      subject.update(purged_at: Time.zone.now)
+
+      expect(subject.purged?).to be true
+    end
+  end
+
+  describe '#retained?' do
+    it 'is false by default' do
+      expect(subject.retained?).to be false
+    end
+
+    it 'is true once retained_at is stamped' do
+      subject.update(retained_at: Time.zone.now)
+
+      expect(subject.retained?).to be true
+    end
+  end
+
+  describe '.not_purged' do
+    it 'excludes jobs whose data has been purged' do
+      purged = create(:extraction_job, extraction_definition:, purged_at: Time.zone.now)
+
+      expect(described_class.not_purged).to include(subject)
+      expect(described_class.not_purged).not_to include(purged)
+    end
+  end
+
+  describe '#busy?' do
+    it 'is false when nothing references the job' do
+      expect(subject.busy?).to be false
+    end
+
+    it 'is true while an unfinished harvest job reads it' do
+      create(:harvest_job, extraction_job: subject, status: 'running')
+
+      expect(subject.busy?).to be true
+    end
+
+    it 'is true while an unfinished pipeline job re-uses it' do
+      create(:pipeline_job, pipeline:, extraction_job: subject, status: 'queued')
+
+      expect(subject.busy?).to be true
+    end
+
+    it 'counts a pipeline job no worker has picked up yet as busy' do
+      create(:pipeline_job, pipeline:, extraction_job: subject, status: nil)
+
+      expect(subject.busy?).to be true
+    end
+
+    it 'is false once the referencing jobs are finished' do
+      create(:harvest_job, extraction_job: subject, status: 'completed')
+      create(:pipeline_job, pipeline:, extraction_job: subject, status: 'completed')
+
+      expect(subject.busy?).to be false
+    end
+  end
+
+  describe '#purge!' do
+    it 'refuses to purge a busy job' do
+      create(:harvest_job, extraction_job: subject, status: 'running')
+
+      expect(subject.purge!).to be false
+      expect(subject.reload.purged_at).to be_nil
+      expect(Dir.exist?(subject.extraction_folder)).to be true
+    end
+
+    it 'refuses to purge a retained job' do
+      subject.update(retained_at: Time.zone.now)
+
+      expect(subject.purge!).to be false
+      expect(subject.reload.purged_at).to be_nil
+      expect(Dir.exist?(subject.extraction_folder)).to be true
+    end
+
+    it 'refuses a job retained after it was loaded' do
+      stale = described_class.find(subject.id)
+      described_class.find(subject.id).update!(retained_at: Time.zone.now)
+
+      expect(stale.purge!).to be false
+      expect(Dir.exist?(subject.extraction_folder)).to be true
+    end
+
+    it 'returns true once the data is purged' do
+      expect(subject.purge!).to be true
+    end
+
+    it 'deletes the extraction folder' do
+      FileUtils.mkdir_p("#{subject.extraction_folder}/1")
+      File.write("#{subject.extraction_folder}/1/page.json", '{}')
+
+      subject.purge!
+
+      expect(Dir.exist?(subject.extraction_folder)).to be false
+    end
+
+    it 'stamps purged_at' do
+      subject.purge!
+
+      expect(subject.reload.purged_at).to be_present
+    end
+
+    it 'stamps purged_at even when the folder is already gone' do
+      FileUtils.rm_rf(subject.extraction_folder)
+
+      subject.purge!
+
+      expect(subject.reload.purged_at).to be_present
+    end
+
+    it 'purges a folder holding a dotfile' do
+      FileUtils.mkdir_p("#{subject.extraction_folder}/1")
+      File.write("#{subject.extraction_folder}/.DS_Store", 'written by macOS Finder')
+
+      subject.purge!
+
+      expect(Dir.exist?(subject.extraction_folder)).to be false
+      expect(subject.reload.purged_at).to be_present
+    end
+
+    it 'keeps the row and its harvest job' do
+      harvest_job = create(:harvest_job, extraction_job: subject)
+
+      subject.purge!
+
+      expect(described_class.find_by(id: subject.id)).to be_present
+      expect(HarvestJob.find_by(id: harvest_job.id)).to be_present
+    end
+  end
+
+  describe '.purge_candidates' do
+    let(:policy) do
+      ExtractionRetentionPolicy.new(
+        dry_run: false, batch_limit: 100, min_age_months: 1,
+        keep_latest: 2, max_age_months: 6, excluded_extraction_definition_ids: []
+      )
+    end
+
+    # keep_latest is 2 here so a handful of jobs exercises the index clause.
+    def job_created(time_ago, **attributes)
+      create(:extraction_job, extraction_definition:, status: 'completed',
+                              created_at: time_ago, **attributes)
+    end
+
+    it 'keeps everything younger than min_age_months' do
+      recent = job_created(2.days.ago)
+
+      expect(described_class.purge_candidates(policy)).not_to include(recent)
+    end
+
+    it 'keeps a young job even though it ranks past keep_latest' do
+      job_created(1.day.ago)
+      job_created(2.days.ago)
+      young_but_over_keep_latest = job_created(3.days.ago)
+
+      expect(described_class.purge_candidates(policy)).not_to include(young_but_over_keep_latest)
+    end
+
+    it 'ranks jobs separately per extraction definition' do
+      other_definition = create(:extraction_definition)
+
+      own_newest = job_created(5.months.ago)
+      job_created(6.months.ago)
+      job_created(7.months.ago)
+
+      other_newest = create(:extraction_job, extraction_definition: other_definition,
+                                              status: 'completed', created_at: 2.months.ago)
+      create(:extraction_job, extraction_definition: other_definition, status: 'completed', created_at: 3.months.ago)
+      create(:extraction_job, extraction_definition: other_definition, status: 'completed', created_at: 4.months.ago)
+
+      candidates = described_class.purge_candidates(policy)
+
+      expect(candidates).not_to include(own_newest)
+      expect(candidates).not_to include(other_newest)
+    end
+
+    it 'keeps the newest keep_latest jobs even when they are old' do
+      newest = job_created(2.months.ago)
+      job_created(3.months.ago)
+      job_created(4.months.ago)
+
+      expect(described_class.purge_candidates(policy)).not_to include(newest)
+    end
+
+    it 'keeps the job ranked exactly at keep_latest' do
+      job_created(2.months.ago)
+      at_boundary = job_created(3.months.ago)
+      job_created(4.months.ago)
+
+      expect(described_class.purge_candidates(policy)).not_to include(at_boundary)
+    end
+
+    it 'purges old jobs beyond the newest keep_latest' do
+      job_created(2.months.ago)
+      job_created(3.months.ago)
+      oldest = job_created(4.months.ago)
+
+      expect(described_class.purge_candidates(policy)).to include(oldest)
+    end
+
+    it 'purges jobs past max_age_months even at index 1' do
+      ancient = job_created(7.months.ago)
+
+      expect(described_class.purge_candidates(policy)).to include(ancient)
+    end
+
+    it 'never purges a retained job, even past max_age' do
+      retained = job_created(7.months.ago, retained_at: Time.zone.now)
+
+      expect(described_class.purge_candidates(policy)).not_to include(retained)
+    end
+
+    it 'leaves other jobs unchanged: a retained job still holds its keep_latest slot' do
+      job_created(2.months.ago)
+      retained = job_created(3.months.ago, retained_at: Time.zone.now)
+      third = job_created(4.months.ago)
+
+      candidates = described_class.purge_candidates(policy)
+
+      expect(candidates).to include(third)
+      expect(candidates).not_to include(retained)
+    end
+
+    it 'never purges a retained job out-ranked past keep_latest' do
+      job_created(2.months.ago)
+      job_created(3.months.ago)
+      retained = job_created(4.months.ago, retained_at: Time.zone.now)
+
+      expect(described_class.purge_candidates(policy)).not_to include(retained)
+    end
+
+    it 'ignores already-purged jobs when ranking' do
+      job_created(2.months.ago, purged_at: Time.zone.now)
+      job_created(3.months.ago, purged_at: Time.zone.now)
+      third = job_created(4.months.ago)
+
+      # It is now the only job that still has data, so it ranks 1 and survives
+      # even though two older-ranked rows exist.
+      expect(described_class.purge_candidates(policy)).not_to include(third)
+    end
+
+    it 'excludes jobs that have already been purged' do
+      purged = job_created(7.months.ago, purged_at: Time.zone.now)
+
+      expect(described_class.purge_candidates(policy)).not_to include(purged)
+    end
+
+    it 'excludes queued and running jobs' do
+      queued = job_created(7.months.ago, status: 'queued')
+      running = job_created(7.months.ago, status: 'running')
+
+      candidates = described_class.purge_candidates(policy)
+
+      expect(candidates).not_to include(queued)
+      expect(candidates).not_to include(running)
+    end
+
+    it 'excludes jobs an unfinished harvest job is using' do
+      job = job_created(7.months.ago)
+      create(:harvest_job, extraction_job: job, status: 'running')
+
+      expect(described_class.purge_candidates(policy)).not_to include(job)
+    end
+
+    it 'excludes jobs an unfinished pipeline job is using' do
+      job = job_created(7.months.ago)
+      create(:pipeline_job, extraction_job: job, status: 'running')
+
+      expect(described_class.purge_candidates(policy)).not_to include(job)
+    end
+
+    it 'excludes jobs a created-but-not-started pipeline job is using' do
+      job = job_created(7.months.ago)
+      # A pipeline job has no status until PipelineWorker picks it up.
+      create(:pipeline_job, extraction_job: job)
+
+      expect(described_class.purge_candidates(policy)).not_to include(job)
+    end
+
+    it 'excludes extraction definitions on the escape-hatch list' do
+      job = job_created(7.months.ago)
+      excluded_policy = ExtractionRetentionPolicy.new(
+        dry_run: false, batch_limit: 100, min_age_months: 1, keep_latest: 2,
+        max_age_months: 6, excluded_extraction_definition_ids: [extraction_definition.id]
+      )
+
+      expect(described_class.purge_candidates(excluded_policy)).not_to include(job)
+    end
+
+    it 'keeps a transformation definition preview past the index cutoff' do
+      job_created(2.months.ago)
+      job_created(3.months.ago)
+      pinned = job_created(4.months.ago)
+      create(:transformation_definition, extraction_job: pinned)
+
+      expect(described_class.purge_candidates(policy)).not_to include(pinned)
+    end
+
+    it 'purges a transformation definition preview past max_age_months' do
+      pinned = job_created(7.months.ago)
+      create(:transformation_definition, extraction_job: pinned)
+
+      expect(described_class.purge_candidates(policy)).to include(pinned)
+    end
+
+    it 'exposes the extraction index on each candidate' do
+      job_created(2.months.ago)
+      job_created(3.months.ago)
+      job_created(4.months.ago)
+
+      expect(described_class.purge_candidates(policy).first.extraction_index).to eq 3
+    end
+
+    it 'caps the batch at batch_limit, oldest first' do
+      job_created(5.months.ago)
+      oldest = job_created(7.months.ago)
+      capped = ExtractionRetentionPolicy.new(
+        dry_run: false, batch_limit: 1, min_age_months: 1, keep_latest: 0,
+        max_age_months: 6, excluded_extraction_definition_ids: []
+      )
+
+      expect(described_class.purge_candidates(capped)).to contain_exactly(oldest)
+    end
+
+    context 'when scoped to a pipeline' do
+      it 'only returns jobs whose definition belongs to that pipeline' do
+        ours = job_created(7.months.ago)
+        other_definition = create(:extraction_definition)
+        theirs = create(:extraction_job, extraction_definition: other_definition,
+                                         status: 'completed', created_at: 7.months.ago)
+
+        candidates = described_class.purge_candidates(policy, pipeline_id: pipeline.id)
+
+        expect(candidates).to include(ours)
+        expect(candidates).not_to include(theirs)
+      end
+
+      it 'behaves exactly as unscoped when pipeline_id is nil' do
+        other_definition = create(:extraction_definition)
+        theirs = create(:extraction_job, extraction_definition: other_definition,
+                                         status: 'completed', created_at: 7.months.ago)
+
+        expect(described_class.purge_candidates(policy, pipeline_id: nil)).to include(theirs)
+      end
     end
   end
 end
