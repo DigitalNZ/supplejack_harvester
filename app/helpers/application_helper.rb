@@ -8,21 +8,22 @@ module ApplicationHelper
   # caller. With nothing filtered out there is nothing to compare against, so it just
   # says how many there are.
   def list_summary(collection, total, noun)
-    return "#{total} #{noun.pluralize(total)}" if collection.total_count == total
+    left = collection.total_count
+    nouns = noun.pluralize(total)
 
-    "#{collection.total_count} of #{total} #{noun.pluralize(total)} match"
+    left == total ? "#{total} #{nouns}" : "#{left} of #{total} #{nouns} match"
   end
 
   # Where a page sits in the list it came from: 'Showing 1-20 of 40 pipelines'. Counted
   # against the filtered total rather than everything there is, because the filtered list
   # is the one being paged through. An empty list has no page to describe.
   def page_summary(collection, noun)
-    return if collection.total_count.zero?
+    total = collection.total_count
+    return if total.zero?
 
-    first = collection.offset_value + 1
-    last = collection.offset_value + collection.length
+    offset = collection.offset_value
 
-    "Showing #{first}–#{last} of #{collection.total_count} #{noun.pluralize(collection.total_count)}"
+    "Showing #{offset + 1}–#{offset + collection.length} of #{total} #{noun.pluralize(total)}"
   end
 
   def last_edited_by(resource)

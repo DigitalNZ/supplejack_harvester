@@ -28,18 +28,20 @@ class ApplicationController < ActionController::Base
   end
 
   def filter_by_pipeline(jobs)
-    return jobs if params[:pipeline_id].blank? || !filterable?(jobs, 'pipeline_id')
+    pipeline_id = params[:pipeline_id]
+    return jobs if pipeline_id.blank? || !filterable?(jobs, 'pipeline_id')
 
-    jobs.where(pipeline_id: params[:pipeline_id])
+    jobs.where(pipeline_id:)
   end
 
   # A job carries no tags of its own; it inherits the ones on the pipeline that ran it,
   # so this filters on the pipeline. Several tags narrow rather than widen: the pipeline
   # behind a listed job has to carry all of them.
   def filter_by_tags(jobs)
-    return jobs if params[:tags].blank? || !filterable?(jobs, 'pipeline_id')
+    slugs = params[:tags]
+    return jobs if slugs.blank? || !filterable?(jobs, 'pipeline_id')
 
-    jobs.where(pipeline_id: Pipeline.tagged_with_all(params[:tags]))
+    jobs.where(pipeline_id: Pipeline.tagged_with_all(slugs))
   end
 
   # Anything the enum does not recognise - 'All', blank, or a value typed into the URL -
@@ -47,26 +49,28 @@ class ApplicationController < ActionController::Base
   # name they cannot find. Passing it through instead would match jobs with no status.
   def filter_by_status(jobs)
     status = params[:status].to_s.downcase
-    return jobs unless jobs.klass.statuses.key?(status)
+    return jobs unless Job::STATUSES.include?(status)
 
     jobs.where(status:)
   end
 
   def filter_by_destination(jobs)
-    return jobs if params[:destination].blank? || params[:destination] == 'All'
+    name = params[:destination]
+    return jobs if name.blank? || name == 'All'
     return jobs unless filterable?(jobs, 'destination_id')
 
-    destination = Destination.find_by(name: params[:destination])
+    destination = Destination.find_by(name:)
     return jobs if destination.blank?
 
     jobs.where(destination:)
   end
 
   def filter_by_run_by(jobs)
-    return jobs if params[:run_by].blank? || params[:run_by] == 'All'
+    username = params[:run_by]
+    return jobs if username.blank? || username == 'All'
     return jobs unless filterable?(jobs, 'launched_by_id')
 
-    user = User.find_by(username: params[:run_by])
+    user = User.find_by(username:)
     return jobs if user.blank?
 
     jobs.where(launched_by: user)

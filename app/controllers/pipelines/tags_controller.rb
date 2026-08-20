@@ -12,11 +12,11 @@ module Pipelines
       unsaveable = tags.reject(&:persisted?)
 
       if unsaveable.any?
-        redirect_to pipeline_path(@pipeline), alert: t('.failure', errors: error_messages(unsaveable))
+        redirect_with_reasons(unsaveable)
       elsif @pipeline.update(tags:)
         redirect_to pipeline_path(@pipeline), notice: t('.success')
       else
-        redirect_to pipeline_path(@pipeline), alert: t('.failure', errors: error_messages([@pipeline]))
+        redirect_with_reasons([@pipeline])
       end
     end
 
@@ -26,8 +26,12 @@ module Pipelines
       params.permit(tag_names: [])[:tag_names]
     end
 
-    def error_messages(records)
-      records.flat_map { |record| record.errors.full_messages }.uniq.to_sentence
+    # Nothing is saved when a name cannot be, so the pipeline is left as it was and the
+    # reasons are what it has to show for the attempt.
+    def redirect_with_reasons(records)
+      errors = records.flat_map { |record| record.errors.full_messages }.uniq.to_sentence
+
+      redirect_to pipeline_path(@pipeline), alert: t('.failure', errors:)
     end
 
     def set_pipeline

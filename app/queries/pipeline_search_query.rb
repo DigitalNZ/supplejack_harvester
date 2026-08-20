@@ -24,13 +24,14 @@ class PipelineSearchQuery
   end
 
   def searched
-    return @query if @words.blank? && @format.blank?
-    return @query.where(id: search_format_ids) if @words.blank? && @format.present?
+    searching = @words.present?
+    formatting = @format.present?
+
+    return @query unless searching || formatting
+    return @query.where(id: search_format_ids) unless searching
 
     @query = or_words_filters
-    @query = and_format_filter if @format.present?
-
-    @query
+    formatting ? and_format_filter : @query
   end
 
   def sanitized_words(words)

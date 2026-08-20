@@ -16,14 +16,17 @@ if (root) {
   const knownNames = JSON.parse(root.dataset.tags || "[]");
 
   const chipNames = () =>
-    [...chipList.querySelectorAll("[data-tag-chip]")].map((chip) => chip.dataset.tagName);
+    [...chipList.querySelectorAll("[data-tag-chip]")].map(
+      (chip) => chip.dataset.tagName
+    );
 
   // What the pipeline is saved with, so Cancel can put the box back.
   const savedNames = chipNames();
 
   const sameName = (one, other) => one.toLowerCase() === other.toLowerCase();
 
-  const isChipped = (name) => chipNames().some((chipped) => sameName(chipped, name));
+  const isChipped = (name) =>
+    chipNames().some((chipped) => sameName(chipped, name));
 
   function syncEmptyNotice() {
     emptyNotice.classList.toggle("d-none", chipNames().length > 0);
@@ -37,7 +40,9 @@ if (root) {
     chip.dataset.tagName = tagName;
     chip.querySelector("[data-tag-chip-name]").textContent = tagName;
     chip.querySelector("[data-tag-chip-value]").value = tagName;
-    chip.querySelector("[data-tag-remove]").setAttribute("aria-label", `Remove ${tagName}`);
+    chip
+      .querySelector("[data-tag-remove]")
+      .setAttribute("aria-label", `Remove ${tagName}`);
 
     chipList.appendChild(chip);
     syncEmptyNotice();
@@ -78,19 +83,32 @@ if (root) {
     suggestionList.replaceChildren();
 
     const matches = knownNames.filter(
-      (name) => !isChipped(name) && (!query || name.toLowerCase().includes(query.toLowerCase())),
+      (name) =>
+        !isChipped(name) &&
+        (!query || name.toLowerCase().includes(query.toLowerCase()))
     );
-    matches.forEach((name) => suggestionList.appendChild(suggestionButton(name, name)));
+    matches.forEach((name) =>
+      suggestionList.appendChild(suggestionButton(name, name))
+    );
 
     const isNewName =
-      query && !knownNames.some((known) => sameName(known, query)) && !isChipped(query);
+      query &&
+      !knownNames.some((known) => sameName(known, query)) &&
+      !isChipped(query);
     if (isNewName) {
       suggestionList.appendChild(
-        suggestionButton(`+ Create tag "${query}"`, query, "text-success fw-semibold"),
+        suggestionButton(
+          `+ Create tag "${query}"`,
+          query,
+          "text-success fw-semibold"
+        )
       );
     }
 
-    suggestionList.classList.toggle("show", suggestionList.childElementCount > 0);
+    suggestionList.classList.toggle(
+      "show",
+      suggestionList.childElementCount > 0
+    );
   }
 
   function openEditor() {
