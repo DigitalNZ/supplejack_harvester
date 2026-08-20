@@ -10,6 +10,17 @@ const PreviewPanel = ({
   loading = false,
   view = "accordion",
 }) => {
+  // The status a preview came back with, which is otherwise nowhere in the panel. A
+  // preview that never reached the content source has none to show - see
+  // RequestsController#failed_response.
+  const responseStatus = () => {
+    if (!preview.status) {
+      return "";
+    }
+
+    return ` (status = ${preview.status})`;
+  };
+
   const formattedPayload = () => {
     return (
       <>
@@ -107,7 +118,7 @@ const PreviewPanel = ({
                 aria-expanded="true"
                 aria-controls="response-headers"
               >
-                Response Headers
+                Response Headers{responseStatus()}
               </button>
             </h2>
             <div id="response-headers" className="accordion-collapse collapse">
