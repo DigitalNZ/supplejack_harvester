@@ -91,6 +91,29 @@ RSpec.describe Extraction::DocumentExtraction do
       end
     end
 
+    # The request layer used to turn anything Integer() could read into a number. The
+    # parameter says so itself now, and a value that only looks numeric stays a string.
+    context 'when a parameter declares its content is a whole number' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
+      let(:request) { create(:request, extraction_definition:, http_method: 'POST') }
+
+      before do
+        create(:parameter, kind: 'query', name: 'page', content: '1', value_type: 'integer', request:)
+        create(:parameter, kind: 'query', name: 'reference', content: '007', request:)
+
+        stub_request(:post, 'https://api.figshare.com')
+          .with(body: '{"page":1,"reference":"007"}')
+          .and_return(fake_response('test'))
+      end
+
+      it 'sends the number as a number and leaves the string alone' do
+        subject.extract
+
+        expect(a_request(:post, 'https://api.figshare.com')
+                 .with(body: '{"page":1,"reference":"007"}')).to have_been_made
+      end
+    end
+
     context 'when a dynamic parameter evaluates to a nested value' do
       let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
       let(:request) { create(:request, extraction_definition:, http_method: 'PUT') }

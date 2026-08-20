@@ -61,17 +61,13 @@ module Extraction
 
     # A request with a payload does not use @connection to avoid sending the URL params
     # as part of the URL which causes the URL to be too big and rejected by Webservers.
+    #
+    # The values are sent as the types they evaluated to. This layer used to guess -
+    # anything Integer() could read became a number - which was a guess a parameter can
+    # now make for itself, and one that was wrong about strings that only look numeric:
+    # Integer('0x1f') is 31, and an identifier of '007' became 7.
     def payload_request(http_method)
-      build_connection(url, {}, headers).public_send(http_method, url, normalized_params.to_json, headers)
-    end
-
-    # We store all values in the database as a string
-    # but for requests carrying a payload the type can be important to the content source
-    # so we need to convert string Integers into Integers
-    def normalized_params
-      params.transform_values do |value|
-        Integer(value, exception: false) || value
-      end
+      build_connection(url, {}, headers).public_send(http_method, url, params.to_json, headers)
     end
   end
 end

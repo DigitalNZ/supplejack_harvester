@@ -49,7 +49,7 @@ RSpec.describe Extraction::Connection do
     before do
       stub_request(:post, "https://google.com/hello").
         with(
-          body: "{\"supplejack\":\"jack\",\"page\":1}",
+          body: "{\"supplejack\":\"jack\",\"page\":\"1\"}",
           headers: {
             'Accept'=>'*/*',
             'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
