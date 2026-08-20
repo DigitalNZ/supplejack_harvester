@@ -61,13 +61,21 @@ const uiParametersSlice = createSlice({
       .addCase(updateParameter.pending, (state, action) => {
         uiParametersAdapter.updateOne(state, {
           id: action.meta.arg.id,
-          changes: { saving: true, hasRun: false },
+          changes: { saving: true, hasRun: false, errors: [] },
         });
       })
       .addCase(updateParameter.fulfilled, (state, action) => {
         uiParametersAdapter.updateOne(state, {
           id: action.meta.arg.id,
-          changes: { saving: false },
+          changes: { saving: false, errors: [] },
+        });
+      })
+      // Without this the parameter saves forever: pending sets saving, and only
+      // fulfilled used to clear it. The messages are what the model refused.
+      .addCase(updateParameter.rejected, (state, action) => {
+        uiParametersAdapter.updateOne(state, {
+          id: action.meta.arg.id,
+          changes: { saving: false, errors: action.payload },
         });
       });
   },

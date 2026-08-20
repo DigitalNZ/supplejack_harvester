@@ -14,6 +14,7 @@ import Tooltip from "~/js/components/Tooltip";
 
 import RequestFragment from "~/js/apps/ExtractionApp/components/RequestFragment";
 import { HTTP_METHODS, sendsPayload } from "~/js/utils/httpMethods";
+import { typedParameterValue } from "~/js/utils/parameterValues";
 
 const Request = ({}) => {
   const dispatch = useDispatch();
@@ -88,7 +89,7 @@ const Request = ({}) => {
 
   const formattedPayload = () => {
     const params = map(queryParameters, (queryParameter) => {
-      return { [queryParameter.name]: queryParameter.content };
+      return { [queryParameter.name]: typedParameterValue(queryParameter) };
     });
 
     return (

@@ -16,7 +16,7 @@ import uiAppDetails from "~/js/features/ExtractionApp/UiAppDetailsSlice";
 
 const emptyEntities = { ids: [], entities: {} };
 
-function renderRequest({ httpMethod }) {
+function renderRequest({ httpMethod, parameter }) {
   const store = configureStore({
     reducer: combineReducers({
       entities: combineReducers({ requests, parameters, appDetails }),
@@ -43,6 +43,8 @@ function renderRequest({ httpMethod }) {
               kind: "query",
               name: "status",
               content: "deleted",
+              value_type: "string",
+              ...parameter,
             },
           },
         },
@@ -84,6 +86,21 @@ describe("<Request />", () => {
       expect(screen.getByText("Payload")).toBeTruthy();
     }
   );
+
+  it("shows a JSON parameter in the payload as the structure it describes", () => {
+    renderRequest({
+      httpMethod: "PUT",
+      parameter: {
+        name: "record",
+        content: '{"status": "deleted"}',
+        value_type: "json",
+      },
+    });
+
+    expect(
+      screen.getByText(/"record":/, { exact: false }).textContent
+    ).toContain('"status": "deleted"');
+  });
 
   it.each(["GET", "DELETE"])(
     "shows the parameters in the URL for %s",
