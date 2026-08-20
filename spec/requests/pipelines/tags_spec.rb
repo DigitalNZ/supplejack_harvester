@@ -70,6 +70,13 @@ RSpec.describe 'Pipelines::Tags' do
         expect(flash[:alert]).to include I18n.t('tag.validations.name_format')
       end
 
+      it 'reports a name that is too short' do
+        patch pipeline_tags_path(pipeline), params: { tag_names: ['a'] }
+
+        expect(pipeline.tags.reload).to be_empty
+        expect(flash[:alert]).to include 'too short'
+      end
+
       it 'reports a name that is too long' do
         patch pipeline_tags_path(pipeline), params: { tag_names: ['a' * 51] }
 

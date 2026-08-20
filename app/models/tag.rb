@@ -13,15 +13,9 @@ class Tag < ApplicationRecord
 
   before_validation :assign_slug
 
-  validates :name, presence: true, uniqueness: true, length: { maximum: 50 }
-  # A name that is present but has nothing sluggable in it ('!!!') would parameterize to
-  # an empty slug and be unreachable from a filter URL. Blank names are the presence
-  # validation's business, so this one sits out of them rather than reporting a second
-  # error for the same mistake - and it is a separate call because allow_blank applies to
-  # every validator in the call it appears on, which would neuter presence above.
-  validates :name, format: { with: /[[:alnum:]]/, message: I18n.t('tag.validations.name_format') },
-                   allow_blank: true
+  validates :name, presence: true, uniqueness: true, length: { in: 2..50, allow_blank: true }
   validates :slug, uniqueness: true
+  validate :name_reduces_to_a_slug
 
   scope :ordered, -> { order(:name) }
 
@@ -47,6 +41,17 @@ class Tag < ApplicationRecord
   end
 
   private
+
+  # A name has to reduce to something: '!!' is present and long enough, but parameterizes
+  # to nothing, and no filter URL could name it. This is the rule the old format
+  # validation was standing in for, and asking what the slug came out as says it directly
+  # - as well as leaving Brakeman nothing to object to, which an unanchored regex in a
+  # validation always will. Blank names are the presence validation's business.
+  def name_reduces_to_a_slug
+    return if name.blank? || slug.present?
+
+    errors.add(:name, I18n.t('tag.validations.name_format'))
+  end
 
   # The slug is what appears in the filter URLs. It follows the name, so renaming a tag
   # rewrites it and the two never drift apart - a link holding the old slug then matches

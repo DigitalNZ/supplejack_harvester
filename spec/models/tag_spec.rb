@@ -18,13 +18,33 @@ RSpec.describe Tag do
       expect(tag).not_to be_valid
       expect(tag.errors[:name]).to include 'has already been taken'
     end
-    it { is_expected.to validate_length_of(:name).is_at_most(50) }
+    it { is_expected.to validate_length_of(:name).is_at_least(2).is_at_most(50) }
 
     it 'rejects a name with nothing sluggable in it' do
       tag = build(:tag, name: '!!!')
 
       expect(tag).not_to be_valid
       expect(tag.errors[:name]).to include I18n.t('tag.validations.name_format')
+    end
+
+    it 'rejects a name of one character' do
+      tag = build(:tag, name: 'a')
+
+      expect(tag).not_to be_valid
+      expect(tag.errors[:name]).to include 'is too short (minimum is 2 characters)'
+    end
+
+    it 'accepts a name of two characters' do
+      expect(build(:tag, name: 'NZ')).to be_valid
+    end
+
+    # Blank names are the presence validation's business; a length error on top of it
+    # would report the same mistake twice.
+    it 'reports a blank name once' do
+      tag = build(:tag, name: '')
+
+      expect(tag).not_to be_valid
+      expect(tag.errors[:name]).to eq ["can't be blank"]
     end
 
     it 'rejects a name that reduces to the same slug as an existing tag' do
