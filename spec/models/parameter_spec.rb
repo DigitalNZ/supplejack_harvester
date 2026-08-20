@@ -93,18 +93,28 @@ RSpec.describe Parameter do
       expect(build(:parameter, content: '', value_type: 'json')).to be_valid
     end
 
-    it 'refuses a type on a dynamic parameter, which is typed by what it returns' do
+    # A dynamic parameter is typed by what its expression returns, so it has no
+    # declaration to keep - and dropping it beats refusing the change, which is what
+    # turning a static JSON parameter into a dynamic one used to hit.
+    it 'drops the type a dynamic parameter cannot declare' do
       parameter = build(:parameter, content: '{"status": "deleted"}', content_type: 'dynamic', value_type: 'json')
 
-      expect(parameter).not_to be_valid
-      expect(parameter.errors[:value_type]).to eq ['can only be declared by a static query or header parameter']
+      expect(parameter).to be_valid
+      expect(parameter.value_string?).to be true
     end
 
-    it 'refuses a type on a slug parameter, which is a segment of the URL' do
+    it 'drops the type a slug parameter cannot declare' do
       parameter = build(:parameter, content: '2', kind: 'slug', value_type: 'integer')
 
-      expect(parameter).not_to be_valid
-      expect(parameter.errors[:value_type]).to eq ['can only be declared by a static query or header parameter']
+      expect(parameter).to be_valid
+      expect(parameter.value_string?).to be true
+    end
+
+    it 'drops the type when a static parameter becomes dynamic' do
+      parameter = create(:parameter, kind: 'query', content: '{"status": "deleted"}', value_type: 'json')
+
+      expect(parameter.update(content_type: 'dynamic')).to be true
+      expect(parameter.reload.value_string?).to be true
     end
 
     it 'accepts a dynamic parameter that declares no type' do

@@ -17,7 +17,8 @@ class Parameter < ApplicationRecord
   BOOLEANS = %w[true false].freeze
   WHOLE_NUMBER = /\A[+-]?\d+\z/
 
-  validate :value_type_is_declarable
+  before_validation :drop_undeclarable_value_type
+
   validate :content_matches_value_type
 
   # A parameter once it has been evaluated: a name, and a value whose type is intact.
@@ -94,11 +95,15 @@ class Parameter < ApplicationRecord
   # what its expression returns, an incremental one is always a number, and a slug is a
   # path segment: Request#slug joins them into the URL, where anything but a string
   # lands as its own inspect output.
-  def value_type_is_declarable
-    return if value_string?
+  #
+  # A parameter that stops being one drops its declaration rather than refusing the
+  # change. Turning a static JSON parameter into a dynamic one is an ordinary thing to
+  # do in the editor, and having to set the type back to string first was a step that
+  # explained nothing.
+  def drop_undeclarable_value_type
     return if static? && (query? || header?)
 
-    errors.add(:value_type, 'can only be declared by a static query or header parameter')
+    self.value_type = :string
   end
 
   # The content column holds a string, so a declared type is a promise about what that
