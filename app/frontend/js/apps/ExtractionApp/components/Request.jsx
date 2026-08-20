@@ -13,6 +13,7 @@ import { selectUiAppDetails } from "~/js/features/ExtractionApp/UiAppDetailsSlic
 import Tooltip from "~/js/components/Tooltip";
 
 import RequestFragment from "~/js/apps/ExtractionApp/components/RequestFragment";
+import { HTTP_METHODS, sendsPayload } from "~/js/utils/httpMethods";
 
 const Request = ({}) => {
   const dispatch = useDispatch();
@@ -123,26 +124,18 @@ const Request = ({}) => {
                 {http_method}
               </button>
               <ul className="dropdown-menu">
-                <li>
-                  <a
-                    className="dropdown-item"
-                    onClick={() => {
-                      handleHttpMethodClick("GET");
-                    }}
-                  >
-                    GET
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className="dropdown-item"
-                    onClick={() => {
-                      handleHttpMethodClick("POST");
-                    }}
-                  >
-                    POST
-                  </a>
-                </li>
+                {map(HTTP_METHODS, (method) => (
+                  <li key={method}>
+                    <a
+                      className="dropdown-item"
+                      onClick={() => {
+                        handleHttpMethodClick(method);
+                      }}
+                    >
+                      {method}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
           )}
@@ -163,13 +156,13 @@ const Request = ({}) => {
         <p>
           <span className="text-secondary">{base_url}</span>
           {formattedSlugParameters()}
-          {http_method == "GET" && formattedQueryParameters()}
+          {!sendsPayload(http_method) && formattedQueryParameters()}
         </p>
 
-        {http_method == "POST" && (
+        {sendsPayload(http_method) && (
           <strong className="float-start me-2">Payload</strong>
         )}
-        {http_method == "POST" && formattedPayload()}
+        {sendsPayload(http_method) && formattedPayload()}
       </div>
     </div>
   );

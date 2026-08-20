@@ -16,16 +16,33 @@ module Extraction
     #
     # @return Document object
     def get
-      @response = @connection.get
-      document('GET')
+      perform('GET')
     end
 
     def post
-      @response = @connection.post
-      document('POST')
+      perform('POST')
+    end
+
+    def put
+      perform('PUT')
+    end
+
+    def patch
+      perform('PATCH')
+    end
+
+    def delete
+      perform('DELETE')
     end
 
     private
+
+    # AbstractExtraction picks the method to call from the request's http_method, so
+    # every verb the Request model knows about has to answer to its own name here.
+    def perform(http_method)
+      @response = @connection.public_send(http_method.downcase)
+      document(http_method)
+    end
 
     def document(http_method)
       Document.new(

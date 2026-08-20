@@ -9,7 +9,7 @@ class Request < ApplicationRecord
   delegate :base_url, to: :extraction_definition
   delegate :format,   to: :extraction_definition
 
-  enum :http_method, { GET: 0, POST: 1 }
+  enum :http_method, { GET: 0, POST: 1, PUT: 2, PATCH: 3, DELETE: 4 }
 
   def url(response = nil)
     return base_url if slug(response).empty?

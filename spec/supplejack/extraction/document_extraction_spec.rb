@@ -46,6 +46,47 @@ RSpec.describe Extraction::DocumentExtraction do
       end
     end
 
+    context 'when the request is sent with a verb that carries a payload' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
+      let(:request) { create(:request, extraction_definition:, http_method: 'PUT') }
+
+      before do
+        create(:parameter, kind: 'slug', content: 'records', request:)
+        create(:parameter, kind: 'slug', content: '2', request:)
+        create(:parameter, name: 'status', content: 'deleted', request:)
+
+        stub_request(:put, 'https://api.figshare.com/records/2')
+          .with(body: '{"status":"deleted"}')
+          .and_return(fake_response('test'))
+      end
+
+      it 'sends the request with that verb and its parameters as the payload' do
+        document = subject.extract
+
+        expect(document.method).to eq 'PUT'
+        expect(a_request(:put, 'https://api.figshare.com/records/2')).to have_been_made
+      end
+    end
+
+    context 'when the request is sent with DELETE' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
+      let(:request) { create(:request, extraction_definition:, http_method: 'DELETE') }
+
+      before do
+        create(:parameter, kind: 'slug', content: 'records', request:)
+        create(:parameter, name: 'id', content: '2', request:)
+
+        stub_request(:delete, 'https://api.figshare.com/records?id=2').and_return(fake_response('test'))
+      end
+
+      it 'sends the request with its parameters in the query string' do
+        document = subject.extract
+
+        expect(document.method).to eq 'DELETE'
+        expect(a_request(:delete, 'https://api.figshare.com/records?id=2')).to have_been_made
+      end
+    end
+
     context 'when record extraction fails' do
       before do
         subject

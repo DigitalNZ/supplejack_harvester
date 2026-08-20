@@ -2,6 +2,7 @@ import React from "react";
 import { map } from "lodash";
 
 import CodeEditor from "~/js/components/CodeEditor";
+import { sendsPayload } from "~/js/utils/httpMethods";
 
 const PreviewPanel = ({
   preview,
@@ -38,13 +39,14 @@ const PreviewPanel = ({
             </h2>
             <div id="request" className="accordion-collapse collapse show">
               <div className="accordion-body">
-                {preview.method == "GET" && (
+                {preview.method == "GET" ? (
                   <a href={preview.url} target="_blank">
                     {preview.url}
                   </a>
+                ) : (
+                  preview.url
                 )}
-                {preview.method == "POST" && preview.url}
-                {preview.method == "POST" && formattedPayload()}
+                {sendsPayload(preview.method) && formattedPayload()}
               </div>
             </div>
           </div>
