@@ -17,11 +17,18 @@ module Load
       handle_load_error(e)
     end
 
+    # Which fragment of the destination record this block writes decides how it is
+    # addressed. Both fragment kinds go through create_batch, which finds the record by
+    # internal_identifier and picks the fragment by priority; an enrichment already holds
+    # the record's id, so it posts straight to that record's fragments. A block writing to
+    # disk feeds the next block and never reaches the load stage, so it can only be a
+    # misconfiguration here - raise rather than returning nil, which handle_response turns
+    # into a NoMethodError on #status.
     def determine_request_type
-      if @harvest_definition.harvest?
-        harvest_request
-      elsif @harvest_definition.enrichment?
-        enrichment_request
+      case @harvest_definition.load_kind
+      when 'primary_fragment', 'secondary_fragment' then harvest_request
+      when 'enrichment' then enrichment_request
+      else raise StandardError, "a #{@harvest_definition.load_kind} definition cannot be loaded"
       end
     end
 
@@ -53,7 +60,7 @@ module Load
     end
 
     def enrichment_request
-      required_fragments = [@harvest_definition.source_id] if @harvest_definition.required_for_active_record?
+      required_fragments = [@harvest_definition.source_id] if @harvest_definition.load_required_for_active_record?
 
       Api::Harvester::Fragment.new(@destination).post(
         @api_record_id,
@@ -70,7 +77,7 @@ module Load
       record.transform_values! { |value| [value].flatten(1) }
 
       record['source_id'] = @harvest_definition.source_id
-      record['priority']  = @harvest_definition.priority
+      record['priority']  = @harvest_definition.load_priority
       record['job_id']    = @harvest_job.name
 
       record

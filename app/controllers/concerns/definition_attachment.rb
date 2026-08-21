@@ -12,9 +12,14 @@ module DefinitionAttachment
 
   private
 
+  # False when the block refuses the definition - a load definition has to be something the
+  # block's kind can actually do, and the caller has a half-made definition to clean up.
   def attach_to_block(definition, type)
-    @harvest_definition.update("#{type}_definition_id" => definition.id)
+    return false unless @harvest_definition.update("#{type}_definition_id" => definition.id)
+
     rename_for_preprocess_block(definition, type)
+
+    true
   end
 
   def rename_for_preprocess_block(definition, type)

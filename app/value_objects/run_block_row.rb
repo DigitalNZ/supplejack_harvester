@@ -5,9 +5,11 @@
 # Run modal and the schedule form share one description of a row.
 class RunBlockRow
   include ActionView::Helpers::FormOptionsHelper
+  include ActionView::Helpers::TagHelper
 
   delegate :pipeline, :subject, :settings, :offers_latest?, to: :@blocks
-  delegate :id, :source_id, :position, :enrichment?, :preprocess?, :ready_to_run?, to: :@definition
+  delegate :id, :source_id, :position, :enrichment?, :preprocess?, :ready_to_run?,
+           :configuration_problems, to: :@definition
 
   def initialize(blocks, definition)
     @blocks = blocks
@@ -24,6 +26,17 @@ class RunBlockRow
 
   def run?
     settings.run?(id)
+  end
+
+  # Nothing at all when the block is fine, rather than an empty element, so the row does not
+  # have to ask twice. Unnamed: it is rendered next to the block's own name. A disabled
+  # checkbox on its own does not say what is wrong, and some of the reasons are a
+  # disagreement between two definitions rather than something missing.
+  def cannot_run_notice
+    problems = configuration_problems
+    return if problems.empty?
+
+    tag.small("Cannot run: #{problems.to_sentence}.", class: 'd-block text-danger')
   end
 
   # nil renders an empty field, which reads as "all of them" next to the placeholder.

@@ -9,6 +9,24 @@ RSpec.describe PipelineJob do
     it { is_expected.to have_many(:harvest_reports) }
   end
 
+  # A run is created before the worker that starts it picks it up, so it has to read as
+  # something in the meantime - and as queued, the same as the other two Job tables. A run
+  # whose worker never arrived used to sit on no status at all, which the jobs page shows as
+  # an empty badge and nothing in the app could explain.
+  describe 'status before the worker starts it' do
+    let(:pipeline) { create(:pipeline) }
+
+    it 'is queued' do
+      job = create(:pipeline_job, pipeline:, destination:)
+
+      expect(job.status).to eq 'queued'
+    end
+
+    it 'is queued for a run built but not saved' do
+      expect(build(:pipeline_job, pipeline:, destination:).status).to eq 'queued'
+    end
+  end
+
   describe '#validations' do
     subject                  { create(:pipeline_job, pipeline:, destination:) }
 

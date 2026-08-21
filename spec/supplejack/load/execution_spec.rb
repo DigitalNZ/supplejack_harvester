@@ -53,7 +53,7 @@ RSpec.describe Load::Execution do
       before do
         stub_request(:post, 'http://www.localhost:3000/harvester/records/record_id/fragments')
           .with(
-            body: "{\"fragment\":{\"title\":[\"title\"],\"description\":[\"description\"],\"source_id\":\"test\",\"priority\":0,\"job_id\":\"#{harvest_job.name}\"},\"required_fragments\":null}",
+            body: "{\"fragment\":{\"title\":[\"title\"],\"description\":[\"description\"],\"source_id\":\"test\",\"priority\":-1,\"job_id\":\"#{harvest_job.name}\"},\"required_fragments\":null}",
             headers: {
               'Accept' => '*/*',
               'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
@@ -67,6 +67,41 @@ RSpec.describe Load::Execution do
 
       it 'sends the record to the API correctly' do
         expect(described_class.new([record], harvest_job, 'record_id').call.status).to eq 200
+      end
+    end
+
+    context 'when the block writes a secondary fragment' do
+      let(:load_definition)    { create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1) }
+      let(:harvest_definition) do
+        create(:harvest_definition, pipeline:, kind: 'harvest', source_id: 'test', priority: -1, load_definition:)
+      end
+      let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }
+      let(:harvest_job)  { create(:harvest_job, harvest_definition:, pipeline_job:) }
+
+      before do
+        stub_request(:post, 'http://www.localhost:3000/harvester/records/create_batch')
+          .to_return(status: 200, body: '', headers: {})
+      end
+
+      it 'goes through create_batch, which addresses the record by internal_identifier' do
+        expect(described_class.new([record], harvest_job).call.status).to eq 200
+
+        expect(a_request(:post, 'http://www.localhost:3000/harvester/records/create_batch')
+          .with { |req| JSON.parse(req.body)['records'].first['fields']['priority'] == -1 }).to have_been_made
+      end
+    end
+
+    context 'when the block writes to disk rather than the API' do
+      let(:load_definition)    { create(:load_definition, pipeline:, kind: 'preprocessed_data') }
+      let(:harvest_definition) do
+        create(:harvest_definition, pipeline:, kind: 'preprocess', source_id: 'test', load_definition:)
+      end
+      let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }
+      let(:harvest_job)  { create(:harvest_job, harvest_definition:, pipeline_job:) }
+
+      it 'raises instead of returning nil for handle_response to trip over' do
+        expect { described_class.new([record], harvest_job).call }
+          .to raise_error(StandardError, 'a preprocessed_data definition cannot be loaded')
       end
     end
   end

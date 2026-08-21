@@ -115,6 +115,56 @@ RSpec.describe ExtractionWorker, type: :job do
       end
     end
 
+    # On a long harvest the loads keep up with the pages, so the whole block can be done
+    # bar the paperwork by the time the extraction ends: this worker marks all four
+    # statuses itself, which makes it the last thing to touch the run and the only thing
+    # left to end it. The run used to sit on "Running" with its block showing Completed -
+    # which is what the jobs page reads, so the two pages disagreed.
+    context 'when the transformation and load workers all finish while the extraction is still running' do
+      let(:destination) { create(:destination) }
+      let(:harvest)     { pipeline.harvest }
+      let(:pipeline_job) do
+        create(:pipeline_job, pipeline:, destination:, status: 'running', start_time: Time.zone.now,
+                              harvest_definitions_to_run: [harvest.id.to_s])
+      end
+      let(:harvest_job) { create(:harvest_job, harvest_definition: harvest, pipeline_job:) }
+      let(:extraction_job) do
+        create(:extraction_job, extraction_definition:, harvest_job:, status: 'queued')
+      end
+      let!(:harvest_report) do
+        create(:harvest_report, pipeline_job:, harvest_job:, extraction_status: 'running',
+                                transformation_workers_queued: 1, transformation_workers_completed: 1,
+                                load_workers_queued: 1, load_workers_completed: 1)
+      end
+
+      before do
+        allow_any_instance_of(Extraction::Execution).to receive(:call)
+        stub_notify_harvesting(destination, false)
+      end
+
+      it 'completes the block' do
+        subject.perform(extraction_job.id, harvest_report.id)
+
+        expect(harvest_report.reload.status).to eq 'completed'
+      end
+
+      it 'ends the run rather than leaving it running with its block completed' do
+        subject.perform(extraction_job.id, harvest_report.id)
+
+        expect(pipeline_job.reload).to be_completed
+      end
+
+      # The destination was told this source was being harvested when the first load was
+      # queued, and it leaves the source's records alone until it is told otherwise. Only
+      # the load workers used to say so, and here they all stood aside.
+      it 'tells the destination the source is no longer being harvested' do
+        subject.perform(extraction_job.id, harvest_report.id)
+
+        expect(a_request(:put, %r{#{Regexp.escape(destination.url)}/harvester/sources/\d+})
+          .with(body: { source: { harvesting: false } }.to_json)).to have_been_made
+      end
+    end
+
     context 'when the extraction is for a block that iterates the previous block (position > 0)' do
       let(:destination) { create(:destination) }
       let(:pipeline_job) { create(:pipeline_job, pipeline:, destination:) }

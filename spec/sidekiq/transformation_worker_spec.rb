@@ -158,6 +158,18 @@ RSpec.describe TransformationWorker do
         include_examples 'expects transformation completion'
       end
 
+      context "when the block writes a secondary fragment" do
+        before do
+          harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1))
+        end
+
+        subject { TransformationWorker.new.perform(harvest_job.id) }
+
+        include_examples 'expects worker to be queued', LoadWorker
+        include_examples 'expects worker not to be queued', DeleteWorker
+        include_examples 'expects harvest report attribute', :delete_workers_queued, 0
+      end
+
       context "when the transformation has errors" do
         before do
           allow(Transformation::Execution).to receive(:new).and_raise("Error")
@@ -232,6 +244,8 @@ RSpec.describe TransformationWorker do
         let!(:harvest_report) { create(:harvest_report, extraction_status: 'completed', harvest_job:, transformation_status: 'running', load_status: 'running', delete_status: 'running', load_workers_queued: 0, load_workers_completed: 1, delete_workers_queued: 0, delete_workers_completed: 1) }
 
         it "marks the load and delete completed if the load worker and the delete worker have completed after the transformation worker" do
+          stub_notify_harvesting(pipeline_job.destination, false)
+
           TransformationWorker.new.perform(harvest_job.id)
           harvest_report.reload
 
@@ -294,7 +308,13 @@ RSpec.describe TransformationWorker do
     context "when the block is a preprocess block" do
       subject { TransformationWorker.new.perform(harvest_job.id) }
 
-      before { harvest_definition.update!(kind: :preprocess, position: 0) }
+      # The load definition has to change with the kind: LoadDefinition::KINDS_FOR_BLOCK_KIND
+      # refuses a primary-fragment load on a pre-processing block.
+      before do
+        harvest_definition.update!(kind: :preprocess, position: 0,
+                                   load_definition: create(:load_definition, pipeline:,
+                                                                             kind: 'preprocessed_data'))
+      end
 
       after { FileUtils.rm_rf(PreProcess::Output.folder(pipeline_job.id, 0)) }
 

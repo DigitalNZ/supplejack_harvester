@@ -120,6 +120,20 @@ en:
     create:
       otp_failure: Invalid two factor code
 
+  load_definitions:
+    create:
+      success: Load Definition created successfully
+      failure: There was an issue creating your Load Definition
+    update:
+      success: Load Definition updated successfully
+      failure: There was an issue updating your Load Definition
+    destroy:
+      success: Load Definition deleted successfully
+      failure: There was an issue deleting your Load Definition
+    clone:
+      success: Load Definition cloned successfully
+      failure: Load Definition clone failed. Please confirm that your Load Definition name is unique and then try again.
+
   transformation_definitions:
     create:
       success: Transformation Definition created successfully

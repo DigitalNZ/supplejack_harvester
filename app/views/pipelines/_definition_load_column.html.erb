@@ -1,0 +1,25 @@
+<%# The load column of a pipeline block: the card if the block has a load definition, or the
+    call to action that creates one. Shared by the harvest, enrichment and pre-processing
+    blocks so all three describe how they write in the same place.
+    locals:
+      block_definition: the HarvestDefinition this column belongs to
+      label:            noun used in the call to action (e.g. 'enrichment') %>
+<% if block_definition.load_definition.present? %>
+  <%= render 'pipelines/definition_load_card',
+             pipeline: @pipeline, block_definition: %>
+<% else %>
+  <button
+    type="button"
+    class="card card--create-cta d-flex h-100"
+    data-bs-toggle="modal"
+    data-bs-target="<%= "#create-load-definition-modal-#{block_definition.id}" %>">
+    <div class="card-body align-items-center d-flex justify-content-center">
+      <p class='card-text'>+ Add <%= label %> load</p>
+    </div>
+  </button>
+
+  <%= render 'load_definitions/create_edit_modal',
+             id: "create-load-definition-modal-#{block_definition.id}",
+             harvest_definition: block_definition,
+             confirmation_button_text: "Create #{label} load" %>
+<% end %>
