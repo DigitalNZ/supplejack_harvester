@@ -14,14 +14,14 @@ module Extraction
       extract
     end
 
-    def save_entries(extraction_folder)
-      each_entry(extraction_folder) do |_, name|
-        current_document = build_doc("#{extraction_folder}/#{name}")
+    def save_entries
+      each_entry(@extraction_folder) do |_, name|
+        current_document = build_doc("#{@extraction_folder}/#{name}")
         save(current_document)
         next_page
       end
     ensure
-      clear_extracted_archive(extraction_folder)
+      clear_extracted_archive(@extraction_folder)
     end
 
     private
