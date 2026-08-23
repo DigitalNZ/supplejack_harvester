@@ -128,7 +128,7 @@ jobs:
       # which has taken anywhere from 30s to 18 minutes, so cache the .debs.
       - name: Cache system packages
         id: apt-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/apt-archives
           key: ${{ steps.apt-key.outputs.key }}
