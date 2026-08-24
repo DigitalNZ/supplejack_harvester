@@ -13,7 +13,7 @@ class ParametersController < ApplicationController
       update_last_edited_by(last_edited_by_resources)
       render json: @parameter
     else
-      render500
+      render422_json(@parameter)
     end
   end
 
@@ -22,7 +22,7 @@ class ParametersController < ApplicationController
       update_last_edited_by(last_edited_by_resources)
       render json: @parameter
     else
-      render500
+      render422_json(@parameter)
     end
   end
 
@@ -46,6 +46,6 @@ class ParametersController < ApplicationController
   end
 
   def parameter_params
-    params.expect(parameter: %i[name content request_id kind content_type])
+    params.expect(parameter: %i[name content request_id kind content_type value_type])
   end
 end

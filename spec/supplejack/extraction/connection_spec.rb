@@ -49,7 +49,7 @@ RSpec.describe Extraction::Connection do
     before do
       stub_request(:post, "https://google.com/hello").
         with(
-          body: "{\"supplejack\":\"jack\",\"page\":1}",
+          body: "{\"supplejack\":\"jack\",\"page\":\"1\"}",
           headers: {
             'Accept'=>'*/*',
             'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
@@ -61,6 +61,63 @@ RSpec.describe Extraction::Connection do
     it 'sends the provided params in the payload and NOT in the URL' do
       conn = described_class.new(url: 'https://google.com/hello', params: { supplejack: 'jack', page: '1' }, headers: {}, method: 'post')
       conn.post
+    end
+  end
+
+  describe '#put' do
+    before do
+      stub_request(:put, 'https://google.com/records/2')
+        .with(body: '{"record":{"status":"deleted"}}')
+        .to_return(status: 200, body: '', headers: {})
+    end
+
+    it 'sends the provided params in the payload and NOT in the URL' do
+      conn = described_class.new(
+        url: 'https://google.com/records/2',
+        params: { record: { status: 'deleted' } },
+        headers: {},
+        method: 'put'
+      )
+      conn.put
+
+      expect(conn.url.to_s).to eq 'https://google.com/records/2'
+    end
+  end
+
+  describe '#patch' do
+    before do
+      stub_request(:patch, 'https://google.com/records/2')
+        .with(body: '{"status":"deleted"}')
+        .to_return(status: 200, body: '', headers: {})
+    end
+
+    it 'sends the provided params in the payload' do
+      conn = described_class.new(
+        url: 'https://google.com/records/2',
+        params: { status: 'deleted' },
+        headers: {},
+        method: 'patch'
+      )
+      conn.patch
+    end
+  end
+
+  describe '#delete' do
+    before do
+      stub_request(:delete, 'https://google.com/records?id=2')
+        .to_return(status: 200, body: '', headers: {})
+    end
+
+    it 'sends the provided params in the URL, as a GET does' do
+      conn = described_class.new(
+        url: 'https://google.com/records',
+        params: { id: '2' },
+        headers: {},
+        method: 'delete'
+      )
+      conn.delete
+
+      expect(conn.url.to_s).to eq 'https://google.com/records?id=2'
     end
   end
 
