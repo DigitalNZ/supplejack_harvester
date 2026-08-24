@@ -32,8 +32,11 @@
 <% end %>
 
 <% if params['status'].nil? %>
-  <%= form_with url: '/pipelines', method: :get, class: 'row mb-5' do |form| %>
-    <div class="col-auto pe-2">
+  <% all_tags = Tag.ordered.to_a %>
+  <% summary = list_summary(@pipelines, Pipeline.count, 'pipeline') %>
+
+  <%= form_with url: '/pipelines', method: :get, class: 'card bg-light mb-3' do |form| %>
+    <div class="card-body p-2 d-flex flex-wrap align-items-center gap-2">
       <div class="search">
         <%= form.text_field(
               :search,
@@ -53,42 +56,52 @@
           </button>
         <% end %>
       </div>
-    </div>
 
-    <div class="col-4 ps-0">
       <button class="btn btn-primary" type="submit">Search</button>
-    </div>
 
-    <div class="col-auto pe-0">
-      <%= form.label :format, 'Format:', class: 'col-form-label' %>
-    </div>
-    <div class="col-auto">
+      <div class="vr"></div>
+
+      <%= render 'shared/tag_filter', tags: all_tags, counts: Tag.pipeline_counts,
+                                      heading: 'Filter by tag', path: pipelines_path %>
+
+      <%# No labels beside these: each one says what it filters, and the select carries
+          that as its accessible name. %>
       <%= form.select(
             :format,
             [['All formats', '']] + ExtractionDefinition::FORMATS.map { |format| [format, format] },
             { selected: params[:format].in?([nil, '', 'All formats']) ? 'All formats' : params[:format] },
-            class: 'form-select', 'data-submitting-select': true
+            class: 'form-select w-auto', 'aria-label': 'Format', 'data-submitting-select': true
           ) %>
-    </div>
 
-    <div class="col-auto pe-0">
-      <%= form.label :sort_by, 'Sort by:', class: 'col-form-label' %>
-    </div>
-    <div class="col-auto">
       <%= form.select(
             :sort_by,
-            [['Last Edited', 'updated_at'], ['Alphabetical', 'name']],
+            [['Sort by: Last Edited', 'updated_at'], ['Sort by: Alphabetical', 'name']],
             { selected: @sort_by.keys.first },
-            class: 'form-select', 'data-submitting-select': true
+            class: 'form-select w-auto', 'aria-label': 'Sort by', 'data-submitting-select': true
           ) %>
     </div>
   <% end %>
+
+  <%= render 'shared/filter_summary', tags: all_tags, path: pipelines_path, summary: %>
+<% end %>
+
+<% if @pipelines.empty? && tag_filter_slugs.any? %>
+  <div class="alert alert-light border text-center">
+    No pipelines carry all of those tags.
+    <%= link_to 'Clear the tag filter', tag_filter_url(pipelines_path, []) %>
+  </div>
 <% end %>
 
 <%- @pipelines.each do |pipeline| %>
   <%= link_to pipeline, class: 'card card--clickable mb-3' do %>
     <div class="card-body">
-      <h2 class="card-title"><%= pipeline.name %></h2>
+      <div class="d-flex align-items-center flex-wrap gap-2">
+        <h2 class="card-title mb-1"><%= pipeline.name %></h2>
+
+        <% pipeline.tags.sort_by(&:name).each do |tag| %>
+          <%= tag_badge(tag) %>
+        <% end %>
+      </div>
       <h3 class="card-subtitle">
         <%= last_edited_by(pipeline) %>
       </h3>
@@ -110,8 +123,11 @@
   <% end %>
 <%- end %>
 
-<% if params['status'].nil? %>
-  <%= render 'shared/pagination_below_table', items: @pipelines %>
+<% if params['status'].nil? && @pipelines.any? %>
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 my-4">
+    <span class="small text-muted"><%= page_summary(@pipelines, 'pipeline') %></span>
+    <%= paginate @pipelines %>
+  </div>
 <% end %>
 
 <%= render layout: 'shared/create_modal',

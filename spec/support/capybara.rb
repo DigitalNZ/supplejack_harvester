@@ -3,6 +3,10 @@
 require 'capybara/rails'
 require 'capybara-screenshot/rspec'
 
+# Locate a control by its aria-label, so a spec can address the icon-only buttons in the
+# app the way a screen reader does rather than by their markup.
+Capybara.enable_aria_label = true
+
 # Chromedriver reports a node resolved against a document that has since been replaced as
 # UnknownError rather than StaleElementReferenceError, and Capybara retries only the latter
 # (Capybara::Selenium::Driver#invalid_element_errors). A click that navigates - a button_to

@@ -10,6 +10,64 @@ RSpec.describe Pipeline do
     it { is_expected.to validate_uniqueness_of(:name).case_insensitive.with_message('has already been taken') }
   end
 
+  describe 'tags' do
+    let(:pipeline) { create(:pipeline) }
+    let(:production) { create(:tag, name: 'Production') }
+    let(:audio) { create(:tag, name: 'Audio') }
+
+    it 'has_many tags through pipeline_tags' do
+      create(:pipeline_tag, pipeline:, tag: production)
+      create(:pipeline_tag, pipeline:, tag: audio)
+
+      expect(pipeline.tags).to contain_exactly(production, audio)
+    end
+
+    it 'destroys its pipeline_tags but not the tags' do
+      create(:pipeline_tag, pipeline:, tag: production)
+
+      expect { pipeline.destroy }.to change(PipelineTag, :count).by(-1)
+      expect(production.reload).to be_persisted
+    end
+
+    describe '.tagged_with_all' do
+      let!(:both) { create(:pipeline) }
+      let!(:production_only) { create(:pipeline) }
+      let!(:untagged) { create(:pipeline) }
+
+      before do
+        create(:pipeline_tag, pipeline: both, tag: production)
+        create(:pipeline_tag, pipeline: both, tag: audio)
+        create(:pipeline_tag, pipeline: production_only, tag: production)
+      end
+
+      it 'returns every pipeline when no slugs are given' do
+        expect(described_class.tagged_with_all(nil)).to include both, production_only, untagged
+        expect(described_class.tagged_with_all([])).to include both, production_only, untagged
+        expect(described_class.tagged_with_all(['', nil])).to include both, production_only, untagged
+      end
+
+      it 'returns the pipelines carrying a single tag' do
+        expect(described_class.tagged_with_all('production')).to contain_exactly(both, production_only)
+      end
+
+      it 'combines several tags with AND' do
+        expect(described_class.tagged_with_all(%w[production audio])).to contain_exactly(both)
+      end
+
+      it 'is not confused by the same slug given twice' do
+        expect(described_class.tagged_with_all(%w[production production])).to contain_exactly(both, production_only)
+      end
+
+      it 'returns nothing for a slug no tag uses' do
+        expect(described_class.tagged_with_all('unknown')).to be_empty
+      end
+
+      it 'composes with ordering and pagination' do
+        expect(described_class.tagged_with_all('production').order(:name).page(1)).to be_present
+      end
+    end
+  end
+
   describe 'associations' do
     let(:pipeline) { create(:pipeline) }
     let!(:harvest_definition) { create(:harvest_definition, pipeline:) }
