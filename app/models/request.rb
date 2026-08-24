@@ -9,7 +9,7 @@ class Request < ApplicationRecord
   delegate :base_url, to: :extraction_definition
   delegate :format,   to: :extraction_definition
 
-  enum :http_method, { GET: 0, POST: 1 }
+  enum :http_method, { GET: 0, POST: 1, PUT: 2, PATCH: 3, DELETE: 4 }
 
   def url(response = nil)
     return base_url if slug(response).empty?
@@ -25,12 +25,15 @@ class Request < ApplicationRecord
       .reduce(&:merge)
   end
 
+  # A header is a string on the wire whatever type the value evaluated to: Faraday hands
+  # the value to the adapter as it is, and Net::HTTP cannot strip a non-string.
   def headers(response = nil)
     parameters
       .header
       .map { |paramater| paramater.evaluate(response) }
       .map(&:to_h)
       .reduce(&:merge)
+      &.transform_values(&:to_s)
   end
 
   def to_h
@@ -52,7 +55,7 @@ class Request < ApplicationRecord
     parameters
       .slug
       .map { |parameter| parameter.evaluate(response) }
-      .map(&:content)
+      .map(&:value)
       .join('/')
   end
 end

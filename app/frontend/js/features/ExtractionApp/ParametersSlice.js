@@ -7,6 +7,17 @@ import { request } from "~/js/utils/request";
 
 import { some } from "lodash";
 
+// A parameter the model refused comes back as 422 with its messages. Anything else -
+// a 500, a dropped connection - has no message worth showing a field, so it is named
+// as what it is.
+function validationErrors(error) {
+  return (
+    error.response?.data?.errors || [
+      "Could not be saved, please try again or check the logs",
+    ]
+  );
+}
+
 const parametersAdapter = createEntityAdapter({
   sortComparer: (parameterOne, parameterTwo) =>
     parameterTwo.created_at.localeCompare(parameterOne.created_at),
@@ -14,20 +25,21 @@ const parametersAdapter = createEntityAdapter({
 
 export const addParameter = createAsyncThunk(
   "parameters/addParameterStatus",
-  async (payload) => {
+  async (payload, { rejectWithValue }) => {
     const {
       name,
       content,
       kind,
       content_type,
+      value_type,
       harvestDefinitionId,
       pipelineId,
       extractionDefinitionId,
       requestId,
     } = payload;
 
-    const response = request
-      .post(
+    try {
+      const response = await request.post(
         `/pipelines/${pipelineId}/harvest_definitions/${harvestDefinitionId}/extraction_definitions/${extractionDefinitionId}/requests/${requestId}/parameters`,
         {
           parameter: {
@@ -36,21 +48,22 @@ export const addParameter = createAsyncThunk(
             name: name,
             content: content,
             content_type: content_type,
+            value_type: value_type,
           },
         }
-      )
-      .then(function (response) {
-        return response.data;
-      });
+      );
 
-    return response;
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(validationErrors(error));
+    }
   }
 );
 
 export const updateParameter = createAsyncThunk(
   "parameters/updateParameterSlice",
 
-  async (payload) => {
+  async (payload, { rejectWithValue }) => {
     const {
       id,
       pipelineId,
@@ -61,10 +74,11 @@ export const updateParameter = createAsyncThunk(
       content,
       kind,
       content_type,
+      value_type,
     } = payload;
 
-    const response = request
-      .patch(
+    try {
+      const response = await request.patch(
         `/pipelines/${pipelineId}/harvest_definitions/${harvestDefinitionId}/extraction_definitions/${extractionDefinitionId}/requests/${requestId}/parameters/${id}`,
         {
           parameter: {
@@ -72,14 +86,15 @@ export const updateParameter = createAsyncThunk(
             content: content,
             kind: kind,
             content_type: content_type,
+            value_type: value_type,
           },
         }
-      )
-      .then((response) => {
-        return response.data;
-      });
+      );
 
-    return response;
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(validationErrors(error));
+    }
   }
 );
 
