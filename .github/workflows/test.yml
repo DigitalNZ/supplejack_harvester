@@ -83,6 +83,39 @@ jobs:
           gem install bundler-audit
           bundle audit check --update
 
+  schema:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0.28
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      # A normal run loads db/schema.rb rather than deriving it, and the test database
+      # is loaded from it too, so nothing else here would notice the file drifting away
+      # from db/migrate. This migrates a throwaway database from nothing and compares.
+      - name: Verify db/schema.rb against the migrations
+        env:
+          RAILS_ENV: test
+          MYSQL_PASSWORD: root
+          MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+        run: |
+          cp config/application.yml.example config/application.yml
+          bundle exec rake schema_verification:verify
+
   rspec:
     runs-on: ubuntu-latest
     env:
@@ -128,7 +161,7 @@ jobs:
       # which has taken anywhere from 30s to 18 minutes, so cache the .debs.
       - name: Cache system packages
         id: apt-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/apt-archives
           key: ${{ steps.apt-key.outputs.key }}
