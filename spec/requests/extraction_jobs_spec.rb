@@ -28,9 +28,9 @@ RSpec.describe 'ExtractionJobs' do
       expect(response).to be_successful
     end
 
-    it 'displays the updated_at of the jobs' do
+    it 'displays the created_at of the jobs' do
       subject.reload
-      expect(response.body).to include subject.updated_at.to_fs(:verbose)
+      expect(response.body).to include subject.created_at.to_fs(:verbose)
     end
 
     it 'labels the destructive button for what it removes: the job' do
@@ -102,15 +102,27 @@ RSpec.describe 'ExtractionJobs' do
 
   describe '#index' do
     it 'lists retained jobs first and badges them' do
-      retained = create(:extraction_job, extraction_definition:, retained_at: Time.zone.now)
-      retained.update_column(:updated_at, 2.days.ago)
-      newer = create(:extraction_job, extraction_definition:)
+      retained = create(:extraction_job, extraction_definition:, retained_at: Time.zone.now,
+                                         created_at: 2.days.ago)
+      newer = create(:extraction_job, extraction_definition:, created_at: Time.zone.now)
 
       get pipeline_harvest_definition_extraction_definition_extraction_jobs_path(pipeline, harvest_definition,
                                                                                  extraction_definition)
 
       expect(response.body).to include('Retained')
       expect(response.body.index(">#{retained.name}<")).to be < response.body.index(">#{newer.name}<")
+    end
+
+    # Lifecycle work (purging, retention changes) bumps updated_at, which used to drag
+    # long-finished jobs back to the top of the list.
+    it 'orders by when the job was created, not when it was last touched' do
+      touched = create(:extraction_job, extraction_definition:, created_at: 2.days.ago, updated_at: Time.zone.now)
+      newer = create(:extraction_job, extraction_definition:, created_at: 1.hour.ago)
+
+      get pipeline_harvest_definition_extraction_definition_extraction_jobs_path(pipeline, harvest_definition,
+                                                                                 extraction_definition)
+
+      expect(response.body.index(">#{newer.name}<")).to be < response.body.index(">#{touched.name}<")
     end
   end
 

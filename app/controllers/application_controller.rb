@@ -10,7 +10,7 @@ class ApplicationController < ActionController::Base
 
   def paginate_and_filter_jobs(jobs)
     jobs = filter_by_pipeline(jobs)
-    jobs = jobs.order(updated_at: :desc).page(params[:page])
+    jobs = jobs.order(created_at: :desc).page(params[:page])
     jobs = filter_by_status(jobs)
     jobs = filter_by_destination(jobs)
     filter_by_run_by(jobs)
