@@ -104,28 +104,27 @@ module JobsHelper
     job.job_priority.presence&.humanize || 'Default'
   end
 
-  def job_entries_info(collection)
-    offset_value = collection.offset_value
-    start = offset_value + 1
-    end_count = offset_value + collection.length
-    total = collection.total_count
-    "#{start} - #{end_count} of #{total} jobs"
-  end
-
+  # The jobs of one pipeline. pipeline_id rides along in the query as well as the path,
+  # because the filter form on that page posts it to the global jobs list.
   def jobs_filter_url(pipeline)
-    pipeline_url = pipeline_pipeline_jobs_path(pipeline)
-    "#{pipeline_url}?pipeline_id=#{pipeline.id}&run_by=All&status=All&destination=All"
+    "#{pipeline_pipeline_jobs_path(pipeline)}?pipeline_id=#{pipeline.id}"
   end
 
+  # The filters carry no label beside them, so each one says what it filters. Choosing
+  # 'all' submits nothing rather than a sentinel the controller has to know about.
+  # Every option says 'Run by', not just the default: a username on its own would not
+  # say what it is filtering once it is the one selected.
   def user_opts
-    User.distinct.pluck(:username).compact.sort.unshift('Schedule').unshift('All')
+    who = User.distinct.pluck(:username).compact.sort.unshift('Schedule')
+
+    [['Run by: anyone', '']] + who.map { |name| ["Run by: #{name}", name] }
   end
 
   def status_opts
-    %w[All Queued Cancelled Completed Running Errored]
+    [['All statuses', '']] + %w[Queued Cancelled Completed Running Errored]
   end
 
   def dest_opts
-    Destination.distinct.pluck(:name).compact.unshift('All')
+    [['All destinations', '']] + Destination.distinct.pluck(:name).compact
   end
 end
