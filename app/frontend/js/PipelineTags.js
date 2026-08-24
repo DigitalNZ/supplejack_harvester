@@ -135,6 +135,10 @@ if (root) {
   cancelButton.addEventListener("click", cancelEditing);
   input.addEventListener("input", renderSuggestions);
   input.addEventListener("focus", renderSuggestions);
+  // Adding a tag closes the list and leaves the focus where it was, so clicking the input
+  // again is not a focus event. Without this the box stays shut until the focus has been
+  // somewhere else and come back.
+  input.addEventListener("click", renderSuggestions);
 
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
