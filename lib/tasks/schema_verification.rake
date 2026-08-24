@@ -17,7 +17,8 @@
 namespace :schema_verification do
   desc 'Fail if db/schema.rb no longer describes what db/migrate produces.'
   task verify: :environment do
-    verification = SchemaVerification.new(verbose: ENV['VERBOSE'] == 'true')
+    ActiveRecord::Migration.verbose = ENV['VERBOSE'] == 'true'
+    verification = SchemaVerification.new
     committed = Rails.root.join('db/schema.rb')
 
     puts "Migrating #{verification.scratch_database} from nothing."

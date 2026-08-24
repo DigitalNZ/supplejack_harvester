@@ -14,40 +14,45 @@
 class SchemaVerification
   SCRATCH_SUFFIX = '_schema_verification'
 
-  delegate :database, to: :scratch, prefix: :scratch
-
-  def initialize(verbose: false)
-    @verbose = verbose
+  def initialize
     @source = ActiveRecord::Base.connection_db_config
   end
+
+  def scratch_database = "#{source.database}#{SCRATCH_SUFFIX}"
 
   # The db/schema.rb that db/migrate produces, dumped from a database migrated from
   # nothing.
   def dump_from_migrations
-    recreate_scratch_database
-    ActiveRecord::Base.establish_connection(scratch.configuration_hash)
-    migrate
+    migrate_scratch_database
     dump
   ensure
-    ActiveRecord::Base.establish_connection(source.configuration_hash)
-    drop_scratch_database
+    release_scratch_database
   end
 
   private
 
-  attr_reader :source, :verbose
+  attr_reader :source
 
   def scratch
-    @scratch ||= ActiveRecord::DatabaseConfigurations::HashConfig.new(
-      source.env_name,
-      source.name,
-      source.configuration_hash.merge(database: "#{source.database}#{SCRATCH_SUFFIX}")
-    )
+    @scratch ||= source.configuration_hash.merge(database: scratch_database)
+  end
+
+  # The migrations are given ActiveRecord::Base's own connection, so that the ones
+  # reaching for a model write to the throwaway database rather than to this one.
+  def migrate_scratch_database
+    recreate_scratch_database
+    ActiveRecord::Base.establish_connection(scratch)
+    ActiveRecord::Base.connection_pool.migration_context.migrate
   end
 
   def recreate_scratch_database
     drop_scratch_database
     ActiveRecord::Tasks::DatabaseTasks.create(scratch)
+  end
+
+  def release_scratch_database
+    ActiveRecord::Base.establish_connection(source.configuration_hash)
+    drop_scratch_database
   end
 
   # A database left behind by an interrupted run has to go before the migrations run
@@ -60,14 +65,6 @@ class SchemaVerification
     ActiveRecord::Tasks::DatabaseTasks.drop(scratch)
   ensure
     $stderr = announcements
-  end
-
-  def migrate
-    was_verbose = ActiveRecord::Migration.verbose
-    ActiveRecord::Migration.verbose = verbose
-    ActiveRecord::Base.connection_pool.migration_context.migrate
-  ensure
-    ActiveRecord::Migration.verbose = was_verbose
   end
 
   def dump
