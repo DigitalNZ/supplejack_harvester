@@ -17,8 +17,20 @@ class LoadWorker
   # on, so Retriable is told to re-raise it at once instead of working through its backoff.
   RETRY_IF_TRANSIENT = ->(error) { !error.is_a?(Load::PermanentError) }
 
+  # Sidekiq builds one of these per job with no arguments and calls #perform, so every
+  # instance variable below is really set in #prepare. Declaring them here says what state a
+  # worker holds without having to read #perform to find out.
+  def initialize
+    super
+    @harvest_job = nil
+    @harvest_report = nil
+    @api_record_id = nil
+    @attempt = 1
+    @abandoned_batches = 0
+  end
+
   def perform(harvest_job_id, records, api_record_id = nil, attempt = 1)
-    prepare(harvest_job_id, attempt)
+    prepare(harvest_job_id, api_record_id, attempt)
 
     job_start
     transformed_records = JSON.parse(records)
@@ -28,14 +40,15 @@ class LoadWorker
 
       break if @harvest_job.cancelled? || @harvest_job.pipeline_job.cancelled?
 
-      process_batch(batch, api_record_id)
+      process_batch(batch)
     end
     job_end
   end
 
-  def prepare(harvest_job_id, attempt)
+  def prepare(harvest_job_id, api_record_id, attempt)
     @harvest_job = HarvestJob.find(harvest_job_id)
     @harvest_report = @harvest_job.harvest_report
+    @api_record_id = api_record_id
     @attempt = attempt
     @abandoned_batches = 0
   end
@@ -55,16 +68,16 @@ class LoadWorker
   # so the failure is handled and the loop carries on. Re-raising here skipped #job_end,
   # which left the block's load counted one worker short and stuck on "running" for good -
   # and took every remaining slice in this worker's page down with it.
-  def process_batch(batch, api_record_id)
+  def process_batch(batch)
     ::Retriable.with_context(:load, on_retry: log_retry_attempt, retry_if: RETRY_IF_TRANSIENT) do
-      execute_load(batch, api_record_id)
+      execute_load(batch)
     end
   rescue StandardError => e
-    handle_load_error(batch, api_record_id, e)
+    handle_load_error(batch, e)
   end
 
-  def execute_load(batch, api_record_id)
-    Load::Execution.new(batch, @harvest_job, api_record_id).call
+  def execute_load(batch)
+    Load::Execution.new(batch, @harvest_job, @api_record_id).call
     @harvest_report.increment_records_loaded!(batch.count)
     @harvest_report.update(load_updated_time: Time.zone.now)
   end
@@ -73,10 +86,10 @@ class LoadWorker
   # minutes, which is no help when the destination is unavailable for longer than that, and
   # a dropped batch is records lost rather than records delayed. Only a batch that has run
   # out of attempts is recorded as an error and counted against the report.
-  def handle_load_error(batch, api_record_id, error)
+  def handle_load_error(batch, error)
     logger.info "Load Excecution error (attempt #{@attempt}/#{MAX_BATCH_ATTEMPTS}): #{error}"
 
-    return requeue_batch(batch, api_record_id) if requeue?(error)
+    return requeue_batch(batch) if requeue?(error)
 
     @abandoned_batches += 1
     record_load_error(error)
@@ -94,7 +107,7 @@ class LoadWorker
   # HarvestReport#load_workers_completed? compares queued against completed, so a retry that
   # counted itself completed without having been queued would push completed past queued and
   # the equality could never come true again.
-  def requeue_batch(batch, api_record_id)
+  def requeue_batch(batch)
     @harvest_report.increment_load_workers_queued!
 
     self.class.perform_in_with_priority(
@@ -102,7 +115,7 @@ class LoadWorker
       RETRY_DELAYS[@attempt - 1],
       @harvest_job.id,
       batch.to_json,
-      api_record_id,
+      @api_record_id,
       @attempt + 1
     )
   end

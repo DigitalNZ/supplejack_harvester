@@ -2,9 +2,11 @@
 
 module Load
   class Execution
-    # Non-2xx statuses worth asking again about: a timeout the destination reported itself,
-    # and it asking to be left alone for a moment.
-    TRANSIENT_STATUSES = [408, 429].freeze
+    # Non-2xx statuses worth asking again about: a destination that is overloaded, restarting
+    # or rate limiting will take the same batch later. One that called the batch malformed,
+    # too large or unauthorised will not, and a redirect reaching here is a destination URL
+    # that needs fixing rather than retrying.
+    TRANSIENT_STATUSES = [408, 429, *500..599].freeze
 
     def initialize(records, harvest_job, api_record_id = nil)
       @records            = records
@@ -48,17 +50,11 @@ module Load
     def handle_response(response)
       return response if response.success?
 
-      message = "Destination API responded with status #{response.status}"
-      raise PermanentError, message unless transient_status?(response.status)
+      status = response.status
+      message = "Destination API responded with status #{status}"
+      raise PermanentError, message unless TRANSIENT_STATUSES.include?(status)
 
       raise StandardError, message
-    end
-
-    # A destination that is overloaded, restarting or rate limiting will take the same batch
-    # later. One that called the batch malformed, too large, or unauthorised will not, and a
-    # redirect reaching here is a destination URL that needs fixing rather than retrying.
-    def transient_status?(status)
-      status >= 500 || TRANSIENT_STATUSES.include?(status)
     end
 
     private
