@@ -23,7 +23,9 @@ module Transformation
       document = @documents[page_number.to_i]
       # blank? also catches the {} that Document.load_from_file returns for a
       # page file that is not JSON, e.g. a binary body (PDF, archive) saved raw.
-      return [] if document.blank?
+      # Under an ARCHIVE_JSON definition such a page is a tar saved as-is by the
+      # after-preprocess path, so its records are unpacked here instead.
+      return archive_records(page_number) if document.blank?
       return [] if too_large_to_parse?(document, page_number)
 
       begin
@@ -55,6 +57,17 @@ module Transformation
 
     def json_extract(page)
       JsonPath.new(record_selector).on(@documents[page].body).flatten
+    end
+
+    def archive_records(page)
+      return [] unless @extraction_job.extraction_definition.format == 'ARCHIVE_JSON'
+
+      file_path = @documents.file_path_for(page)
+      return [] if file_path.blank? || File.size(file_path) > MAX_PARSEABLE_PAGE_SIZE
+
+      Extraction::Archive.entry_bodies_from_file(file_path).flat_map do |body|
+        JsonPath.new(record_selector).on(body).flatten
+      end
     end
 
     def format

@@ -15,7 +15,7 @@ class ApplicationController < ActionController::Base
     jobs = filter_by_destination(jobs)
     jobs = filter_by_run_by(jobs)
 
-    jobs.order(updated_at: :desc).page(params[:page])
+    jobs.order(created_at: :desc).page(params[:page])
   end
 
   private
