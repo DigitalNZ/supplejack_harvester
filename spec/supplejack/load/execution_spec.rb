@@ -91,6 +91,48 @@ RSpec.describe Load::Execution do
       end
     end
 
+    # Only a 2xx means the batch landed. Anything but an exact 500 used to be counted as a
+    # success, so records the destination never took were reported as loaded.
+    context 'when the destination refuses the batch' do
+      let(:harvest_definition) { create(:harvest_definition, pipeline:, kind: 'harvest', source_id: 'test') }
+      let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
+      let(:harvest_job)        { create(:harvest_job, harvest_definition:, pipeline_job:) }
+
+      def stub_status(status)
+        stub_request(:post, 'http://www.localhost:3000/harvester/records/create_batch')
+          .to_return(status:, body: '', headers: {})
+      end
+
+      # A struggling destination behind a proxy answers with 502/503/504, not with a 500, and
+      # 408/429 are it asking to be tried again. The exact class matters as much as the
+      # message: PermanentError is a StandardError, so matching the parent proves nothing.
+      [500, 502, 503, 504, 408, 429].each do |status|
+        it "raises a retryable error on #{status}" do
+          stub_status(status)
+
+          expect { described_class.new([record], harvest_job).call }
+            .to raise_error(an_instance_of(StandardError)
+              .and(having_attributes(message: "Destination API responded with status #{status}")))
+        end
+      end
+
+      # Retrying a batch the destination called malformed or oversized only delays the run.
+      [400, 401, 413, 422].each do |status|
+        it "raises a permanent error on #{status}" do
+          stub_status(status)
+
+          expect { described_class.new([record], harvest_job).call }
+            .to raise_error(Load::PermanentError, "Destination API responded with status #{status}")
+        end
+      end
+
+      it 'treats a redirect as a destination URL that needs fixing rather than retrying' do
+        stub_status(302)
+
+        expect { described_class.new([record], harvest_job).call }.to raise_error(Load::PermanentError)
+      end
+    end
+
     context 'when the block writes to disk rather than the API' do
       let(:load_definition)    { create(:load_definition, pipeline:, kind: 'preprocessed_data') }
       let(:harvest_definition) do
@@ -101,7 +143,7 @@ RSpec.describe Load::Execution do
 
       it 'raises instead of returning nil for handle_response to trip over' do
         expect { described_class.new([record], harvest_job).call }
-          .to raise_error(StandardError, 'a preprocessed_data definition cannot be loaded')
+          .to raise_error(Load::PermanentError, 'a preprocessed_data definition cannot be loaded')
       end
     end
   end

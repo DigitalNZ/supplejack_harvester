@@ -2,6 +2,10 @@
 
 module Load
   class Execution
+    # Non-2xx statuses worth asking again about: a timeout the destination reported itself,
+    # and it asking to be left alone for a moment.
+    TRANSIENT_STATUSES = [408, 429].freeze
+
     def initialize(records, harvest_job, api_record_id = nil)
       @records            = records
       @harvest_job        = harvest_job
@@ -31,14 +35,30 @@ module Load
       case @harvest_definition.load_kind
       when 'primary_fragment', 'secondary_fragment' then harvest_request
       when 'enrichment' then enrichment_request
-      else raise StandardError, "a #{@harvest_definition.load_kind} definition cannot be loaded"
+      else raise PermanentError, "a #{@harvest_definition.load_kind} definition cannot be loaded"
       end
     end
 
+    # Only a 2xx means the batch landed. Anything else counted as a success unless it was
+    # exactly 500, so a 502/503/504 from a proxy in front of a struggling destination, or a
+    # 413 refusing an oversized batch, had its records counted as loaded and left no trace at
+    # all - no error recorded, and a report that balanced. Api::Request carries no
+    # raise_error middleware, so the status has to be read here rather than arriving as an
+    # exception.
     def handle_response(response)
-      return response unless response.status == 500
+      return response if response.success?
 
-      raise StandardError, 'Destination API responded with status 500'
+      message = "Destination API responded with status #{response.status}"
+      raise PermanentError, message unless transient_status?(response.status)
+
+      raise StandardError, message
+    end
+
+    # A destination that is overloaded, restarting or rate limiting will take the same batch
+    # later. One that called the batch malformed, too large, or unauthorised will not, and a
+    # redirect reaching here is a destination URL that needs fixing rather than retrying.
+    def transient_status?(status)
+      status >= 500 || TRANSIENT_STATUSES.include?(status)
     end
 
     private

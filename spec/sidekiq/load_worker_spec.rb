@@ -183,6 +183,41 @@ RSpec.describe LoadWorker, type: :job do
       end
     end
 
+    # A refusal the destination will repeat is not worth waiting on: Retriable re-raises it
+    # at once rather than working through its backoff, and it is not requeued either.
+    context 'when the Load Execution raises a permanent error' do
+      let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
+
+      # A verifying double rather than a stub on .new: stubbing .new returns nil, and the
+      # NoMethodError from calling nil is not the error under test - it is transient, so it
+      # would be retried and the example would prove the opposite of what it claims.
+      let(:execution) { instance_double(Load::Execution) }
+
+      before do
+        allow(execution).to receive(:call).and_raise(Load::PermanentError)
+        allow(Load::Execution).to receive(:new).and_return(execution)
+        stub_notice_to_api
+      end
+
+      it 'does not retry the Load Execution' do
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(Load::Execution).to have_received(:new).once
+      end
+
+      it 'does not requeue the batch even on the first attempt' do
+        expect(described_class).not_to receive(:perform_in_with_priority)
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+
+      it 'records the error and marks the load errored straight away' do
+        expect { described_class.new.perform(harvest_job.id, records) }.to change(JobError, :count).by(1)
+
+        expect(harvest_report.reload.load_status).to eq 'errored'
+      end
+    end
+
     context "when the Api::Utils::NotifyHarvesting raises an exception" do
       before do
         allow_any_instance_of(Api::Utils::NotifyHarvesting).to receive(:call).and_raise(StandardError)

@@ -13,6 +13,10 @@ class LoadWorker
   MAX_BATCH_ATTEMPTS = 3
   RETRY_DELAYS = [5.minutes, 15.minutes].freeze
 
+  # A refusal the destination will repeat however many times it is asked is not worth waiting
+  # on, so Retriable is told to re-raise it at once instead of working through its backoff.
+  RETRY_IF_TRANSIENT = ->(error) { !error.is_a?(Load::PermanentError) }
+
   def perform(harvest_job_id, records, api_record_id = nil, attempt = 1)
     prepare(harvest_job_id, attempt)
 
@@ -52,7 +56,7 @@ class LoadWorker
   # which left the block's load counted one worker short and stuck on "running" for good -
   # and took every remaining slice in this worker's page down with it.
   def process_batch(batch, api_record_id)
-    ::Retriable.retriable(on_retry: log_retry_attempt) do
+    ::Retriable.retriable(on_retry: log_retry_attempt, retry_if: RETRY_IF_TRANSIENT) do
       execute_load(batch, api_record_id)
     end
   rescue StandardError => e
@@ -72,10 +76,18 @@ class LoadWorker
   def handle_load_error(batch, api_record_id, error)
     logger.info "Load Excecution error (attempt #{@attempt}/#{MAX_BATCH_ATTEMPTS}): #{error}"
 
-    return requeue_batch(batch, api_record_id) if @attempt < MAX_BATCH_ATTEMPTS
+    return requeue_batch(batch, api_record_id) if requeue?(error)
 
     @abandoned_batches += 1
     record_load_error(error)
+  end
+
+  # A permanent refusal is given up on at once. A later attempt would be refused the same
+  # way, and the run is better off finishing and saying what happened.
+  def requeue?(error)
+    return false if error.is_a?(Load::PermanentError)
+
+    @attempt < MAX_BATCH_ATTEMPTS
   end
 
   # The retry is a load worker of its own, so the report has to be told to expect it.
