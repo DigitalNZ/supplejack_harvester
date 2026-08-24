@@ -56,7 +56,7 @@ class LoadWorker
   # which left the block's load counted one worker short and stuck on "running" for good -
   # and took every remaining slice in this worker's page down with it.
   def process_batch(batch, api_record_id)
-    ::Retriable.retriable(on_retry: log_retry_attempt, retry_if: RETRY_IF_TRANSIENT) do
+    ::Retriable.with_context(:load, on_retry: log_retry_attempt, retry_if: RETRY_IF_TRANSIENT) do
       execute_load(batch, api_record_id)
     end
   rescue StandardError => e

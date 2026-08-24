@@ -127,6 +127,16 @@ RSpec.describe LoadWorker, type: :job do
         described_class.new.perform(harvest_job.id, records)
       end
 
+      # Not the app-wide configuration, which is set for extractions and would hold this
+      # worker for fifteen minutes on a batch the requeue is going to pick up anyway.
+      it 'retries through the load context rather than the default one' do
+        allow(::Retriable).to receive(:with_context).and_call_original
+
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(::Retriable).to have_received(:with_context).with(:load, hash_including(:retry_if, :on_retry))
+      end
+
       it 'does not raise, so the slices after the failed one are still loaded' do
         expect { described_class.new.perform(harvest_job.id, records) }.not_to raise_error
       end
