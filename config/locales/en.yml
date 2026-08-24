@@ -222,6 +222,14 @@ en:
     validations:
       destination: must be selected
 
+  tags:
+    update:
+      success: Tag updated successfully
+      failure: 'There was an issue updating your tag: %{errors}'
+    destroy:
+      success: '%{name} was deleted, and taken off any pipeline carrying it'
+      failure: There was an issue deleting your tag
+
   tag:
     validations:
       name_format: must contain at least one letter or number
