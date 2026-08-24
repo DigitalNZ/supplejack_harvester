@@ -10,11 +10,14 @@ module Load
       @api_record_id      = api_record_id
     end
 
+    # Errors are left to travel to LoadWorker rather than being recorded here. Recording
+    # them here meant every attempt Retriable went on to retry successfully still left a
+    # JobError behind, so the load errors on a run said nothing about whether any records
+    # were actually lost - two thirds of them were recoveries. LoadWorker records the one
+    # that matters, once the retries are spent.
     def call
       response = determine_request_type
       handle_response(response)
-    rescue StandardError => e
-      handle_load_error(e)
     end
 
     # Which fragment of the destination record this block writes decides how it is
@@ -36,19 +39,6 @@ module Load
       return response unless response.status == 500
 
       raise StandardError, 'Destination API responded with status 500'
-    end
-
-    def handle_load_error(error)
-      JobCompletionServices::ContextBuilder.create_job_completion_or_error(
-        {
-          error: error,
-          definition:
-          @harvest_job&.extraction_definition,
-          job: @harvest_job&.extraction_job,
-          origin: 'LoadWorker'
-        }
-      )
-      raise
     end
 
     private

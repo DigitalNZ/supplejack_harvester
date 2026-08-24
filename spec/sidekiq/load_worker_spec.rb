@@ -114,23 +114,72 @@ RSpec.describe LoadWorker, type: :job do
     end
 
     context 'when the Load Execution raises an exception' do
+      let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
+      let(:last_attempt) { described_class::MAX_BATCH_ATTEMPTS }
+
       before do
         allow_any_instance_of(Load::Execution).to receive(:call).and_raise(StandardError)
       end
 
       it 'retries the Load Execution' do
         expect(Load::Execution).to receive(:new).exactly(2).times
-        expect { described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]") }.to raise_error(StandardError)
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+
+      it 'does not raise, so the slices after the failed one are still loaded' do
+        expect { described_class.new.perform(harvest_job.id, records) }.not_to raise_error
       end
 
       it 'still increments the number of workers completed' do
         expect(harvest_report.load_workers_queued).to eq 1
         expect(harvest_report.load_workers_completed).to eq 0
 
-        expect { described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]") }.to raise_error(StandardError)
+        described_class.new.perform(harvest_job.id, records)
         harvest_report.reload
 
-        expect(harvest_report.load_workers_completed).to eq 0
+        expect(harvest_report.load_workers_completed).to eq 1
+      end
+
+      it 'requeues the batch and tells the report to expect it' do
+        expect(described_class).to receive(:perform_in_with_priority).with(
+          harvest_job.pipeline_job.job_priority, described_class::RETRY_DELAYS.first,
+          harvest_job.id, [{ 'transformed_record' => { 'internal_identifier' => 'test' } }].to_json, nil, 2
+        )
+
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(harvest_report.reload.load_workers_queued).to eq 2
+      end
+
+      it 'records no error while the batch still has attempts left' do
+        expect { described_class.new.perform(harvest_job.id, records) }.not_to change(JobError, :count)
+        expect(harvest_report.reload.load_status).not_to eq 'errored'
+      end
+
+      # On the last attempt the load reaches its completion instead of being abandoned
+      # mid-flight, so the destination is told harvesting has finished - which is the point
+      # of not re-raising, and why these three stub the notice.
+      it 'gives up on a batch that has run out of attempts rather than requeueing it' do
+        stub_notice_to_api
+        expect(described_class).not_to receive(:perform_in_with_priority)
+
+        described_class.new.perform(harvest_job.id, records, nil, last_attempt)
+      end
+
+      it 'records the error once the batch has run out of attempts' do
+        stub_notice_to_api
+
+        expect { described_class.new.perform(harvest_job.id, records, nil, last_attempt) }
+          .to change(JobError, :count).by(1)
+      end
+
+      it 'marks the load errored so the run does not claim it loaded everything' do
+        stub_notice_to_api
+
+        described_class.new.perform(harvest_job.id, records, nil, last_attempt)
+
+        expect(harvest_report.reload.load_status).to eq 'errored'
       end
     end
 
