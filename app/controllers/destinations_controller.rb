@@ -13,10 +13,13 @@ class DestinationsController < ApplicationController
     @destination = Destination.new
   end
 
+  # A connectivity check with someone waiting on the answer, so it does not get the minute a
+  # harvest's requests are allowed: a destination that has not answered in fifteen seconds
+  # has failed the check, and holding the request open for longer tells them nothing more.
   def test
     test_url = "#{destination_params['url']}/harvester/users?api_key=#{destination_params['api_key']}"
 
-    render json: { status: Faraday.get(test_url).status }
+    render json: { status: Faraday.new(request: { timeout: 15 }).get(test_url).status }
   end
 
   def edit; end
