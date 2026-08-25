@@ -23,7 +23,7 @@
         multiline: true
       } do %>
       <% if @pipeline.description.present? %>
-        <p><%= @pipeline.description %></p>
+        <div class='markdown'><%= markdown(@pipeline.description) %></div>
       <% else %>
         <p class='js-inline-editable-control inline-editable-element__control ' data-id='pipeline-description'>Add pipeline description</p>
       <% end %>

@@ -198,6 +198,15 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include %(js-inline-editable-cancel' data-id="pipeline-description")
     end
 
+    it 'renders the description as markdown' do
+      pipeline.update(description: "Harvests **daily**.\n\n- see [the wiki](https://example.com/wiki)")
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include '<strong>daily</strong>'
+      expect(response.body).to include '<a href="https://example.com/wiki"'
+    end
+
     it 'does not offer purged extraction jobs in the run-pipeline dropdown' do
       # The run-settings modal only renders when the pipeline is ready to run,
       # which needs a transformation definition with at least one field.

@@ -1,0 +1,42 @@
+// Spacing for rendered markdown. Imported after inline-editable-element so that these rules win
+// over the flat paragraph margins that block sets for its single line content.
+.markdown {
+
+  p,
+  ul,
+  ol,
+  blockquote,
+  pre {
+    margin-top: 0;
+    margin-bottom: .5rem;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.5rem;
+  }
+
+  blockquote {
+    border-left: .25rem solid $bright-star;
+    color: $pompeii-ash;
+    padding-left: .75rem;
+  }
+
+  pre {
+    background-color: $lynx-white;
+    border-radius: .25rem;
+    padding: .5rem .75rem;
+  }
+
+  code {
+    color: $antarctic-deep;
+  }
+
+  hr {
+    margin: .75rem 0;
+  }
+}
