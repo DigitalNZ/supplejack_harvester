@@ -46,6 +46,28 @@ RSpec.describe 'Managing tags', :js do
     expect(tag.reload.name).to eq 'Musuem'
   end
 
+  it 'gives a tag a colour, which it is drawn in from then on' do
+    tag = create(:tag, name: 'Museum')
+    create(:pipeline, name: 'Auckland Museum', last_edited_by: user).tags = [tag]
+
+    visit edit_tag_path(tag)
+
+    find('.color-picker__swatch--dead-blue-eyes').click
+    click_on 'Update'
+
+    expect(page).to have_content 'Tag updated successfully'
+    expect(tag.reload.color).to eq 'dead_blue_eyes'
+    expect(page).to have_css '.tag.tag--dead-blue-eyes', text: 'Museum'
+  end
+
+  it 'shows the colour a tag already has as the one it is set to' do
+    tag = create(:tag, name: 'Museum', color: :secret_affair)
+
+    visit edit_tag_path(tag)
+
+    expect(page).to have_field 'Secret Affair', type: :radio, checked: true, visible: :all
+  end
+
   it 'deletes a tag once the deletion is confirmed' do
     tag = create(:tag, name: 'Musuem')
     create(:pipeline, name: 'Auckland Museum', last_edited_by: user).tags = [tag]

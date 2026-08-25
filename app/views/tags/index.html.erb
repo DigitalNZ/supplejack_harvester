@@ -29,7 +29,7 @@
             <% @tags.each do |tag| %>
               <% count = @pipeline_counts.fetch(tag.id, 0) %>
               <tr>
-                <td><%= tag_badge(tag) %></td>
+                <td><%= tag_label(tag) %></td>
                 <td>
                   <%# The count links to the pipelines carrying the tag, so that what a tag
                       is on can be looked at before it is renamed or deleted. %>

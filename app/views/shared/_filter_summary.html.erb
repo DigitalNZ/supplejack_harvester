@@ -4,10 +4,10 @@
 
 <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
   <% tags.select { |tag| selected.include?(tag.slug) }.each do |tag| %>
-    <span class="badge border text-secondary d-inline-flex align-items-center gap-1">
+    <span class="<%= tag_classes(tag) %>">
       <%= tag.name %>
       <%= link_to tag_filter_url(path, selected - [tag.slug]),
-                  class: 'text-reset text-decoration-none lh-1',
+                  class: 'tag__remove',
                   aria: { label: "Stop filtering by #{tag.name}" } do %>&times;<% end %>
     </span>
   <% end %>

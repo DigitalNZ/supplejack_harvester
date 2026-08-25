@@ -71,6 +71,29 @@ RSpec.describe 'Tagging a pipeline', :js do
     end
   end
 
+  # The chip is cloned from a template rendered for a tag with no colour of its own, so
+  # the colour of the tag being added has to be put on it.
+  it 'draws the chip for an existing tag in that tag colour' do
+    Tag.find_by(name: 'Museum').update(color: :purple_rain)
+
+    visit pipeline_path(pipeline)
+
+    click_on '+ Add tags'
+    click_on 'Museum'
+
+    expect(page).to have_css '[data-tags-chips] .tag--purple-rain', text: 'Museum'
+  end
+
+  it 'draws the chip for a tag being created in the grey a new tag starts as' do
+    visit pipeline_path(pipeline)
+
+    click_on '+ Add tags'
+    fill_in 'Search or create a tag', with: 'Audio'
+    click_on '+ Create tag "Audio"'
+
+    expect(page).to have_css '[data-tags-chips] .tag--pompeii-ash', text: 'Audio'
+  end
+
   it 'takes a tag off the pipeline' do
     pipeline.tags = [Tag.find_by(name: 'Museum'), Tag.find_by(name: 'High priority')]
 

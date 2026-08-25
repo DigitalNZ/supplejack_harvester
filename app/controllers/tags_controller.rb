@@ -43,6 +43,6 @@ class TagsController < ApplicationController
   end
 
   def tag_params
-    params.expect(tag: [:name])
+    params.expect(tag: %i[name color])
   end
 end

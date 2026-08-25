@@ -71,6 +71,24 @@ RSpec.describe 'Tags' do
       expect(pipeline.tags.reload.map(&:name)).to eq ['Museum']
     end
 
+    it 'recolours the tag' do
+      tag = create(:tag, name: 'Museum')
+
+      patch tag_path(tag), params: { tag: { name: 'Museum', color: 'dead_blue_eyes' } }
+
+      expect(tag.reload.color).to eq 'dead_blue_eyes'
+      expect(response).to redirect_to tags_path
+    end
+
+    it 'reports a colour it does not know rather than raising' do
+      tag = create(:tag, name: 'Museum')
+
+      patch tag_path(tag), params: { tag: { name: 'Museum', color: 'chartreuse' } }
+
+      expect(tag.reload.color).to eq 'pompeii_ash'
+      expect(flash[:alert]).to include 'Color is not included in the list'
+    end
+
     describe 'when the name cannot be saved' do
       it 'reports a name another tag already has' do
         create(:tag, name: 'Museum')

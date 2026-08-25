@@ -99,7 +99,7 @@
         <h2 class="card-title mb-1"><%= pipeline.name %></h2>
 
         <% pipeline.tags.sort_by(&:name).each do |tag| %>
-          <%= tag_badge(tag) %>
+          <%= tag_label(tag) %>
         <% end %>
       </div>
       <h3 class="card-subtitle">
