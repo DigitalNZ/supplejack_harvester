@@ -12,5 +12,6 @@
 
 <%= render 'pipeline_jobs/jobs_table',
            jobs: @pipeline_jobs,
+           total: PipelineJob.count,
            show_pipeline_col: true,
            show_destination_col: true %>

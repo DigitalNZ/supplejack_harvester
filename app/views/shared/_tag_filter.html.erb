@@ -1,0 +1,39 @@
+<%# The tag dropdown for a list, which sits inside the filter form so that Apply submits
+    the tags alongside whatever else the list is filtered by. Ticking a box filters
+    nothing on its own, and several tags narrow rather than widen: everything shown
+    carries all of them. The chips for what is being filtered by are a row of their own,
+    below the card - see shared/_filter_summary. %>
+<% selected = tag_filter_slugs %>
+
+<div class="tag-filter dropdown">
+  <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+          data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+    Filter by tag<%= " (#{selected.size})" if selected.any? %>
+  </button>
+
+  <div class="dropdown-menu tag-filter__menu p-2">
+    <h6 class="dropdown-header px-2"><%= heading %></h6>
+
+    <% if tags.empty? %>
+      <p class="dropdown-item-text text-muted mb-0">No tags yet.</p>
+    <% end %>
+
+    <% tags.each do |tag| %>
+      <div class="form-check d-flex align-items-center gap-2 ps-2">
+        <%= check_box_tag 'tags[]', tag.slug, selected.include?(tag.slug),
+                          id: "tag-filter-#{tag.slug}", class: 'form-check-input m-0 flex-shrink-0' %>
+        <%= label_tag "tag-filter-#{tag.slug}", class: 'form-check-label d-flex gap-3 flex-grow-1' do %>
+          <span class="flex-grow-1"><%= tag.name %></span>
+          <span class="text-muted"><%= counts.fetch(tag.id, 0) %></span>
+        <% end %>
+      </div>
+    <% end %>
+
+    <hr class="dropdown-divider">
+
+    <div class="d-flex align-items-center gap-2 px-2">
+      <button type="submit" class="btn btn-success btn-sm">Apply</button>
+      <%= link_to 'Clear', tag_filter_url(path, []), class: 'btn btn-link btn-sm' %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,20 @@
+.tag-filter {
+  // Bootstrap fills an outline button with the whole of its colour when hovered or held
+  // open, which for secondary is a dark grey the design does not ask for: it only wants
+  // the background to lighten. Retuning Bootstrap's own variables keeps that in its
+  // hands rather than restating the button's colours here.
+  .dropdown-toggle {
+    --bs-btn-hover-color: var(--bs-secondary);
+    --bs-btn-hover-bg: var(--bs-gray-100);
+    --bs-btn-hover-border-color: var(--bs-gray-500);
+    --bs-btn-active-color: var(--bs-secondary);
+    --bs-btn-active-bg: var(--bs-gray-200);
+    --bs-btn-active-border-color: var(--bs-gray-500);
+  }
+
+  // Wide enough for a tag name and its count to sit either side of the row without the
+  // menu resizing itself as the list is filtered.
+  @include element('menu') {
+    min-width: 15rem;
+  }
+}

@@ -107,6 +107,10 @@ en:
     clone:
       success: Pipeline cloned successfully
       failure: Pipeline clone failed. Please confirm that your Pipeline name is unique and then try again.
+    tags:
+      update:
+        success: Tags updated successfully
+        failure: 'There was an issue updating your tags: %{errors}'
   
   pipeline_jobs:
     create:
@@ -217,3 +221,7 @@ en:
   automation:
     validations:
       destination: must be selected
+
+  tag:
+    validations:
+      name_format: must contain at least one letter or number

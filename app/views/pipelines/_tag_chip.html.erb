@@ -1,0 +1,13 @@
+<%# One tag inside the editor: the badge, the name it submits, and its remove button.
+    The editor also renders this into a <template> for PipelineTags.js to clone, so the
+    chip markup is only written here. %>
+<span class="badge border text-secondary d-inline-flex align-items-center gap-1"
+      data-tag-chip
+      data-tag-name="<%= tag.name %>">
+  <span data-tag-chip-name><%= tag.name %></span>
+  <%= hidden_field_tag 'tag_names[]', tag.name, id: nil, data: { tag_chip_value: true } %>
+  <button type="button"
+          class="btn btn-sm p-0 border-0 lh-1 text-reset"
+          data-tag-remove
+          aria-label="Remove <%= tag.name %>">&times;</button>
+</span>

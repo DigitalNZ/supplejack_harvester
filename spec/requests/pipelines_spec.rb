@@ -19,6 +19,88 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include CGI.escapeHTML(pipeline.name)
     end
 
+    it "displays a pipeline's tags on its card" do
+      pipeline.tags = [create(:tag, name: 'Museum'), create(:tag, name: 'High priority')]
+
+      get pipelines_path
+
+      expect(response.body).to include 'Museum', 'High priority'
+    end
+
+    # The cards read the tags off the pipelines they were loaded with, rather than going
+    # back to the database one card at a time - so more cards must not mean more queries.
+    # Counted rather than fixed, because the filter dropdown asks about tags as well.
+    it 'does not query the tags a card at a time' do
+      tag_queries_for = lambda do
+        queries = []
+        subscription = ActiveSupport::Notifications.subscribe('sql.active_record') do |*, payload|
+          queries << payload[:sql] if payload[:sql].include?('`tags`') && payload[:name] != 'SCHEMA'
+        end
+        get pipelines_path
+        ActiveSupport::Notifications.unsubscribe(subscription)
+        queries.size
+      end
+
+      create(:pipeline).tags = [create(:tag)]
+      one_card = tag_queries_for.call
+
+      create_list(:pipeline, 5).each { |listed| listed.tags = [create(:tag)] }
+
+      expect(tag_queries_for.call).to eq one_card
+    end
+
+    describe 'filtering by tag' do
+      let(:museum)   { create(:tag, name: 'Museum') }
+      let(:priority) { create(:tag, name: 'High priority') }
+
+      let!(:both)        { create(:pipeline, name: 'Auckland Museum').tap { it.tags = [museum, priority] } }
+      let!(:museum_only) { create(:pipeline, name: 'Te Papa').tap { it.tags = [museum] } }
+      let!(:untagged)    { create(:pipeline, name: 'AnyQuestions') }
+
+      it 'lists the pipelines carrying the tag' do
+        get pipelines_path(tags: ['museum'])
+
+        expect(response.body).to include 'Auckland Museum', 'Te Papa'
+        expect(response.body).not_to include 'AnyQuestions'
+      end
+
+      # Every tag narrows the list, rather than each one adding to it.
+      it 'lists only the pipelines carrying all of the tags' do
+        get pipelines_path(tags: %w[museum high-priority])
+
+        expect(response.body).to include 'Auckland Museum'
+        expect(response.body).not_to include 'Te Papa', 'AnyQuestions'
+      end
+
+      it 'says so when no pipeline carries all of them' do
+        get pipelines_path(tags: %w[museum high-priority], search: 'Te Papa')
+
+        expect(response.body).to include 'No pipelines carry all of those tags'
+      end
+
+      it 'narrows a search rather than widening it' do
+        create(:pipeline, name: 'Museum of Transport')
+
+        get pipelines_path(tags: ['museum'], search: 'Museum')
+
+        expect(response.body).to include 'Auckland Museum'
+        expect(response.body).not_to include 'Museum of Transport'
+      end
+
+      it 'lists everything again once the filter is dropped' do
+        get pipelines_path
+
+        expect(response.body).to include 'Auckland Museum', 'Te Papa', 'AnyQuestions'
+      end
+
+      it 'offers every tag as a filter, with the number of pipelines carrying it' do
+        get pipelines_path
+
+        expect(response.body).to include 'Filter by tag'
+        expect(response.body).to include 'tag-filter-museum', 'tag-filter-high-priority'
+      end
+    end
+
     context 'when asked for the queued runs' do
       let(:destination) { create(:destination) }
 

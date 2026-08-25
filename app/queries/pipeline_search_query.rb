@@ -4,20 +4,35 @@ class PipelineSearchQuery
   def initialize(params)
     @words = sanitized_words(params[:search])
     @format = params[:format]
-    @query = Pipeline.includes(%i[last_edited_by schedules])
+    @tags = params[:tags]
+    @query = Pipeline.includes(%i[last_edited_by schedules tags])
   end
 
   def call
-    return @query if @words.blank? && @format.blank?
-    return @query.where(id: search_format_ids) if @words.blank? && @format.present?
-
-    @query = or_words_filters
-    @query = and_format_filter if @format.present?
-
-    @query
+    tagged(searched)
   end
 
   private
+
+  # The tag filter narrows whatever the search and format left, and has to be applied
+  # after them rather than before: the search ORs its terms together, and a tag folded
+  # into that would widen the results instead of narrowing them.
+  def tagged(query)
+    return query if @tags.blank?
+
+    query.tagged_with_all(@tags)
+  end
+
+  def searched
+    searching = @words.present?
+    formatting = @format.present?
+
+    return @query unless searching || formatting
+    return @query.where(id: search_format_ids) unless searching
+
+    @query = or_words_filters
+    formatting ? and_format_filter : @query
+  end
 
   def sanitized_words(words)
     words = Pipeline.sanitize_sql_like(words || '')

@@ -53,3 +53,4 @@ import "/js/step-type-select";
 import "/js/load-definition-fields";
 import "/js/ScheduleSelect";
 import "/js/Expander";
+import "/js/PipelineTags";
