@@ -6,9 +6,10 @@
           <tr class='table-primary'>
             <%# The first column carries the destination and who ran the job under the
                 pipeline's name. On a pipeline's own jobs there is no name to put above
-                them, so the header names the line that is left. %>
-            <th scope="col"><%= show_pipeline_col ? 'Pipeline' : 'Destination · Run by' %></th>
-            <% if show_pipeline_col %>
+                them, so the header names the line that is left, and the tags of that one
+                pipeline are not worth a column that repeats them. %>
+            <th scope="col"><%= pipeline_scoped ? 'Destination · Run by' : 'Pipeline' %></th>
+            <% unless pipeline_scoped %>
               <th scope="col">Tags</th>
             <% end %>
             <th scope="col">Job</th>
@@ -33,12 +34,12 @@
                          job: job,
                          report: report,
                          harvest_definition: harvest_definition.first,
-                         show_pipeline_col: show_pipeline_col,
+                         pipeline_scoped: pipeline_scoped,
                          row_index: %>
             <% end %>
             <% if job_idx != total_jobs %>
               <tr class='table__divider'>
-                <td colspan='<%= 9 + (show_pipeline_col ? 1 : 0) %>'><hr></td>
+                <td colspan='<%= pipeline_scoped ? 9 : 10 %>'><hr></td>
               </tr>
             <% end %>
           <% end %>

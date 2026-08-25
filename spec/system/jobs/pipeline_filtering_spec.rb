@@ -37,17 +37,22 @@ RSpec.describe "Filtering one pipeline's jobs", :js do
     expect(page).to have_no_css 'th', text: 'Pipeline'
   end
 
-  it 'stays on the pipeline when filtering by tag' do
+  # Tags belong to pipelines, so filtering one pipeline's jobs by them is all of them or
+  # none of them - there is nothing to narrow. The global list is where it means something.
+  it 'does not offer to filter by tag' do
     pipeline.tags = [create(:tag, name: 'Museum')]
 
     visit pipeline_pipeline_jobs_path(pipeline)
 
-    click_on 'Filter by tag'
-    check 'Museum'
-    click_on 'Apply'
+    expect(page).to have_no_button 'Filter by tag'
+    expect(page).to have_select 'status'
+  end
 
-    expect(page).to have_current_path(/#{Regexp.escape(pipeline_pipeline_jobs_path(pipeline))}/)
-    expect(page).to have_content '1 job'
-    expect(page).to have_css 'th', text: 'Destination · Run by'
+  it 'still offers it on the list of every job' do
+    pipeline.tags = [create(:tag, name: 'Museum')]
+
+    visit jobs_path
+
+    expect(page).to have_button 'Filter by tag'
   end
 end

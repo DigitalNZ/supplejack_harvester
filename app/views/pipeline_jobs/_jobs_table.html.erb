@@ -1,7 +1,8 @@
 <%# The jobs list, filters and all. Both the global list and one pipeline's render this,
-    and each passes the path of the list it is: filtering stays on the page it was done
-    from rather than sending a pipeline's jobs off to the global list to be narrowed
-    again by an id in the query. %>
+    and pipeline_scoped is which: it decides the columns a row carries, the heading over
+    them, and whether the tags of the pipeline are anything to filter by. Each also passes
+    the path of the list it is, so filtering stays on the page it was done from rather
+    than sending a pipeline's jobs off to the global list to be narrowed again. %>
 <% all_tags = Tag.ordered.to_a %>
 <% summary = list_summary(jobs, total, 'job') %>
 
@@ -10,10 +11,14 @@
     <% submit = 'this.form.requestSubmit()' %>
     <% klass = 'form-select w-auto' %>
 
-    <%= render 'shared/tag_filter', tags: all_tags, counts: Tag.job_counts,
-                                    heading: 'Filter by pipeline tag', path: %>
+    <%# Tags belong to pipelines, so filtering by them sorts one pipeline's jobs into all
+        of them or none: there is nothing to narrow within a single pipeline. %>
+    <% unless pipeline_scoped %>
+      <%= render 'shared/tag_filter', tags: all_tags, counts: Tag.job_counts,
+                                      heading: 'Filter by pipeline tag', path: %>
 
-    <div class="vr"></div>
+      <div class="vr"></div>
+    <% end %>
 
     <%# No labels beside these: each one's options say what it filters, and the select
         carries that as its accessible name. %>
@@ -28,11 +33,14 @@
   </div>
 <% end %>
 
+<%# The summary carries the count of the list either way, and the tags it is filtered by
+    when there are any - which on a pipeline's jobs only a hand-written query could set,
+    and then it is the way to clear it again. %>
 <%= render 'shared/filter_summary', tags: all_tags, path:, summary: %>
 
 <% if jobs.present? %>
   <%= render partial: 'pipeline_jobs/table',
-             locals: { jobs: jobs, show_pipeline_col: show_pipeline_col } %>
+             locals: { jobs: jobs, pipeline_scoped: pipeline_scoped } %>
 
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 my-4">
     <span class="small text-muted"><%= page_summary(jobs, 'job') %></span>
