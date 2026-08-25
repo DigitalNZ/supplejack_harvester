@@ -78,6 +78,20 @@
             </div>
 
             <div class="col-4">
+              <%= form.label :throttle, class: 'form-label' do %>
+                Throttle
+
+                <span
+                    data-bs-toggle="tooltip"
+                    data-bs-title="The delay in milliseconds between requests made during the enrichment. This is done to reduce the stress on a content source. Ignored when the pipeline is run with 'Run Enrichments Concurrently'."><i class="bi bi-question-circle" aria-label="helper text"></i>
+                </span>
+              <% end %>
+            </div>
+            <div class="col-8">
+              <%= form.number_field :throttle, class: 'form-control', required: true, value: model.throttle %>
+            </div>
+
+            <div class="col-4">
               <%= form.label :format, class: 'form-label' do %>
                 Enrichment source format
                 <span
