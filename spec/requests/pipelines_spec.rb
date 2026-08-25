@@ -185,6 +185,12 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include pipeline.name
     end
 
+    it 'edits the description in a textarea' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to match(/<textarea[^>]*name="pipeline\[description\]"/)
+    end
+
     it 'does not offer purged extraction jobs in the run-pipeline dropdown' do
       # The run-settings modal only renders when the pipeline is ready to run,
       # which needs a transformation definition with at least one field.

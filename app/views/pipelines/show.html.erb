@@ -19,7 +19,8 @@
         id: 'pipeline-description',
         model: @pipeline,
         url: pipeline_path(@pipeline),
-        attribute: :description
+        attribute: :description,
+        multiline: true
       } do %>
       <% if @pipeline.description.present? %>
         <p><%= @pipeline.description %></p>

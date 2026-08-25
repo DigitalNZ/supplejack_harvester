@@ -5,6 +5,11 @@
     margin-bottom: 0;
   }
 
+  @include element('textarea') {
+    min-width: 40rem;
+    max-width: 100%;
+  }
+
   @include element('control') {
     color: $primary;
 
