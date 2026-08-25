@@ -2,7 +2,7 @@
 <% multiline = local_assigns.fetch(:multiline, false) %>
 
 <% content_classes = class_names({ 'd-none': model.errors.include?(attribute) })
-   form_classes = class_names({ 'd-none': model.errors.exclude?(attribute) }) %>
+   form_classes = class_names('mb-2', { 'd-none': model.errors.exclude?(attribute) }) %>
 
 <div class='inline-editable-element'>
   <div id="<%= "#{id}-content" %>" class="<%= content_classes %>">
@@ -22,12 +22,20 @@
       <%= form.text_area attribute, class: 'form-control inline-editable-element__textarea', rows: 8 %>
 
       <%= form.submit 'Save', class: 'btn btn-primary mt-2' %>
+
+      <button type='button' class='btn btn-outline-secondary mt-2 ms-2 js-inline-editable-cancel' data-id="<%= id %>">
+        Cancel
+      </button>
     <% else %>
       <div class='float-start'>
         <%= form.text_field attribute, class: 'form-control w-auto' %>
       </div>
 
       <%= form.submit 'Save', class: 'btn btn-primary ms-2' %>
+
+      <button type='button' class='btn btn-outline-secondary ms-2 js-inline-editable-cancel' data-id="<%= id %>">
+        Cancel
+      </button>
     <% end %>
   <% end %>
 </div>
