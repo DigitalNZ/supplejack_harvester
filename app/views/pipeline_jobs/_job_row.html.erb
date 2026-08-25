@@ -21,17 +21,21 @@
       <%= link_to name, pipeline_pipeline_job_path(job.pipeline.id, job.id) %>
     <% end %>
   </td>
-  <td class="d-inline-flex align-items-center gap-1">
-    <%= job_status_badge(report, job) %>
-    <% if report&.harvest_job.present? %>
-      <% error_count = JobError.count_for_harvest_job(report.harvest_job) %>
-      <% if error_count.positive? %>
-        <%= link_to error_count,
-                    pipeline_pipeline_job_harvest_job_errors_path(job.pipeline, job, report.harvest_job),
-                    class: 'badge text-decoration-none bg-danger',
-                    title: 'View harvest job errors' %>
+  <td>
+    <%# The status is an icon and the word rather than a filled badge, so the count of
+        errors beside it is the only thing in the column drawn as one. %>
+    <span class="d-inline-flex align-items-center gap-2">
+      <%= job_status_with_icon(report, job) %>
+      <% if report&.harvest_job.present? %>
+        <% error_count = JobError.count_for_harvest_job(report.harvest_job) %>
+        <% if error_count.positive? %>
+          <%= link_to error_count,
+                      pipeline_pipeline_job_harvest_job_errors_path(job.pipeline, job, report.harvest_job),
+                      class: 'badge text-decoration-none bg-danger',
+                      title: 'View harvest job errors' %>
+        <% end %>
       <% end %>
-    <% end %>
+    </span>
   </td>
   <td><%= job_started_and_duration(report, job) %></td>
   <td class="text-end">
