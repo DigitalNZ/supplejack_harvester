@@ -56,6 +56,8 @@ en:
       failure: Extraction Definition clone failed. Please confirm that your Extraction Definition name is unique and then try again.
 
   extraction_jobs:
+    show:
+      purged: "Extracted data was removed on %{date} by the retention policy."
     create:
       success: Job queued successfuly
       failure: There was an issue launching the job
@@ -66,6 +68,12 @@ en:
     cancel:
       success: Job cancelled successfully
       failure: There was an issue cancelling the job
+    retentions:
+      create:
+        success: Job retained. The nightly cleanup will keep its data.
+        failure: This job's data was already removed, so it can't be retained
+      destroy:
+        success: Job no longer retained
 
   harvest_definitions:
     create:
@@ -99,6 +107,10 @@ en:
     clone:
       success: Pipeline cloned successfully
       failure: Pipeline clone failed. Please confirm that your Pipeline name is unique and then try again.
+    tags:
+      update:
+        success: Tags updated successfully
+        failure: 'There was an issue updating your tags: %{errors}'
   
   pipeline_jobs:
     create:
@@ -111,6 +123,20 @@ en:
   sessions:
     create:
       otp_failure: Invalid two factor code
+
+  load_definitions:
+    create:
+      success: Load Definition created successfully
+      failure: There was an issue creating your Load Definition
+    update:
+      success: Load Definition updated successfully
+      failure: There was an issue updating your Load Definition
+    destroy:
+      success: Load Definition deleted successfully
+      failure: There was an issue deleting your Load Definition
+    clone:
+      success: Load Definition cloned successfully
+      failure: Load Definition clone failed. Please confirm that your Load Definition name is unique and then try again.
 
   transformation_definitions:
     create:
@@ -195,3 +221,7 @@ en:
   automation:
     validations:
       destination: must be selected
+
+  tag:
+    validations:
+      name_format: must contain at least one letter or number

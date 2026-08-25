@@ -58,23 +58,8 @@
           <%= form.text_field :source_id, class: 'form-control' %>
         </div>
 
-        <% if @harvest_definition.harvest? %>
-          <%= form.hidden_field :priority, value: 0 %>
-        <% else %>
-          <div class="col-3">
-            <%= form.label :priority, 'Priority', class: 'form-label' %>
-          </div>
-          <div class='col-9'>
-            <%= form.number_field :priority, class: 'form-control' %>
-          </div>
-
-          <div class="col-3">
-            <%= form.label :required_for_active_record, 'Required for active record', class: 'form-check-label' %>
-          </div>
-          <div class='col-9'>
-            <%= form.check_box :required_for_active_record, class: 'form-check-input' %>
-          </div>
-        <% end %>
+        <%# Priority and "required for active record" describe how the block writes, not the
+            block itself, so they live on its load definition. %>
       </div>
     </div>
   </div>

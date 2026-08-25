@@ -83,10 +83,44 @@ jobs:
           gem install bundler-audit
           bundle audit check --update
 
+  schema:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0.28
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      # A normal run loads db/schema.rb rather than deriving it, and the test database
+      # is loaded from it too, so nothing else here would notice the file drifting away
+      # from db/migrate. This migrates a throwaway database from nothing and compares.
+      - name: Verify db/schema.rb against the migrations
+        env:
+          RAILS_ENV: test
+          MYSQL_PASSWORD: root
+          MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+        run: |
+          cp config/application.yml.example config/application.yml
+          bundle exec rake schema_verification:verify
+
   rspec:
     runs-on: ubuntu-latest
     env:
       TZ: 'Pacific/Auckland'
+      APT_PACKAGES: 'mysql-client libmysqlclient-dev ocrmypdf tesseract-ocr'
 
     services:
       mysql:
@@ -114,9 +148,46 @@ jobs:
         with:
           bundler-cache: true
 
+      # The key is the versions apt would install, so the cache is reused for as
+      # long as it holds the right packages, no matter which runner image we land
+      # on. Bump the suffix when APT_PACKAGES changes.
+      - name: Compute the system packages cache key
+        id: apt-key
+        run: |
+          versions=$(apt-cache policy $APT_PACKAGES | grep Candidate | sha256sum | cut -c1-16)
+          echo "key=apt-$versions-v1" >> "$GITHUB_OUTPUT"
+
+      # Downloading ocrmypdf and its dependencies is ~70MB from the Ubuntu mirrors,
+      # which has taken anywhere from 30s to 18 minutes, so cache the .debs.
+      - name: Cache system packages
+        id: apt-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/apt-archives
+          key: ${{ steps.apt-key.outputs.key }}
+
+      # The cached .debs are installed with dpkg rather than apt so that they are
+      # used as they are, without apt insisting on the versions its indexes point
+      # at. The mirrors are only touched if that left something uninstalled.
+      - name: Install system packages
+        run: |
+          if [ -n "$(ls ~/apt-archives/*.deb 2> /dev/null)" ]; then
+            sudo dpkg --install --auto-deconfigure ~/apt-archives/*.deb || true
+          fi
+
+          if dpkg-query --show --showformat='${Status}\n' $APT_PACKAGES 2>&1 |
+            grep -qv 'install ok installed'; then
+            echo 'Installing the packages from the mirrors'
+            sudo apt-get update
+            sudo apt-get install -y --download-only $APT_PACKAGES
+            rm -rf ~/apt-archives
+            mkdir -p ~/apt-archives
+            cp /var/cache/apt/archives/*.deb ~/apt-archives/
+            sudo apt-get install -y --fix-broken $APT_PACKAGES
+          fi
+
       - name: Verify MySQL connection from host
         run: |
-          sudo apt-get install -y mysql-client libmysqlclient-dev
           mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -proot -e "SHOW GRANTS FOR 'root'@'localhost'"
           mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -proot mysql
 
@@ -137,6 +208,4 @@ jobs:
           MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: |
-          sudo apt-get update 
-          sudo apt-get install -y ocrmypdf tesseract-ocr
           bundle exec rspec spec --fail-fast --format=progress

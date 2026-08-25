@@ -50,7 +50,7 @@
                   <small>
                     <%= hd.name %>
                     <br>
-                    (Fragment priority: <%= hd.priority %>)
+                    (Fragment priority: <%= hd.load_priority %>)
                   </small>
                   <% report = find_harvest_report(last_automation_run, hd, index) %>
                   <% status = harvest_report_status(report) %>

@@ -1,13 +1,14 @@
-.alert {
-  --bs-alert-color: #{$white}
-}
-
+// White text belongs only on the variants we give a dark background to. Setting
+// it on .alert made it apply to every variant, including the light ones
+// Bootstrap already picks an accessible text colour for (secondary, warning).
 .alert-danger {
+  --bs-alert-color: #{$white};
   --bs-alert-bg: #{$cruel-ruby};
   --bs-alert-border-color: #{$cruel-ruby};
 }
 
 .alert-success {
+  --bs-alert-color: #{$white};
   --bs-alert-bg: #{$primary};
   --bs-alert-border-color: #{$primary};
 }

@@ -1,0 +1,39 @@
+<% id ||= 'create-load-modal' %>
+<% modal_heading ||= 'Create load definition' %>
+<% modal_subheading ||= 'Define where this block writes its records' %>
+<% load_options = LoadOptions.new(harvest_definition) %>
+<% model ||= LoadDefinition.new(kind: load_options.default_kind, priority: load_options.default_priority) %>
+<% confirmation_button_text ||= 'Create load definition' %>
+
+<%= tag.div(
+      class: 'modal fade',
+      id:,
+      tabindex: '-1',
+      'aria-labelledby': 'Create',
+      'aria-hidden': 'true'
+    ) do %>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header--with-subheader">
+        <h5 class="modal-title"><%= modal_heading %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class='modal-subheader'>
+        <p><%= modal_subheading %></p>
+      </div>
+      <div class="modal-body">
+
+        <%= vertical_form_with model: [@pipeline, harvest_definition, model] do |form| %>
+          <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
+
+          <%= render 'load_definitions/fields', form:, harvest_definition: %>
+
+          <div class='float-end mt-4'>
+            <button type="button" class="btn btn-outline-danger me-2" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+            <button type="submit" class="btn btn-primary"><%= confirmation_button_text %></button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

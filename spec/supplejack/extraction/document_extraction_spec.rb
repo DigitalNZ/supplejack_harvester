@@ -46,6 +46,116 @@ RSpec.describe Extraction::DocumentExtraction do
       end
     end
 
+    context 'when the request is sent with a verb that carries a payload' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
+      let(:request) { create(:request, extraction_definition:, http_method: 'PUT') }
+
+      before do
+        create(:parameter, kind: 'slug', content: 'records', request:)
+        create(:parameter, kind: 'slug', content: '2', request:)
+        create(:parameter, name: 'status', content: 'deleted', request:)
+
+        stub_request(:put, 'https://api.figshare.com/records/2')
+          .with(body: '{"status":"deleted"}')
+          .and_return(fake_response('test'))
+      end
+
+      it 'sends the request with that verb and its parameters as the payload' do
+        document = subject.extract
+
+        expect(document.method).to eq 'PUT'
+        expect(a_request(:put, 'https://api.figshare.com/records/2')).to have_been_made
+      end
+    end
+
+    context 'when a parameter declares its content is JSON' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
+      let(:request) { create(:request, extraction_definition:, http_method: 'PUT') }
+
+      before do
+        create(:parameter, kind: 'slug', content: 'records', request:)
+        create(:parameter, kind: 'slug', content: '2', request:)
+        create(:parameter, kind: 'query', name: 'record', content: '{"status": "deleted"}', value_type: 'json',
+                           request:)
+
+        stub_request(:put, 'https://api.figshare.com/records/2')
+          .with(body: '{"record":{"status":"deleted"}}')
+          .and_return(fake_response('test'))
+      end
+
+      it 'sends the value nested, rather than as the string it is stored as' do
+        subject.extract
+
+        expect(a_request(:put, 'https://api.figshare.com/records/2')
+                 .with(body: '{"record":{"status":"deleted"}}')).to have_been_made
+      end
+    end
+
+    # The request layer used to turn anything Integer() could read into a number. The
+    # parameter says so itself now, and a value that only looks numeric stays a string.
+    context 'when a parameter declares its content is a whole number' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
+      let(:request) { create(:request, extraction_definition:, http_method: 'POST') }
+
+      before do
+        create(:parameter, kind: 'query', name: 'page', content: '1', value_type: 'integer', request:)
+        create(:parameter, kind: 'query', name: 'reference', content: '007', request:)
+
+        stub_request(:post, 'https://api.figshare.com')
+          .with(body: '{"page":1,"reference":"007"}')
+          .and_return(fake_response('test'))
+      end
+
+      it 'sends the number as a number and leaves the string alone' do
+        subject.extract
+
+        expect(a_request(:post, 'https://api.figshare.com')
+                 .with(body: '{"page":1,"reference":"007"}')).to have_been_made
+      end
+    end
+
+    context 'when a dynamic parameter evaluates to a nested value' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
+      let(:request) { create(:request, extraction_definition:, http_method: 'PUT') }
+
+      before do
+        create(:parameter, kind: 'slug', content: 'records', request:)
+        create(:parameter, kind: 'slug', content: '2', request:)
+        create(:parameter, kind: 'query', name: 'record', content: '{ status: :deleted }', content_type: 'dynamic',
+                           request:)
+
+        stub_request(:put, 'https://api.figshare.com/records/2')
+          .with(body: '{"record":{"status":"deleted"}}')
+          .and_return(fake_response('test'))
+      end
+
+      it 'sends what the expression returned, rather than its inspect output' do
+        subject.extract
+
+        expect(a_request(:put, 'https://api.figshare.com/records/2')
+                 .with(body: '{"record":{"status":"deleted"}}')).to have_been_made
+      end
+    end
+
+    context 'when the request is sent with DELETE' do
+      let(:extraction_definition) { create(:extraction_definition, base_url: 'https://api.figshare.com') }
+      let(:request) { create(:request, extraction_definition:, http_method: 'DELETE') }
+
+      before do
+        create(:parameter, kind: 'slug', content: 'records', request:)
+        create(:parameter, name: 'id', content: '2', request:)
+
+        stub_request(:delete, 'https://api.figshare.com/records?id=2').and_return(fake_response('test'))
+      end
+
+      it 'sends the request with its parameters in the query string' do
+        document = subject.extract
+
+        expect(document.method).to eq 'DELETE'
+        expect(a_request(:delete, 'https://api.figshare.com/records?id=2')).to have_been_made
+      end
+    end
+
     context 'when record extraction fails' do
       before do
         subject
@@ -90,7 +200,7 @@ RSpec.describe Extraction::DocumentExtraction do
             'page' => '1',
             'itemsPerPage' => '10',
             'search_for' => 'zealand',
-            'date' => Date.today.to_s
+            'date' => Date.today
           }
         ).and_call_original
 
@@ -112,7 +222,7 @@ RSpec.describe Extraction::DocumentExtraction do
           },
           method: 'get',
           params: {
-            'page' => '2',
+            'page' => 2,
             'itemsPerPage' => '10',
             'search_for' => 'zealand'
           }

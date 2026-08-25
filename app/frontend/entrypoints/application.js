@@ -50,5 +50,7 @@ import "/js/automation-template-tabs";
 import "/js/inlineEditable";
 import "/js/react";
 import "/js/step-type-select";
+import "/js/load-definition-fields";
 import "/js/ScheduleSelect";
 import "/js/Expander";
+import "/js/PipelineTags";

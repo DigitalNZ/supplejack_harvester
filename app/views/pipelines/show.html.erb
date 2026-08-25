@@ -27,6 +27,8 @@
         <p class='js-inline-editable-control inline-editable-element__control ' data-id='pipeline-description'>Add pipeline description</p>
       <% end %>
     <% end %>
+
+    <%= render 'pipelines/tags' %>
   </div>
 
   <div class="float-end">
@@ -248,7 +250,8 @@
       <div class='row gy-3 align-items-center'>
         <%= form.hidden_field :pipeline_id, value: @pipeline.id %>
         <%= form.hidden_field :kind, value: 'enrichment' %>
-        <%= form.hidden_field :priority, value: (@pipeline.harvest_definitions.last&.priority || 0) - 1 %>
+        <%# The priority the enrichment writes at is chosen when its load definition is
+            created - see LoadOptions#default_priority. %>
 
         <div class="col-4">
           <%= form.label :source_id, class: 'form-label' do %>

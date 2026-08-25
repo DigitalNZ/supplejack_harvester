@@ -10,7 +10,20 @@ module PreProcess
     DOCUMENTS_PER_FOLDER = 100
 
     def self.folder(pipeline_job_id, position)
-      "#{FOLDER}/#{pipeline_job_id}/#{position}"
+      "#{job_folder(pipeline_job_id)}/#{position}"
+    end
+
+    # Every block's output for one pipeline job.
+    def self.job_folder(pipeline_job_id)
+      "#{FOLDER}/#{pipeline_job_id}"
+    end
+
+    # Pipeline job ids that have preprocess output on disk. Ignores anything
+    # that is not a job id, since this walks a directory nobody owns.
+    def self.pipeline_job_ids_on_disk
+      Dir.children(FOLDER).grep(/\A\d+\z/).map(&:to_i)
+    rescue Errno::ENOENT
+      []
     end
 
     # Finds which pipeline jobs have written preprocess output for the given

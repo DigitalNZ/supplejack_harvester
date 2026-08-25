@@ -77,7 +77,7 @@ class PipelinesController < ApplicationController
   private
 
   def queued_jobs
-    PipelineJob.includes([pipeline: %i[last_edited_by schedules]]).where.missing(:harvest_reports).map(&:pipeline).uniq
+    PipelineJob.not_started.includes([pipeline: %i[last_edited_by schedules]]).map(&:pipeline).uniq
   end
 
   def running_jobs
@@ -103,7 +103,7 @@ class PipelinesController < ApplicationController
 
   def assign_show_variables
     @harvest_definition = @pipeline.harvest_definitions.find(&:harvest?) || HarvestDefinition.new(pipeline: @pipeline)
-    @extraction_jobs = @harvest_definition.extraction_definition&.extraction_jobs&.order(created_at: :desc)
+    @extraction_jobs = @harvest_definition.available_extraction_jobs
     @enrichment_definition = HarvestDefinition.new(pipeline: @pipeline)
     @preprocess_definition = HarvestDefinition.new(pipeline: @pipeline, kind: :preprocess)
   end

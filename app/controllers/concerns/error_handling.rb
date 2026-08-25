@@ -16,4 +16,17 @@ module ErrorHandling
       message: 'An unexpected error occured, check logs'
     }, status: :internal_server_error
   end
+
+  # A record the editor can fix, as opposed to render500's "check logs": the messages
+  # go back so the field that was refused can say why.
+  def render422_json(record)
+    messages = record.errors.full_messages
+
+    render json: {
+      error: true,
+      errorCode: 'UnprocessableEntity',
+      message: messages.to_sentence,
+      errors: messages
+    }, status: :unprocessable_content
+  end
 end

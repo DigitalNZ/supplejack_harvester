@@ -51,6 +51,59 @@ RSpec.describe Transformation::RawRecordsExtractor do
       end
     end
 
+    context 'when the page file on disk is not valid JSON' do
+      before do
+        file_path = Dir.glob("#{extraction_job.extraction_folder}/**/*__000000001.json").first
+        File.write(file_path, "\x89PNG binary junk", mode: 'wb')
+      end
+
+      it 'returns an empty array instead of raising' do
+        expect(subject.records(1)).to eq []
+      end
+    end
+
+    context 'when the page is a tar archive saved raw by the after-preprocess path' do
+      let(:archive_definition) { create(:extraction_definition, format: 'ARCHIVE_JSON') }
+      let(:archive_job)        { create(:extraction_job, extraction_definition: archive_definition) }
+      let(:archive_transformation) do
+        create(:transformation_definition, extraction_job: archive_job, record_selector: '$[*]')
+      end
+
+      subject { described_class.new(archive_transformation, archive_job) }
+
+      let(:tar_body) do
+        plain = [{ 'ID' => 'a' }, { 'ID' => 'b' }].to_json
+        zipped = Zlib.gzip([{ 'ID' => 'c' }].to_json)
+        io = StringIO.new
+        Minitar::Writer.open(io) do |tar|
+          tar.mkdir('BRATS', mode: 0o755)
+          tar.add_file_simple('BRATS/plain.json', mode: 0o644, size: plain.bytesize) { |entry| entry.write(plain) }
+          tar.add_file_simple('BRATS/zipped.json.gz', mode: 0o644, size: zipped.bytesize) do |entry|
+            entry.write(zipped)
+          end
+        end
+        io.string
+      end
+
+      before do
+        folder = "#{archive_job.extraction_folder}/1"
+        FileUtils.mkdir_p(folder)
+        File.write("#{folder}/archive__000000001.json", tar_body, mode: 'wb')
+      end
+
+      it 'unpacks the tar and returns the records from every entry' do
+        expect(subject.records(1)).to eq [{ 'ID' => 'a' }, { 'ID' => 'b' }, { 'ID' => 'c' }]
+      end
+
+      context 'when the raw page is not actually a tar' do
+        let(:tar_body) { '<html>a challenge page from a bot blocker, not a tar</html>' }
+
+        it 'returns an empty array' do
+          expect(subject.records(1)).to eq []
+        end
+      end
+    end
+
     context 'when the page exceeds the maximum parseable size' do
       let(:body)      { { items: [{ id: 1 }] }.to_json }
       let(:document)  { instance_double(Extraction::Document, body:, size_in_bytes: 200.megabytes) }

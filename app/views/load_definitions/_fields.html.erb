@@ -1,0 +1,70 @@
+<%# The settings that describe how a block writes its records. Shared by the create modal
+    and the edit page so the two cannot drift.
+    locals:
+      form:               the form builder for a LoadDefinition
+      harvest_definition: the block this load definition belongs to, which decides what it
+                          is allowed to do - see LoadOptions %>
+<% load_options = LoadOptions.new(harvest_definition) %>
+
+<div class="row gy-3 align-items-center">
+  <% if form.object.persisted? %>
+    <div class="col-4">
+      <%= form.label :name, 'Name', class: 'form-label' %>
+    </div>
+    <div class='col-8'>
+      <%= form.text_field :name, class: 'form-control' %>
+    </div>
+  <% end %>
+
+  <div class="col-4">
+    <%= form.label :kind, class: 'form-label' do %>
+      Type
+      <span
+        data-bs-toggle="tooltip"
+        data-bs-title="Which part of the destination record this block writes to"><i class="bi bi-question-circle" aria-label="helper text"></i>
+      </span>
+    <% end %>
+  </div>
+
+  <div class='col-8'>
+    <%= form.select :kind, options_for_select(load_options.kind_options, form.object.kind), {},
+                    class: 'form-select', data: { js: 'load-kind' } %>
+  </div>
+
+  <%# Left out rather than hidden, because which settings apply follows from the block's kind
+      and cannot change while the form is open - see LoadOptions. The one thing that can is
+      a harvest choosing between the two fragments, and only the primary one fixes the priority
+      at 0 (js/load-definition-fields keeps up with that). %>
+  <% if load_options.asks_for_priority? %>
+    <div class="col-4">
+      <%= form.label :priority, class: 'form-label' do %>
+        Priority
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="Fragments are merged lowest priority first, so a lower number wins for any single-value field. A block writing a secondary fragment must not use 0 - that is the primary fragment's priority."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
+    </div>
+
+    <%# The primary fragment is 0 by definition, so the number is shown as plain text rather
+        than as a field inviting an edit that would be refused. Readonly rather than disabled
+        because a disabled input submits nothing, and a definition moving off a secondary
+        fragment would keep the non-zero priority it is no longer allowed. %>
+    <% fixed = form.object.primary_fragment? %>
+
+    <div class='col-8'>
+      <%= form.number_field :priority, class: fixed ? 'form-control-plaintext' : 'form-control',
+                                       readonly: fixed, data: { js: 'load-priority' } %>
+    </div>
+  <% end %>
+
+  <% if load_options.asks_for_required_fragment? %>
+    <div class="col-4">
+      <%= form.label :required_for_active_record, 'Required for active record', class: 'form-check-label' %>
+    </div>
+
+    <div class='col-8'>
+      <%= form.check_box :required_for_active_record, class: 'form-check-input' %>
+    </div>
+  <% end %>
+</div>

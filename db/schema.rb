@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_13_140000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_21_120000) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -138,9 +138,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_13_140000) do
     t.string "stop_condition_type"
     t.string "stop_condition_name"
     t.text "stop_condition_content"
+    t.datetime "purged_at"
     t.bigint "source_pipeline_job_id"
     t.integer "source_position"
+    t.datetime "retained_at"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
+    t.index ["purged_at"], name: "index_extraction_jobs_on_purged_at"
     t.index ["source_pipeline_job_id"], name: "index_extraction_jobs_on_source_pipeline_job_id"
     t.index ["status"], name: "index_extraction_jobs_on_status"
   end
@@ -298,13 +301,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_13_140000) do
     t.datetime "updated_at", null: false
     t.bigint "request_id", null: false
     t.integer "content_type", default: 0
+    t.integer "value_type", default: 0, null: false
     t.index ["request_id"], name: "index_parameters_on_request_id"
   end
 
   create_table "pipeline_jobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.timestamp "start_time"
     t.timestamp "end_time"
-    t.integer "status"
+    t.integer "status", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "pipeline_id"
@@ -327,6 +331,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_13_140000) do
     t.index ["launched_by_id"], name: "index_pipeline_jobs_on_launched_by_id"
     t.index ["pipeline_id"], name: "index_pipeline_jobs_on_pipeline_id"
     t.index ["schedule_id"], name: "index_pipeline_jobs_on_schedule_id"
+  end
+
+  create_table "pipeline_tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "pipeline_id", null: false
+    t.bigint "tag_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pipeline_id", "tag_id"], name: "index_pipeline_tags_on_pipeline_id_and_tag_id", unique: true
+    t.index ["tag_id"], name: "index_pipeline_tags_on_tag_id"
   end
 
   create_table "pipelines", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -405,6 +418,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_13_140000) do
     t.index ["extraction_definition_id"], name: "index_stop_conditions_on_extraction_definition_id"
   end
 
+  create_table "tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_tags_on_name", unique: true
+    t.index ["slug"], name: "index_tags_on_slug", unique: true
+  end
+
   create_table "transformation_definitions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.text "name"
     t.string "record_selector"
@@ -471,6 +493,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_13_140000) do
   add_foreign_key "field_schema_field_values", "schema_field_values"
   add_foreign_key "job_errors", "job_completion_summaries"
   add_foreign_key "pipeline_jobs", "automation_steps"
+  add_foreign_key "pipeline_tags", "pipelines"
+  add_foreign_key "pipeline_tags", "tags"
   add_foreign_key "pipelines", "users", column: "last_edited_by_id"
   add_foreign_key "schemas", "users", column: "last_edited_by_id"
   add_foreign_key "transformation_definitions", "users", column: "last_edited_by_id"

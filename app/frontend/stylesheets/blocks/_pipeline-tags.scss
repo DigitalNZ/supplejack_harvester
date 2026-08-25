@@ -1,0 +1,26 @@
+.pipeline-tags {
+  @include element('editor') {
+    width: 38rem;
+    max-width: 100%;
+  }
+
+  // Bootstrap only offsets a dropdown menu that Popper has positioned, and this one is
+  // opened by hand under the input it belongs to.
+  @include element('suggestions') {
+    // Dropdowns in this app hover to dark green with white text, which would swallow the
+    // green "Create tag" option whole. The design hovers to light grey and leaves the
+    // text as it was.
+    --bs-dropdown-link-hover-bg: var(--bs-gray-100);
+    --bs-dropdown-link-hover-color: var(--bs-dropdown-link-color);
+
+    top: 100%;
+    left: 0;
+    max-height: 14rem;
+    overflow-y: auto;
+
+    // The create option keeps its own colour on hover; only its background moves.
+    .dropdown-item.text-success:hover {
+      color: var(--bs-success);
+    }
+  }
+}

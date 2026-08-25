@@ -76,6 +76,7 @@ Rails.application.routes.draw do
     scope module: :pipelines do
       resources :schedules
       resource :run_blocks, only: %i[show]
+      resource :tags, only: %i[update]
     end
 
     resources :harvest_definitions, only: %i[create update destroy] do
@@ -88,6 +89,7 @@ Rails.application.routes.draw do
 
         resources :extraction_jobs, only: %i[index show create destroy] do
           post :cancel, on: :member
+          resource :retention, only: %i[create destroy], module: :extraction_jobs
         end
 
         resources :requests do
@@ -104,6 +106,10 @@ Rails.application.routes.draw do
         resources :fields, only: %i[create update destroy] do
           post :run, on: :collection
         end
+      end
+
+      resources :load_definitions, only: %i[create show update destroy] do
+        post :clone, on: :member
       end
     end
   end

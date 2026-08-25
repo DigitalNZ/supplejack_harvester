@@ -1,11 +1,10 @@
 <div class='card p-4 definition-group--spacer'>
   <%= render 'pipelines/definition_header',
              definition: enrichment_definition,
-             label: 'Enrichment',
-             show_priority: true %>
+             label: 'Enrichment' %>
 
   <div class='row'>
-    <div class='col-6'>
+    <div class='col-4'>
       <% if enrichment_definition.extraction_definition.present? %>
         <%= render 'pipelines/definition_extraction_card',
                    pipeline: @pipeline, block_definition: enrichment_definition %>
@@ -31,7 +30,7 @@
       <% end %>
     </div>
 
-    <div class='col-6'>
+    <div class='col-4'>
       <% if enrichment_definition.transformation_definition.present? %>
         <%= render 'pipelines/definition_transformation_card',
                    pipeline: @pipeline, block_definition: enrichment_definition %>
@@ -85,6 +84,11 @@
                      } %>
         <% end %>
       <% end %>
+    </div>
+
+    <div class='col-4'>
+      <%= render 'pipelines/definition_load_column',
+                 block_definition: enrichment_definition, label: 'enrichment' %>
     </div>
   </div>
 </div>

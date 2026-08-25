@@ -28,9 +28,101 @@ RSpec.describe 'ExtractionJobs' do
       expect(response).to be_successful
     end
 
-    it 'displays the updated_at of the jobs' do
+    it 'displays the created_at of the jobs' do
       subject.reload
-      expect(response.body).to include subject.updated_at.to_fs(:verbose)
+      expect(response.body).to include subject.created_at.to_fs(:verbose)
+    end
+
+    it 'labels the destructive button for what it removes: the job' do
+      expect(response.body).to include('Delete job')
+    end
+
+    it 'offers to retain the job' do
+      expect(response.body).to include('Retain job')
+    end
+  end
+
+  describe '#show when the extracted data has been purged' do
+    before do
+      subject.update(status: 'completed', purged_at: Time.zone.parse('2026-06-01 09:00'),
+                     start_time: Time.zone.parse('2026-05-01 09:00'), end_time: Time.zone.parse('2026-05-01 10:00'))
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(pipeline, harvest_definition,
+                                                                                extraction_definition, subject)
+    end
+
+    it 'returns a successful response' do
+      expect(response).to be_successful
+    end
+
+    it 'says the data was removed' do
+      expect(response.body).to include('Extracted data was removed')
+    end
+
+    it 'still shows how long the job ran' do
+      expect(response.body).to include('Duration: 1 hour')
+    end
+
+    it 'does not render the result viewer' do
+      expect(response.body).not_to include('extraction-result-viewer')
+    end
+
+    it 'does not offer to retain the job' do
+      expect(response.body).not_to include('Retain job')
+    end
+  end
+
+  describe '#show when the job is retained' do
+    before do
+      subject.update(status: 'completed', retained_at: Time.zone.now)
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(pipeline, harvest_definition,
+                                                                                extraction_definition, subject)
+    end
+
+    it 'shows the Retained badge' do
+      expect(response.body).to include('Retained')
+    end
+
+    it 'offers to stop retaining' do
+      expect(response.body).to include('Stop retaining')
+    end
+  end
+
+  describe '#show when purged extracted data had errored' do
+    before do
+      subject.update(status: 'errored', error_message: 'Connection refused by host',
+                     purged_at: Time.zone.parse('2026-06-01 09:00'))
+      get pipeline_harvest_definition_extraction_definition_extraction_job_path(pipeline, harvest_definition,
+                                                                                extraction_definition, subject)
+    end
+
+    it 'still shows why the job failed' do
+      expect(response.body).to include('Connection refused by host')
+    end
+  end
+
+  describe '#index' do
+    it 'lists retained jobs first and badges them' do
+      retained = create(:extraction_job, extraction_definition:, retained_at: Time.zone.now,
+                                         created_at: 2.days.ago)
+      newer = create(:extraction_job, extraction_definition:, created_at: Time.zone.now)
+
+      get pipeline_harvest_definition_extraction_definition_extraction_jobs_path(pipeline, harvest_definition,
+                                                                                 extraction_definition)
+
+      expect(response.body).to include('Retained')
+      expect(response.body.index(">#{retained.name}<")).to be < response.body.index(">#{newer.name}<")
+    end
+
+    # Lifecycle work (purging, retention changes) bumps updated_at, which used to drag
+    # long-finished jobs back to the top of the list.
+    it 'orders by when the job was created, not when it was last touched' do
+      touched = create(:extraction_job, extraction_definition:, created_at: 2.days.ago, updated_at: Time.zone.now)
+      newer = create(:extraction_job, extraction_definition:, created_at: 1.hour.ago)
+
+      get pipeline_harvest_definition_extraction_definition_extraction_jobs_path(pipeline, harvest_definition,
+                                                                                 extraction_definition)
+
+      expect(response.body.index(">#{newer.name}<")).to be < response.body.index(">#{touched.name}<")
     end
   end
 

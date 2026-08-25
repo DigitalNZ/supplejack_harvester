@@ -54,7 +54,7 @@
     id='js-harvest-definition-id'>
 
   <div class='row'>
-    <div class='col-6'>
+    <div class='col-4'>
       <% if @harvest_definition.extraction_definition.present? %>
 
         <%= render partial: 'pipelines/card',
@@ -111,7 +111,7 @@
       <% end %>
     </div>
 
-    <div class='col-6'>
+    <div class='col-4'>
       <% if @harvest_definition.transformation_definition.present? %>
 
         <%= render partial: 'pipelines/card',
@@ -160,6 +160,11 @@
           </div>
         </button>
       <% end %>
+    </div>
+
+    <div class='col-4'>
+      <%= render 'pipelines/definition_load_column',
+                 block_definition: @harvest_definition, label: 'harvest' %>
     </div>
   </div>
 </div>
