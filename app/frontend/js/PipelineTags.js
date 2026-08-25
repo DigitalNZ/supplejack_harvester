@@ -127,8 +127,12 @@ if (root) {
   function openEditor() {
     editButton.classList.add("d-none");
     editor.classList.remove("d-none");
-    renderSuggestions();
     input.focus();
+    // Opening the editor is not asking for suggestions - the list sits over Save and
+    // Cancel, and nothing has been typed or clicked yet. Focusing the input is what asks
+    // for them, and the focus above has just done so, so shut the list it opened. Both
+    // ways of asking on purpose - clicking the input, or typing in it - still open it.
+    hideSuggestions();
   }
 
   function closeEditor() {
