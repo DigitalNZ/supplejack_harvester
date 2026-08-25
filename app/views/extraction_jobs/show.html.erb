@@ -6,7 +6,7 @@
     <h1>Extracted Data</h1>
     <p>
       <span class="me-1"><%= @extraction_job.extraction_definition.name %></span>|
-      <span class="ms-1"><strong><%= @extraction_job.updated_at.to_fs(:verbose) %></strong></span>
+      <span class="ms-1"><strong><%= @extraction_job.created_at.to_fs(:verbose) %></strong></span>
     </p>
   </div>
 

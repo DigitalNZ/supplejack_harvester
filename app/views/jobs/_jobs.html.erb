@@ -8,7 +8,7 @@
                     class: 'card card--clickable mb-3' do %>
           <div class='card-body'>
             <h5 class='card-title'><%= job.name %></h5>
-            <h6 class='card-subtitle'><%= job.updated_at.to_fs(:light) %></h6>
+            <h6 class='card-subtitle'><%= job.created_at.to_fs(:light) %></h6>
 
             <span class="badge bg-light text-dark">
               <%= job_status_text(job) %>

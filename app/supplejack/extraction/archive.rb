@@ -33,6 +33,29 @@ module Extraction
       top_level_entries
     end
 
+    # The bodies of a tar file's entries, gunzipping gzipped ones. For tars saved
+    # raw as a single page file, which are unpacked at read time rather than on disk.
+    def self.entry_bodies_from_file(file_path)
+      bytes = File.binread(file_path)
+      return [] unless tar?(bytes)
+
+      Minitar::Input.open(StringIO.new(bytes)) { |input| file_entry_bodies(input) }
+    end
+
+    def self.file_entry_bodies(input)
+      input.enum_for(:each).filter_map { |entry| entry_body(entry.read) if entry.file? }
+    end
+
+    def self.tar?(bytes)
+      bytes.to_s.byteslice(257, 5) == 'ustar'
+    end
+
+    def self.entry_body(content)
+      return Zlib.gunzip(content) if content.to_s.byteslice(0, 2).unpack('C2') == [0x1F, 0x8B]
+
+      content
+    end
+
     def self.body(extracted_file_path)
       body = if Archive.gzipped?(extracted_file_path)
                Archive.extract_from_gz(extracted_file_path)

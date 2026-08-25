@@ -150,10 +150,31 @@ module Extraction
     end
 
     def extract_archive_and_save(request)
-      extraction_folder = @extraction_job.extraction_folder
-      @de = ArchiveExtraction.new(request, extraction_folder, @previous_request)
+      @de = ArchiveExtraction.new(request, @extraction_job.extraction_folder, @previous_request)
       @de.download_archive
-      @de.save_entries(extraction_folder)
+      first_page = @extraction_definition.page
+      @de.save_entries
+      enqueue_archive_transformations(first_page)
+    end
+
+    # An archive saves one page per tar entry rather than one per request, and
+    # they are only on disk once #save_entries returns - so their transformations
+    # are queued afterwards, from the page range it saved, rather than per fetched
+    # document like #enqueue_record_transformation.
+    def enqueue_archive_transformations(first_page)
+      return if @harvest_report.blank?
+
+      (first_page...@extraction_definition.page).each { |page| enqueue_archive_page(page) }
+      @harvest_report.update(extraction_updated_time: Time.zone.now)
+    end
+
+    def enqueue_archive_page(page)
+      @harvest_report.increment_pages_extracted!
+      return unless @de.document.successful?
+      return if requires_additional_processing?
+
+      TransformationWorker.perform_async_with_priority(@harvest_job.pipeline_job.job_priority, @harvest_job.id, page)
+      @harvest_report.increment_transformation_workers_queued!
     end
 
     def extract_and_save_document(request)
