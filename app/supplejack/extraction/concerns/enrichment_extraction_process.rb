@@ -20,7 +20,7 @@ module Extraction
 
       private
 
-      # rubocop:disable Metrics/MethodLength
+      # rubocop:disable-next Metrics/MethodLength
       def build_extraction_context(parsed_params)
         extraction_definition_id = parsed_params['extraction_definition_id']
         extraction_job_id = parsed_params['extraction_job_id']
@@ -39,7 +39,6 @@ module Extraction
           parsed_params['page']
         )
       end
-      # rubocop:enable Metrics/MethodLength
 
       def build_enrichment_extraction(parsed_params, extraction_definition, extraction_job)
         Extraction::EnrichmentExtraction.new(
@@ -57,7 +56,7 @@ module Extraction
         update_harvest_report(extraction_context)
       end
 
-      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable-next Metrics/AbcSize
       def enqueue_record_transformation(extraction_context)
         harvest_job = extraction_context.harvest_job
         enrichment_extraction = extraction_context.enrichment_extraction
@@ -71,9 +70,8 @@ module Extraction
                                                          extraction_context.api_record['id'])
 
         harvest_report = harvest_job.harvest_report
-        harvest_report.increment_transformation_workers_queued! if harvest_report.present?
+        harvest_report.presence&.increment_transformation_workers_queued!
       end
-      # rubocop:enable Metrics/AbcSize
 
       def update_harvest_report(extraction_context)
         harvest_report = extraction_context.harvest_job.harvest_report

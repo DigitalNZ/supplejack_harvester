@@ -10,7 +10,7 @@ module Api
       if success
         render json: { status: 'success', message:, automation_id: automation.id }
       else
-        render json: { status: 'failed', message: }, status: :unprocessable_entity
+        render json: { status: 'failed', message: }, status: :unprocessable_content
       end
     end
 

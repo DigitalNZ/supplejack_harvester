@@ -43,7 +43,7 @@ class S3ExtractionExecution
   end
 
   # rubocop:disable Metrics/MethodLength
-  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable-next Metrics/AbcSize
   def convert_files_to_extraction_job
     p 'Converting files from S3 into extraction job format...'
 
@@ -69,6 +69,5 @@ class S3ExtractionExecution
 
     @extraction_job.completed!
   end
-  # rubocop:enable Metrics/AbcSize
   # rubocop:enable Metrics/MethodLength
 end
