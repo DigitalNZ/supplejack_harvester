@@ -1,5 +1,4 @@
 <% id ||= 'inline-editable-element' %>
-<% multiline = local_assigns.fetch(:multiline, false) %>
 
 <% content_classes = class_names({ 'd-none': model.errors.include?(attribute) })
    form_classes = class_names('mb-2', { 'd-none': model.errors.exclude?(attribute) }) %>
@@ -18,20 +17,15 @@
 
   <%= vertical_form_with(model:, url:, class: form_classes, id: "#{id}-form") do |form| %>
 
-    <% if multiline %>
-      <%= form.text_area attribute, class: 'form-control inline-editable-element__textarea', rows: 8 %>
-    <% else %>
-      <div class='float-start'>
-        <%= form.text_field attribute, class: 'form-control w-auto' %>
-      </div>
-    <% end %>
+    <div class='float-start'>
+      <%= form.text_field attribute, class: 'form-control w-auto' %>
+    </div>
 
-    <%# a textarea puts its buttons on the line below, a single line field alongside it %>
-    <%= form.submit 'Save', class: class_names('btn btn-primary', { 'mt-2': multiline, 'ms-2': !multiline }) %>
+    <%= form.submit 'Save', class: 'btn btn-primary ms-2' %>
 
     <button
       type='button'
-      class="<%= class_names('btn btn-outline-secondary ms-2 js-inline-editable-cancel', { 'mt-2': multiline }) %>"
+      class='btn btn-outline-secondary ms-2 js-inline-editable-cancel'
       data-id="<%= id %>">
       Cancel
     </button>

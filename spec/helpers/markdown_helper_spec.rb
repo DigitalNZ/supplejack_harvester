@@ -49,11 +49,13 @@ RSpec.describe MarkdownHelper do
       expect(markdown('See https://example.com/wiki')).to include '<a href="https://example.com/wiki"'
     end
 
-    it 'strips headings back to their text' do
-      html = markdown('# Overview')
+    it 'turns a heading of any level into a bold paragraph' do
+      expect(markdown('# Overview')).to include '<p><strong>Overview</strong></p>'
+      expect(markdown('#### Overview')).to include '<p><strong>Overview</strong></p>'
+    end
 
-      expect(html).not_to include '<h1'
-      expect(html).to include 'Overview'
+    it 'keeps the formatting inside a heading' do
+      expect(markdown('# An *emphatic* heading')).to include '<strong>An <em>emphatic</em> heading</strong>'
     end
 
     it 'strips images back to their alt text' do

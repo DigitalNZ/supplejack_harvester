@@ -20,6 +20,19 @@
     padding-left: 1.5rem;
   }
 
+  // The preview is 5 lines of running text. Bootstrap has no clamp utility, and the blocks inside
+  // have to go inline or only the first of them would be measured.
+  &--clamped {
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    display: -webkit-box;
+    overflow: hidden;
+
+    > * {
+      display: inline;
+    }
+  }
+
   blockquote {
     border-left: .25rem solid $bright-star;
     color: $pompeii-ash;

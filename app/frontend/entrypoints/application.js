@@ -48,6 +48,7 @@ import "/js/run-blocks";
 import "/js/schedules";
 import "/js/automation-template-tabs";
 import "/js/inlineEditable";
+import "/js/pipelineDescription";
 import "/js/react";
 import "/js/step-type-select";
 import "/js/load-definition-fields";

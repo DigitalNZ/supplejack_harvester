@@ -1,1 +1,3 @@
-<div class='markdown'><%= markdown(pipeline.description) %></div>
+<% classes = local_assigns.fetch(:classes, nil) %>
+
+<div class="<%= class_names('markdown', classes) %>"><%= markdown(pipeline.description) %></div>

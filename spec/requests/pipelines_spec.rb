@@ -191,11 +191,25 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to match(/<textarea[^>]*name="pipeline\[description\]"/)
     end
 
-    it 'offers a cancel button for the name and description editors' do
+    it 'offers a cancel button for the name editor' do
       get pipeline_path(pipeline)
 
       expect(response.body).to match(/<button[^>]*js-inline-editable-cancel[^>]*data-id="pipeline-name"/)
-      expect(response.body).to match(/<button[^>]*js-inline-editable-cancel[^>]*data-id="pipeline-description"/)
+    end
+
+    it 'offers the three description states, and the collapsed one leads' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to match(/class="js-description-collapsed"/)
+      expect(response.body).to match(/js-description-expanded/)
+      expect(response.body).to match(/js-description-form/)
+    end
+
+    it 'offers to read the rest of the description, and to fold it away again' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include 'Read full description'
+      expect(response.body).to include 'Show less'
     end
 
     it 'renders the description as markdown' do
