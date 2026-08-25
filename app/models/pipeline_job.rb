@@ -27,6 +27,15 @@ class PipelineJob < ApplicationRecord
   # and such a run must not read as one that is still coming. status is nullable, hence the nil.
   scope :not_started, -> { where.missing(:harvest_reports).where(status: [nil, *Job::UNFINISHED_STATUSES]) }
 
+  # Everything a row of the jobs table reads, loaded up front. Both lists that draw that
+  # table - every job, and one pipeline's - go through here, so neither asks per row for
+  # the destination, the schedule, the reports and their harvest jobs, or the tags of the
+  # pipeline that ran it.
+  scope :for_jobs_table, lambda {
+    includes(:destination, :schedule, { pipeline: :tags }, { harvest_reports: :harvest_job },
+             { automation_step: [:automation] })
+  }
+
   with_options if: :set_number? do
     validates :pages, presence: true
   end

@@ -2,7 +2,7 @@
 
 module TagsHelper
   # The filters a list can already be under, which a tag filter has to leave alone.
-  FILTER_PARAMS = %i[search format sort_by status destination run_by pipeline_id].freeze
+  FILTER_PARAMS = %i[search format sort_by status destination run_by].freeze
 
   # The modifier that colours a tag, from the colour it carries.
   def tag_color_modifier(tag)

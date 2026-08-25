@@ -130,10 +130,4 @@ module JobsHelper
 
     job.job_priority.presence&.humanize || 'Default'
   end
-
-  # The jobs of one pipeline. pipeline_id rides along in the query as well as the path,
-  # because the filter form on that page posts it to the global jobs list.
-  def jobs_filter_url(pipeline)
-    "#{pipeline_pipeline_jobs_path(pipeline)}?pipeline_id=#{pipeline.id}"
-  end
 end

@@ -141,16 +141,6 @@ RSpec.describe JobsHelper do
     end
   end
 
-  describe '#jobs_filter_url' do
-    let(:pipeline) { create(:pipeline) }
-
-    it 'generates the correct jobs filter URL' do
-      expected_url = "#{pipeline_pipeline_jobs_path(pipeline)}?pipeline_id=#{pipeline.id}"
-
-      expect(helper.jobs_filter_url(pipeline)).to eq(expected_url)
-    end
-  end
-
   describe '#job_source_line' do
     let(:destination) { create(:destination, name: 'Production API') }
 

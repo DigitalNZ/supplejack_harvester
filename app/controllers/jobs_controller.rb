@@ -1,16 +1,10 @@
 # frozen_string_literal: true
 
+# Every job, whatever ran it. One pipeline's are PipelineJobsController's, and both draw
+# the same table from the same filters - see ApplicationController#paginate_and_filter_jobs
+# and PipelineJob.for_jobs_table.
 class JobsController < ApplicationController
   def index
-    # The rows carry each pipeline's tags, so they are loaded with the pipelines rather
-    # than a query at a time as the table is drawn.
-    @pipeline_jobs = paginate_and_filter_jobs(PipelineJob.includes([:harvest_reports, :destination, :schedule,
-                                                                    { pipeline: :tags },
-                                                                    { automation_step: [:automation] }]))
-
-    respond_to do |format|
-      format.html
-      format.js
-    end
+    @pipeline_jobs = paginate_and_filter_jobs(PipelineJob.for_jobs_table)
   end
 end

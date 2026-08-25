@@ -1,14 +1,17 @@
+<%# The jobs list, filters and all. Both the global list and one pipeline's render this,
+    and each passes the path of the list it is: filtering stays on the page it was done
+    from rather than sending a pipeline's jobs off to the global list to be narrowed
+    again by an id in the query. %>
 <% all_tags = Tag.ordered.to_a %>
 <% summary = list_summary(jobs, total, 'job') %>
 
-<%= form_with url: jobs_path, method: :get, html: { id: 'filters-form', class: 'card bg-light mb-3' } do %>
+<%= form_with url: path, method: :get, html: { id: 'filters-form', class: 'card bg-light mb-3' } do %>
   <div class="card-body p-2 d-flex flex-wrap align-items-center gap-2">
     <% submit = 'this.form.requestSubmit()' %>
     <% klass = 'form-select w-auto' %>
-    <%= hidden_field_tag :pipeline_id, params[:pipeline_id] %>
 
     <%= render 'shared/tag_filter', tags: all_tags, counts: Tag.job_counts,
-                                    heading: 'Filter by pipeline tag', path: jobs_path %>
+                                    heading: 'Filter by pipeline tag', path: %>
 
     <div class="vr"></div>
 
@@ -25,7 +28,7 @@
   </div>
 <% end %>
 
-<%= render 'shared/filter_summary', tags: all_tags, path: jobs_path, summary: %>
+<%= render 'shared/filter_summary', tags: all_tags, path:, summary: %>
 
 <% if jobs.present? %>
   <%= render partial: 'pipeline_jobs/table',
@@ -38,6 +41,6 @@
 <% elsif tag_filter_slugs.any? %>
   <div class="alert alert-light border text-center">
     No jobs belong to a pipeline carrying all of those tags.
-    <%= link_to 'Clear the tag filter', tag_filter_url(jobs_path, []) %>
+    <%= link_to 'Clear the tag filter', tag_filter_url(path, []) %>
   </div>
 <% end %>
