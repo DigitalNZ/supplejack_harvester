@@ -194,8 +194,8 @@ RSpec.describe 'Pipelines' do
     it 'offers a cancel button for the name and description editors' do
       get pipeline_path(pipeline)
 
-      expect(response.body).to include %(js-inline-editable-cancel' data-id="pipeline-name")
-      expect(response.body).to include %(js-inline-editable-cancel' data-id="pipeline-description")
+      expect(response.body).to match(/<button[^>]*js-inline-editable-cancel[^>]*data-id="pipeline-name"/)
+      expect(response.body).to match(/<button[^>]*js-inline-editable-cancel[^>]*data-id="pipeline-description"/)
     end
 
     it 'renders the description as markdown' do
