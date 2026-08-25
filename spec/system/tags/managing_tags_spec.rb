@@ -15,8 +15,8 @@ RSpec.describe 'Managing tags', :js do
 
     expect(page).to have_content 'Museum'
     expect(page).to have_content 'Musuem'
-    expect(page).to have_link '1'
-    expect(page).to have_content 'None'
+    expect(page).to have_link '1 pipeline'
+    expect(page).to have_content 'No pipelines'
   end
 
   it 'renames a mis-spelt tag' do
