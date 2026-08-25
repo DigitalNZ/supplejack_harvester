@@ -18,6 +18,110 @@ RSpec.describe 'Pipelines' do
       expect(response).to have_http_status :ok
       expect(response.body).to include CGI.escapeHTML(pipeline.name)
     end
+
+    it "displays a pipeline's tags on its card" do
+      pipeline.tags = [create(:tag, name: 'Museum'), create(:tag, name: 'High priority')]
+
+      get pipelines_path
+
+      expect(response.body).to include 'Museum', 'High priority'
+    end
+
+    # The cards read the tags off the pipelines they were loaded with, rather than going
+    # back to the database one card at a time - so more cards must not mean more queries.
+    # Counted rather than fixed, because the filter dropdown asks about tags as well.
+    it 'does not query the tags a card at a time' do
+      tag_queries_for = lambda do
+        queries = []
+        subscription = ActiveSupport::Notifications.subscribe('sql.active_record') do |*, payload|
+          queries << payload[:sql] if payload[:sql].include?('`tags`') && payload[:name] != 'SCHEMA'
+        end
+        get pipelines_path
+        ActiveSupport::Notifications.unsubscribe(subscription)
+        queries.size
+      end
+
+      create(:pipeline).tags = [create(:tag)]
+      one_card = tag_queries_for.call
+
+      create_list(:pipeline, 5).each { |listed| listed.tags = [create(:tag)] }
+
+      expect(tag_queries_for.call).to eq one_card
+    end
+
+    describe 'filtering by tag' do
+      let(:museum)   { create(:tag, name: 'Museum') }
+      let(:priority) { create(:tag, name: 'High priority') }
+
+      let!(:both)        { create(:pipeline, name: 'Auckland Museum').tap { it.tags = [museum, priority] } }
+      let!(:museum_only) { create(:pipeline, name: 'Te Papa').tap { it.tags = [museum] } }
+      let!(:untagged)    { create(:pipeline, name: 'AnyQuestions') }
+
+      it 'lists the pipelines carrying the tag' do
+        get pipelines_path(tags: ['museum'])
+
+        expect(response.body).to include 'Auckland Museum', 'Te Papa'
+        expect(response.body).not_to include 'AnyQuestions'
+      end
+
+      # Every tag narrows the list, rather than each one adding to it.
+      it 'lists only the pipelines carrying all of the tags' do
+        get pipelines_path(tags: %w[museum high-priority])
+
+        expect(response.body).to include 'Auckland Museum'
+        expect(response.body).not_to include 'Te Papa', 'AnyQuestions'
+      end
+
+      it 'says so when no pipeline carries all of them' do
+        get pipelines_path(tags: %w[museum high-priority], search: 'Te Papa')
+
+        expect(response.body).to include 'No pipelines carry all of those tags'
+      end
+
+      it 'narrows a search rather than widening it' do
+        create(:pipeline, name: 'Museum of Transport')
+
+        get pipelines_path(tags: ['museum'], search: 'Museum')
+
+        expect(response.body).to include 'Auckland Museum'
+        expect(response.body).not_to include 'Museum of Transport'
+      end
+
+      it 'lists everything again once the filter is dropped' do
+        get pipelines_path
+
+        expect(response.body).to include 'Auckland Museum', 'Te Papa', 'AnyQuestions'
+      end
+
+      it 'offers every tag as a filter, with the number of pipelines carrying it' do
+        get pipelines_path
+
+        expect(response.body).to include 'Filter by tag'
+        expect(response.body).to include 'tag-filter-museum', 'tag-filter-high-priority'
+      end
+    end
+
+    context 'when asked for the queued runs' do
+      let(:destination) { create(:destination) }
+
+      it 'lists a pipeline whose run has not begun' do
+        create(:pipeline_job, pipeline:, destination:, status: 'queued')
+
+        get pipelines_path(status: 'queued')
+
+        expect(response.body).to include CGI.escapeHTML(pipeline.name)
+      end
+
+      # PipelineWorker refuses to start a run whose blocks cannot run, which leaves it over
+      # with nothing to report. Nothing about it is still coming.
+      it 'leaves out one whose run is over without having reported anything' do
+        create(:pipeline_job, pipeline:, destination:, status: 'errored')
+
+        get pipelines_path(status: 'queued')
+
+        expect(response.body).not_to include CGI.escapeHTML(pipeline.name)
+      end
+    end
   end
 
   describe 'POST /create' do
@@ -81,6 +185,20 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include pipeline.name
     end
 
+    it 'does not offer purged extraction jobs in the run-pipeline dropdown' do
+      # The run-settings modal only renders when the pipeline is ready to run,
+      # which needs a transformation definition with at least one field.
+      create(:field, transformation_definition: harvest_definition.transformation_definition)
+      extraction_definition = harvest_definition.extraction_definition
+      live = create(:extraction_job, extraction_definition:)
+      purged = create(:extraction_job, extraction_definition:, purged_at: Time.zone.now)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include live.name
+      expect(response.body).not_to include purged.name
+    end
+
     it 'configures each block separately in the Run modal' do
       create(:field, transformation_definition: harvest_definition.transformation_definition)
       preprocess = create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one',
@@ -133,6 +251,113 @@ RSpec.describe 'Pipelines' do
       # The add-preprocess modal's hidden position must append to the END of the existing
       # preprocess chain (one block at position 0 exists, so the next one goes to 1).
       expect(response.body).to match(/value="1"[^>]*name="harvest_definition\[position\]"/)
+    end
+
+    it 'offers to add a load definition to a block that has none' do
+      harvest_definition.update_columns(load_definition_id: nil)
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include '+ Add harvest load'
+    end
+
+    it 'shows the load definition of a block that has one' do
+      load_definition = create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1)
+      harvest_definition.update(load_definition:)
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include load_definition.name
+      expect(response.body).not_to include '+ Add harvest load'
+    end
+
+    # The reasons live in the Run modal, in the row of the block they belong to.
+    it 'says in the Run modal why a block whose definitions contradict each other cannot run' do
+      harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment'))
+      create(:field, name: 'title', transformation_definition: harvest_definition.transformation_definition)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include CGI.escapeHTML(
+        'Cannot run: it writes a secondary fragment, so its transformation has to set internal_identifier.'
+      )
+    end
+
+    it 'says why a block is merely unfinished too, the modal being where a block is chosen' do
+      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'half-built',
+                                  extraction_definition: nil, transformation_definition: nil)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include CGI.escapeHTML(
+        'Cannot run: it has no extraction definition and it has no transformation definition.'
+      )
+    end
+
+    # Opening it is how the reasons get read, so it must open even when nothing can run.
+    it 'offers the Run modal while the pipeline has blocks, runnable or not' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include 'run-settings'
+      expect(response.body).not_to match(/<button[^>]*disabled[^>]*bs-target="#run-settings"/)
+    end
+
+    it 'refuses to start a run when no block can run, and says so' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include 'No block in this pipeline can run yet.'
+      expect(response.body).to match(/<button[^>]*disabled[^>]*>Run<\/button>/)
+    end
+
+    it 'lets a run start when a block can, even alongside one that cannot' do
+      create(:field, name: 'title', transformation_definition: harvest_definition.transformation_definition)
+      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'half-built',
+                                  extraction_definition: nil, transformation_definition: nil)
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).not_to include 'No block in this pipeline can run yet.'
+      expect(response.body).to match(/<button[^>]*>Run<\/button>/)
+      expect(response.body).not_to match(/<button[^>]*disabled[^>]*>Run<\/button>/)
+    end
+
+    it 'has nothing to open on a pipeline with no blocks at all' do
+      empty = create(:pipeline, name: 'No blocks')
+
+      get pipeline_path(empty)
+
+      expect(response.body).to match(/<button[^>]*disabled[^>]*bs-target="#run-settings"/)
+    end
+
+    # Sharing arises from cloning a pipeline, which points the clone's blocks at the same
+    # definitions. Both blocks have to be a kind that can do this load, so they are both
+    # harvests - which is also what a cloned pipeline gives you.
+    it 'offers to clone a load definition shared with another block' do
+      load_definition = create(:load_definition, pipeline:)
+      harvest_definition.update(load_definition:)
+      create(:harvest_definition, pipeline: create(:pipeline), kind: :harvest, source_id: 'cloned', load_definition:)
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include 'Edit shared Load'
+      expect(response.body).to include CGI.escapeHTML(
+        clone_pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
+      )
+    end
+
+    it 'renders the load column on enrichment and pre-processing blocks too' do
+      create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'enrich-one', load_definition: nil)
+      create(:harvest_definition, pipeline:, kind: :preprocess, position: 0, source_id: 'pre-one',
+                                  load_definition: nil)
+
+      get pipeline_path(pipeline)
+
+      expect(response).to have_http_status :ok
+      expect(response.body).to include '+ Add enrichment load'
+      expect(response.body).to include '+ Add pre-processing load'
     end
 
     it 'offers "Add Harvest" when the pipeline has blocks but no harvest yet' do

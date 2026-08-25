@@ -43,7 +43,7 @@ class TransformationWorker
 
     update_harvest_report(transformed_records.count, rejected_records.count)
 
-    if @harvest_job.harvest_definition.preprocess?
+    if @harvest_job.load_kind == 'preprocessed_data'
       feed_forward(valid_records)
     else
       queue_load_worker(valid_records)
@@ -100,18 +100,22 @@ class TransformationWorker
 
   def handle_transformation_completion
     @harvest_report.transformation_completed!
-    @harvest_report.load_completed! if @harvest_report.load_workers_completed?
+    @harvest_job.complete_load(@harvest_report)
     @harvest_report.delete_completed! if @harvest_report.delete_workers_completed?
 
-    return unless @harvest_report.delete_workers_queued.zero?
-
-    @harvest_report.delete_completed!
-    @harvest_report.transformation_completed!
+    if @harvest_report.delete_workers_queued.zero?
+      @harvest_report.delete_completed!
+      @harvest_report.transformation_completed!
+    end
 
     # A preprocess block completes when its transformation completes (it queues no
     # loads/deletes), so the chain can step forward from here. HarvestJob#advance_chain
     # decides, because the extraction worker reaches the same point by another route.
     @harvest_job.advance_chain
+
+    # And a harvest block that queued no loads is complete here too, so this is the only
+    # worker left to queue its enrichments. HarvestJob#queue_enrichments decides.
+    @harvest_job.queue_enrichments
   end
 
   def transform_records
@@ -145,7 +149,7 @@ class TransformationWorker
 
   def notify_harvesting_api
     ::Retriable.retriable(on_retry: log_retry_attempt) do
-      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if @harvest_report.load_workers_queued.zero?
+      Api::Utils::NotifyHarvesting.new(destination, source_id, true).call if notify_harvesting?
     end
   rescue StandardError => e
     JobCompletionServices::ContextBuilder.create_job_completion_or_error({
@@ -156,16 +160,29 @@ class TransformationWorker
                                                                          })
   end
 
+  def notify_harvesting?
+    source_id.present? && @harvest_report.load_workers_queued.zero?
+  end
+
+  # A block writing a secondary fragment does not own the records it touches, so a delete_if
+  # on it must not mark the whole record deleted - the most it can honestly mean is that
+  # this block's fragment no longer applies, and there is no way to remove just a fragment.
+  # Blocks that do own their records (a harvest, an enrichment) delete as they always have.
   def queue_delete_worker(records)
     return if records.empty?
+    return if @harvest_job.load_kind == 'secondary_fragment'
 
     DeleteWorker.perform_async_with_priority(@pipeline_job.job_priority, records.to_json, destination.id,
                                              @harvest_report.id)
     @harvest_report.increment_delete_workers_queued!
   end
 
+  # The source whose records this run is touching, which is what the API flags as
+  # harvesting so it does not de-index them mid-run. That is the pipeline's harvest
+  # block, not `harvest_definitions.first` - blocks are ordered by id, so a pipeline
+  # whose preprocess block was created before its harvest flagged the wrong source.
   def source_id
-    @pipeline_job.pipeline.harvest_definitions.first.source_id
+    @pipeline_job.pipeline.harvest&.source_id
   end
 
   def destination

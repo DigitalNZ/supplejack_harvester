@@ -32,4 +32,5 @@
 
 <%= render 'jobs_table',
            jobs: @pipeline_jobs,
+           total: @pipeline.pipeline_jobs.count,
            show_pipeline_col: false %>

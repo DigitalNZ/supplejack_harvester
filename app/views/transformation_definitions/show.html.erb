@@ -21,7 +21,19 @@
   <span id='react-nav-tabs'></span>
 <% end %>
 
-<% if @transformation_definition.extraction_job.present? && (@transformation_definition.extraction_job.completed? || @transformation_definition.extraction_job.cancelled?) %>
+<% if @transformation_definition.extraction_job&.purged? %>
+  <div class="container">
+    <div class="row">
+      <div class="col text-center">
+        <p class='text-center'><strong>Data removed</strong></p>
+        <p class='text-center'>
+          The extracted data this transformation previews from was removed by the retention policy.
+          Run a new extraction, or choose a different one in Settings.
+        </p>
+      </div>
+    </div>
+  </div>
+<% elsif @transformation_definition.extraction_job.present? && (@transformation_definition.extraction_job.completed? || @transformation_definition.extraction_job.cancelled?) %>
   <div id="js-transformation-app" data-props="<%= @props %>"></div>
 <% elsif @transformation_definition.extraction_job.present? %>
   <div class="container">

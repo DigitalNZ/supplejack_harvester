@@ -7,6 +7,14 @@ RSpec.describe Request do
     it { is_expected.to validate_presence_of(:http_method) }
   end
 
+  describe 'http_method' do
+    it 'can be sent with any of the verbs the extraction stack supports' do
+      %w[GET POST PUT PATCH DELETE].each do |http_method|
+        expect(build(:request, http_method:)).to be_valid
+      end
+    end
+  end
+
   describe 'associations' do
     it { is_expected.to belong_to(:extraction_definition) }
     it { is_expected.to have_many(:parameters) }

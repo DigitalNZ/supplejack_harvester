@@ -24,6 +24,15 @@ import {
 
 import Tooltip from "~/js/components/Tooltip";
 
+const VALUE_TYPES = ["string", "integer", "boolean", "json"];
+
+const VALUE_TYPE_LABELS = {
+  string: "String",
+  integer: "Integer",
+  boolean: "Boolean",
+  json: "JSON",
+};
+
 const Parameter = ({ id }) => {
   const appDetails = useSelector(selectAppDetails);
   const uiAppDetails = useSelector(selectUiAppDetails);
@@ -40,12 +49,12 @@ const Parameter = ({ id }) => {
     "query",
   ]);
 
-  const { name, content, content_type, kind } = useSelector((state) =>
-    selectParameterById(state, id)
+  const { name, content, content_type, kind, value_type } = useSelector(
+    (state) => selectParameterById(state, id)
   );
 
-  const { saved, deleting, saving, displayed, active } = useSelector((state) =>
-    selectUiParameterById(state, id)
+  const { saved, deleting, saving, displayed, active, errors } = useSelector(
+    (state) => selectUiParameterById(state, id)
   );
 
   const dispatch = useDispatch();
@@ -157,6 +166,25 @@ const Parameter = ({ id }) => {
     );
   };
 
+  const handleValueTypeClick = (value) => {
+    dispatch(
+      updateParameter({
+        id: id,
+        value_type: value,
+        harvestDefinitionId: appDetails.harvestDefinition.id,
+        pipelineId: appDetails.pipeline.id,
+        extractionDefinitionId: appDetails.extractionDefinition.id,
+        requestId: uiAppDetails.activeRequest,
+      })
+    );
+  };
+
+  // Only a static query or header parameter declares a type: a dynamic one is typed by
+  // whatever its expression returns, and a slug is a segment of the URL.
+  const declaresValueType = () => {
+    return content_type == "static" && kind != "slug";
+  };
+
   return (
     <>
       <div
@@ -236,6 +264,39 @@ const Parameter = ({ id }) => {
                       )}
                   </ul>
                 </div>
+
+                {declaresValueType() && (
+                  // The tooltip goes around the whole dropdown, not around the
+                  // button: Tooltip renders a span, and Bootstrap opens the menu it
+                  // finds as the toggle's next sibling.
+                  <Tooltip data-bs-title="How the value is read when the request is sent. A JSON value is what a nested payload is made of.">
+                    <div className="dropdown">
+                      <button
+                        className="btn btn-outline-primary dropdown-toggle"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <i className="bi bi-braces" aria-hidden="true"></i>{" "}
+                        {VALUE_TYPE_LABELS[value_type]}
+                      </button>
+                      <ul className="dropdown-menu">
+                        {map(VALUE_TYPES, (valueType) => (
+                          <li key={valueType}>
+                            <a
+                              className="dropdown-item"
+                              onClick={() => {
+                                handleValueTypeClick(valueType);
+                              }}
+                            >
+                              {VALUE_TYPE_LABELS[valueType]}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Tooltip>
+                )}
 
                 <button className="btn btn-outline-danger" onClick={handleShow}>
                   <i className="bi bi-trash" aria-hidden="true"></i>
@@ -336,6 +397,12 @@ const Parameter = ({ id }) => {
                 </div>
               </div>
             </div>
+
+            {map(errors, (error) => (
+              <p className="text-danger mt-2 mb-0" key={error}>
+                {error}
+              </p>
+            ))}
           </div>
         </div>
       </div>

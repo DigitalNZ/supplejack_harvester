@@ -26,6 +26,13 @@ module Extraction
       @documents[@current_page] = Document.load_from_file(documents_filepath)
     end
 
+    # Path of the page's file on disk, or nil when there is none. For pages whose
+    # body was saved raw (outside the JSON envelope), which #[] cannot represent.
+    def file_path_for(key)
+      @current_page = key.to_i
+      documents_filepath
+    end
+
     def total_pages
       return 0 if total_folders.zero?
 

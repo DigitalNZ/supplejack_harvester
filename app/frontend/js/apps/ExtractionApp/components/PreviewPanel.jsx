@@ -2,6 +2,7 @@ import React from "react";
 import { map } from "lodash";
 
 import CodeEditor from "~/js/components/CodeEditor";
+import { sendsPayload } from "~/js/utils/httpMethods";
 
 const PreviewPanel = ({
   preview,
@@ -9,6 +10,17 @@ const PreviewPanel = ({
   loading = false,
   view = "accordion",
 }) => {
+  // The status a preview came back with, which is otherwise nowhere in the panel. A
+  // preview that never reached the content source has none to show - see
+  // RequestsController#failed_response.
+  const responseStatus = () => {
+    if (!preview.status) {
+      return "";
+    }
+
+    return ` (status = ${preview.status})`;
+  };
+
   const formattedPayload = () => {
     return (
       <>
@@ -38,13 +50,14 @@ const PreviewPanel = ({
             </h2>
             <div id="request" className="accordion-collapse collapse show">
               <div className="accordion-body">
-                {preview.method == "GET" && (
+                {preview.method == "GET" ? (
                   <a href={preview.url} target="_blank">
                     {preview.url}
                   </a>
+                ) : (
+                  preview.url
                 )}
-                {preview.method == "POST" && preview.url}
-                {preview.method == "POST" && formattedPayload()}
+                {sendsPayload(preview.method) && formattedPayload()}
               </div>
             </div>
           </div>
@@ -105,7 +118,7 @@ const PreviewPanel = ({
                 aria-expanded="true"
                 aria-controls="response-headers"
               >
-                Response Headers
+                Response Headers{responseStatus()}
               </button>
             </h2>
             <div id="response-headers" className="accordion-collapse collapse">

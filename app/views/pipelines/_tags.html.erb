@@ -1,0 +1,62 @@
+<%# The pipeline's tags, and the editor for changing them. The editor is inert markup
+    until PipelineTags.js takes it over, and it needs the names of the tags that already
+    exist to offer them as suggestions. %>
+<% tags = @pipeline.tags.ordered.to_a %>
+
+<div class="pipeline-tags mt-2"
+     data-pipeline-tags
+     data-tags="<%= autocomplete_tags %>">
+
+  <div class="d-flex flex-wrap align-items-center gap-2" data-tags-display>
+    <% tags.each do |tag| %>
+      <%= tag_badge(tag) %>
+    <% end %>
+
+    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" data-tags-edit>
+      <% if tags.any? %>
+        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+        <span class="visually-hidden">Edit tags</span>
+      <% else %>
+        + Add tags
+      <% end %>
+    </button>
+  </div>
+
+  <%= form_with url: pipeline_tags_path(@pipeline), method: :patch,
+                class: 'card pipeline-tags__editor mt-2 d-none', data: { tags_editor: true } do %>
+    <div class="card-body">
+      <h2 class="h6">Edit tags</h2>
+
+      <div class="d-flex flex-wrap gap-1 mb-2" data-tags-chips>
+        <% tags.each do |tag| %>
+          <%= render 'pipelines/tag_chip', tag: %>
+        <% end %>
+      </div>
+
+      <p class="form-text mt-0 mb-2 <%= 'd-none' if tags.any? %>" data-tags-empty>
+        No tags yet — type below to add some.
+      </p>
+
+      <div class="dropdown">
+        <%= text_field_tag :tag_search, nil,
+                           class: 'form-control form-control-sm',
+                           placeholder: 'Type to search or create a tag…',
+                           autocomplete: 'off',
+                           aria: { label: 'Search or create a tag' },
+                           data: { tags_input: true } %>
+        <ul class="dropdown-menu pipeline-tags__suggestions w-100" data-tags-suggestions></ul>
+      </div>
+
+      <div class="d-flex gap-2 align-items-center mt-3">
+        <button type="submit" class="btn btn-success btn-sm">Save tags</button>
+        <button type="button" class="btn btn-link btn-sm" data-tags-cancel>Cancel</button>
+      </div>
+
+      <p class="form-text mb-0">Press Enter to add · Tags are shared across the whole account</p>
+    </div>
+
+    <template data-tag-chip-template>
+      <%= render 'pipelines/tag_chip', tag: Tag.new %>
+    </template>
+  <% end %>
+</div>

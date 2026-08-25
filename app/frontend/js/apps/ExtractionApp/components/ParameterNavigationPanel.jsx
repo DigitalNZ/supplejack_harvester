@@ -8,6 +8,7 @@ import { toggleDisplayParameters } from "~/js/features/ExtractionApp/UiParameter
 import { selectUiAppDetails } from "~/js/features/ExtractionApp/UiAppDetailsSlice";
 import { selectRequestById } from "~/js/features/ExtractionApp/RequestsSlice";
 import Tooltip from "~/js/components/Tooltip";
+import { sendsPayload } from "~/js/utils/httpMethods";
 
 import AddParameter from "./AddParameter";
 import ParameterNavigationList from "./ParameterNavigationList";
@@ -34,7 +35,7 @@ const ParameterNavigationPanel = () => {
   );
 
   const queryHeading = () => {
-    if (request.http_method == "POST") {
+    if (sendsPayload(request.http_method)) {
       return "Payload";
     }
 

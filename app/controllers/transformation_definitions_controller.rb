@@ -2,7 +2,7 @@
 
 class TransformationDefinitionsController < ApplicationController
   include LastEditedBy
-  include DefinitionAttachment
+  include DefinitionActions
 
   before_action :find_pipeline, :find_harvest_definition
   before_action :find_transformation_definition, only: %i[show update destroy clone]
@@ -12,41 +12,15 @@ class TransformationDefinitionsController < ApplicationController
   def show; end
 
   def create
-    @transformation_definition = TransformationDefinition.new(transformation_definition_params)
-
-    if @transformation_definition.save
-      attach_to_block(@transformation_definition, 'transformation')
-
-      redirect_to pipeline_harvest_definition_transformation_definition_path(
-        @pipeline, @harvest_definition, @transformation_definition
-      ), notice: t('.success')
-    else
-      flash.alert = t('.failure')
-
-      redirect_to pipeline_path(@pipeline)
-    end
+    create_definition('transformation')
   end
 
   def update
-    if @transformation_definition.update(transformation_definition_params)
-      redirect_to pipeline_harvest_definition_transformation_definition_path(
-        @pipeline, @harvest_definition, @transformation_definition
-      ), notice: t('.success')
-    else
-      flash.alert = t('.failure')
-
-      render :show
-    end
+    update_definition('transformation', @transformation_definition)
   end
 
   def destroy
-    if @transformation_definition.destroy
-      redirect_to pipeline_path(@pipeline), notice: t('.success')
-    else
-      flash.alert = t('.failure')
-      redirect_to pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition,
-                                                                             @transformation_definition)
-    end
+    destroy_definition('transformation', @transformation_definition)
   end
 
   def test
@@ -59,16 +33,7 @@ class TransformationDefinitionsController < ApplicationController
   end
 
   def clone
-    clone = @transformation_definition.clone(@pipeline, transformation_definition_params['name'])
-
-    if clone.save
-      @harvest_definition.update(transformation_definition: clone)
-      flash.notice = t('.success')
-      redirect_to pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition, clone)
-    else
-      flash.alert = t('.failure')
-      redirect_to pipeline_path(@pipeline)
-    end
+    clone_definition('transformation', @transformation_definition)
   end
 
   private
@@ -79,7 +44,7 @@ class TransformationDefinitionsController < ApplicationController
 
     @props = transformation_app_state
 
-    @extraction_jobs = @harvest_definition.extraction_definition&.extraction_jobs&.order(created_at: :desc) || []
+    @extraction_jobs = @harvest_definition.available_extraction_jobs || []
   end
 
   def assign_schema_variables
@@ -113,7 +78,7 @@ class TransformationDefinitionsController < ApplicationController
                              end
 
     @extraction_jobs = extraction_definitions.map do |ed|
-      [ed.name, ed.extraction_jobs.map { |job| [job.name, job.id] }]
+      [ed.name, ed.extraction_jobs.not_purged.map { |job| [job.name, job.id] }]
     end
   end
 

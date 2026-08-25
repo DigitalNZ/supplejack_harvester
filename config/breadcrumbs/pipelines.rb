@@ -36,6 +36,11 @@ crumb :transformation_definition do |pipeline, transformation_definition|
   parent :pipeline, pipeline
 end
 
+crumb :load_definition do |pipeline, load_definition|
+  link load_definition.name_in_database
+  parent :pipeline, pipeline
+end
+
 crumb :extraction_jobs do |pipeline, harvest_definition, extraction_definition|
   link 'Extraction Jobs', pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
     pipeline, harvest_definition, extraction_definition

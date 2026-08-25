@@ -32,4 +32,48 @@ RSpec.describe Extraction::Request do
       expect(doc.body).to eq('{"totalObjects": 200}')
     end
   end
+
+  describe '#put' do
+    it 'returns a document naming the method it was sent with' do
+      stub_request(:put, 'http://google.com/records/2')
+        .with(body: '{"record":{"status":"deleted"}}')
+        .and_return(fake_response('test'))
+
+      doc = described_class.new(
+        url: 'http://google.com/records/2',
+        params: { record: { status: 'deleted' } },
+        method: 'put'
+      ).put
+
+      expect(doc).to be_a Extraction::Document
+      expect(doc.method).to eq 'PUT'
+      expect(doc.url.to_s).to eq 'http://google.com/records/2'
+    end
+  end
+
+  describe '#patch' do
+    it 'returns a document naming the method it was sent with' do
+      stub_request(:patch, 'http://google.com/records/2')
+        .with(body: '{"status":"deleted"}')
+        .and_return(fake_response('test'))
+
+      doc = described_class.new(
+        url: 'http://google.com/records/2',
+        params: { status: 'deleted' },
+        method: 'patch'
+      ).patch
+
+      expect(doc.method).to eq 'PATCH'
+    end
+  end
+
+  describe '#delete' do
+    it 'returns a document naming the method it was sent with' do
+      stub_request(:delete, 'http://google.com/records/2').and_return(fake_response('test'))
+
+      doc = described_class.new(url: 'http://google.com/records/2', method: 'delete').delete
+
+      expect(doc.method).to eq 'DELETE'
+    end
+  end
 end

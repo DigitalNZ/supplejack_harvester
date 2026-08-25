@@ -7,12 +7,29 @@ class Pipeline < ApplicationRecord
   has_many :harvest_jobs, through: :harvest_definitions
   belongs_to :last_edited_by, class_name: 'User', optional: true
 
+  has_many :pipeline_tags, dependent: :destroy
+  has_many :tags, through: :pipeline_tags
+
   has_many :pipeline_jobs, dependent: :destroy
   has_many :schedules, dependent: :destroy
   has_many :automation_step_templates, dependent: :destroy
   has_many :automation_templates, -> { distinct }, through: :automation_step_templates
 
   validates :name, presence: true, uniqueness: true
+
+  # Tag filters combine with AND: a pipeline has to carry every tag asked for, not any
+  # of them. One subquery per slug rather than a grouped COUNT keeps the relation a
+  # plain, ungrouped one, so it still composes with search, ordering, pagination and
+  # nests as a subquery for the jobs list filter. A slug no tag uses matches nothing,
+  # which is the honest answer for a filter naming a tag that has been deleted.
+  scope :tagged_with_all, lambda { |slugs|
+    slugs = Array(slugs).map(&:to_s).compact_blank.uniq
+    next all if slugs.empty?
+
+    slugs.reduce(all) do |query, slug|
+      query.where(id: PipelineTag.where(tag: Tag.where(slug:)).select(:pipeline_id))
+    end
+  }
 
   def self.search(words, format)
     words = sanitized_words(words)

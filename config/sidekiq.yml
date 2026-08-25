@@ -1,5 +1,12 @@
 ---
+# Staging runs a single Sidekiq process, so it must consume low_priority
+# itself (the daily cleanup jobs in config/schedule.yml land there).
+# Production leaves low_priority to its dedicated deployment, which starts
+# with -C config/sidekiq_low_priority.yml.
 staging:
   :concurrency: <%= ENV.fetch('SIDEKIQ_CONCURRENCY') { 5 } %>
+  :queues:
+    - default
+    - low_priority
 production:
-  :concurrency: <%= ENV.fetch('SIDEKIQ_CONCURRENCY') { 5 } %> 
+  :concurrency: <%= ENV.fetch('SIDEKIQ_CONCURRENCY') { 5 } %>

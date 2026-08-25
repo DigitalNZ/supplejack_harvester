@@ -6,12 +6,17 @@ class ExtractionJob < ApplicationRecord
   include Job
 
   EXTRACTIONS_FOLDER = Rails.root.join("extractions/#{Rails.env}").to_s.freeze
+  UNFINISHED_STATUSES = %w[queued running].freeze
 
   enum :kind, { full: 0, sample: 1 }, prefix: :is
 
   belongs_to :extraction_definition
   belongs_to :source_pipeline_job, class_name: 'PipelineJob', optional: true
   has_one :harvest_job, dependent: :destroy
+
+  # Jobs whose extracted data is still on disk. Anything offering a job to
+  # read from (pickers, previews) should use this.
+  scope :not_purged, -> { where(purged_at: nil) }
 
   after_create :create_folder
   after_destroy :delete_folder
@@ -57,14 +62,17 @@ class ExtractionJob < ApplicationRecord
     Dir.mkdir(extraction_folder)
   end
 
-  # Deletes a folder at the location of the extraction folder
+  # Deletes a folder at the location of the extraction folder.
   #
-  # @return [true, false] depending on success of the folder deletion
+  # Removes the folder itself rather than globbing its contents first: a glob
+  # skips dotfiles, so a stray .DS_Store used to leave the folder behind and
+  # Dir.rmdir raised Errno::ENOTEMPTY.
+  #
+  # @return Array the paths removed
   def delete_folder
     return unless Dir.exist?(extraction_folder)
 
-    FileUtils.rm_rf Dir.glob("#{extraction_folder}/*")
-    Dir.rmdir(extraction_folder)
+    FileUtils.rm_rf(extraction_folder)
   end
 
   # Converts the files stored in the extraction folder into pageable objects
@@ -78,7 +86,7 @@ class ExtractionJob < ApplicationRecord
   #
   # @return Integer
   def extraction_folder_size_in_bytes
-    Dir.glob("#{extraction_folder}/**/*.*").sum { |f| File.size(f) }
+    Dir.glob("#{extraction_folder}/**/*.*").sum { |file| File.size(file) }
   end
 
   # Records the stop condition that ended this extraction, if any.
@@ -92,5 +100,106 @@ class ExtractionJob < ApplicationRecord
       stop_condition_name: name,
       stop_condition_content: content
     )
+  end
+
+  # True while unfinished work is still reading this job's data: an
+  # unfinished harvest job, or a pipeline job re-using the extraction.
+  # The per-job twin of the bulk busy_ids query below.
+  def busy?
+    HarvestJob.exists?(extraction_job_id: id, status: UNFINISHED_STATUSES) ||
+      PipelineJob.exists?(extraction_job_id: id, status: UNFINISHED_STATUSES + [nil])
+  end
+
+  # Removes the extracted data from disk while keeping the job row, so run
+  # history and anything pointing at this job survive. Safe to call when the
+  # folder is already missing.
+  #
+  # Refuses busy and retained jobs and returns false: the nightly batch's busy
+  # list is a snapshot, so work that starts mid-batch is only caught by
+  # re-checking here, just before the folder goes. The retained check is the
+  # same idea: the lock must hold for any caller, even one that never
+  # consulted purge_candidates.
+  def purge!
+    return false if busy? || reload.retained?
+
+    delete_folder
+    update!(purged_at: Time.zone.now)
+  end
+
+  # True once the extracted data has been removed from disk by the retention
+  # policy. The job row itself still exists.
+  def purged?
+    purged_at.present?
+  end
+
+  # True while a user is retaining this job: the nightly cleanup never
+  # deletes its data, however old it gets.
+  def retained?
+    retained_at.present?
+  end
+
+  # Extraction jobs whose data is old enough to delete under the retention
+  # policy, oldest first.
+  #
+  # The ranking runs over every job that still has data, whatever its status:
+  # filtering before ranking would let a running job shift every index by one.
+  # Exclusions are applied to the ranked set.
+  #
+  # @return ActiveRecord::Relation
+  def self.purge_candidates(policy, pipeline_id: nil)
+    scope = eligible_for_purge(policy)
+    # Filtered outside the ranking subquery, so scoping never shifts a rank.
+    scope = scope.where(extraction_definition_id: ExtractionDefinition.where(pipeline_id:).select(:id)) if pipeline_id
+
+    scope
+      .where(beyond_retention, keep: policy.keep_latest,
+                               pinned: pinned_ids.presence || [0],
+                               max_age: policy.max_age_cutoff)
+      .order(:created_at, :id)
+      .limit(policy.batch_limit)
+  end
+
+  class << self
+    private
+
+    # The ranked, status-and-exclusion-filtered set purge_candidates chooses
+    # from, before the keep_latest/max_age retention clause is applied.
+    def eligible_for_purge(policy)
+      from(ranked_by_recency, :extraction_jobs)
+        .where(status: Job::FINISHED_STATUSES)
+        .where(retained_at: nil)
+        .where.not(extraction_definition_id: policy.excluded_extraction_definition_ids)
+        .where.not(id: busy_ids)
+        .where(created_at: ...policy.min_age_cutoff)
+    end
+
+    # Numbers each definition's surviving extractions, 1 being the newest.
+    def ranked_by_recency
+      not_purged.select(
+        'extraction_jobs.*',
+        'ROW_NUMBER() OVER (PARTITION BY extraction_definition_id ' \
+        'ORDER BY created_at DESC, id DESC) AS extraction_index'
+      )
+    end
+
+    # Dan's rule: past the newest N for its definition, or simply too old. A job a
+    # transformation definition previews from is spared the first clause but not
+    # the second.
+    def beyond_retention
+      '(extraction_index > :keep AND extraction_jobs.id NOT IN (:pinned)) OR created_at < :max_age'
+    end
+
+    # Extraction jobs a transformation definition renders its preview from.
+    def pinned_ids
+      TransformationDefinition.distinct.pluck(:extraction_job_id).compact
+    end
+
+    # Extraction jobs that work still in flight is reading. A pipeline job's
+    # status stays NULL until PipelineWorker picks it up (the column has no
+    # default), so NULL counts as busy.
+    def busy_ids
+      (HarvestJob.where(status: UNFINISHED_STATUSES).pluck(:extraction_job_id) +
+        PipelineJob.where(status: UNFINISHED_STATUSES + [nil]).pluck(:extraction_job_id)).compact
+    end
   end
 end

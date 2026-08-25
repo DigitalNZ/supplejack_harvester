@@ -18,13 +18,51 @@ class PipelineJob < ApplicationRecord
 
   enum :page_type, { all_available_pages: 0, set_number: 1 }
 
+  # How long an unfinished run is protected from the preprocess sweep. A
+  # safety window, not a retention choice, so it lives in code, not config.
+  PREPROCESS_WRITING_WINDOW = 1.day
+
+  # Runs that have not begun. Having reported nothing is not enough on its own: PipelineWorker
+  # refuses to start a run whose blocks cannot run, which leaves it over with nothing to report,
+  # and such a run must not read as one that is still coming. status is nullable, hence the nil.
+  scope :not_started, -> { where.missing(:harvest_reports).where(status: [nil, *Job::UNFINISHED_STATUSES]) }
+
   with_options if: :set_number? do
     validates :pages, presence: true
+  end
+
+  # Preprocess output folders whose run has fallen outside the newest
+  # keep_latest runs of its pipeline. ids_on_disk comes from
+  # PreProcess::Output.pipeline_job_ids_on_disk, so the ranking only ever
+  # considers runs that still have output: keep_latest means "the newest N
+  # folders", not "the newest N runs". Plain Ruby rather than a SQL window
+  # function because the set is at most a few folders per pipeline once the
+  # sweep is live.
+  def self.preprocess_sweep_candidates(policy, ids_on_disk, pipeline_id: nil)
+    scope = where(id: ids_on_disk)
+    scope = scope.where(pipeline_id:) if pipeline_id
+
+    scope
+      .order(created_at: :desc, id: :desc)
+      .group_by(&:pipeline_id)
+      .values
+      .flat_map { |jobs| jobs.drop(policy.keep_latest) }
+      .reject(&:maybe_still_writing?)
   end
 
   # Check if this job is part of an automation
   def from_automation?
     automation_step.present?
+  end
+
+  # Whether this run might still be writing preprocess output. Checks the
+  # status column directly, not #finished? -- that method is overridden to
+  # track whether every harvest report's load workers have completed, a
+  # different question. Status alone cannot be trusted either: nothing ever
+  # moves a crashed run to errored, and a preprocess-only pipeline never
+  # completes, so "unfinished" stops protecting a run once it is a day old.
+  def maybe_still_writing?
+    !status.in?(Job::FINISHED_STATUSES) && created_at > PREPROCESS_WRITING_WINDOW.ago
   end
 
   # Called by this run's blocks as each of them finishes - see RunCompletion for why the
@@ -113,6 +151,12 @@ class PipelineJob < ApplicationRecord
     harvest_reports.all?(&:finished?)
   end
 
+  # Whether this block is one this run was asked to run. Asked by PipelineWorker before it
+  # starts anything, as well as when the chain steps forward.
+  def should_run?(id)
+    harvest_definitions_to_run.map(&:to_i).include?(id)
+  end
+
   # Whether this enrichment is one this run still has to queue - asked by RunCompletion as
   # well as when they are queued.
   def should_queue_enrichment?(enrichment)
@@ -153,9 +197,5 @@ class PipelineJob < ApplicationRecord
     return true if harvest_report.blank?
 
     harvest_report.completed?
-  end
-
-  def should_run?(id)
-    harvest_definitions_to_run.map(&:to_i).include?(id)
   end
 end

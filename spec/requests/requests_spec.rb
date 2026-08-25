@@ -42,6 +42,16 @@ RSpec.describe 'Requests' do
         expect(request['http_method']).to eq 'POST'
       end
     end
+
+    context 'with one of the verbs that mutate the content source' do
+      it 'updates the request' do
+        patch pipeline_harvest_definition_extraction_definition_request_path(pipeline, harvest_definition, extraction_definition, request), params: {
+          request: { http_method: 'PUT' }
+        }
+
+        expect(request.reload.http_method).to eq 'PUT'
+      end
+    end
   end
 
   describe 'GET /show' do    

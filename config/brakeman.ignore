@@ -47,30 +47,6 @@
       "note": ""
     },
     {
-      "warning_type": "Dangerous Eval",
-      "warning_code": 13,
-      "fingerprint": "13686982330c02c10d639b6e0d2f55e50479b1b5c6a1da4797d9d04f40d3128f",
-      "check_name": "Evaluation",
-      "message": "Dynamic code evaluation",
-      "file": "app/models/parameter.rb",
-      "line": 29,
-      "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
-      "code": "eval(content)",
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "Parameter",
-        "method": "dynamic_evaluation"
-      },
-      "user_input": null,
-      "confidence": "Weak",
-      "cwe_id": [
-        913,
-        95
-      ],
-      "note": ""
-    },
-    {
       "warning_type": "Unmaintained Dependency",
       "warning_code": 122,
       "fingerprint": "21ab0fe00fdd5899ffc405cff75aadb91b805ee996a614f7e27b08a287e9062d",
@@ -87,7 +63,7 @@
       "cwe_id": [
         1104
       ],
-      "note": ""
+      "note": "Bridge until the Rails 8.1 upgrade (Dependabot PR #232) lands. Remove this entry with the upgrade."
     },
     {
       "warning_type": "Dangerous Eval",
@@ -104,6 +80,30 @@
         "type": "method",
         "class": "StopCondition",
         "method": "evaluate"
+      },
+      "user_input": null,
+      "confidence": "Weak",
+      "cwe_id": [
+        913,
+        95
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "Dangerous Eval",
+      "warning_code": 13,
+      "fingerprint": "27e34363132a4e285792fab5fd034050b0f04f5b02ed6911fb6222e7e3f8003e",
+      "check_name": "Evaluation",
+      "message": "Dynamic code evaluation",
+      "file": "app/models/parameter.rb",
+      "line": 73,
+      "link": "https://brakemanscanner.org/docs/warning_types/dangerous_eval/",
+      "code": "eval(content)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Parameter",
+        "method": "evaluate_content"
       },
       "user_input": null,
       "confidence": "Weak",

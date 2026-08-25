@@ -1,0 +1,20 @@
+<%# The row under a list's filter card: what it is filtered by on the left, and how much
+    of the list that leaves on the right. %>
+<% selected = tag_filter_slugs %>
+
+<div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+  <% tags.select { |tag| selected.include?(tag.slug) }.each do |tag| %>
+    <span class="badge border text-secondary d-inline-flex align-items-center gap-1">
+      <%= tag.name %>
+      <%= link_to tag_filter_url(path, selected - [tag.slug]),
+                  class: 'text-reset text-decoration-none lh-1',
+                  aria: { label: "Stop filtering by #{tag.name}" } do %>&times;<% end %>
+    </span>
+  <% end %>
+
+  <% if selected.any? %>
+    <%= link_to 'Clear all', tag_filter_url(path, []), class: 'small' %>
+  <% end %>
+
+  <span class="ms-auto small text-muted"><%= summary %></span>
+</div>
