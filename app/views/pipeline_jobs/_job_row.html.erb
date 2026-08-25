@@ -1,11 +1,18 @@
 <% extraction_job_id = report&.harvest_job&.extraction_job_id || job.extraction_job_id %>
 
 <tr>
-  <% if show_pipeline_col %>
-    <td><%= link_to job.pipeline.name, job.pipeline if row_index.zero? %></td>
-  <% end %>
-  <td><%= job.destination.name if row_index.zero? %></td>
-  <td><%= job_launched_by_label(job) if row_index.zero? %></td>
+  <%# Where the job wrote and who ran it sit under the pipeline's name rather than in
+      columns of their own - they belong to the job rather than to any one of its rows,
+      which is why all three are drawn on the first row of a job only. %>
+  <td>
+    <% if row_index.zero? %>
+      <% if show_pipeline_col %>
+        <%= link_to job.pipeline.name, job.pipeline, class: 'fw-semibold' %>
+      <% end %>
+
+      <div class="small text-muted"><%= job_source_line(job) %></div>
+    <% end %>
+  </td>
   <td>
     <% if extraction_job_id.blank? %>
       <%= harvest_definition.name %>

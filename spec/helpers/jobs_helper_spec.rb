@@ -109,6 +109,37 @@ RSpec.describe JobsHelper do
     end
   end
 
+  describe '#job_source_line' do
+    let(:destination) { create(:destination, name: 'Production API') }
+
+    it 'names the destination and whoever ran the job' do
+      job = create(:pipeline_job, destination:, launched_by: create(:user, username: 'ting'))
+
+      expect(helper.job_source_line(job)).to eq 'Production API · Run by ting'
+    end
+
+    it 'links to the schedule that ran the job' do
+      schedule = create(:schedule, destination:, automation_template: create(:automation_template))
+      job = create(:pipeline_job, destination:, schedule:, launched_by: nil)
+
+      expect(helper.job_source_line(job)).to eq(
+        "Production API · Run by <a href=\"#{schedule_path(schedule)}\">Schedule</a>"
+      )
+    end
+
+    it 'is the destination alone when nobody is recorded as running the job' do
+      job = create(:pipeline_job, destination:, launched_by: nil)
+
+      expect(helper.job_source_line(job)).to eq 'Production API'
+    end
+
+    it 'escapes a username rather than trusting it' do
+      job = create(:pipeline_job, destination:, launched_by: create(:user, username: '<b>ting</b>'))
+
+      expect(helper.job_source_line(job)).to eq 'Production API · Run by &lt;b&gt;ting&lt;/b&gt;'
+    end
+  end
+
   describe '#extraction_end_reason' do
     let(:harvest_job) { create(:harvest_job) }
     let(:report) { create(:harvest_report, harvest_job:, pipeline_job: harvest_job.pipeline_job) }

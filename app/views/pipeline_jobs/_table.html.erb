@@ -4,11 +4,10 @@
       <table class="table table-borderless table--jobs">
         <thead>
           <tr class='table-primary'>
-            <% if show_pipeline_col %>
-              <th scope="col">Pipeline</th>
-            <% end %>
-            <th scope="col">Destination</th>
-            <th scope="col">Run by</th>
+            <%# The first column carries the destination and who ran the job under the
+                pipeline's name. On a pipeline's own jobs there is no name to put above
+                them, and the destination is what the column then leads with. %>
+            <th scope="col"><%= show_pipeline_col ? 'Pipeline' : 'Destination' %></th>
             <th scope="col">Job</th>
             <th scope="col">Status</th>
             <th scope="col">Time started</th>
@@ -37,7 +36,7 @@
             <% end %>
             <% if job_idx != total_jobs %>
               <tr class='table__divider'>
-                <td colspan='<%= 11 + (show_pipeline_col ? 1 : 0) %>'><hr></td>
+                <td colspan='10'><hr></td>
               </tr>
             <% end %>
           <% end %>

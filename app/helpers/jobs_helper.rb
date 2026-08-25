@@ -90,6 +90,18 @@ module JobsHelper
     end
   end
 
+  # The line under a pipeline's name in the jobs table: where the job wrote, and who set
+  # it going. Run by is a link when a schedule or an automation did it, so the parts are
+  # joined rather than interpolated, and a job nobody is recorded as running is left as
+  # its destination alone rather than trailing a 'Run by' with nothing after it.
+  def job_source_line(job)
+    run_by = job_launched_by_label(job)
+    parts = [job.destination.name]
+    parts << safe_join(['Run by ', run_by]) if run_by.present?
+
+    safe_join(parts, ' · ')
+  end
+
   def job_started_at_label(report, job)
     if report&.harvest_job&.extraction_job.present? && report&.extraction_start_time.present?
       report&.extraction_start_time&.strftime('%H:%M %d/%m/%y')
