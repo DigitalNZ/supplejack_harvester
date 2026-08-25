@@ -79,6 +79,48 @@ RSpec.describe JobsHelper do
     end
   end
 
+  describe '#job_duration_seconds_short' do
+    it 'reads in minutes and seconds' do
+      expect(job_duration_seconds_short(597)).to eq '9m 57s'
+    end
+
+    it 'reads in seconds alone under a minute' do
+      expect(job_duration_seconds_short(5)).to eq '5s'
+    end
+
+    # At that length the seconds are noise, and the column has a start time to fit too.
+    it 'leaves the seconds out of an hour-long run' do
+      expect(job_duration_seconds_short(9659)).to eq '2h 40m'
+    end
+
+    it 'says nothing lasted no time at all' do
+      expect(job_duration_seconds_short(0)).to eq '0s'
+    end
+  end
+
+  describe '#job_started_and_duration' do
+    let(:report) { create(:harvest_report) }
+
+    it 'joins when the job started to how long it ran' do
+      # The report works its duration out from the times it holds, so this is 9m 57s of it.
+      report.update(extraction_start_time: Time.zone.local(2026, 8, 21, 3, 44),
+                    extraction_end_time: Time.zone.local(2026, 8, 21, 3, 53, 57))
+
+      expect(helper.job_started_and_duration(report, report.pipeline_job)).to eq '03:44 21/08/26 · 9m 57s'
+    end
+
+    # A queued job has neither, and a running one has no duration yet.
+    it 'leaves the separator off when there is only one of them' do
+      job = create(:pipeline_job, start_time: Time.zone.local(2026, 8, 21, 3, 44))
+
+      expect(helper.job_started_and_duration(nil, job)).to eq '03:44 21/08/26'
+    end
+
+    it 'is empty for a job that has not started' do
+      expect(helper.job_started_and_duration(nil, create(:pipeline_job, start_time: nil))).to eq ''
+    end
+  end
+
   describe '#job_duration_seconds' do
     subject(:job) { ExtractionJob.new(start_time: Time.zone.now, end_time: 1.minute.from_now) }
 

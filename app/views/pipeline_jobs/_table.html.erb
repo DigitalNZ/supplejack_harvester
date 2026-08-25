@@ -10,8 +10,7 @@
             <th scope="col"><%= show_pipeline_col ? 'Pipeline' : 'Destination' %></th>
             <th scope="col">Job</th>
             <th scope="col">Status</th>
-            <th scope="col">Time started</th>
-            <th scope="col" class="text-end">Duration</th>
+            <th scope="col">Started · duration</th>
             <th scope="col" class="text-end">Pages</th>
             <th scope="col" class="text-end">Transform</th>
             <th scope="col" class="text-end">Load</th>
@@ -36,7 +35,7 @@
             <% end %>
             <% if job_idx != total_jobs %>
               <tr class='table__divider'>
-                <td colspan='10'><hr></td>
+                <td colspan='9'><hr></td>
               </tr>
             <% end %>
           <% end %>
