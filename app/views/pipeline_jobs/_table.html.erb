@@ -6,8 +6,8 @@
           <tr class='table-primary'>
             <%# The first column carries the destination and who ran the job under the
                 pipeline's name. On a pipeline's own jobs there is no name to put above
-                them, and the destination is what the column then leads with. %>
-            <th scope="col"><%= show_pipeline_col ? 'Pipeline' : 'Destination' %></th>
+                them, so the header names the line that is left. %>
+            <th scope="col"><%= show_pipeline_col ? 'Pipeline' : 'Destination · Run by' %></th>
             <% if show_pipeline_col %>
               <th scope="col">Tags</th>
             <% end %>
