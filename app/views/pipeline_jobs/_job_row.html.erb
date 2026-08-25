@@ -13,6 +13,20 @@
       <div class="small text-muted"><%= job_source_line(job) %></div>
     <% end %>
   </td>
+
+  <%# A job carries the tags of the pipeline that ran it, so this cell only earns its keep
+      where the pipelines differ from row to row - on a pipeline's own jobs it would say
+      the same thing all the way down, under the tags already on the page above. %>
+  <% if show_pipeline_col %>
+    <td>
+      <% if row_index.zero? %>
+        <div class="d-flex flex-wrap align-items-center gap-1">
+          <%= tag_labels(job.pipeline.tags.sort_by(&:name), limit: 3) %>
+        </div>
+      <% end %>
+    </td>
+  <% end %>
+
   <td>
     <% if extraction_job_id.blank? %>
       <%= harvest_definition.name %>

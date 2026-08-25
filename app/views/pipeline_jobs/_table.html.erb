@@ -8,6 +8,9 @@
                 pipeline's name. On a pipeline's own jobs there is no name to put above
                 them, and the destination is what the column then leads with. %>
             <th scope="col"><%= show_pipeline_col ? 'Pipeline' : 'Destination' %></th>
+            <% if show_pipeline_col %>
+              <th scope="col">Tags</th>
+            <% end %>
             <th scope="col">Job</th>
             <th scope="col">Status</th>
             <th scope="col">Started · duration</th>
@@ -35,7 +38,7 @@
             <% end %>
             <% if job_idx != total_jobs %>
               <tr class='table__divider'>
-                <td colspan='9'><hr></td>
+                <td colspan='<%= 9 + (show_pipeline_col ? 1 : 0) %>'><hr></td>
               </tr>
             <% end %>
           <% end %>

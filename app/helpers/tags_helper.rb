@@ -21,6 +21,23 @@ module TagsHelper
     content_tag :span, tag.name, class: tag_classes(tag, css_class:)
   end
 
+  # A row of tags with a limit on how many are drawn: a jobs row has one cell to spare,
+  # and a pipeline carrying a dozen tags would push the rest of the row out of the way.
+  # What is left over is counted rather than dropped, and the count names them in its
+  # tooltip so nothing is hidden outright.
+  def tag_labels(tags, limit:)
+    rest = tags.drop(limit)
+    labels = tags.first(limit).map { |tag| tag_label(tag) }
+
+    if rest.any?
+      labels << content_tag(:span, "+#{rest.size}",
+                            class: 'small text-muted',
+                            title: rest.map(&:name).join(', '))
+    end
+
+    safe_join(labels, ' ')
+  end
+
   # The tags the editor offers as suggestions, as JSON for PipelineTags.js - the same
   # idea as the autocomplete_* helpers the definition pickers on this page use. Each
   # carries its modifier as well as its name, so a chip for a tag that already exists is
