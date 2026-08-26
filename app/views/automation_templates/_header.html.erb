@@ -4,7 +4,7 @@
   <h1 class="header__title"><%= automation_template.name %></h1>
 
   <div class="header__actions mb-4">
-    <%= link_to 'Edit Template', edit_automation_template_path(automation_template),
+    <%= link_to 'Edit', edit_automation_template_path(automation_template),
                 class: 'btn btn-outline-primary me-2' %>
 
     <%= link_to '+ Add new schedule', new_schedule_path,
@@ -15,7 +15,7 @@
     </button>
 
     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-template-modal">
-      <i class="bi bi-trash"></i> Delete Template
+      <i class="bi bi-trash"></i> Delete
     </button>
   </div>
 
