@@ -55,7 +55,7 @@ class Parameter < ApplicationRecord
 
   # An expression mentioning the headers is handed the whole response to read; every
   # other one is handed the body, which is what an expression usually works from.
-  # rubocop:disable Style/OpenStructUse
+  # rubocop:disable-next Style/OpenStructUse
   def dynamic_subject(response_object)
     return response_object&.body unless content.include?('headers')
 
@@ -65,7 +65,6 @@ class Parameter < ApplicationRecord
       status: response_object&.status
     )
   end
-  # rubocop:enable Style/OpenStructUse
 
   # The expression is written against a local named response, so the block has to take
   # it by that name even though nothing here reads it.

@@ -35,7 +35,7 @@ class Tag < ApplicationRecord
   # create. A name that cannot be saved comes back unpersisted, carrying its errors for
   # the caller to report.
   def self.from_names(names)
-    Array(names).map { |name| name.to_s.squish }.compact_blank.uniq { it.parameterize }.map do |name|
+    Array(names).map { |name| name.to_s.squish }.compact_blank.uniq(&:parameterize).map do |name|
       find_by(slug: name.parameterize) || create(name:)
     end
   end

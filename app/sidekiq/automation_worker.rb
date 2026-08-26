@@ -3,6 +3,7 @@
 class AutomationWorker
   include PerformWithPriority
   include Sidekiq::Job
+
   sidekiq_options retry: 5
 
   # Performs the automation step process
