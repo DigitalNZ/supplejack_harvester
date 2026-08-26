@@ -100,7 +100,7 @@
       <div>
           <% if template.automations.exists? %>
           <% last_automation = template.automations.order(created_at: :desc).first %>
-          <span class="badge <%= status_badge_class(last_automation.status) %>"><%= last_automation.status.humanize %></span>
+          <%= status_with_icon(last_automation.status) %>
         <% end %>
         <% if template.destination %>
           <span class="badge bg-light text-dark">

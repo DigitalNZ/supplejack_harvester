@@ -42,4 +42,25 @@ RSpec.describe JobStatusHelper do
         .to include 'Napping', 'bi-question-circle'
     end
   end
+
+  describe '#status_with_icon' do
+    it 'draws a cancelled status without a colour of its own' do
+      expect(helper.status_with_icon('cancelled')).to include 'Cancelled', 'bi-x-circle-fill', 'text-secondary'
+    end
+
+    # An automation's own status, unlike a job's, can be failed.
+    it 'draws a failed status as the one worth acting on' do
+      expect(helper.status_with_icon('failed')).to include 'Failed', 'bi-exclamation-triangle-fill', 'text-danger'
+    end
+
+    it 'reads not_started as words rather than as the column name' do
+      expect(helper.status_with_icon('not_started')).to include 'Not started', 'bi-dash-circle'
+    end
+
+    # A harvest definition the last run never reached, or an API call nobody has made, has
+    # no status to read: not started is what that means.
+    it 'treats nothing to read a status from as not started' do
+      expect(helper.status_with_icon(nil)).to include 'Not started', 'bi-dash-circle'
+    end
+  end
 end

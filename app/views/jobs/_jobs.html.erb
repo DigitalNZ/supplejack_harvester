@@ -10,15 +10,15 @@
             <h5 class='card-title'><%= job.name %></h5>
             <h6 class='card-subtitle'><%= job.created_at.to_fs(:light) %></h6>
 
-            <span class="badge bg-light text-dark">
-              <%= job_status_text(job) %>
-            </span>
-            <% if job.purged? %>
-              <span class="badge bg-secondary">Data removed</span>
-            <% end %>
-            <% if job.retained? %>
-              <span class="badge bg-secondary"><i class="bi bi-lock-fill" aria-hidden="true"></i> Retained</span>
-            <% end %>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <%= status_with_icon(job.status) %>
+              <% if job.purged? %>
+                <span class="badge bg-secondary">Data removed</span>
+              <% end %>
+              <% if job.retained? %>
+                <span class="badge bg-secondary"><i class="bi bi-lock-fill" aria-hidden="true"></i> Retained</span>
+              <% end %>
+            </div>
           </div>
         <% end %>
 

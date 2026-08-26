@@ -19,7 +19,7 @@
 
             <% report = pipeline_job.harvest_jobs
                                     .find { |job| job.harvest_definition_id == @harvest_definition.id }&.harvest_report %>
-            <%= job_status_badge(report, pipeline_job) %>
+            <%= job_status_with_icon(report, pipeline_job) %>
           </div>
         <% end %>
       </div>

@@ -9,7 +9,7 @@
       <div class="modal-body">
         <div class="mb-3">
           <strong>Status:</strong>
-          <%= last_run_step.api_response_report.status %>
+          <%= status_with_icon(last_run_step.api_response_report.status) %>
         </div>
         <% if last_run_step.api_response_report.response_code %>
           <div class="mb-3">

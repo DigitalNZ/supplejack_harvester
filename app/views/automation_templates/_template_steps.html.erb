@@ -53,12 +53,7 @@
                     (Fragment priority: <%= hd.load_priority %>)
                   </small>
                   <% report = find_harvest_report(last_automation_run, hd, index) %>
-                  <% status = harvest_report_status(report) %>
-                  <small>
-                    <span class="badge <%= status[:badge_class] %>">
-                      <%= status[:status_text] %>
-                    </span>
-                  </small>
+                  <small><%= status_with_icon(report&.status) %></small>
                 </div>
               <% end %>
             <% else %>
@@ -72,11 +67,7 @@
               <small class="text-break">
                 <%= step.api_url.truncate(100) %>
               </small>
-              <small>
-                <span class="badge <%= api_response_badge_class(last_run_step&.api_response_report) %> ms-2">
-                  <%= api_response_status_text(last_run_step&.api_response_report) %>
-                </span>
-              </small>
+              <small class="ms-2"><%= status_with_icon(last_run_step&.api_response_report&.status) %></small>
             </div>
           <% end %>
         </div>

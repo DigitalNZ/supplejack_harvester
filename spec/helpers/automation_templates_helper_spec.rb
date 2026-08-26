@@ -45,28 +45,4 @@ RSpec.describe AutomationTemplatesHelper do
       end
     end
   end
-  
-  describe '#harvest_report_status' do
-    context 'when report is nil' do
-      it 'returns default status' do
-        status = helper.harvest_report_status(nil)
-        expect(status[:badge_class]).to eq('bg-secondary')
-        expect(status[:status_text]).to eq('Not started')
-      end
-    end
-    
-    context 'when report exists' do
-      let(:report) { instance_double('HarvestReport', status: 'completed') }
-      
-      before do
-        allow(helper).to receive(:status_badge_class).with('completed').and_return('bg-success')
-      end
-      
-      it 'returns status based on the report' do
-        status = helper.harvest_report_status(report)
-        expect(status[:badge_class]).to eq('bg-success')
-        expect(status[:status_text]).to eq('Completed')
-      end
-    end
-  end
-end 
+end

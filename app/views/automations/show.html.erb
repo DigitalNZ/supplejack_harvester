@@ -37,7 +37,7 @@
 
               <h6>Status</h6>
               <p>
-                <span class="badge <%= status_badge_class(@automation.status) %>"><%= @automation.status.humanize %></span>
+                <%= status_with_icon(@automation.status) %>
               </p>
 
               <h6>Total Steps</h6>
@@ -101,9 +101,7 @@
                         <% end %>
                       </td>
                       <td>
-                        <span class="badge <%= status_badge_class(step.status) %>">
-                          <%= step.status.present? ? step.status&.humanize : 'Not Started' %>
-                        </span>
+                        <%= status_with_icon(step.status) %>
                       </td>
                       <td>
                         <% if step.step_type == 'pipeline' && step.pipeline_job %>
