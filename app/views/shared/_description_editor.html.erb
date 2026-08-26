@@ -1,16 +1,20 @@
-<%# The description has three states and only ever shows one of them: a clamped preview, the whole
-    thing in a card, and the edit form. pipelineDescription.js swaps between them. The form leads
-    when the last save came back with an error, so the author lands back on what they wrote. %>
-<% editing = pipeline.errors.include?(:description) %>
+<%# A description has three states and only ever shows one of them: a clamped preview, the whole
+    thing in a card, and the edit form. descriptions.js swaps between them. The form leads when the
+    last save came back with an error, so the author lands back on what they wrote.
 
-<div class='pipeline-description js-description'>
+    model is whatever carries the description - a pipeline, an automation template, one of the
+    definitions - and names itself in the prompt to add one. %>
+<% editing = model.errors.include?(:description) %>
+<% noun = model.model_name.human.downcase %>
+
+<div class='description-editor js-description'>
   <div class="<%= class_names('js-description-collapsed', { 'd-none': editing }) %>">
     <div class='d-flex align-items-end gap-2'>
-      <% if pipeline.description.present? %>
-        <%= render 'pipelines/description', pipeline:,
-                                            classes: 'markdown--clamped small js-description-clamp' %>
+      <% if model.description.present? %>
+        <%= render 'shared/description', description: model.description,
+                                         classes: 'markdown--clamped small js-description-clamp' %>
       <% else %>
-        <span class='small text-primary js-description-edit' role='button'>Add pipeline description</span>
+        <span class='small text-primary js-description-edit' role='button'>Add <%= noun %> description</span>
       <% end %>
 
       <i class='bi bi-pencil-square text-primary flex-shrink-0 js-description-edit' role='button' title='Edit description'></i>
@@ -36,7 +40,7 @@
         </a>
       </div>
 
-      <%= render 'pipelines/description', pipeline:, classes: 'small' %>
+      <%= render 'shared/description', description: model.description, classes: 'small' %>
     </div>
   </div>
 
@@ -44,7 +48,7 @@
     <div class='card-body'>
       <div class='small fw-semibold mb-2'>Edit description</div>
 
-      <%= vertical_form_with(model: pipeline, url: pipeline_path(pipeline)) do |form| %>
+      <%= vertical_form_with(model:, url:) do |form| %>
         <%= form.text_area :description, rows: 9, class: 'form-control form-control-sm font-monospace' %>
 
         <div class='d-flex align-items-center flex-wrap gap-2 mt-2'>

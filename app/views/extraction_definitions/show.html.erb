@@ -18,6 +18,11 @@
 
   <div class="clearfix"></div>
 
+  <%= render 'shared/description_editor',
+             model: @extraction_definition,
+             url: pipeline_harvest_definition_extraction_definition_path(@pipeline, @harvest_definition,
+                                                                         @extraction_definition) %>
+
   <span id='react-nav-tabs'></span>
 <% end %>
 

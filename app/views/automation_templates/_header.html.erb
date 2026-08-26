@@ -21,7 +21,8 @@
 
   <div class="clearfix"></div>
 
-  <p><%= automation_template.description.presence || 'No description' %></p>
+  <%= render 'shared/description_editor', model: automation_template,
+                                          url: automation_template_path(automation_template) %>
 
   <% if last_automation_run.present? %>
     <p>
