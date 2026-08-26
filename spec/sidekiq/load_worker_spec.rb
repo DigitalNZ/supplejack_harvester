@@ -235,6 +235,12 @@ RSpec.describe LoadWorker, type: :job do
         stub_notice_to_api
       end
 
+      it 'sends the batch once, rather than working through the in-process backoff' do
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(Load::Execution).to have_received(:new).once
+      end
+
       it 'does not requeue the batch, even on the first attempt' do
         expect(described_class).not_to receive(:perform_in_with_priority)
 

@@ -13,9 +13,19 @@ class LoadWorker
   MAX_BATCH_ATTEMPTS = 3
   RETRY_DELAYS = [5.minutes, 15.minutes].freeze
 
-  # A refusal the destination will repeat however many times it is asked is not worth waiting
-  # on, so Retriable is told to re-raise it at once instead of working through its backoff.
-  RETRY_IF_TRANSIENT = ->(error) { !error.is_a?(Load::PermanentError) }
+  # Failures a second attempt cannot improve on: a refusal the destination will repeat however
+  # many times it is asked, and a read timeout - it had the batch when the socket gave up and
+  # may well go on to accept it, so sending it again only repeats an expensive write against an
+  # endpoint that was already too slow to answer. Neither is retried in process nor requeued.
+  #
+  # Faraday::TimeoutError is the request having been sent and not answered. A connection that
+  # never opened, was refused, or broke mid-response arrives as ConnectionFailed and is still
+  # worth resending, because the destination certainly never had it.
+  POINTLESS_TO_RESEND = [Load::PermanentError, Faraday::TimeoutError].freeze
+
+  # Named for the Retriable option it is passed as, which re-raises at once when this is false
+  # rather than working through the backoff.
+  RETRY_IF = ->(error) { POINTLESS_TO_RESEND.none? { |kind| error.is_a?(kind) } }
 
   # Sidekiq builds one of these per job with no arguments and calls #perform, so every
   # instance variable below is really set in #prepare. Declaring them here says what state a
@@ -69,7 +79,7 @@ class LoadWorker
   # which left the block's load counted one worker short and stuck on "running" for good -
   # and took every remaining slice in this worker's page down with it.
   def process_batch(batch)
-    ::Retriable.with_context(:load, on_retry: log_retry_attempt, retry_if: RETRY_IF_TRANSIENT) do
+    ::Retriable.with_context(:load, on_retry: log_retry_attempt, retry_if: RETRY_IF) do
       execute_load(batch)
     end
   rescue StandardError => e
@@ -95,21 +105,13 @@ class LoadWorker
     record_load_error(error)
   end
 
-  # A permanent refusal is given up on at once. A later attempt would be refused the same
-  # way, and the run is better off finishing and saying what happened.
-  #
-  # So is a read timeout, for the opposite reason: the destination had the batch when the socket
-  # gave up, and it may well go on to accept it. On staging a page that timed out at 60 seconds
-  # was written by the API 13 seconds later and answered 200 to nobody, so all a requeue bought
-  # was the same expensive write a second and third time, against the endpoint that was already
-  # too slow to answer. Faraday::TimeoutError is the request having been sent and not answered;
-  # a connection that never opened or broke mid-response comes back as ConnectionFailed and is
-  # still worth requeueing, because the destination certainly never had it.
+  # Nothing POINTLESS_TO_RESEND covers is requeued either. On staging a page that timed out at
+  # 60 seconds was written by the API 13 seconds later and answered 200 to nobody, so the two
+  # requeues that followed bought nothing but the same 550KB write twice more.
   def requeue?(error)
-    case error
-    when Load::PermanentError, Faraday::TimeoutError then false
-    else @attempt < MAX_BATCH_ATTEMPTS
-    end
+    return false if POINTLESS_TO_RESEND.any? { |kind| error.is_a?(kind) }
+
+    @attempt < MAX_BATCH_ATTEMPTS
   end
 
   # Never 0: each_slice(0) raises, and a block that has no load definition yet reads its
