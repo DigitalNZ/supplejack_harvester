@@ -13,7 +13,9 @@ if (root) {
   const cancelButton = root.querySelector("[data-tags-cancel]");
   const chipTemplate = root.querySelector("[data-tag-chip-template]");
 
-  const knownNames = JSON.parse(root.dataset.tags || "[]");
+  // Each known tag as its name and the modifier that colours a chip for it.
+  const knownTags = JSON.parse(root.dataset.tags || "[]");
+  const knownNames = knownTags.map((tag) => tag.name);
 
   const chipNames = () =>
     [...chipList.querySelectorAll("[data-tag-chip]")].map(
@@ -33,10 +35,14 @@ if (root) {
   }
 
   function addChip(name) {
-    // An existing tag keeps its own spelling however the name was typed.
-    const tagName = knownNames.find((known) => sameName(known, name)) || name;
+    // An existing tag keeps its own spelling however the name was typed, and its colour
+    // with it. A name no tag has yet gets the colour the template was rendered with,
+    // which is the grey a tag is created as.
+    const known = knownTags.find((tag) => sameName(tag.name, name));
+    const tagName = known ? known.name : name;
 
     const chip = chipTemplate.content.firstElementChild.cloneNode(true);
+    if (known) recolour(chip, known.modifier);
     chip.dataset.tagName = tagName;
     chip.querySelector("[data-tag-chip-name]").textContent = tagName;
     chip.querySelector("[data-tag-chip-value]").value = tagName;
@@ -46,6 +52,13 @@ if (root) {
 
     chipList.appendChild(chip);
     syncEmptyNotice();
+  }
+
+  function recolour(chip, modifier) {
+    chip.classList.remove(
+      ...[...chip.classList].filter((name) => name.startsWith("tag--"))
+    );
+    chip.classList.add(modifier);
   }
 
   function hideSuggestions() {
@@ -114,8 +127,12 @@ if (root) {
   function openEditor() {
     editButton.classList.add("d-none");
     editor.classList.remove("d-none");
-    renderSuggestions();
     input.focus();
+    // Opening the editor is not asking for suggestions - the list sits over Save and
+    // Cancel, and nothing has been typed or clicked yet. Focusing the input is what asks
+    // for them, and the focus above has just done so, so shut the list it opened. Both
+    // ways of asking on purpose - clicking the input, or typing in it - still open it.
+    hideSuggestions();
   }
 
   function closeEditor() {

@@ -155,6 +155,29 @@ RSpec.describe Tag do
     end
   end
 
+  describe '#color' do
+    it 'starts as the grey a tag is created in' do
+      expect(create(:tag).color).to eq 'pompeii_ash'
+    end
+
+    it 'is one of the colours the picker offers' do
+      tag = create(:tag)
+
+      tag.update(color: :dead_blue_eyes)
+
+      expect(tag.reload.color).to eq 'dead_blue_eyes'
+    end
+
+    # A colour no swatch could have submitted is a validation failure rather than the
+    # ArgumentError an enum raises by default, which nothing here would catch.
+    it 'rejects a colour it does not know' do
+      tag = build(:tag, color: 'chartreuse')
+
+      expect(tag).not_to be_valid
+      expect(tag.errors[:color]).to include 'is not included in the list'
+    end
+  end
+
   describe '.ordered' do
     it 'sorts by name' do
       second = create(:tag, name: 'Beta')

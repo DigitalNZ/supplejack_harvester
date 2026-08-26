@@ -3,7 +3,7 @@
 class ExtractionContext
   attr_reader :extraction_definition, :extraction_job, :enrichment_extraction, :harvest_job, :api_record, :page
 
-  # rubocop:disable Metrics/ParameterLists
+  # rubocop:disable-next Metrics/ParameterLists
   def initialize(extraction_definition, extraction_job, enrichment_extraction, harvest_job, api_record, page)
     @extraction_definition = extraction_definition
     @extraction_job = extraction_job
@@ -12,5 +12,4 @@ class ExtractionContext
     @api_record = api_record
     @page = page
   end
-  # rubocop:enable Metrics/ParameterLists
 end

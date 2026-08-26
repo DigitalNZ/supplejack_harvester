@@ -1,0 +1,39 @@
+<%= content_for :header do %>
+  <h1 class="header__title">Harvester</h1>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<%# The way in to every part of the app. The card's title is the link, and the card is
+    clickable around it - the pattern the pipeline blocks use (blocks/_card-link.scss). %>
+<% sections = [
+     ['Pipelines', pipelines_path,
+      'Each source that is harvested, and the extraction, transformation and load definitions behind it.'],
+     ['Tags', tags_path,
+      'The labels pipelines are grouped and filtered by. Rename a mis-spelt one, or delete one nothing needs.'],
+     ['Automation Templates', automation_templates_path,
+      'Sequences of pipeline runs and API calls, and the automations started from them.'],
+     ['Destinations', destinations_path,
+      'The APIs harvested records are loaded into, and the keys used to reach them.'],
+     ['Schemas', schemas_path,
+      'Shared field definitions, and the transformation fields mapped onto them.'],
+     ['Schedules', schedules_path,
+      'When a pipeline or an automation runs unattended, and how often.'],
+     ['Jobs', jobs_path,
+      'Every run and how it went, by pipeline, tag, status, destination or whoever started it.']
+   ] %>
+
+<div class="row row-cols-1 row-cols-md-3 g-3">
+  <% sections.each do |title, path, description| %>
+    <div class="col">
+      <div class="card card--clickable h-100">
+        <div class="card-body">
+          <h2 class="card-title h5">
+            <%= link_to title, path, class: 'card__link' %>
+          </h2>
+          <p class="card-text text-muted mb-0"><%= description %></p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

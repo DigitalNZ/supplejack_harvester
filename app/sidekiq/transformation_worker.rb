@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# rubocop:disable Metrics/ClassLength
+# rubocop:disable-next Metrics/ClassLength
 class TransformationWorker
   include PerformWithPriority
   include Sidekiq::Job
@@ -200,4 +200,3 @@ class TransformationWorker
     end
   end
 end
-# rubocop:enable Metrics/ClassLength

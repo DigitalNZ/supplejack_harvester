@@ -3,7 +3,7 @@
 class AutomationTemplatesController < ApplicationController
   include LastEditedBy
 
-  before_action :set_automation_template, only: %i[show edit update destroy run_automation automations]
+  before_action :set_automation_template, only: %i[show edit update destroy run_automation]
   before_action :set_pipeline, only: [:index], if: -> { params[:pipeline_id].present? }
 
   def index
@@ -73,11 +73,6 @@ class AutomationTemplatesController < ApplicationController
     else
       redirect_to path, alert: message
     end
-  end
-
-  # Show automations created from this template
-  def automations
-    @automations = @automation_template.automations.page(params[:page])
   end
 
   private

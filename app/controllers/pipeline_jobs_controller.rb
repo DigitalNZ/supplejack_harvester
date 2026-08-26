@@ -4,13 +4,15 @@ class PipelineJobsController < ApplicationController
   before_action :find_pipeline
   before_action :find_pipeline_job, only: %i[show cancel]
 
+  # The pipeline is the route's, so filter_by_pipeline has it from params either way; what
+  # this scopes is the query itself, before the filters narrow it.
   def index
-    @pipeline_jobs = paginate_and_filter_jobs(@pipeline.pipeline_jobs)
+    @pipeline_jobs = paginate_and_filter_jobs(@pipeline.pipeline_jobs.for_jobs_table)
   end
 
   def show; end
 
-  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable-next Metrics/AbcSize
   def create
     @pipeline_job = PipelineJob.new(pipeline_job_params.merge(launched_by_id: current_user.id))
 
@@ -23,7 +25,6 @@ class PipelineJobsController < ApplicationController
 
     redirect_to pipeline_pipeline_jobs_path(@pipeline)
   end
-  # rubocop:enable Metrics/AbcSize
 
   def cancel
     if @pipeline_job.cancelled!

@@ -48,12 +48,17 @@ module JobsHelper
     ActiveSupport::Duration.build(seconds).inspect
   end
 
+  # Short enough to sit beside the time the job started: 2h 40m, 9m 57s, 5s. An hour-long
+  # run leaves its seconds out - at that length they are noise rather than detail.
   def job_duration_seconds_short(seconds)
     hours   = seconds / 3_600
     minutes = (seconds % 3_600) / 60
     seconds %= 60
 
-    format('%<h>d:%<m>02d:%<s>02d', h: hours, m: minutes, s: seconds)
+    return "#{hours}h #{minutes}m" if hours.positive?
+    return "#{minutes}m #{seconds}s" if minutes.positive?
+
+    "#{seconds}s"
   end
 
   def job_status_badge(report, job)
@@ -90,6 +95,28 @@ module JobsHelper
     end
   end
 
+  # When a job started and how long it took, as the one column the design gives them. A
+  # queued job has started at neither, and a running one has no duration yet, so the two
+  # are joined rather than interpolated: what there is of it is shown without a separator
+  # dangling off the end.
+  def job_started_and_duration(report, job)
+    parts = [job_started_at_label(report, job), job_duration(report, format: :short)]
+
+    safe_join(parts.compact_blank, ' · ')
+  end
+
+  # The line under a pipeline's name in the jobs table: where the job wrote, and who set
+  # it going. Run by is a link when a schedule or an automation did it, so the parts are
+  # joined rather than interpolated, and a job nobody is recorded as running is left as
+  # its destination alone rather than trailing a 'Run by' with nothing after it.
+  def job_source_line(job)
+    run_by = job_launched_by_label(job)
+    parts = [job.destination.name]
+    parts << safe_join(['Run by ', run_by]) if run_by.present?
+
+    safe_join(parts, ' · ')
+  end
+
   def job_started_at_label(report, job)
     if report&.harvest_job&.extraction_job.present? && report&.extraction_start_time.present?
       report&.extraction_start_time&.strftime('%H:%M %d/%m/%y')
@@ -102,29 +129,5 @@ module JobsHelper
     return '' unless job
 
     job.job_priority.presence&.humanize || 'Default'
-  end
-
-  # The jobs of one pipeline. pipeline_id rides along in the query as well as the path,
-  # because the filter form on that page posts it to the global jobs list.
-  def jobs_filter_url(pipeline)
-    "#{pipeline_pipeline_jobs_path(pipeline)}?pipeline_id=#{pipeline.id}"
-  end
-
-  # The filters carry no label beside them, so each one says what it filters. Choosing
-  # 'all' submits nothing rather than a sentinel the controller has to know about.
-  # Every option says 'Run by', not just the default: a username on its own would not
-  # say what it is filtering once it is the one selected.
-  def user_opts
-    who = User.distinct.pluck(:username).compact.sort.unshift('Schedule')
-
-    [['Run by: anyone', '']] + who.map { |name| ["Run by: #{name}", name] }
-  end
-
-  def status_opts
-    [['All statuses', '']] + %w[Queued Cancelled Completed Running Errored]
-  end
-
-  def dest_opts
-    [['All destinations', '']] + Destination.distinct.pluck(:name).compact
   end
 end
