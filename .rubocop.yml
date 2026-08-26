@@ -65,3 +65,16 @@ Metrics/MethodLength:
 Lint/RescueException:
   Exclude:
     - "app/supplejack/transformation/field_execution.rb"
+
+# New cops from the August 2026 rubocop upgrade. Each one asks for rewrites of
+# working production code (66 controller changes for StrongParametersExpect
+# alone), so they are off until someone can make and test those changes
+# deliberately.
+Rails/StrongParametersExpect:
+  Enabled: false
+
+Style/CollectionQuerying:
+  Enabled: false
+
+Naming/PredicateMethod:
+  Enabled: false

@@ -19,7 +19,7 @@ class TwoFactorSetupsController < ApplicationController
   end
 
   def destroy
-    return redirect_back(fallback_location: root_path, alert: t('.mandatory')) if current_user.enforce_two_factor?
+    return redirect_back_or_to(root_path, alert: t('.mandatory')) if current_user.enforce_two_factor?
 
     if current_user.update(otp_required_for_login: false, otp_secret: nil, two_factor_setup: false)
       flash.notice = t('.success')

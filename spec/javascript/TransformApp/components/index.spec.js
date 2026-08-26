@@ -28,18 +28,26 @@ document.createRange = () => {
 
 describe("<TransformationApp />", () => {
   beforeEach(() => {
+    ["react-modals", "react-header-actions", "react-nav-tabs"].forEach((id) => {
+      const portalTarget = document.createElement("div");
+      portalTarget.setAttribute("id", id);
+      document.body.appendChild(portalTarget);
+    });
+
     const initialFields = {
       ids: [1, 2,],
       entities: {
         1: {
           id: 1,
           name: 'title',
-          block: 'record["title"]'
+          block: 'record["title"]',
+          created_at: '2026-01-01T00:00:00.000Z'
         },
         2: {
           id: 2,
           name: 'description',
-          block: 'record["description"]'
+          block: 'record["description"]',
+          created_at: '2026-01-02T00:00:00.000Z'
         }
       }
     }
@@ -61,6 +69,12 @@ describe("<TransformationApp />", () => {
         id: 1
       },
       transformationDefinition: {
+        id: 1
+      },
+      pipeline: {
+        id: 1
+      },
+      harvestDefinition: {
         id: 1
       }
     }
@@ -85,7 +99,12 @@ describe("<TransformationApp />", () => {
       preloadedState: {
         entities: {
           fields: initialFields,
-          appDetails: initialAppDetails
+          appDetails: initialAppDetails,
+          sharedDefinitions: { ids: [], entities: {} },
+          schemas: { ids: [], entities: {} },
+          schemaFields: { ids: [], entities: {} },
+          schemaFieldValues: { ids: [], entities: {} },
+          fieldSchemaFieldValues: { ids: [], entities: {} }
         },
         ui: {
           fields: initialUiFields
@@ -94,8 +113,14 @@ describe("<TransformationApp />", () => {
     });
   });
 
+  afterEach(() => {
+    ["react-modals", "react-header-actions", "react-nav-tabs"].forEach((id) => {
+      document.getElementById(id).remove();
+    });
+  });
+
   it("displays the raw record", () => {
-    expect(screen.queryByText("Raw")).toBeTruthy();
+    expect(screen.queryByText("Raw data")).toBeTruthy();
   });
   
   it("displays the transformed record", () => {
@@ -103,7 +128,7 @@ describe("<TransformationApp />", () => {
   });
 
   it("displays the fields for the transformation", () => {
-    expect(screen.queryByText("Fields")).toBeTruthy();
+    expect(screen.queryByText("Custom Fields")).toBeTruthy();
     const fields = screen.getAllByTestId('field');
     expect(fields).toHaveLength(2);
   })
@@ -113,7 +138,7 @@ describe("<TransformationApp />", () => {
     let fields = screen.getAllByTestId('field');
     expect(fields).toHaveLength(2);
 
-    const button = screen.getByText('Add Field');
+    const button = screen.getByText('+ Add field');
     fireEvent.click(button)
 
     expect(await screen.findAllByText('Additional Field')).toBeTruthy();

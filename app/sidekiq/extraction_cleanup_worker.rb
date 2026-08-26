@@ -35,7 +35,7 @@ class ExtractionCleanupWorker
   # the batch: a failed purge leaves purged_at null so the next run retries it.
   # Not find_each: it would drop the oldest-first order and the batch limit,
   # and the batch is already capped small enough to load whole.
-  # rubocop:disable Rails/FindEach
+  # rubocop:disable-next Rails/FindEach
   def purge_extraction_jobs(pipeline_id)
     ExtractionJob.purge_candidates(@policy, pipeline_id:).includes(:extraction_definition).each do |job|
       bytes = examine(job)
@@ -46,7 +46,6 @@ class ExtractionCleanupWorker
       report_failure("extraction_job=#{job.id}", e)
     end
   end
-  # rubocop:enable Rails/FindEach
 
   # purge! backs out with false when the job turned busy mid-batch, or when it
   # was retained after the candidate list was built; either skip is logged but
