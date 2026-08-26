@@ -50,7 +50,7 @@ RSpec.describe JobStatusHelper do
 
     # An automation's own status, unlike a job's, can be failed.
     it 'draws a failed status as the one worth acting on' do
-      expect(helper.status_with_icon('failed')).to include 'Failed', 'bi-exclamation-triangle-fill', 'text-danger'
+      expect(helper.status_with_icon('failed')).to include 'Failed', 'bi-exclamation-octagon-fill', 'text-danger'
     end
 
     it 'reads not_started as words rather than as the column name' do
