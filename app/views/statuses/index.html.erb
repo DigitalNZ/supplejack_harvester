@@ -14,19 +14,22 @@
   <div class="clearfix"></div>
 <% end %>
 
-<%# Narrow, and one to a row: each is a word and a mark, and a column of them reads as a list
-    rather than as a table with a column to spare. %>
+<%# Three columns to a row, so the marks line up under each other and the column names read
+    down the left. %>
 <div class="row">
-  <div class="col-lg-6">
+  <div class="col-lg-9">
     <div class="card">
       <ul class="list-group list-group-flush">
-        <% @statuses.each do |status| %>
-          <li class="list-group-item d-flex align-items-center justify-content-between gap-3">
-            <%= status_with_icon(status) %>
+        <% @statuses.each do |status, description| %>
+          <li class="list-group-item">
+            <div class="row align-items-center">
+              <%# What a status is called in the database, and in a status= filter. %>
+              <div class="col-3"><code class="small"><%= status %></code></div>
 
-            <%# The column name behind the word, which is what a status is called in the
-                database and in a status= filter. %>
-            <code class="small text-muted"><%= status %></code>
+              <div class="col-3"><%= status_with_icon(status) %></div>
+
+              <div class="col-6 small text-muted"><%= description %></div>
+            </div>
           </li>
         <% end %>
       </ul>

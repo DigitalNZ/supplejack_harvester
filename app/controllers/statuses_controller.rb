@@ -8,17 +8,32 @@
 # StatusManagement can work out. A status added to either appears here without this being
 # touched.
 class StatusesController < ApplicationController
-  # What has not run, then what is under way, then how it turned out. A status a model
-  # declares and this does not name is shown after these rather than left out.
-  DISPLAY_ORDER = %w[not_started queued running completed cancelled errored failed].freeze
+  # What each status says, in the order the page reads best in: what has not run, then what
+  # is under way, then how it turned out. A status a model declares and this does not
+  # describe is still shown, after these and without a sentence, rather than left out.
+  DESCRIPTIONS = {
+    'napping' => 'A status the app does not know about, but which a model has declared.',
+    'not_started' => 'Nothing has run yet.',
+    'queued' => 'Waiting for a worker to pick it up.',
+    'running' => 'Under way now.',
+    'completed' => 'Finished, and did what it was asked to.',
+    'cancelled' => 'Stopped by someone before it finished.',
+    'errored' => 'Stopped on an error.',
+    'failed' => 'An automation with an errored step in it.'
+  }.freeze
 
   def index
-    @statuses = declared_statuses.sort_by { |status| DISPLAY_ORDER.index(status) || DISPLAY_ORDER.length }
+    @statuses = declared_statuses.sort_by { |status| position(status) }
+                                 .map { |status| [status, DESCRIPTIONS[status]] }
   end
 
   private
 
   def declared_statuses
     (Job::STATUSES + ['napping']) | StatusManagement::STATUS_PRIORITY.keys
+  end
+
+  def position(status)
+    DESCRIPTIONS.keys.index(status) || DESCRIPTIONS.length
   end
 end
