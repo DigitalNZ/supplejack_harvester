@@ -289,6 +289,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
     t.bigint "last_edited_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "read_timeout"
+    t.integer "batch_size", default: 100, null: false
     t.index ["last_edited_by_id"], name: "index_load_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_load_definitions_on_name", unique: true, length: 255
     t.index ["pipeline_id"], name: "index_load_definitions_on_pipeline_id"

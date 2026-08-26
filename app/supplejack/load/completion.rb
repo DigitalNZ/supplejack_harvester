@@ -19,9 +19,14 @@ module Load
 
     # Only the caller that finds the load finished and still unmarked does anything, so the
     # destination is not told again by the next worker through here.
+    #
+    # An errored load counts as marked. LoadWorker sets that after asking here - the flag has
+    # to be taken back even when batches failed - and all three workers call in, so without
+    # this a later one would pass both guards, notify the destination a second time and mark
+    # the load completed over the top of the failure.
     def call
       return unless @report.load_workers_completed?
-      return if @report.load_completed?
+      return if @report.load_completed? || @report.load_errored?
 
       @report.load_completed!
       notify_harvesting_finished

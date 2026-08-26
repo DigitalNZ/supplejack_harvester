@@ -2,8 +2,14 @@
 
 module Api
   class Request
-    def initialize(destination)
-      @connection = Faraday.new(url: destination.url, headers: headers(destination.api_key)) do |builder|
+    # The read timeout is left out altogether when there is nothing to say, rather than passed
+    # as nil: Faraday merges this over config/initializers/faraday.rb's defaults, so an
+    # explicit nil would clear the app-wide read timeout instead of falling back to it.
+    def initialize(destination, read_timeout: nil)
+      options = { url: destination.url, headers: headers(destination.api_key) }
+      options[:request] = { timeout: read_timeout } if read_timeout.present?
+
+      @connection = Faraday.new(**options) do |builder|
         builder.request :json
         builder.response :json
       end
