@@ -213,6 +213,35 @@ RSpec.describe 'Load Definitions' do
       expect(load_definition.reload.kind).to eq 'primary_fragment'
       expect(response.body).to include 'must not be 0'
     end
+
+    # Why a load definition could refuse to save with nothing on the form saying so: both of
+    # these land on a select, and VerticalFormBuilder only knew how to mark the fields a user
+    # types into.
+    it 'says why when the refusal is about the response timeout, which is a select' do
+      patch pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition), params: {
+        load_definition: { read_timeout: 45 }
+      }
+
+      expect(response.body).to include 'is not included in the list'
+    end
+
+    context 'when a block that cannot do this kind is already attached to it' do
+      before do
+        # The block side refuses this pairing, so it takes update_columns to build the state -
+        # but rows predating that validation exist, and then nothing about the definition saves.
+        create(:harvest_definition, pipeline:, kind: 'enrichment', source_id: 'enriching')
+          .update_columns(load_definition_id: load_definition.id) # rubocop:disable Rails/SkipsModelValidations
+      end
+
+      it 'says why, though the kind is a select too' do
+        patch pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition,
+                                                               load_definition), params: {
+                                                                 load_definition: { name: load_definition.name }
+                                                               }
+
+        expect(response.body).to include 'is not something the enrichment block enriching can do'
+      end
+    end
   end
 
   describe '#destroy' do
