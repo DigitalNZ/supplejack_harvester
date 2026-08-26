@@ -88,9 +88,11 @@
     </div>
 
     <div class='col-8'>
+      <%# The default entry carries a nil value, so it is part of the list rather than an
+          include_blank - that way it can say which wait it stands for. %>
       <%= form.select :read_timeout,
-                      options_for_select(LoadDefinition.read_timeout_options, form.object.read_timeout),
-                      { include_blank: 'Default' }, class: 'form-select' %>
+                      options_for_select(form.object.read_timeout_options, form.object.read_timeout),
+                      {}, class: 'form-select' %>
     </div>
   <% end %>
 

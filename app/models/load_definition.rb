@@ -47,9 +47,30 @@ class LoadDefinition < ApplicationRecord
   # hour. nil means the app-wide default in config/initializers/faraday.rb stands.
   READ_TIMEOUT_OPTIONS = { 30 => '30 seconds', 60 => '1 minute', 120 => '2 minutes', 180 => '3 minutes' }.freeze
 
-  # For a select: plain English rather than a number of seconds, which reads as a timeout of
-  # thirty when it is two minutes.
-  def self.read_timeout_options = READ_TIMEOUT_OPTIONS.map { |seconds, label| [label, seconds] }
+  # What a definition that says nothing waits: the app-wide default from
+  # config/initializers/faraday.rb, which HTTP_READ_TIMEOUT sets. Read back from Faraday rather
+  # than from ENV so the form cannot disagree with what the request will actually do.
+  def self.default_read_timeout = Faraday.default_connection_options.request.timeout
+
+  # Plain English rather than a number of seconds, which reads as a timeout of thirty when it is
+  # two minutes. A value the switch does not name - HTTP_READ_TIMEOUT is free to be anything -
+  # is described in seconds rather than left blank.
+  def self.read_timeout_label(seconds) = READ_TIMEOUT_OPTIONS.fetch(seconds) { "#{seconds} seconds" }
+
+  # For a select. Leaving it unset means the default, so that entry says which value that is
+  # rather than only that it exists; and the choice equal to it is dropped, because offering
+  # both would list the same number twice for the same wait.
+  #
+  # Unless this definition is the one pinned to that value, which keeps its entry: nothing in
+  # the list would otherwise match what is stored, and opening the form would quietly turn a
+  # pinned timeout into one that follows the default.
+  def read_timeout_options
+    settings = self.class
+    default = settings.default_read_timeout
+    offered = read_timeout == default ? READ_TIMEOUT_OPTIONS : READ_TIMEOUT_OPTIONS.except(default)
+
+    [["Default (#{settings.read_timeout_label(default)})", nil]] + offered.map { |seconds, label| [label, seconds] }
+  end
 
   # What LoadWorker has always sliced at, and what a block with no load definition still gets.
   DEFAULT_BATCH_SIZE = 100

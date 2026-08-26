@@ -133,6 +133,20 @@ RSpec.describe 'Load Definitions' do
       expect(response.body).to include load_definition.name
     end
 
+    it 'names the wait the default stands for, so it need not be guessed at' do
+      get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
+
+      expect(response.body).to include "Default (#{LoadDefinition.read_timeout_label(
+        LoadDefinition.default_read_timeout
+      )})"
+    end
+
+    it 'does not offer that same wait again further down the list' do
+      get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
+
+      expect(response.body).not_to include %(<option value="#{LoadDefinition.default_read_timeout}">)
+    end
+
     # Only the settings that mean something for what this block can do - see PipelinesHelper.
     it 'asks a harvest block for a priority but not for a required fragment' do
       get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
