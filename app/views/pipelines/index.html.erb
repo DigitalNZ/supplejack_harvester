@@ -95,14 +95,14 @@
 <%- @pipelines.each do |pipeline| %>
   <%= link_to pipeline, class: 'card card--clickable mb-3' do %>
     <div class="card-body">
-      <div class="d-flex align-items-center flex-wrap gap-2">
-        <h2 class="card-title mb-1"><%= pipeline.name %></h2>
+      <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+        <h2 class="card-title mb-0"><%= pipeline.name %></h2>
 
         <% pipeline.tags.sort_by(&:name).each do |tag| %>
           <%= tag_label(tag) %>
         <% end %>
       </div>
-      <h3 class="card-subtitle">
+      <h3 class="card-subtitle mt-0">
         <%= last_edited_by(pipeline) %>
       </h3>
       <div>
