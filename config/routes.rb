@@ -131,6 +131,10 @@ Rails.application.routes.draw do
 
   resources :field_schema_field_values, only: %i[create update destroy]
 
+  # The statuses a job or an automation can be in, and how each is drawn. Not to be
+  # confused with /status below, which is the health check.
+  resources :statuses, only: %i[index]
+
   mount Sidekiq::Web => '/sidekiq'
 
   get '/status', to: proc { [200, { 'Cache-Control' => 'no-store, must-revalidate, private, max-age=0' }, ['ok']] }

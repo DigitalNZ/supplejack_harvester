@@ -14,7 +14,7 @@ module JobStatusHelper
     'running' => 'play-circle-fill',
     'completed' => 'check-circle-fill',
     'errored' => 'exclamation-triangle-fill',
-    'failed' => 'exclamation-triangle-fill',
+    'failed' => 'exclamation-octagon-fill',
     'cancelled' => 'x-circle-fill'
   }.freeze
 

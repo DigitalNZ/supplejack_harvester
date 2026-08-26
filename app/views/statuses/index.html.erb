@@ -1,0 +1,35 @@
+<%= content_for(:title) { 'Statuses' } %>
+<% breadcrumb :statuses %>
+
+<%= content_for :header do %>
+  <div class="float-start">
+    <h1>Statuses</h1>
+    <p>
+      Every status a job or an automation can be in, drawn the way it is drawn wherever it
+      appears. The list comes from the models, so a status added to either arrives here on its
+      own.
+    </p>
+  </div>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<%# Narrow, and one to a row: each is a word and a mark, and a column of them reads as a list
+    rather than as a table with a column to spare. %>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="card">
+      <ul class="list-group list-group-flush">
+        <% @statuses.each do |status| %>
+          <li class="list-group-item d-flex align-items-center justify-content-between gap-3">
+            <%= status_with_icon(status) %>
+
+            <%# The column name behind the word, which is what a status is called in the
+                database and in a status= filter. %>
+            <code class="small text-muted"><%= status %></code>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</div>
