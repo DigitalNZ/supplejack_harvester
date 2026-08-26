@@ -1,0 +1,60 @@
+<%# The description has three states and only ever shows one of them: a clamped preview, the whole
+    thing in a card, and the edit form. pipelineDescription.js swaps between them. The form leads
+    when the last save came back with an error, so the author lands back on what they wrote. %>
+<% editing = pipeline.errors.include?(:description) %>
+
+<div class='pipeline-description js-description'>
+  <div class="<%= class_names('js-description-collapsed', { 'd-none': editing }) %>">
+    <div class='d-flex align-items-end gap-2'>
+      <% if pipeline.description.present? %>
+        <%= render 'pipelines/description', pipeline:,
+                                            classes: 'markdown--clamped small js-description-clamp' %>
+      <% else %>
+        <span class='small text-primary js-description-edit' role='button'>Add pipeline description</span>
+      <% end %>
+
+      <i class='bi bi-pencil-square text-primary flex-shrink-0 js-description-edit' role='button' title='Edit description'></i>
+    </div>
+
+    <%# only worth offering once the clamp has actually cut something off, which only the browser knows %>
+    <div class='mt-1 d-none js-description-more'>
+      <a href='#' class='small text-decoration-none js-description-expand'>
+        Read full description <i class='bi bi-chevron-down'></i>
+      </a>
+    </div>
+  </div>
+
+  <div class='card shadow-sm d-none js-description-expanded'>
+    <div class='card-body'>
+      <div class='d-flex align-items-center gap-2 mb-2'>
+        <span class='small fw-bold text-muted text-uppercase'>Description</span>
+
+        <i class='bi bi-pencil-square text-primary js-description-edit' role='button' title='Edit description'></i>
+
+        <a href='#' class='ms-auto small text-decoration-none js-description-collapse'>
+          Show less <i class='bi bi-chevron-up'></i>
+        </a>
+      </div>
+
+      <%= render 'pipelines/description', pipeline:, classes: 'small' %>
+    </div>
+  </div>
+
+  <div class="<%= class_names('card shadow-sm js-description-form', { 'd-none': !editing }) %>">
+    <div class='card-body'>
+      <div class='small fw-semibold mb-2'>Edit description</div>
+
+      <%= vertical_form_with(model: pipeline, url: pipeline_path(pipeline)) do |form| %>
+        <%= form.text_area :description, rows: 9, class: 'form-control form-control-sm font-monospace' %>
+
+        <div class='d-flex align-items-center flex-wrap gap-2 mt-2'>
+          <%= form.submit 'Save description', class: 'btn btn-success btn-sm' %>
+
+          <button type='button' class='btn btn-link btn-sm text-decoration-none js-description-cancel'>Cancel</button>
+
+          <span class='small text-muted ms-auto'>Markdown supported</span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

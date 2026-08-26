@@ -12,7 +12,7 @@ class PipelineJobsController < ApplicationController
 
   def show; end
 
-  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable-next Metrics/AbcSize
   def create
     @pipeline_job = PipelineJob.new(pipeline_job_params.merge(launched_by_id: current_user.id))
 
@@ -25,7 +25,6 @@ class PipelineJobsController < ApplicationController
 
     redirect_to pipeline_pipeline_jobs_path(@pipeline)
   end
-  # rubocop:enable Metrics/AbcSize
 
   def cancel
     if @pipeline_job.cancelled!

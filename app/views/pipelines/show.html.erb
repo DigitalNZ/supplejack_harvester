@@ -14,19 +14,7 @@
       <h1><%= @pipeline.name %></h1>
     <% end %>
 
-    <%= render layout: 'shared/inline_editable_element', locals:
-      {
-        id: 'pipeline-description',
-        model: @pipeline,
-        url: pipeline_path(@pipeline),
-        attribute: :description
-      } do %>
-      <% if @pipeline.description.present? %>
-        <p><%= @pipeline.description %></p>
-      <% else %>
-        <p class='js-inline-editable-control inline-editable-element__control ' data-id='pipeline-description'>Add pipeline description</p>
-      <% end %>
-    <% end %>
+    <%= render 'pipelines/description_editor', pipeline: @pipeline %>
 
     <%= render 'pipelines/tags' %>
   </div>

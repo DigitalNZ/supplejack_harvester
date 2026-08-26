@@ -61,7 +61,8 @@ module Extractions
 
   # Thin wrapper over the kubectl binary.
   class Kubectl
-    Error = Class.new(StandardError)
+    class Error < StandardError
+    end
 
     def initialize(config)
       @config = config
@@ -277,7 +278,7 @@ module Extractions
         when /\A(\d+)\s*-\s*(\d+)\z/
           a = Regexp.last_match(1).to_i
           b = Regexp.last_match(2).to_i
-          (a <= b ? (a..b) : (b..a)).select { |n| n.between?(1, max) }
+          (a <= b ? (a..b) : (b..a)).grep(1..max)
         else
           []
         end

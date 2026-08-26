@@ -39,6 +39,9 @@ gem 'gretel'
 # used for pipelines
 gem 'activerecord-nulldb-adapter' # allows to run pipeline without credentials
 
+# renders the markdown people write in pipeline descriptions
+gem 'commonmarker'
+
 # user management
 gem 'devise'
 gem 'devise_invitable', '~> 2.0.0'
