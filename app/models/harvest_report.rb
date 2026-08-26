@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# rubocop:disable Metrics/ClassLength
+# rubocop:disable-next Metrics/ClassLength
 class HarvestReport < ApplicationRecord
   scope :completed, lambda {
                       where(extraction_status: 'completed', transformation_status: 'completed',
@@ -157,4 +157,3 @@ class HarvestReport < ApplicationRecord
     @idle_offset
   end
 end
-# rubocop:enable Metrics/ClassLength

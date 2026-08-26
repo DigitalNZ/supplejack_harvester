@@ -77,12 +77,12 @@ class PipelinesController < ApplicationController
   private
 
   def queued_jobs
-    PipelineJob.not_started.includes([pipeline: %i[last_edited_by schedules]]).map(&:pipeline).uniq
+    PipelineJob.not_started.includes([{ pipeline: %i[last_edited_by schedules] }]).map(&:pipeline).uniq
   end
 
   def running_jobs
     HarvestReport.includes([:harvest_job,
-                            { pipeline_job: [pipeline: %i[last_edited_by schedules]] }]).running.map do |report|
+                            { pipeline_job: [{ pipeline: %i[last_edited_by schedules] }] }]).running.map do |report|
       report.pipeline_job.pipeline
     end.uniq
   end
