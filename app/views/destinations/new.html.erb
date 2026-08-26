@@ -2,9 +2,9 @@
 <% breadcrumb :new_destination %>
 
 <%= content_for :header do %>
-  <h1 class="header__title float-start">Add New Destination</h1>
+  <h1 class="header__title">Add New Destination</h1>
 
-  <div class="float-end">
+  <div class="header__actions">
     <button type="button" class="btn btn-outline-primary me-1" id="js-test-destination-button">
       Test
     </button>
@@ -14,7 +14,7 @@
     </button>
   </div>
 
-  <div class="clearfix">
+  <div class="clearfix"></div>
 <% end %>
 
 <%= render 'form' %>

@@ -1,10 +1,10 @@
 <%= content_for(:title) { 'Job Completion Summary' } %>
 <% breadcrumb :job_completion_summaries %>
 
-<%= content_for(:header) do %>
-  <div class='float-start'>
-    <h1>Job Completion Summary</h1>
-    <p>View and manage job completion summary</p>
+<%= content_for :header do %>
+  <div class='header__column'>
+    <h1 class='header__title'>Job Completion Summary</h1>
+    <p class='header__subtitle'>View and manage job completion summary</p>
   </div>
   <div class='clearfix'></div>
 <% end %>
