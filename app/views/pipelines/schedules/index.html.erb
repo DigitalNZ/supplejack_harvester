@@ -1,37 +1,18 @@
 <%= content_for(:title) { 'Schedules' } %>
 <% breadcrumb :pipeline, @pipeline %>
 
-<%= content_for :header do %>
-  <h1 class="header__title">Schedules</h1>
+<%= content_for :heading do %>
+  <h1>Schedules</h1>
+<% end %>
 
-  <div class="header__actions">
-    <%= link_to new_schedule_path(pipeline_id: @pipeline.id), class: 'btn btn-primary' do %>
-      <i class="bi bi-plus" aria-hidden="true"></i> Add new schedule
-    <% end %>
-  </div>
+<%= content_for :actions do %>
+  <%= link_to new_schedule_path(pipeline_id: @pipeline.id), class: 'btn btn-primary' do %>
+    <i class="bi bi-plus" aria-hidden="true"></i> Add new schedule
+  <% end %>
+<% end %>
 
-  <div class='clearfix'></div>
-
-  <div class='mt-4'></div>
-  <ul class="nav nav-tabs">
-    <li class='nav-item'>
-      <%= link_to 'Pipeline', pipeline_path(@pipeline), class: 'nav-link' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to "Schedules (#{@pipeline.schedules.count})", pipeline_schedules_path(@pipeline),
-                  class: 'nav-link active' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})",
-                  pipeline_automation_templates_path(@pipeline), class: 'nav-link' %>
-    </li>
-  </ul>
+<%= content_for :nav_tabs do %>
+  <%= render 'pipelines/tabs', pipeline: @pipeline, active: :schedules %>
 <% end %>
 
 <% @schedules.each do |schedule| %>

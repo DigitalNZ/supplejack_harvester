@@ -1,20 +1,18 @@
 <%= content_for(:title) { 'New Destination' } %>
 <% breadcrumb :new_destination %>
 
-<%= content_for :header do %>
-  <h1 class="header__title">Add New Destination</h1>
+<%= content_for :heading do %>
+  <h1>Add New Destination</h1>
+<% end %>
 
-  <div class="header__actions">
-    <button type="button" class="btn btn-outline-primary me-1" id="js-test-destination-button">
-      Test
-    </button>
+<%= content_for :actions do %>
+  <button type="button" class="btn btn-outline-primary" id="js-test-destination-button">
+    Test
+  </button>
 
-    <button type="submit" class="btn btn-primary" data-form="js-destination-form">
-      Save
-    </button>
-  </div>
-
-  <div class="clearfix"></div>
+  <button type="submit" class="btn btn-primary" data-form="js-destination-form">
+    Save
+  </button>
 <% end %>
 
 <%= render 'form' %>

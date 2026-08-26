@@ -1,18 +1,17 @@
 <%= content_for(:title) { @user.username } %>
 <% breadcrumb :user, @user %>
 
-<%= content_for :header do %>
-  <h1 class="header__title"><%= @user.username %></h1>
+<%= content_for :heading do %>
+  <h1><%= @user.username %></h1>
+<% end %>
 
-  <div class="header__actions">
-    <%= link_to edit_user_path(@user), class: 'btn btn-primary' do %>
-      <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit user
-    <% end %>
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-user-modal">
-      <i class="bi bi-trash" aria-hidden="true"></i> Delete user
-    </button>
-  </div>
-  <div class="clearfix"></div>
+<%= content_for :actions do %>
+  <%= link_to edit_user_path(@user), class: 'btn btn-primary' do %>
+    <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit user
+  <% end %>
+  <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-user-modal">
+    <i class="bi bi-trash" aria-hidden="true"></i> Delete user
+  </button>
 <% end %>
 
 <ul class="list-group">

@@ -1,16 +1,14 @@
 <%= content_for(:title) { "Editing #{@tag.name_in_database}" } %>
 <% breadcrumb :edit_tag, @tag %>
 
-<%= content_for :header do %>
-  <h1 class="header__title"><%= @tag.name_in_database %></h1>
+<%= content_for :heading do %>
+  <h1><%= @tag.name_in_database %></h1>
+<% end %>
 
-  <div class="header__actions">
-    <%= link_to 'Cancel', tags_path, class: 'btn btn-outline-secondary me-1' %>
+<%= content_for :actions do %>
+  <%= link_to 'Cancel', tags_path, class: 'btn btn-outline-secondary' %>
 
-    <button type="submit" class="btn btn-primary" data-form="js-tag-form">Update</button>
-  </div>
-
-  <div class="clearfix"></div>
+  <button type="submit" class="btn btn-primary" data-form="js-tag-form">Update</button>
 <% end %>
 
 <%= vertical_form_with model: @tag, id: 'js-tag-form' do |form| %>

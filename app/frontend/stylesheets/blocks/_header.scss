@@ -6,6 +6,13 @@
   padding: 2rem;
   border-bottom: 1px solid $bright-star;
 
+  // Every page titles itself with an h1 in the heading slot, so it is spaced here rather than by
+  // a class each page has to remember. The gap is for what the slot carries under it: a line of
+  // detail, a description, the tags.
+  h1 {
+    margin-bottom: .25rem;
+  }
+
   .nav-tabs {
     margin-bottom: -2rem;
     border-bottom: none;

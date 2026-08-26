@@ -1,47 +1,25 @@
 <%= content_for(:title) { @pipeline ? "#{@pipeline.name} - Automation Templates" : 'Automation Templates' } %>
 <% breadcrumb :automation_templates, @pipeline %>
 
-<%= content_for :header do %>
-  <% if @pipeline %>
-    <div class='header__column'>
-      <h1 class='header__title'><%= @pipeline.name %></h1>
-      <% if @pipeline.description.present? %>
-        <%= render 'shared/description', description: @pipeline.description %>
-      <% end %>
-    </div>
+<%# Two pages share this template: the templates of one pipeline, reached from that pipeline's
+    tabs, and every template there is. Each slot says which of the two it is filling. %>
+<%= content_for :heading do %>
+  <h1><%= @pipeline ? @pipeline.name : 'Automation Templates' %></h1>
 
-    <div class='clearfix'></div>
+  <% if @pipeline&.description.present? %>
+    <%= render 'shared/description', description: @pipeline.description %>
+  <% end %>
+<% end %>
 
-    <div class='mt-4'></div>
-    <ul class="nav nav-tabs">
-      <li class='nav-item'>
-        <%= link_to 'Pipeline', pipeline_path(@pipeline), class: 'nav-link' %>
-      </li>
-
-      <li class='nav-item'>
-        <%= link_to "Schedules (#{@pipeline.schedules.count})", pipeline_schedules_path(@pipeline), class: 'nav-link' %>
-      </li>
-
-      <li class='nav-item'>
-        <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link' %>
-      </li>
-
-      <li class='nav-item'>
-        <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})",
-                    pipeline_automation_templates_path(@pipeline),
-                    class: 'nav-link active' %>
-      </li>
-    </ul>
-  <% else %>
-    <h1 class="header__title">Automation Templates</h1>
-
-    <div class="header__actions">
-      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
-          + Create new template
-      </button>
-    </div>
-
-    <div class="clearfix"></div>
+<% if @pipeline %>
+  <%= content_for :nav_tabs do %>
+    <%= render 'pipelines/tabs', pipeline: @pipeline, active: :automation_templates %>
+  <% end %>
+<% else %>
+  <%= content_for :actions do %>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
+      + Create new template
+    </button>
   <% end %>
 <% end %>
 

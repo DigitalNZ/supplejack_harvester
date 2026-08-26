@@ -1,16 +1,13 @@
 <% breadcrumb :automation, @automation %>
 
-<%= content_for :header do %>
-  <h1 class="header__title"><%= @automation.name %></h1>
+<%= content_for :heading do %>
+  <h1><%= @automation.name %></h1>
+<% end %>
 
-  <div class="header__actions">
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-automation-modal">
-      <i class="bi bi-trash"></i> Delete Automation
-    </button>
-  </div>
-
-  <div class="clearfix"></div>
-
+<%= content_for :actions do %>
+  <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-automation-modal">
+    <i class="bi bi-trash"></i> Delete Automation
+  </button>
 <% end %>
 <div class="py-4">
   <div class="row mb-4">

@@ -1,16 +1,12 @@
 <%= content_for(:title) { 'Tags' } %>
 <% breadcrumb :tags %>
 
-<%= content_for :header do %>
-  <div class="header__column">
-    <h1 class="header__title">Tags</h1>
-    <p class="header__subtitle">
-      Every pipeline is tagged from this one set. Renaming a tag relabels it wherever it is
-      carried, and deleting it takes it off every pipeline that carries it.
-    </p>
-  </div>
-
-  <div class="clearfix"></div>
+<%= content_for :heading do %>
+  <h1>Tags</h1>
+  <p class="text-muted mb-0">
+    Every pipeline is tagged from this one set. Renaming a tag relabels it wherever it is
+    carried, and deleting it takes it off every pipeline that carries it.
+  </p>
 <% end %>
 
 <%# A card each rather than a table: a tag is a name, what carries it and two things to do

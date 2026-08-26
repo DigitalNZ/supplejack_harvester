@@ -1,28 +1,29 @@
 <%= content_for(:title) { @transformation_definition.name_in_database } %>
 <% breadcrumb :transformation_definition, @pipeline, @transformation_definition %>
 
-<%= content_for :header do %>
-  <h1 class='header__title'><%= @transformation_definition.name %></h1>
-
-  <div class="header__actions">
-    <span id="react-header-actions"></span>
-
-    <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#update-transformation-definition-modal">
-      <i class="bi bi bi-sliders2" aria-hidden="true"></i> Settings
-    </button>
-
-    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
-      <i class="bi bi-trash" aria-hidden="true"></i> Delete
-    </button>
-  </div>
-
-  <div class="clearfix"></div>
+<%= content_for :heading do %>
+  <h1><%= @transformation_definition.name %></h1>
 
   <%= render 'shared/description_editor',
              model: @transformation_definition,
              url: pipeline_harvest_definition_transformation_definition_path(@pipeline, @harvest_definition,
                                                                              @transformation_definition) %>
+<% end %>
 
+<%= content_for :actions do %>
+  <span id="react-header-actions"></span>
+
+  <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#update-transformation-definition-modal">
+    <i class="bi bi bi-sliders2" aria-hidden="true"></i> Settings
+  </button>
+
+  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
+    <i class="bi bi-trash" aria-hidden="true"></i> Delete
+  </button>
+<% end %>
+
+<%# The tab strip is rendered here by the React app that owns the rest of the page. %>
+<%= content_for :nav_tabs do %>
   <span id='react-nav-tabs'></span>
 <% end %>
 

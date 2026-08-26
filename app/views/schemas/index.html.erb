@@ -1,16 +1,14 @@
 <%= content_for(:title) { 'Schemas' } %>
 <% breadcrumb :schemas %>
 
-<%= content_for :header do %>
-  <h1 class="header__title">Schemas</h1>
+<%= content_for :heading do %>
+  <h1>Schemas</h1>
+<% end %>
 
-  <div class="header__actions">
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
-      <i class="bi bi-plus" aria-hidden="true"></i>Create new schema
-    </button>
-  </div>
-
-  <div class="clearfix"></div>
+<%= content_for :actions do %>
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
+    <i class="bi bi-plus" aria-hidden="true"></i>Create new schema
+  </button>
 <% end %>
 
 <%- if @schemas.any? %>

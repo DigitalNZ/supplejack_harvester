@@ -1,28 +1,24 @@
 <%= content_for(:title) { @pipeline.name_in_database } %>
 <% breadcrumb :pipeline_job, @pipeline_job %>
 
-<%= content_for :header do %>
-  <div class="header__column">
-    <h1 class="header__title">Job <%= @pipeline_job.id %></h1>
-    <p class="header__subtitle">
-      <% if @pipeline_job.start_time %>
-        <strong><%= "Started #{@pipeline_job.start_time.to_fs(:verbose)}" %></strong>
-      <% else %>
-        <strong>Has not yet started</strong>
-      <% end %>
-    </p>
-  </div>
-
-  <div class="header__actions">
-    <% unless @pipeline_job.finished? %>
-      <%= button_to 'Cancel pipeline',
-                    cancel_pipeline_pipeline_job_path(@pipeline.id, @pipeline_job.id),
-                    class: 'btn btn-outline-danger me-1',
-                    form_class: 'd-inline' %>
+<%= content_for :heading do %>
+  <h1>Job <%= @pipeline_job.id %></h1>
+  <p class="text-muted mb-0">
+    <% if @pipeline_job.start_time %>
+      <strong><%= "Started #{@pipeline_job.start_time.to_fs(:verbose)}" %></strong>
+    <% else %>
+      <strong>Has not yet started</strong>
     <% end %>
-  </div>
+  </p>
+<% end %>
 
-  <div class="clearfix"></div>
+<%= content_for :actions do %>
+  <% unless @pipeline_job.finished? %>
+    <%= button_to 'Cancel pipeline',
+                  cancel_pipeline_pipeline_job_path(@pipeline.id, @pipeline_job.id),
+                  class: 'btn btn-outline-danger',
+                  form_class: 'd-inline' %>
+  <% end %>
 <% end %>
 
 <% @pipeline_job.harvest_reports.each do |report| %>

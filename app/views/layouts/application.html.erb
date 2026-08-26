@@ -28,17 +28,15 @@
 
     <%# A page fills the header in slots rather than laying itself out: what the page is about on
         the left, what can be done to it on the right, its tabs under both. The arranging is all
-        Bootstrap's, so .header holds only the band and the pull that sits the tabs on its edge.
-
-        :header is the older single-slot version, which lays itself out with floats and a
-        clearfix. The pages still on it are due the same treatment. %>
+        Bootstrap's, so .header holds only the band, the h1's spacing, and the pull that sits the
+        tabs on its edge. There is no other way to put something in the header. %>
     <header class='header'>
       <div class='container'>
         <%= breadcrumbs style: :bootstrap5 %>
 
-        <% if content_for?(:metadata) || content_for?(:actions) %>
+        <% if content_for?(:heading) || content_for?(:actions) %>
           <div class='d-flex align-items-start justify-content-between gap-3'>
-            <div><%= yield :metadata %></div>
+            <div><%= yield :heading %></div>
 
             <%# Half a rem of padding sets the buttons against the title rather than its ascenders,
                 and the gap is what spaces them, so none of them carries a margin of its own. %>
@@ -51,8 +49,6 @@
         <% if content_for?(:nav_tabs) %>
           <div class='mt-4'><%= yield :nav_tabs %></div>
         <% end %>
-
-        <%= yield :header %>
       </div>
     </header>
 

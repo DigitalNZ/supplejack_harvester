@@ -1,19 +1,16 @@
 <%= content_for(:title) { 'Edit Schedule' } %>
 <% breadcrumb :schedule, @schedule %>
 
-<%= content_for :header do %>
-  <h1 class="header__title"><%= @schedule.subject.name_in_database %></h1>
+<%= content_for :heading do %>
+  <h1><%= @schedule.subject.name_in_database %></h1>
+<% end %>
 
-  <div class="header__actions">
-    <button type="submit" class="btn btn-primary" data-form="js-schedule-form">
-      Update
-    </button>
+<%= content_for :actions do %>
+  <button type="submit" class="btn btn-primary" data-form="js-schedule-form">
+    Update
+  </button>
 
-    <%= link_to 'Cancel', schedules_path, class: 'btn btn-outline-danger' %>
-  </div>
-
-  <div class="clearfix"></div>
-
+  <%= link_to 'Cancel', schedules_path, class: 'btn btn-outline-danger' %>
 <% end %>
 
 <div class='mb-4'></div>

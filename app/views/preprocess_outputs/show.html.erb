@@ -1,16 +1,12 @@
 <%= content_for(:title) { 'Pre-processed data' } %>
 <% breadcrumb :preprocess_output, @pipeline, @harvest_definition, @pipeline_job %>
 
-<%= content_for :header do %>
-  <div class="header__column">
-    <h1 class="header__title">Pre-processed Data</h1>
-    <p class="header__subtitle">
-      <span class="me-1"><%= @harvest_definition.source_id %></span>|
-      <span class="ms-1"><strong>Job #<%= @pipeline_job.id %>, <%= @pipeline_job.created_at.to_fs(:verbose) %></strong></span>
-    </p>
-  </div>
-
-  <div class="clearfix"></div>
+<%= content_for :heading do %>
+  <h1>Pre-processed Data</h1>
+  <p class="text-muted mb-0">
+    <span class="me-1"><%= @harvest_definition.source_id %></span>|
+    <span class="ms-1"><strong>Job #<%= @pipeline_job.id %>, <%= @pipeline_job.created_at.to_fs(:verbose) %></strong></span>
+  </p>
 <% end %>
 
 <div class="my-4">

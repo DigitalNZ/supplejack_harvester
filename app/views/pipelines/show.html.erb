@@ -3,7 +3,7 @@
 
 <%# What the pipeline is: its name, which is edited in place, and the description and tags
     that belong to it. %>
-<%= content_for :metadata do %>
+<%= content_for :heading do %>
   <%= render layout: 'shared/inline_editable_element', locals:
     {
       id: 'pipeline-name',
@@ -35,24 +35,7 @@
 <% end %>
 
 <%= content_for :nav_tabs do %>
-  <ul class="nav nav-tabs">
-    <li class='nav-item'>
-      <%= link_to 'Pipeline', pipeline_path(@pipeline), class: 'nav-link active' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to "Schedules (#{@pipeline.schedules.count})", pipeline_schedules_path(@pipeline), class: 'nav-link' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link' %>
-    </li>
-
-    <li class='nav-item'>
-      <%= link_to "Automation Templates (#{@pipeline.automation_templates.count})",
-                  pipeline_automation_templates_path(@pipeline), class: 'nav-link' %>
-    </li>
-  </ul>
+  <%= render 'pipelines/tabs', pipeline: @pipeline, active: :pipeline %>
 <% end %>
 
 <% if @pipeline.harvest_definitions.any? %>
