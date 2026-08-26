@@ -44,7 +44,6 @@ Rails.application.routes.draw do
   resources :automation_templates do
     member do
       post :run_automation
-      get :automations
     end
 
     resources :automation_step_templates do
