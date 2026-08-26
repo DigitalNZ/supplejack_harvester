@@ -26,7 +26,7 @@ class HarvestWorker < ApplicationWorker
     ExtractionWorker.perform_async_with_priority(@pipeline_job.job_priority, extraction_job.id, @harvest_report.id)
   end
 
-  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable-next Metrics/AbcSize
   def create_transformation_jobs(extraction_job)
     @harvest_job.update(extraction_job_id: extraction_job.id)
     @harvest_report.extraction_completed!
@@ -41,7 +41,6 @@ class HarvestWorker < ApplicationWorker
       break if @pipeline_job.cancelled? || page_number_reached?(page)
     end
   end
-  # rubocop:enable Metrics/AbcSize
 
   private
 
