@@ -175,7 +175,7 @@ GEM
     diff-lcs (1.5.1)
     domain_name (0.6.20240107)
     drb (2.2.3)
-    dry-cli (1.0.0)
+    dry-cli (1.4.1)
     elastic-apm (4.9.0)
       concurrent-ruby (~> 1.0)
       http (>= 3.0, < 7.0)
@@ -292,6 +292,7 @@ GEM
       drb (~> 2.0)
       prism (~> 1.5)
     multi_json (1.15.0)
+    mutex_m (0.3.0)
     mysql2 (0.5.7)
       bigdecimal
     net-http (0.9.1)
@@ -340,7 +341,7 @@ GEM
     rack (3.2.7)
     rack-mini-profiler (4.0.1)
       rack (>= 1.2.0)
-    rack-proxy (0.7.7)
+    rack-proxy (0.8.3)
       rack
     rack-session (2.1.2)
       base64 (>= 0.1.0)
@@ -513,8 +514,10 @@ GEM
     vite_rails (3.11.1)
       railties (>= 5.1, < 9)
       vite_ruby (~> 3.0, >= 3.2.2)
-    vite_ruby (3.5.0)
+    vite_ruby (3.10.2)
       dry-cli (>= 0.7, < 2)
+      logger (~> 1.6)
+      mutex_m
       rack-proxy (~> 0.6, >= 0.6.1)
       zeitwerk (~> 2.2)
     warden (1.2.9)
