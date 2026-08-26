@@ -323,12 +323,39 @@ RSpec.describe HarvestDefinition do
       expect(cloned_harvest_definition.transformation_definition).to eq harvest_definition.transformation_definition
     end
 
-    it 'points the clone at the same load definition' do
+    # Sharing one would mean editing either pipeline's load settings silently edited the
+    # other's, and #destroy_definition would then decline to clean up either.
+    it 'gives the clone a load definition of its own' do
+      harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment',
+                                                                         priority: -2, batch_size: 25,
+                                                                         read_timeout: 120))
+
+      clone = harvest_definition.clone(pipeline_two)
+
+      expect(clone.load_definition).not_to eq harvest_definition.load_definition
+    end
+
+    it 'copies the load settings onto it' do
+      harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment',
+                                                                         priority: -2, batch_size: 25,
+                                                                         read_timeout: 120))
+
+      clone = harvest_definition.clone(pipeline_two)
+
+      expect(clone.load_definition).to have_attributes(kind: 'secondary_fragment', priority: -2,
+                                                       batch_size: 25, read_timeout: 120)
+    end
+
+    it 'stores the new load definition when the clone is saved' do
       harvest_definition.update(load_definition: create(:load_definition, pipeline:, kind: 'secondary_fragment'))
 
-      cloned_harvest_definition = harvest_definition.clone(pipeline_two)
+      expect { harvest_definition.clone(pipeline_two).save! }.to change(LoadDefinition, :count).by(1)
+    end
 
-      expect(cloned_harvest_definition.load_definition).to eq harvest_definition.load_definition
+    it 'leaves the clone without one when the block it came from had none' do
+      harvest_definition.update(load_definition: nil)
+
+      expect(harvest_definition.clone(pipeline_two).load_definition).to be_nil
     end
   end
 

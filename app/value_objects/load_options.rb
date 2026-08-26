@@ -28,7 +28,12 @@ class LoadOptions
 
   # A block writing a file posts nothing, so there is no fragment for a priority to pick.
   def asks_for_priority?
-    kinds.exclude?('preprocessed_data')
+    posts_to_the_api?
+  end
+
+  # Nor is there a request to wait on or a batch to size.
+  def asks_for_request_settings?
+    posts_to_the_api?
   end
 
   # Only an enrichment can leave a record partial by not arriving: Load::Execution sends
@@ -54,6 +59,10 @@ class LoadOptions
   end
 
   private
+
+  def posts_to_the_api?
+    kinds.exclude?('preprocessed_data')
+  end
 
   def kinds
     @kinds ||= LoadDefinition.kinds_for_block_kind(block_kind)

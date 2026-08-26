@@ -120,6 +120,74 @@ RSpec.describe LoadDefinition do
     end
   end
 
+  describe 'request settings' do
+    it 'accepts the offered timeouts' do
+      LoadDefinition::READ_TIMEOUT_OPTIONS.each_key do |seconds|
+        expect(build(:load_definition, pipeline:, read_timeout: seconds)).to be_valid
+      end
+    end
+
+    describe '#read_timeout_options' do
+      # HTTP_READ_TIMEOUT sets it, and the form reads it back from Faraday rather than from ENV,
+      # so this is the value a request would actually be given.
+      let(:default) { described_class.default_read_timeout }
+      let(:load_definition) { build(:load_definition, pipeline:, read_timeout: nil) }
+
+      it 'names the choices in plain English rather than in seconds' do
+        expect(load_definition.read_timeout_options).to include(['2 minutes', 120])
+      end
+
+      it 'says which wait leaving it unset stands for, rather than only that there is one' do
+        expect(load_definition.read_timeout_options.first)
+          .to eq ["Default (#{described_class.read_timeout_label(default)})", nil]
+      end
+
+      it 'does not offer the same wait twice by naming the default among the choices' do
+        expect(load_definition.read_timeout_options.map(&:last)).not_to include default
+      end
+
+      it 'describes a default the switch does not name in seconds' do
+        allow(described_class).to receive(:default_read_timeout).and_return(90)
+
+        expect(load_definition.read_timeout_options.first).to eq ['Default (90 seconds)', nil]
+      end
+
+      it 'offers every choice when the default is not one of them' do
+        allow(described_class).to receive(:default_read_timeout).and_return(90)
+
+        expect(load_definition.read_timeout_options.map(&:last)).to eq [nil, 30, 60, 120, 180]
+      end
+
+      # Otherwise opening the form would quietly turn a pinned timeout into one that follows
+      # the default, because nothing in the list would match what is stored.
+      it 'keeps the choice equal to the default when this definition is pinned to it' do
+        load_definition.read_timeout = default
+
+        expect(load_definition.read_timeout_options.map(&:last)).to include default
+      end
+    end
+
+    it 'leaves the app-wide default standing when it is not set' do
+      expect(build(:load_definition, pipeline:, read_timeout: nil)).to be_valid
+    end
+
+    it 'refuses a timeout that is not one of the offered choices' do
+      expect(build(:load_definition, pipeline:, read_timeout: 45)).not_to be_valid
+    end
+
+    it 'refuses a batch that would slice into nothing' do
+      expect(build(:load_definition, pipeline:, batch_size: 0)).not_to be_valid
+    end
+
+    it 'refuses a batch larger than the destination has ever been asked for' do
+      expect(build(:load_definition, pipeline:, batch_size: 101)).not_to be_valid
+    end
+
+    it 'defaults to the size LoadWorker has always sliced at' do
+      expect(create(:load_definition, pipeline:).batch_size).to eq LoadDefinition::DEFAULT_BATCH_SIZE
+    end
+  end
+
   describe '#clone' do
     it 'copies the settings onto a new definition in the given pipeline' do
       load_definition = create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1)

@@ -114,23 +114,200 @@ RSpec.describe LoadWorker, type: :job do
     end
 
     context 'when the Load Execution raises an exception' do
+      let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
+      let(:last_attempt) { described_class::MAX_BATCH_ATTEMPTS }
+
       before do
         allow_any_instance_of(Load::Execution).to receive(:call).and_raise(StandardError)
       end
 
       it 'retries the Load Execution' do
         expect(Load::Execution).to receive(:new).exactly(2).times
-        expect { described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]") }.to raise_error(StandardError)
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+
+      # Not the app-wide configuration, which is set for extractions and would hold this
+      # worker for fifteen minutes on a batch the requeue is going to pick up anyway.
+      it 'retries through the load context rather than the default one' do
+        allow(::Retriable).to receive(:with_context).and_call_original
+
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(::Retriable).to have_received(:with_context).with(:load, hash_including(:retry_if, :on_retry))
+      end
+
+      it 'does not raise, so the slices after the failed one are still loaded' do
+        expect { described_class.new.perform(harvest_job.id, records) }.not_to raise_error
       end
 
       it 'still increments the number of workers completed' do
         expect(harvest_report.load_workers_queued).to eq 1
         expect(harvest_report.load_workers_completed).to eq 0
 
-        expect { described_class.new.perform(harvest_job.id, "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]") }.to raise_error(StandardError)
+        described_class.new.perform(harvest_job.id, records)
         harvest_report.reload
 
-        expect(harvest_report.load_workers_completed).to eq 0
+        expect(harvest_report.load_workers_completed).to eq 1
+      end
+
+      it 'requeues the batch and tells the report to expect it' do
+        expect(described_class).to receive(:perform_in_with_priority).with(
+          harvest_job.pipeline_job.job_priority, described_class::RETRY_DELAYS.first,
+          harvest_job.id, [{ 'transformed_record' => { 'internal_identifier' => 'test' } }].to_json, nil, 2
+        )
+
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(harvest_report.reload.load_workers_queued).to eq 2
+      end
+
+      it 'records no error while the batch still has attempts left' do
+        expect { described_class.new.perform(harvest_job.id, records) }.not_to change(JobError, :count)
+        expect(harvest_report.reload.load_status).not_to eq 'errored'
+      end
+
+      # On the last attempt the load reaches its completion instead of being abandoned
+      # mid-flight, so the destination is told harvesting has finished - which is the point
+      # of not re-raising, and why these three stub the notice.
+      it 'gives up on a batch that has run out of attempts rather than requeueing it' do
+        stub_notice_to_api
+        expect(described_class).not_to receive(:perform_in_with_priority)
+
+        described_class.new.perform(harvest_job.id, records, nil, last_attempt)
+      end
+
+      it 'records the error once the batch has run out of attempts' do
+        stub_notice_to_api
+
+        expect { described_class.new.perform(harvest_job.id, records, nil, last_attempt) }
+          .to change(JobError, :count).by(1)
+      end
+
+      it 'marks the load errored so the run does not claim it loaded everything' do
+        stub_notice_to_api
+
+        described_class.new.perform(harvest_job.id, records, nil, last_attempt)
+
+        expect(harvest_report.reload.load_status).to eq 'errored'
+      end
+    end
+
+    # A refusal the destination will repeat is not worth waiting on: Retriable re-raises it
+    # at once rather than working through its backoff, and it is not requeued either.
+    # The destination writes a batch one record at a time, so how long it takes tracks how much
+    # is sent. A source whose records are large sends fewer per request.
+    context 'when the load definition sets a batch size' do
+      let(:records) { (1..5).map { |i| { transformed_record: { internal_identifier: "r#{i}" } } }.to_json }
+
+      it 'slices at the size the definition asks for' do
+        harvest_definition.load_definition.update!(batch_size: 2)
+        stub_notice_to_api
+
+        expect(Load::Execution).to receive(:new).exactly(3).times.and_return(
+          instance_double(Load::Execution, call: instance_double(Faraday::Response, success?: true))
+        )
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+
+      it 'slices at 100 when no definition says otherwise' do
+        harvest_definition.load_definition.update!(batch_size: 100)
+        stub_notice_to_api
+
+        expect(Load::Execution).to receive(:new).once.and_return(
+          instance_double(Load::Execution, call: instance_double(Faraday::Response, success?: true))
+        )
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+    end
+
+    # A read timeout means the destination had the batch when the socket gave up, and it may
+    # well go on to accept it - so sending it again just repeats an expensive write.
+    context 'when the Load Execution times out reading the response' do
+      let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
+      let(:execution) { instance_double(Load::Execution) }
+
+      before do
+        allow(execution).to receive(:call).and_raise(Faraday::TimeoutError, 'Net::ReadTimeout')
+        allow(Load::Execution).to receive(:new).and_return(execution)
+        stub_notice_to_api
+      end
+
+      it 'sends the batch once, rather than working through the in-process backoff' do
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(Load::Execution).to have_received(:new).once
+      end
+
+      it 'does not requeue the batch, even on the first attempt' do
+        expect(described_class).not_to receive(:perform_in_with_priority)
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+
+      it 'does not tell the report to expect a retry it will never get' do
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(harvest_report.reload.load_workers_queued).to eq 1
+      end
+
+      it 'records the error and marks the load errored straight away' do
+        expect { described_class.new.perform(harvest_job.id, records) }.to change(JobError, :count).by(1)
+
+        expect(harvest_report.reload.load_status).to eq 'errored'
+      end
+    end
+
+    # A connection that never opened, or broke mid-response, is worth requeueing: the
+    # destination certainly never had the batch.
+    context 'when the connection to the destination fails' do
+      let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
+      let(:execution) { instance_double(Load::Execution) }
+
+      before do
+        allow(execution).to receive(:call).and_raise(Faraday::ConnectionFailed, 'Connection refused')
+        allow(Load::Execution).to receive(:new).and_return(execution)
+      end
+
+      it 'requeues the batch' do
+        expect(described_class).to receive(:perform_in_with_priority)
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+    end
+
+    context 'when the Load Execution raises a permanent error' do
+      let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
+
+      # A verifying double rather than a stub on .new: stubbing .new returns nil, and the
+      # NoMethodError from calling nil is not the error under test - it is transient, so it
+      # would be retried and the example would prove the opposite of what it claims.
+      let(:execution) { instance_double(Load::Execution) }
+
+      before do
+        allow(execution).to receive(:call).and_raise(Load::PermanentError)
+        allow(Load::Execution).to receive(:new).and_return(execution)
+        stub_notice_to_api
+      end
+
+      it 'does not retry the Load Execution' do
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(Load::Execution).to have_received(:new).once
+      end
+
+      it 'does not requeue the batch even on the first attempt' do
+        expect(described_class).not_to receive(:perform_in_with_priority)
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+
+      it 'records the error and marks the load errored straight away' do
+        expect { described_class.new.perform(harvest_job.id, records) }.to change(JobError, :count).by(1)
+
+        expect(harvest_report.reload.load_status).to eq 'errored'
       end
     end
 

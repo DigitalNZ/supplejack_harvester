@@ -59,4 +59,20 @@ class VerticalFormBuilder < ActionView::Helpers::FormBuilder
       end
     end
   end
+
+  # A select cannot join the loop above: it takes its choices between the method and the
+  # options, and its CSS class in a fourth hash rather than the first. Left out, a validation
+  # error on anything the user picks from a list marked nothing and said nothing - a load
+  # definition refusing to save because of its kind showed only the flash, with every field on
+  # the form looking fine.
+  def select(method, choices = nil, options = {}, html_options = {}, &)
+    disable_errors_display = options.delete(:disable_errors_display)
+
+    return super if disable_errors_display
+
+    error_wrapper(method) do
+      html_options = modify_options(html_options) if @object.errors[method].any?
+      super(method, choices, options, html_options, &)
+    end
+  end
 end
