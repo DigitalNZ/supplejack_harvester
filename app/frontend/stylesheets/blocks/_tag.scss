@@ -1,0 +1,37 @@
+// A tag as the design draws it: its colour as both the text and the outline, on a
+// background just off white. The sizes are the design's, in rem: 1px 6px of padding,
+// 10.5px of text on a 15px line.
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .0625rem .375rem;
+  border: 1px solid;
+  border-radius: var(--bs-border-radius-sm);
+  background-color: $wash-me;
+  font-size: .65625rem;
+  font-weight: 600;
+  line-height: .9375rem;
+
+  // A tag with no modifier is drawn in whatever colour it inherits, so a missing colour
+  // shows up as an odd tag rather than an invisible one.
+  @each $name, $hex in $tag-colors {
+    @include modifier($name) {
+      color: $hex;
+      border-color: $hex;
+    }
+  }
+
+  // The x that takes a tag off - out of the editor on a pipeline, or out of a list's
+  // filters. It is the tag's own colour, whether it is a button or a link.
+  @include element('remove') {
+    padding: 0 0 0 .125rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: .875rem;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+  }
+}

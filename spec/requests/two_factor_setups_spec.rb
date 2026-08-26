@@ -18,7 +18,6 @@ RSpec.describe 'TwoFactorSetups' do
 
       expect(response).to redirect_to root_path
       follow_redirect!
-      follow_redirect! # redirection to content_sources
       expect(response.body).to include 'Two Factor Authentication successfully set up'
     end
 
@@ -38,7 +37,6 @@ RSpec.describe 'TwoFactorSetups' do
         delete two_factor_setups_path
 
         expect(response).to redirect_to root_path
-        follow_redirect!
         follow_redirect!
         expect(response.body).to include '2FA was made mandatory for you by admins'
         user.reload

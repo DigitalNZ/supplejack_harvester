@@ -1,0 +1,75 @@
+<%= content_for(:title) { 'Tags' } %>
+<% breadcrumb :tags %>
+
+<%= content_for :header do %>
+  <div class="float-start">
+    <h1>Tags</h1>
+    <p>
+      Every pipeline is tagged from this one set. Renaming a tag relabels it wherever it is
+      carried, and deleting it takes it off every pipeline that carries it.
+    </p>
+  </div>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<%# A card each rather than a table: a tag is a name, what carries it and two things to do
+    with it, and rows of that read better as a list than as three columns. The list is
+    narrow for the same reason - none of it is wide, and the page would otherwise stretch
+    two words across the window. It sits at the left of the container rather than centred
+    in it, so that a row starts where the heading above it does. %>
+<div class="row">
+  <div class="col-lg-8">
+    <% @tags.each do |tag| %>
+      <% count = @pipeline_counts.fetch(tag.id, 0) %>
+      <div class="card mb-2">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3 py-2 px-3">
+          <%= tag_label(tag) %>
+
+          <%# What the tag is on, so it can be looked at before the tag is renamed or
+              deleted. A tag nothing carries has nowhere to link to. %>
+          <% if count.zero? %>
+            <span class="small text-muted">No pipelines</span>
+          <% else %>
+            <%= link_to pluralize(count, 'pipeline'), pipelines_path(tags: [tag.slug]), class: 'small' %>
+          <% end %>
+
+          <div class="ms-auto d-flex flex-wrap align-items-center gap-3">
+            <%= link_to 'Edit', edit_tag_path(tag), class: 'small' %>
+
+            <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                    data-bs-toggle="modal" data-bs-target="#delete-modal-<%= tag.id %>">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @tags.empty? %>
+      <div class="card">
+        <div class="card-body text-center text-muted py-5">
+          There are currently no tags. They are created as pipelines are tagged, from a pipeline's page.
+        </div>
+      </div>
+    <% end %>
+
+    <%= render 'shared/pagination_below_table', items: @tags %>
+  </div>
+</div>
+
+<%# The confirmation modals are gathered at the end rather than sitting in the row each
+    belongs to, which is where Bootstrap asks for them: a dialog is positioned against the
+    viewport, and nesting it leaves it at the mercy of whatever it was nested in. %>
+<% @tags.each do |tag| %>
+  <% count = @pipeline_counts.fetch(tag.id, 0) %>
+  <%= render layout: 'shared/delete_modal',
+             locals: { path: tag_path(tag), id: "delete-modal-#{tag.id}", heading_text: 'Delete tag' } do %>
+    <p>Are you sure you want to delete the <strong><%= tag.name %></strong> tag?</p>
+    <% if count.zero? %>
+      <p>No pipeline carries it, so nothing else changes.</p>
+    <% else %>
+      <p>It will be taken off the <%= pluralize(count, 'pipeline') %> carrying it.</p>
+    <% end %>
+  <% end %>
+<% end %>

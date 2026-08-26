@@ -44,7 +44,6 @@ Rails.application.routes.draw do
   resources :automation_templates do
     member do
       post :run_automation
-      get :automations
     end
 
     resources :automation_step_templates do
@@ -113,6 +112,12 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # Tags are shared across every pipeline, so managing the tags themselves - renaming a
+  # mis-spelt one, deleting one nothing needs - is a list of its own rather than something
+  # done from inside one pipeline. The nested pipeline_tags route above, for setting a
+  # single pipeline's tags, is a different thing under a name close enough to confuse.
+  resources :tags, only: %i[index edit update destroy]
 
   resources :destinations do
     post :test, on: :collection

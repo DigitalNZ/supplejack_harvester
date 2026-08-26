@@ -20,7 +20,7 @@
     </li>
 
     <li class='nav-item'>
-      <%= link_to 'Jobs', jobs_filter_url(@pipeline), class: 'nav-link active' %>
+      <%= link_to 'Jobs', pipeline_pipeline_jobs_path(@pipeline), class: 'nav-link active' %>
     </li>
 
     <li class='nav-item'>
@@ -33,4 +33,5 @@
 <%= render 'jobs_table',
            jobs: @pipeline_jobs,
            total: @pipeline.pipeline_jobs.count,
-           show_pipeline_col: false %>
+           path: pipeline_pipeline_jobs_path(@pipeline),
+           pipeline_scoped: true %>

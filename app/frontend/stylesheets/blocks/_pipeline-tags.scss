@@ -1,6 +1,7 @@
 .pipeline-tags {
+  // The width the design gives the editor - 460px - which no Bootstrap utility offers.
   @include element('editor') {
-    width: 38rem;
+    width: 28.75rem;
     max-width: 100%;
   }
 
