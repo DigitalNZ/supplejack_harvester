@@ -19,6 +19,28 @@ class Tag < ApplicationRecord
 
   scope :ordered, -> { order(:name) }
 
+  # The colours a tag can be shown in, in the order the picker offers them. The names are
+  # the palette's own convention - what https://color-name-generator.com/ calls each hex -
+  # and the hexes themselves live with the modifiers they belong to, in
+  # stylesheets/blocks/_tag.scss. Pompeii Ash is the grey a tag starts as.
+  #
+  # validate: true rather than the default: a colour the picker could not have offered
+  # arrives as an ordinary validation failure instead of an ArgumentError nothing catches.
+  enum :color, {
+    pompeii_ash: 0,
+    roxy_brown: 1,
+    unmatched_beauty: 2,
+    tennis_court: 3,
+    alligator: 4,
+    camouflage_green: 5,
+    cloudy_camouflage: 6,
+    boating_green: 7,
+    dead_blue_eyes: 8,
+    purple_rain: 9,
+    ultra_violet_lentz: 10,
+    secret_affair: 11
+  }, default: :pompeii_ash, validate: true
+
   # How many pipelines carry each tag, and how many jobs those pipelines have run,
   # keyed by tag id. One query each, for the counts beside the filter checkboxes.
   def self.pipeline_counts

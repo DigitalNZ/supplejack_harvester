@@ -1,33 +1,39 @@
 <%# The pipeline's tags, and the editor for changing them. The editor is inert markup
-    until PipelineTags.js takes it over, and it needs the names of the tags that already
-    exist to offer them as suggestions. %>
+    until PipelineTags.js takes it over, and it needs the tags that already exist to offer
+    them as suggestions. %>
 <% tags = @pipeline.tags.ordered.to_a %>
 
 <div class="pipeline-tags mt-2"
      data-pipeline-tags
      data-tags="<%= autocomplete_tags %>">
 
-  <div class="d-flex flex-wrap align-items-center gap-2" data-tags-display>
-    <% tags.each do |tag| %>
-      <%= tag_badge(tag) %>
-    <% end %>
+  <div class="d-flex flex-wrap align-items-center gap-3">
+    <% if tags.any? %>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <% tags.each do |tag| %>
+          <%= tag_label(tag) %>
+        <% end %>
+      </div>
 
-    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" data-tags-edit>
-      <% if tags.any? %>
+      <%# Alongside the tags it labels, the pencil is enough on its own. %>
+      <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" data-tags-edit>
         <i class="bi bi-pencil-square" aria-hidden="true"></i>
         <span class="visually-hidden">Edit tags</span>
-      <% else %>
-        + Add tags
-      <% end %>
-    </button>
+      </button>
+    <% else %>
+      <%# With no tags beside it there is nothing to say what the control is for, so the
+          design outlines it and lets it say so itself. %>
+      <button type="button" class="btn btn-outline-success btn-sm" data-tags-edit>+ Add tags</button>
+    <% end %>
   </div>
 
   <%= form_with url: pipeline_tags_path(@pipeline), method: :patch,
-                class: 'card pipeline-tags__editor mt-2 d-none', data: { tags_editor: true } do %>
+                class: 'card pipeline-tags__editor bg-white rounded-3 shadow-sm mt-2 d-none',
+                data: { tags_editor: true } do %>
     <div class="card-body">
-      <h2 class="h6">Edit tags</h2>
+      <h2 class="small fw-semibold mb-2">Edit tags</h2>
 
-      <div class="d-flex flex-wrap gap-1 mb-2" data-tags-chips>
+      <div class="d-flex flex-wrap gap-2 mb-2" data-tags-chips>
         <% tags.each do |tag| %>
           <%= render 'pipelines/tag_chip', tag: %>
         <% end %>
@@ -44,12 +50,13 @@
                            autocomplete: 'off',
                            aria: { label: 'Search or create a tag' },
                            data: { tags_input: true } %>
-        <ul class="dropdown-menu pipeline-tags__suggestions w-100" data-tags-suggestions></ul>
+        <%# mt-1 is the gap the design leaves between the input and the list under it. %>
+        <ul class="dropdown-menu pipeline-tags__suggestions w-100 mt-1" data-tags-suggestions></ul>
       </div>
 
       <div class="d-flex gap-2 align-items-center mt-3">
         <button type="submit" class="btn btn-success btn-sm">Save tags</button>
-        <button type="button" class="btn btn-link btn-sm" data-tags-cancel>Cancel</button>
+        <button type="button" class="btn btn-link btn-sm text-decoration-none" data-tags-cancel>Cancel</button>
       </div>
 
       <p class="form-text mb-0">Press Enter to add · Tags are shared across the whole account</p>

@@ -1,11 +1,32 @@
 <% extraction_job_id = report&.harvest_job&.extraction_job_id || job.extraction_job_id %>
 
 <tr>
-  <% if show_pipeline_col %>
-    <td><%= link_to job.pipeline.name, job.pipeline if row_index.zero? %></td>
+  <%# Where the job wrote and who ran it sit under the pipeline's name rather than in
+      columns of their own - they belong to the job rather than to any one of its rows,
+      which is why all three are drawn on the first row of a job only. %>
+  <td>
+    <% if row_index.zero? %>
+      <% unless pipeline_scoped %>
+        <%= link_to job.pipeline.name, job.pipeline, class: 'fw-semibold' %>
+      <% end %>
+
+      <div class="small text-muted"><%= job_source_line(job) %></div>
+    <% end %>
+  </td>
+
+  <%# A job carries the tags of the pipeline that ran it, so this cell only earns its keep
+      where the pipelines differ from row to row - on a pipeline's own jobs it would say
+      the same thing all the way down, under the tags already on the page above. %>
+  <% unless pipeline_scoped %>
+    <td>
+      <% if row_index.zero? %>
+        <div class="d-flex flex-wrap align-items-center gap-1">
+          <%= tag_labels(job.pipeline.tags.sort_by(&:name), limit: 3) %>
+        </div>
+      <% end %>
+    </td>
   <% end %>
-  <td><%= job.destination.name if row_index.zero? %></td>
-  <td><%= job_launched_by_label(job) if row_index.zero? %></td>
+
   <td>
     <% if extraction_job_id.blank? %>
       <%= harvest_definition.name %>
@@ -14,20 +35,23 @@
       <%= link_to name, pipeline_pipeline_job_path(job.pipeline.id, job.id) %>
     <% end %>
   </td>
-  <td class="d-inline-flex align-items-center gap-1">
-    <%= job_status_badge(report, job) %>
-    <% if report&.harvest_job.present? %>
-      <% error_count = JobError.count_for_harvest_job(report.harvest_job) %>
-      <% if error_count.positive? %>
-        <%= link_to error_count,
-                    pipeline_pipeline_job_harvest_job_errors_path(job.pipeline, job, report.harvest_job),
-                    class: 'badge text-decoration-none bg-danger',
-                    title: 'View harvest job errors' %>
+  <td>
+    <%# The status is an icon and the word rather than a filled badge, so the count of
+        errors beside it is the only thing in the column drawn as one. %>
+    <span class="d-inline-flex align-items-center gap-2">
+      <%= job_status_with_icon(report, job) %>
+      <% if report&.harvest_job.present? %>
+        <% error_count = JobError.count_for_harvest_job(report.harvest_job) %>
+        <% if error_count.positive? %>
+          <%= link_to error_count,
+                      pipeline_pipeline_job_harvest_job_errors_path(job.pipeline, job, report.harvest_job),
+                      class: 'badge text-decoration-none bg-danger',
+                      title: 'View harvest job errors' %>
+        <% end %>
       <% end %>
-    <% end %>
+    </span>
   </td>
-  <td><%= job_started_at_label(report, job) %></td>
-  <td class="text-end"><%= job_duration(report, format: :short) %></td>
+  <td><%= job_started_and_duration(report, job) %></td>
   <td class="text-end">
     <% if extraction_job_id.present? %>
       <%= link_to number_to_delimited(report&.pages_extracted) || '',

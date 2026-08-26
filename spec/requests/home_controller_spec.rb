@@ -10,9 +10,18 @@ RSpec.describe 'Home' do
   end
 
   describe '#index' do
-    it 'redirects to the pipelines page' do
+    # It used to pass straight on to the pipelines list rather than render anything.
+    it 'renders a page of its own' do
       get root_path
-      expect(response).to redirect_to pipelines_path
+
+      expect(response).to have_http_status :ok
+    end
+
+    it 'says what each part of the app it links to is for' do
+      get root_path
+
+      expect(response.body).to include 'Each source that is harvested'
+      expect(response.body).to include 'The labels pipelines are grouped and filtered by'
     end
   end
 end

@@ -24,7 +24,7 @@ RSpec.describe 'Login' do
         fill_in 'Password', with: user.password
         click_button 'Log in'
 
-        expect(page).to have_css('.header__title', text: 'Pipelines')
+        expect(page).to have_css('.header__title', text: 'Harvester')
       end
     end
 
@@ -109,7 +109,7 @@ RSpec.describe 'Login' do
         click_button 'Log in'
 
         expect(page).to have_content('Signed in successfully.')
-        expect(page).to have_css('.header__title', text: 'Pipelines')
+        expect(page).to have_css('.header__title', text: 'Harvester')
       end
     end
   end

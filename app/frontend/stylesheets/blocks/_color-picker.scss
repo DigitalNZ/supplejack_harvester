@@ -1,0 +1,47 @@
+// The colours a tag can be given, as a row of swatches. Each swatch is the label of a
+// radio that sits off screen, so picking one is a click on the colour itself and the form
+// submits it like any other field.
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
+
+  // As tall as the field above it, with the swatches centred in that: the label beside it
+  // is a col-form-label, so it lines up with the row of swatches the way it lines up with
+  // an input. 2.375rem is a form-control's height - its text, padding and border.
+  min-height: 2.375rem;
+
+  @include element('swatch') {
+    display: block;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: .125rem solid $white;
+    border-radius: 50%;
+
+    // The swatch is drawn in its own colour, so the modifier only has to name it once:
+    // the circle is filled with it, and so is the ring the border leaves room for.
+    background-color: currentColor;
+    box-shadow: 0 0 0 1px currentColor;
+    cursor: pointer;
+
+    @each $name, $hex in $tag-colors {
+      @include modifier($name) {
+        color: $hex;
+      }
+    }
+  }
+
+  @include element('input') {
+    // The radio itself cannot be seen, so the swatch has to show which one is picked: the
+    // ring around the one chosen thickens, and a keyboard focus is outlined.
+    &:checked + .color-picker__swatch {
+      box-shadow: 0 0 0 .16rem currentColor;
+    }
+
+    &:focus-visible + .color-picker__swatch {
+      outline: .125rem solid $primary;
+      outline-offset: .125rem;
+    }
+  }
+}

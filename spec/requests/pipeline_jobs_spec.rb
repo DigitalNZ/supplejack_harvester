@@ -22,6 +22,32 @@ RSpec.describe 'PipelineJobs' do
 
       expect(response).to have_http_status :ok
     end
+
+    # The filters used to post to the global jobs list with the pipeline as a parameter,
+    # which took you off this page to be narrowed again by an id in the query.
+    it 'filters back to this pipeline rather than to the global list' do
+      get pipeline_pipeline_jobs_path(pipeline)
+
+      expect(response.body).to include "action=\"#{pipeline_pipeline_jobs_path(pipeline)}\""
+      expect(response.body).not_to include "action=\"#{jobs_path}\""
+    end
+
+    it 'narrows to the filters it is given, counted against the pipeline' do
+      create(:pipeline_job, pipeline:, destination:, status: 'completed')
+
+      get pipeline_pipeline_jobs_path(pipeline), params: { status: 'errored' }
+
+      expect(response.body).to include '0 of 2 jobs match'
+    end
+
+    it 'leaves the jobs of other pipelines out of it' do
+      other = create(:pipeline, name: 'Somewhere else')
+      create(:pipeline_job, pipeline: other, destination:)
+
+      get pipeline_pipeline_jobs_path(pipeline)
+
+      expect(response.body).not_to include 'Somewhere else'
+    end
   end
 
   describe 'GET /show' do
