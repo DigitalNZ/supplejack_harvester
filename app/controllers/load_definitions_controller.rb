@@ -43,7 +43,7 @@ class LoadDefinitionsController < ApplicationController
 
   def load_definition_params
     safe_params = params.expect(
-      load_definition: %i[pipeline_id name kind priority required_for_active_record]
+      load_definition: %i[pipeline_id name kind priority required_for_active_record read_timeout batch_size]
     )
     merge_last_edited_by(safe_params)
   end

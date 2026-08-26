@@ -41,8 +41,45 @@ class LoadDefinition < ApplicationRecord
     kinds_for_block_kind(block_kind).first
   end
 
+  # How long to wait for the destination to answer, offered as a few choices rather than a free
+  # number: the only useful answers are "the default", "a bit longer" and "much longer", and a
+  # typo in a free field is a harvest that either gives up too early or holds a worker for an
+  # hour. nil means the app-wide default in config/initializers/faraday.rb stands.
+  READ_TIMEOUT_OPTIONS = { 30 => '30 seconds', 60 => '1 minute', 120 => '2 minutes', 180 => '3 minutes' }.freeze
+
+  # What a definition that says nothing waits: the app-wide default from
+  # config/initializers/faraday.rb, which HTTP_READ_TIMEOUT sets. Read back from Faraday rather
+  # than from ENV so the form cannot disagree with what the request will actually do.
+  def self.default_read_timeout = Faraday.default_connection_options.request.timeout
+
+  # Plain English rather than a number of seconds, which reads as a timeout of thirty when it is
+  # two minutes. A value the switch does not name - HTTP_READ_TIMEOUT is free to be anything -
+  # is described in seconds rather than left blank.
+  def self.read_timeout_label(seconds) = READ_TIMEOUT_OPTIONS.fetch(seconds) { "#{seconds} seconds" }
+
+  # For a select. Leaving it unset means the default, so that entry says which value that is
+  # rather than only that it exists; and the choice equal to it is dropped, because offering
+  # both would list the same number twice for the same wait.
+  #
+  # Unless this definition is the one pinned to that value, which keeps its entry: nothing in
+  # the list would otherwise match what is stored, and opening the form would quietly turn a
+  # pinned timeout into one that follows the default.
+  def read_timeout_options
+    settings = self.class
+    default = settings.default_read_timeout
+    offered = read_timeout == default ? READ_TIMEOUT_OPTIONS : READ_TIMEOUT_OPTIONS.except(default)
+
+    [["Default (#{settings.read_timeout_label(default)})", nil]] + offered.map { |seconds, label| [label, seconds] }
+  end
+
+  # What LoadWorker has always sliced at, and what a block with no load definition still gets.
+  DEFAULT_BATCH_SIZE = 100
+
   validates :name, uniqueness: true
   validates :priority, numericality: { only_integer: true }
+  validates :read_timeout, inclusion: { in: READ_TIMEOUT_OPTIONS.keys }, allow_nil: true
+  validates :batch_size,
+            numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: DEFAULT_BATCH_SIZE }
 
   validate :priority_agrees_with_kind
   validate :kind_suits_the_blocks_loading_through_it

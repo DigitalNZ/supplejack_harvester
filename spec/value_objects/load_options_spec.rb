@@ -38,6 +38,17 @@ RSpec.describe LoadOptions do
     end
   end
 
+  describe '#asks_for_request_settings?' do
+    it 'asks a block that posts to the API, which is what there is a request to size' do
+      expect(options_for(:harvest).asks_for_request_settings?).to be true
+    end
+
+    it 'does not ask a pre-processing block, which writes a file and posts nothing' do
+      expect(options_for(:preprocess).asks_for_request_settings?).to be false
+    end
+  end
+
+
   describe '#asks_for_required_fragment?' do
     it 'asks an enrichment, the only kind that can leave a record partial by not arriving' do
       expect(options_for(:enrichment).asks_for_required_fragment?).to be true

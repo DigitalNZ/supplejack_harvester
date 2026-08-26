@@ -367,9 +367,9 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to match(/<button[^>]*disabled[^>]*bs-target="#run-settings"/)
     end
 
-    # Sharing arises from cloning a pipeline, which points the clone's blocks at the same
-    # definitions. Both blocks have to be a kind that can do this load, so they are both
-    # harvests - which is also what a cloned pipeline gives you.
+    # Sharing arises from pointing a second block at a load definition another block already
+    # uses - cloning a pipeline no longer produces it, the clone gets one of its own. Both
+    # blocks have to be a kind that can do this load, so they are both harvests.
     it 'offers to clone a load definition shared with another block' do
       load_definition = create(:load_definition, pipeline:)
       harvest_definition.update(load_definition:)
@@ -662,6 +662,24 @@ RSpec.describe 'Pipelines' do
         expect(cloned_pipeline.harvest_definitions.first.transformation_definition.shared?).to eq true
       end
   
+      # Unlike the extraction and transformation definitions above, which the clone shares.
+      it 'gives each cloned block a load definition of its own' do
+        post clone_pipeline_path(pipeline), params: { pipeline: { name: 'copy' } }
+
+        cloned = Pipeline.last.harvest_definitions.first.load_definition
+
+        expect(cloned).not_to eq harvest_definition.load_definition
+      end
+
+      it 'copies the load settings onto it' do
+        harvest_definition.load_definition.update!(batch_size: 25, read_timeout: 120)
+
+        post clone_pipeline_path(pipeline), params: { pipeline: { name: 'copy' } }
+
+        expect(Pipeline.last.harvest_definitions.first.load_definition)
+          .to have_attributes(batch_size: 25, read_timeout: 120)
+      end
+
       it 'displays a successful message' do
         post clone_pipeline_path(pipeline), params: {
           pipeline: {

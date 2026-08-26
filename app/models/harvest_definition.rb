@@ -79,6 +79,15 @@ class HarvestDefinition < ApplicationRecord
     load_definition.required_for_active_record?
   end
 
+  # How the request to the destination is made rather than what it carries. nil for the timeout
+  # leaves the app-wide default standing - Api::Request drops the option entirely rather than
+  # passing nil, which would clear it.
+  delegate :read_timeout, to: :load_definition, prefix: :load, allow_nil: true
+
+  def load_batch_size
+    load_definition&.batch_size || LoadDefinition::DEFAULT_BATCH_SIZE
+  end
+
   def completed_harvest_jobs?
     @completed_harvest_jobs ||= harvest_jobs.completed.any?
   end
@@ -125,7 +134,19 @@ class HarvestDefinition < ApplicationRecord
     }
   end
 
+  # The clone gets a load definition of its own, copying the settings rather than pointing at
+  # the original's. Sharing one means editing either pipeline's load settings silently edits the
+  # other's, which is not what cloning a pipeline is for - and #destroy_definition then declines
+  # to clean either up, because #shared? is true for both.
+  #
+  # The extraction and transformation definitions are still shared, which is the behaviour that
+  # was there before.
+  # The new load definition is given no name, so LoadDefinition's after_create names it the way
+  # a freshly created one is named, and is left unsaved - a belongs_to holding a new record is
+  # saved with its owner, so the clone's own #save! stores both.
   def clone(pipeline)
-    HarvestDefinition.new(dup.attributes.merge(pipeline:))
+    attributes = dup.attributes.except('load_definition_id')
+
+    HarvestDefinition.new(attributes.merge(pipeline:, load_definition: load_definition&.clone(pipeline, nil)))
   end
 end
