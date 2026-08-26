@@ -1,7 +1,6 @@
 .description-editor {
-  // Every header this sits in sizes to its content - a float on the pipeline, normal flow under the
-  // title on the definitions - so without a width of its own the edit form would collapse to the
-  // textarea's intrinsic size while the preview stayed wide.
+  // Every header this sits in sizes to its content, so without a width of its own the edit form
+  // would collapse to the textarea's intrinsic size while the preview beside it stayed wide.
   max-width: 100%;
   width: 46rem;
 

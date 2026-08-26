@@ -1,38 +1,10 @@
+// The band a page is titled in. Everything inside it is arranged by Bootstrap utilities in the
+// layout, so all this holds is the band and the one thing utilities cannot express: pulling the
+// tab strip through the band's own padding so it sits on the bottom edge.
 .header {
   background-color: $doctor;
   padding: 2rem;
   border-bottom: 1px solid $bright-star;
-
-  @include element('title') {
-    float: left;
-    margin-bottom: 0;
-  }
-
-  // The left of the header when it holds more than the title: a line of detail under it, the
-  // description editor, the tags. The column does the floating, so the title inside one stops
-  // doing it and keeps a gap to whatever follows instead.
-  @include element('column') {
-    float: left;
-
-    .header__title {
-      float: none;
-      margin-bottom: .25rem;
-    }
-  }
-
-  // The line of detail under the title - what the page is, or which record it belongs to.
-  @include element('subtitle') {
-    color: $pompeii-ash;
-    margin-bottom: 0;
-  }
-
-  // A long title pushes the actions onto a line of their own, where they would otherwise sit
-  // against whatever the header has under them - a description, a line of detail, the tabs.
-  @include element('actions') {
-    float: right;
-    margin-bottom: .5rem;
-    padding-top: .5rem;
-  }
 
   .nav-tabs {
     margin-bottom: -2rem;
