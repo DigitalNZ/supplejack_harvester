@@ -59,8 +59,10 @@ module Load
 
     private
 
+    # The timeout comes from the load definition so a source whose batches are slow to write can
+    # wait longer without every other destination call in the app waiting with it.
     def harvest_request
-      Api::Harvester::Record.new(@destination).create_batch(
+      Api::Harvester::Record.new(@destination, read_timeout:).create_batch(
         records: build_records
       )
     end
@@ -68,11 +70,13 @@ module Load
     def enrichment_request
       required_fragments = [@harvest_definition.source_id] if @harvest_definition.load_required_for_active_record?
 
-      Api::Harvester::Fragment.new(@destination).post(
+      Api::Harvester::Fragment.new(@destination, read_timeout:).post(
         @api_record_id,
         { fragment: build_record(@records.first), required_fragments: }
       )
     end
+
+    def read_timeout = @harvest_definition.load_read_timeout
 
     def build_records
       @records.map { |record| { fields: build_record(record) } }

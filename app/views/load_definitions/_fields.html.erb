@@ -58,6 +58,42 @@
     </div>
   <% end %>
 
+  <%# How the request is made rather than what it carries. The destination writes a batch one
+      record at a time, so how long it takes tracks how much is sent: a source whose records are
+      large can either be given longer or sent less at once. %>
+  <% if load_options.asks_for_request_settings? %>
+    <div class="col-4">
+      <%= form.label :batch_size, 'Records per request', class: 'form-label' do %>
+        Records per request
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="How many records go to the destination in one request. The destination writes them one at a time, so fewer per request means each one is answered sooner. Lower this before raising the timeout."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
+    </div>
+
+    <div class='col-8'>
+      <%= form.number_field :batch_size, class: 'form-control', min: 1,
+                                         max: LoadDefinition::DEFAULT_BATCH_SIZE %>
+    </div>
+
+    <div class="col-4">
+      <%= form.label :read_timeout, 'Response timeout', class: 'form-label' do %>
+        Response timeout
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="How long to wait for the destination to answer a load. Leave on Default unless this source's batches are genuinely slow to write - a load that gives up while the destination is still writing counts records as lost that were not."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
+    </div>
+
+    <div class='col-8'>
+      <%= form.select :read_timeout,
+                      options_for_select(LoadDefinition.read_timeout_options, form.object.read_timeout),
+                      { include_blank: 'Default' }, class: 'form-select' %>
+    </div>
+  <% end %>
+
   <% if load_options.asks_for_required_fragment? %>
     <div class="col-4">
       <%= form.label :required_for_active_record, 'Required for active record', class: 'form-check-label' %>

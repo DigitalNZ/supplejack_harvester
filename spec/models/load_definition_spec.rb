@@ -120,6 +120,38 @@ RSpec.describe LoadDefinition do
     end
   end
 
+  describe 'request settings' do
+    it 'accepts the offered timeouts' do
+      LoadDefinition::READ_TIMEOUT_OPTIONS.each_key do |seconds|
+        expect(build(:load_definition, pipeline:, read_timeout: seconds)).to be_valid
+      end
+    end
+
+    it 'offers them for a select in plain English' do
+      expect(described_class.read_timeout_options).to include(['2 minutes', 120])
+    end
+
+    it 'leaves the app-wide default standing when it is not set' do
+      expect(build(:load_definition, pipeline:, read_timeout: nil)).to be_valid
+    end
+
+    it 'refuses a timeout that is not one of the offered choices' do
+      expect(build(:load_definition, pipeline:, read_timeout: 45)).not_to be_valid
+    end
+
+    it 'refuses a batch that would slice into nothing' do
+      expect(build(:load_definition, pipeline:, batch_size: 0)).not_to be_valid
+    end
+
+    it 'refuses a batch larger than the destination has ever been asked for' do
+      expect(build(:load_definition, pipeline:, batch_size: 101)).not_to be_valid
+    end
+
+    it 'defaults to the size LoadWorker has always sliced at' do
+      expect(create(:load_definition, pipeline:).batch_size).to eq LoadDefinition::DEFAULT_BATCH_SIZE
+    end
+  end
+
   describe '#clone' do
     it 'copies the settings onto a new definition in the given pipeline' do
       load_definition = create(:load_definition, pipeline:, kind: 'secondary_fragment', priority: -1)

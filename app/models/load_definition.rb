@@ -41,8 +41,24 @@ class LoadDefinition < ApplicationRecord
     kinds_for_block_kind(block_kind).first
   end
 
+  # How long to wait for the destination to answer, offered as a few choices rather than a free
+  # number: the only useful answers are "the default", "a bit longer" and "much longer", and a
+  # typo in a free field is a harvest that either gives up too early or holds a worker for an
+  # hour. nil means the app-wide default in config/initializers/faraday.rb stands.
+  READ_TIMEOUT_OPTIONS = { 30 => '30 seconds', 60 => '1 minute', 120 => '2 minutes', 180 => '3 minutes' }.freeze
+
+  # For a select: plain English rather than a number of seconds, which reads as a timeout of
+  # thirty when it is two minutes.
+  def self.read_timeout_options = READ_TIMEOUT_OPTIONS.map { |seconds, label| [label, seconds] }
+
+  # What LoadWorker has always sliced at, and what a block with no load definition still gets.
+  DEFAULT_BATCH_SIZE = 100
+
   validates :name, uniqueness: true
   validates :priority, numericality: { only_integer: true }
+  validates :read_timeout, inclusion: { in: READ_TIMEOUT_OPTIONS.keys }, allow_nil: true
+  validates :batch_size,
+            numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: DEFAULT_BATCH_SIZE }
 
   validate :priority_agrees_with_kind
   validate :kind_suits_the_blocks_loading_through_it

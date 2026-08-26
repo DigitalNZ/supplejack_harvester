@@ -35,7 +35,7 @@ class LoadWorker
     job_start
     transformed_records = JSON.parse(records)
 
-    transformed_records.each_slice(100) do |batch|
+    transformed_records.each_slice(batch_size) do |batch|
       @harvest_job.reload
 
       break if @harvest_job.cancelled? || @harvest_job.pipeline_job.cancelled?
@@ -97,11 +97,24 @@ class LoadWorker
 
   # A permanent refusal is given up on at once. A later attempt would be refused the same
   # way, and the run is better off finishing and saying what happened.
+  #
+  # So is a read timeout, for the opposite reason: the destination had the batch when the socket
+  # gave up, and it may well go on to accept it. On staging a page that timed out at 60 seconds
+  # was written by the API 13 seconds later and answered 200 to nobody, so all a requeue bought
+  # was the same expensive write a second and third time, against the endpoint that was already
+  # too slow to answer. Faraday::TimeoutError is the request having been sent and not answered;
+  # a connection that never opened or broke mid-response comes back as ConnectionFailed and is
+  # still worth requeueing, because the destination certainly never had it.
   def requeue?(error)
-    return false if error.is_a?(Load::PermanentError)
-
-    @attempt < MAX_BATCH_ATTEMPTS
+    case error
+    when Load::PermanentError, Faraday::TimeoutError then false
+    else @attempt < MAX_BATCH_ATTEMPTS
+    end
   end
+
+  # Never 0: each_slice(0) raises, and a block that has no load definition yet reads its
+  # fallback through HarvestDefinition#load_batch_size.
+  def batch_size = [@harvest_job.harvest_definition.load_batch_size.to_i, 1].max
 
   # The retry is a load worker of its own, so the report has to be told to expect it.
   # HarvestReport#load_workers_completed? compares queued against completed, so a retry that

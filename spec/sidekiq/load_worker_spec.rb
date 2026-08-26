@@ -195,6 +195,83 @@ RSpec.describe LoadWorker, type: :job do
 
     # A refusal the destination will repeat is not worth waiting on: Retriable re-raises it
     # at once rather than working through its backoff, and it is not requeued either.
+    # The destination writes a batch one record at a time, so how long it takes tracks how much
+    # is sent. A source whose records are large sends fewer per request.
+    context 'when the load definition sets a batch size' do
+      let(:records) { (1..5).map { |i| { transformed_record: { internal_identifier: "r#{i}" } } }.to_json }
+
+      it 'slices at the size the definition asks for' do
+        harvest_definition.load_definition.update!(batch_size: 2)
+        stub_notice_to_api
+
+        expect(Load::Execution).to receive(:new).exactly(3).times.and_return(
+          instance_double(Load::Execution, call: instance_double(Faraday::Response, success?: true))
+        )
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+
+      it 'slices at 100 when no definition says otherwise' do
+        harvest_definition.load_definition.update!(batch_size: 100)
+        stub_notice_to_api
+
+        expect(Load::Execution).to receive(:new).once.and_return(
+          instance_double(Load::Execution, call: instance_double(Faraday::Response, success?: true))
+        )
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+    end
+
+    # A read timeout means the destination had the batch when the socket gave up, and it may
+    # well go on to accept it - so sending it again just repeats an expensive write.
+    context 'when the Load Execution times out reading the response' do
+      let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
+      let(:execution) { instance_double(Load::Execution) }
+
+      before do
+        allow(execution).to receive(:call).and_raise(Faraday::TimeoutError, 'Net::ReadTimeout')
+        allow(Load::Execution).to receive(:new).and_return(execution)
+        stub_notice_to_api
+      end
+
+      it 'does not requeue the batch, even on the first attempt' do
+        expect(described_class).not_to receive(:perform_in_with_priority)
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+
+      it 'does not tell the report to expect a retry it will never get' do
+        described_class.new.perform(harvest_job.id, records)
+
+        expect(harvest_report.reload.load_workers_queued).to eq 1
+      end
+
+      it 'records the error and marks the load errored straight away' do
+        expect { described_class.new.perform(harvest_job.id, records) }.to change(JobError, :count).by(1)
+
+        expect(harvest_report.reload.load_status).to eq 'errored'
+      end
+    end
+
+    # A connection that never opened, or broke mid-response, is worth requeueing: the
+    # destination certainly never had the batch.
+    context 'when the connection to the destination fails' do
+      let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
+      let(:execution) { instance_double(Load::Execution) }
+
+      before do
+        allow(execution).to receive(:call).and_raise(Faraday::ConnectionFailed, 'Connection refused')
+        allow(Load::Execution).to receive(:new).and_return(execution)
+      end
+
+      it 'requeues the batch' do
+        expect(described_class).to receive(:perform_in_with_priority)
+
+        described_class.new.perform(harvest_job.id, records)
+      end
+    end
+
     context 'when the Load Execution raises a permanent error' do
       let(:records) { "[{\"transformed_record\":{\"internal_identifier\":\"test\"}}]" }
 

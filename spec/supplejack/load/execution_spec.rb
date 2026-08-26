@@ -133,6 +133,34 @@ RSpec.describe Load::Execution do
       end
     end
 
+    # The destination writes a batch one record at a time, so a source whose records are large
+    # can be given longer without every other destination call in the app waiting with it.
+    context 'when the load definition sets a response timeout' do
+      let(:harvest_definition) { create(:harvest_definition, pipeline:, kind: 'harvest', source_id: 'test') }
+      let(:pipeline_job)       { create(:pipeline_job, pipeline:, destination:) }
+      let(:harvest_job)        { create(:harvest_job, harvest_definition:, pipeline_job:) }
+
+      let(:api) { instance_double(Api::Harvester::Record, create_batch: instance_double(Faraday::Response, success?: true)) }
+
+      it 'asks Faraday to wait that long' do
+        harvest_definition.load_definition.update!(read_timeout: 180)
+        allow(Api::Harvester::Record).to receive(:new).and_return(api)
+
+        described_class.new([record], harvest_job).call
+
+        expect(Api::Harvester::Record).to have_received(:new).with(destination, read_timeout: 180)
+      end
+
+      it 'says nothing about the timeout when the definition does not set one' do
+        harvest_definition.load_definition.update!(read_timeout: nil)
+        allow(Api::Harvester::Record).to receive(:new).and_return(api)
+
+        described_class.new([record], harvest_job).call
+
+        expect(Api::Harvester::Record).to have_received(:new).with(destination, read_timeout: nil)
+      end
+    end
+
     context 'when the block writes to disk rather than the API' do
       let(:load_definition)    { create(:load_definition, pipeline:, kind: 'preprocessed_data') }
       let(:harvest_definition) do

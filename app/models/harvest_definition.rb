@@ -79,6 +79,15 @@ class HarvestDefinition < ApplicationRecord
     load_definition.required_for_active_record?
   end
 
+  # How the request to the destination is made rather than what it carries. nil for the timeout
+  # leaves the app-wide default standing - Api::Request drops the option entirely rather than
+  # passing nil, which would clear it.
+  delegate :read_timeout, to: :load_definition, prefix: :load, allow_nil: true
+
+  def load_batch_size
+    load_definition&.batch_size || LoadDefinition::DEFAULT_BATCH_SIZE
+  end
+
   def completed_harvest_jobs?
     @completed_harvest_jobs ||= harvest_jobs.completed.any?
   end
