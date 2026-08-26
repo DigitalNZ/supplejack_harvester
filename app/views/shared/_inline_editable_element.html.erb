@@ -1,7 +1,7 @@
 <% id ||= 'inline-editable-element' %>
 
 <% content_classes = class_names({ 'd-none': model.errors.include?(attribute) })
-   form_classes = class_names({ 'd-none': model.errors.exclude?(attribute) }) %>
+   form_classes = class_names('mb-2', { 'd-none': model.errors.exclude?(attribute) }) %>
 
 <div class='inline-editable-element'>
   <div id="<%= "#{id}-content" %>" class="<%= content_classes %>">
@@ -22,5 +22,12 @@
     </div>
 
     <%= form.submit 'Save', class: 'btn btn-primary ms-2' %>
+
+    <button
+      type='button'
+      class='btn btn-outline-secondary ms-2 js-inline-editable-cancel'
+      data-id="<%= id %>">
+      Cancel
+    </button>
   <% end %>
 </div>

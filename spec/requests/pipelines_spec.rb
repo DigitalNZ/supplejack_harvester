@@ -185,6 +185,42 @@ RSpec.describe 'Pipelines' do
       expect(response.body).to include pipeline.name
     end
 
+    it 'edits the description in a textarea' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to match(/<textarea[^>]*name="pipeline\[description\]"/)
+    end
+
+    it 'offers a cancel button for the name editor' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to match(/<button[^>]*js-inline-editable-cancel[^>]*data-id="pipeline-name"/)
+    end
+
+    it 'offers the three description states, and the collapsed one leads' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to match(/class="js-description-collapsed"/)
+      expect(response.body).to match(/js-description-expanded/)
+      expect(response.body).to match(/js-description-form/)
+    end
+
+    it 'offers to read the rest of the description, and to fold it away again' do
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include 'Read full description'
+      expect(response.body).to include 'Show less'
+    end
+
+    it 'renders the description as markdown' do
+      pipeline.update(description: "Harvests **daily**.\n\n- see [the wiki](https://example.com/wiki)")
+
+      get pipeline_path(pipeline)
+
+      expect(response.body).to include '<strong>daily</strong>'
+      expect(response.body).to include '<a href="https://example.com/wiki"'
+    end
+
     it 'does not offer purged extraction jobs in the run-pipeline dropdown' do
       # The run-settings modal only renders when the pipeline is ready to run,
       # which needs a transformation definition with at least one field.
