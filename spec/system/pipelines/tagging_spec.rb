@@ -16,6 +16,7 @@ RSpec.describe 'Tagging a pipeline', :js do
     visit pipeline_path(pipeline)
 
     click_on '+ Add tags'
+    find('[data-tags-input]').click
     click_on 'Museum'
     click_on 'Save tags'
 
@@ -47,6 +48,26 @@ RSpec.describe 'Tagging a pipeline', :js do
     expect(pipeline.tags.reload.map(&:name)).to eq ['Audio']
   end
 
+  it 'opens the editor with the suggestions shut' do
+    visit pipeline_path(pipeline)
+
+    click_on '+ Add tags'
+
+    expect(page).to have_field 'Search or create a tag'
+    expect(page).to have_no_css '[data-tags-suggestions].show'
+  end
+
+  it 'opens the suggestions when the input is clicked' do
+    visit pipeline_path(pipeline)
+
+    click_on '+ Add tags'
+    find('[data-tags-input]').click
+
+    within '[data-tags-suggestions]' do
+      expect(page).to have_button 'Museum'
+    end
+  end
+
   it 'narrows the suggestions to what has been typed' do
     visit pipeline_path(pipeline)
 
@@ -63,12 +84,37 @@ RSpec.describe 'Tagging a pipeline', :js do
     visit pipeline_path(pipeline)
 
     click_on '+ Add tags'
+    find('[data-tags-input]').click
     click_on 'Museum'
     fill_in 'Search or create a tag', with: 'Mus'
 
     within '[data-tags-suggestions]' do
       expect(page).to have_no_button 'Museum'
     end
+  end
+
+  # The chip is cloned from a template rendered for a tag with no colour of its own, so
+  # the colour of the tag being added has to be put on it.
+  it 'draws the chip for an existing tag in that tag colour' do
+    Tag.find_by(name: 'Museum').update(color: :purple_rain)
+
+    visit pipeline_path(pipeline)
+
+    click_on '+ Add tags'
+    find('[data-tags-input]').click
+    click_on 'Museum'
+
+    expect(page).to have_css '[data-tags-chips] .tag--purple-rain', text: 'Museum'
+  end
+
+  it 'draws the chip for a tag being created in the grey a new tag starts as' do
+    visit pipeline_path(pipeline)
+
+    click_on '+ Add tags'
+    fill_in 'Search or create a tag', with: 'Audio'
+    click_on '+ Create tag "Audio"'
+
+    expect(page).to have_css '[data-tags-chips] .tag--pompeii-ash', text: 'Audio'
   end
 
   it 'takes a tag off the pipeline' do

@@ -12,6 +12,39 @@ $foggy-morn: #C8CFCF;
 $bright-star: #DEE2E6;
 $lynx-white: #F7F7F7;
 
+// The tag colours from the design. Pompeii Ash above is the grey of them, and the one a
+// tag starts as; Wash Me is the near-white a tag sits on whichever colour it carries.
+$roxy-brown: #795548;
+$unmatched-beauty: #b02a37;
+$tennis-court: #c2410c;
+$alligator: #8f6400;
+$camouflage-green: #3f6212;
+$cloudy-camouflage: #157347;
+$boating-green: #0f766e;
+$dead-blue-eyes: #0a58ca;
+$purple-rain: #6f42c1;
+$ultra-violet-lentz: #a21caf;
+$secret-affair: #be185d;
+$wash-me: #fbfcfd;
+
+// Keyed by the names of Tag's colour enum, dasherised, and in the order the enum declares
+// them - which is the order the picker offers them in. The .tag--* modifiers and the
+// picker's swatches are both generated from this, so a colour is only listed once.
+$tag-colors: (
+  "pompeii-ash": $pompeii-ash,
+  "roxy-brown": $roxy-brown,
+  "unmatched-beauty": $unmatched-beauty,
+  "tennis-court": $tennis-court,
+  "alligator": $alligator,
+  "camouflage-green": $camouflage-green,
+  "cloudy-camouflage": $cloudy-camouflage,
+  "boating-green": $boating-green,
+  "dead-blue-eyes": $dead-blue-eyes,
+  "purple-rain": $purple-rain,
+  "ultra-violet-lentz": $ultra-violet-lentz,
+  "secret-affair": $secret-affair
+);
+
 $primary: $vital-green;
 $dark: $antarctic-deep;
 

@@ -5,6 +5,17 @@
     th, td {
       padding: .75rem;
     }
+
+    // A row is mostly links - the pipeline, the job, the pages it extracted - and
+    // underlining them all makes a stripe of the table. They underline when pointed at
+    // instead. Bootstrap 5.2 has no utility for that; 5.3's link-underline-* would do it.
+    a {
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
 
   @include element('divider')  {

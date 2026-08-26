@@ -145,6 +145,10 @@ GEM
     chunky_png (1.4.0)
     coderay (1.1.3)
     colorize (1.1.0)
+    commonmarker (2.10.0-arm64-darwin)
+    commonmarker (2.10.0-x86_64-darwin)
+    commonmarker (2.10.0-x86_64-linux)
+    commonmarker (2.10.0-x86_64-linux-musl)
     concurrent-ruby (1.3.8)
     connection_pool (2.5.5)
     crack (1.0.1)
@@ -553,6 +557,7 @@ DEPENDENCIES
   capybara
   capybara-screenshot
   codeclimate_diff!
+  commonmarker
   debug
   devise
   devise-two-factor

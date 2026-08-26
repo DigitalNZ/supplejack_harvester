@@ -1,0 +1,60 @@
+<%= content_for(:title) { "Editing #{@tag.name_in_database}" } %>
+<% breadcrumb :edit_tag, @tag %>
+
+<%= content_for :header do %>
+  <h1 class="header__title"><%= @tag.name_in_database %></h1>
+
+  <div class="header__actions">
+    <%= link_to 'Cancel', tags_path, class: 'btn btn-outline-secondary me-1' %>
+
+    <button type="submit" class="btn btn-primary" data-form="js-tag-form">Update</button>
+  </div>
+
+  <div class="clearfix"></div>
+<% end %>
+
+<%= vertical_form_with model: @tag, id: 'js-tag-form' do |form| %>
+  <div class="card">
+    <div class="card-body">
+      <%# The labels are the columns they sit in rather than sitting inside one: a label is
+          inline, and only being a flex item of the row gives its padding somewhere to
+          push. That padding is what col-form-label is for - it lines a label up with the
+          field beside it, rather than with the field and its helper text together. %>
+      <div class="row gy-3 align-items-start">
+        <%= form.label :name, 'Name', class: 'col-3 col-form-label' %>
+
+        <div class="col-9">
+          <%# Any error marks the field, not only one on the name: a rename can fail on the
+              slug the name reduces to, which is the same name being typed again. %>
+          <%= form.text_field :name, class: { 'form-control': true, 'is-invalid': @tag.errors.any? } %>
+          <p class="form-text">
+            Renaming a tag relabels it on every pipeline that carries it. Links filtering a
+            list by the old name stop matching.
+          </p>
+        </div>
+
+        <span class="col-3 col-form-label">Colour</span>
+
+        <div class="col-9">
+          <%# Each swatch is the label of its own radio, so the colour picked is submitted
+              with the name and needs no JavaScript of its own. %>
+          <div class="color-picker">
+            <% Tag.colors.each_key do |color| %>
+              <div>
+                <%= form.radio_button :color, color, class: 'color-picker__input visually-hidden' %>
+                <%= form.label :color,
+                               value: color,
+                               title: color.titleize,
+                               class: "color-picker__swatch color-picker__swatch--#{color.dasherize}" do %>
+                  <span class="visually-hidden"><%= color.titleize %></span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <p class="form-text">The colour the tag is drawn in, everywhere it appears.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
