@@ -2,7 +2,7 @@
   // Every header this sits in sizes to its content, so without a width of its own the edit form
   // would collapse to the textarea's intrinsic size while the preview beside it stayed wide.
   max-width: 100%;
-  width: 46rem;
+  width: 38rem;
 
   // A flex item will not shrink below its own content unless it is told to, and the preview
   // growing past the row would push the edit control off the end of it.
