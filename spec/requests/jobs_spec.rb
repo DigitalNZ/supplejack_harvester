@@ -104,9 +104,52 @@ RSpec.describe 'Jobs' do
     end
 
     describe 'filtering by who ran the job' do
+      # A schedule and an automation are how the table labels the jobs they ran, so they
+      # are what this filter offers alongside the usernames - see job_launched_by_label.
+      let(:schedule) do
+        create(:schedule, destination:, automation_template: create(:automation_template, destination:))
+      end
+      let(:automation_step) do
+        create(:automation_step, automation: create(:automation, destination:), pipeline:)
+      end
+
       it 'keeps only the jobs that user launched' do
         job = create(:pipeline_job, pipeline:, destination:, launched_by: user)
         create(:pipeline_job, pipeline: other_pipeline, destination:, launched_by: someone_else)
+
+        get jobs_path(run_by: 'tim')
+
+        expect(listed_jobs).to contain_exactly job
+      end
+
+      it 'keeps only the jobs an automation ran' do
+        job = create(:pipeline_job, pipeline:, destination:, automation_step:, launched_by: user)
+        create(:pipeline_job, pipeline:, destination:, launched_by: user)
+        create(:pipeline_job, pipeline:, destination:, schedule:, launched_by: user)
+
+        get jobs_path(run_by: 'Automation')
+
+        expect(listed_jobs).to contain_exactly job
+      end
+
+      # Selecting Schedule used to look for a user of that name, find none, and leave the
+      # list as it was - so it appeared to match everything, automations included.
+      it 'keeps only the jobs a schedule ran' do
+        job = create(:pipeline_job, pipeline:, destination:, schedule:, launched_by: user)
+        create(:pipeline_job, pipeline:, destination:, automation_step:, launched_by: user)
+        create(:pipeline_job, pipeline:, destination:, launched_by: user)
+
+        get jobs_path(run_by: 'Schedule')
+
+        expect(listed_jobs).to contain_exactly job
+      end
+
+      # The name on such a job is whoever set the schedule or the automation up, and the
+      # table does not label it with them, so this filter does not either.
+      it 'leaves scheduled and automated jobs out of a username' do
+        job = create(:pipeline_job, pipeline:, destination:, launched_by: user)
+        create(:pipeline_job, pipeline:, destination:, schedule:, launched_by: user)
+        create(:pipeline_job, pipeline:, destination:, automation_step:, launched_by: user)
 
         get jobs_path(run_by: 'tim')
 
@@ -207,6 +250,24 @@ RSpec.describe 'Jobs' do
 
       expect(response).to have_http_status :ok
       expect(assigns(:extraction_jobs)).to contain_exactly extraction_job
+    end
+
+    # Run by Schedule and Automation look at columns of their own, which that table has
+    # no more than it has the rest of them.
+    it 'ignores who ran it when the column is not there to ask' do
+      harvest_definition = create(:harvest_definition, pipeline:)
+      extraction_definition = create(:extraction_definition, pipeline:)
+      harvest_definition.update(extraction_definition:)
+      extraction_job = create(:extraction_job, extraction_definition:)
+
+      %w[Schedule Automation].each do |run_by|
+        get pipeline_harvest_definition_extraction_definition_extraction_jobs_path(
+          pipeline, harvest_definition, extraction_definition, run_by:
+        )
+
+        expect(response).to have_http_status :ok
+        expect(assigns(:extraction_jobs)).to contain_exactly extraction_job
+      end
     end
   end
 end

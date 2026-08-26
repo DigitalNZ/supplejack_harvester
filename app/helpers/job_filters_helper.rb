@@ -5,9 +5,12 @@
 # the controller would have to know about.
 module JobFiltersHelper
   # Every option says 'Run by', not just the default: a username on its own would not say
-  # what it is filtering once it is the one selected.
+  # what it is filtering once it is the one selected. Schedule and Automation lead the
+  # list because they are how most jobs are labelled, and they are not users - a person
+  # named either of those would be indistinguishable here, which no one is.
   def user_opts
-    who = User.distinct.pluck(:username).compact.sort.unshift('Schedule')
+    who = User.distinct.pluck(:username).compact.sort
+    who.unshift(ApplicationController::RUN_BY_SCHEDULE, ApplicationController::RUN_BY_AUTOMATION)
 
     [['Run by: anyone', '']] + who.map { |name| ["Run by: #{name}", name] }
   end
