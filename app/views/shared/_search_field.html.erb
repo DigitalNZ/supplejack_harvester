@@ -1,0 +1,21 @@
+<%# The search box for a filter bar. The placeholder doubles as the label, which the styling
+    lays over the empty field and takes away as soon as there is something to read there - see
+    stylesheets/blocks/_search. The clear button only appears once there is a search to clear.
+    locals:
+      form:        the filter bar's form builder
+      placeholder: what this list can be searched by, which is also its label %>
+<div class="search">
+  <%= form.text_field :search, value: params[:search], placeholder:, class: 'form-control search__input' %>
+
+  <%= form.label :search, class: 'search__label' do %>
+    <i aria-hidden="true" class="bi bi-search"></i>
+    <%= placeholder %>
+  <% end %>
+
+  <% if params[:search].present? %>
+    <button type="button" class="btn btn-secondary search__clear" data-clear-field="search">
+      Clear
+      <i aria-hidden="true" class="bi bi-plus"></i>
+    </button>
+  <% end %>
+</div>

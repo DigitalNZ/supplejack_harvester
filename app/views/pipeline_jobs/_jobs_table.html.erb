@@ -6,31 +6,31 @@
 <% all_tags = Tag.ordered.to_a %>
 <% summary = list_summary(jobs, total, 'job') %>
 
-<%= form_with url: path, method: :get, html: { id: 'filters-form', class: 'card bg-light mb-3' } do %>
-  <div class="card-body p-2 d-flex flex-wrap align-items-center gap-2">
-    <% submit = 'this.form.requestSubmit()' %>
-    <% klass = 'form-select w-auto' %>
+<%= render layout: 'shared/filter_bar', locals: { path: } do %>
+  <%# Submitted on change by js/SubmittingSelect, the way every other list's selects are,
+      rather than by an onchange of their own. %>
+  <% klass = 'form-select w-auto' %>
+  <% submits = { 'data-submitting-select': true } %>
 
-    <%# Tags belong to pipelines, so filtering by them sorts one pipeline's jobs into all
-        of them or none: there is nothing to narrow within a single pipeline. %>
-    <% unless pipeline_scoped %>
-      <%= render 'shared/tag_filter', tags: all_tags, counts: Tag.job_counts,
-                                      heading: 'Filter by pipeline tag', path: %>
+  <%# Tags belong to pipelines, so filtering by them sorts one pipeline's jobs into all
+      of them or none: there is nothing to narrow within a single pipeline. %>
+  <% unless pipeline_scoped %>
+    <%= render 'shared/tag_filter', tags: all_tags, counts: Tag.job_counts,
+                                    heading: 'Filter by pipeline tag', path: %>
 
-      <div class="vr"></div>
-    <% end %>
+    <div class="vr"></div>
+  <% end %>
 
-    <%# No labels beside these: each one's options say what it filters, and the select
-        carries that as its accessible name. %>
-    <%= select_tag :run_by, options_for_select(user_opts, params[:run_by]),
-                   class: klass, onchange: submit, aria: { label: 'Last run by' } %>
+  <%# No labels beside these: each one's options say what it filters, and the select
+      carries that as its accessible name. %>
+  <%= select_tag :run_by, options_for_select(user_opts, params[:run_by]),
+                 class: klass, aria: { label: 'Last run by' }, **submits %>
 
-    <%= select_tag :status, options_for_select(status_opts, params[:status]),
-                   class: klass, onchange: submit, aria: { label: 'Status' } %>
+  <%= select_tag :status, options_for_select(status_opts, params[:status]),
+                 class: klass, aria: { label: 'Status' }, **submits %>
 
-    <%= select_tag :destination, options_for_select(dest_opts, params[:destination]),
-                   class: klass, onchange: submit, aria: { label: 'Destination' } %>
-  </div>
+  <%= select_tag :destination, options_for_select(dest_opts, params[:destination]),
+                 class: klass, aria: { label: 'Destination' }, **submits %>
 <% end %>
 
 <%# The summary carries the count of the list either way, and the tags it is filtered by
