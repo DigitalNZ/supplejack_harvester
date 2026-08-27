@@ -72,9 +72,9 @@ class TransformationDefinitionsController < ApplicationController
 
   def find_extraction_jobs
     extraction_definitions = if params['kind'] == 'enrichment' || @transformation_definition&.kind == 'enrichment'
-                               ExtractionDefinition.all.enrichment
+                               ExtractionDefinition.enrichment.order(:name)
                              else
-                               ExtractionDefinition.all.harvest
+                               ExtractionDefinition.harvest.order(:name)
                              end
 
     @extraction_jobs = extraction_definitions.map do |ed|
@@ -84,7 +84,7 @@ class TransformationDefinitionsController < ApplicationController
 
   def transformation_definition_params
     safe_params = params.expect(
-      transformation_definition: %i[pipeline_id content_source_id name extraction_job_id
+      transformation_definition: %i[pipeline_id content_source_id name description extraction_job_id
                                     record_selector kind]
     )
     merge_last_edited_by(safe_params)

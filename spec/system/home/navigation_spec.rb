@@ -42,7 +42,7 @@ RSpec.describe 'The homepage' do
     visit root_path
     within('.card', text: 'Each source that is harvested') { click_on 'Pipelines' }
 
-    expect(page).to have_css '.header__title', text: 'Pipelines'
+    expect(page).to have_css '.header h1', text: 'Pipelines'
   end
 end
 

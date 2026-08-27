@@ -119,6 +119,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_27_120000) do
     t.text "fields"
     t.boolean "include_sub_documents", default: true, null: false
     t.boolean "follow_redirects", default: true
+    t.text "description"
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_extraction_definitions_on_name", unique: true, length: 255
@@ -439,6 +440,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_27_120000) do
     t.integer "kind", default: 0
     t.bigint "pipeline_id"
     t.bigint "last_edited_by_id"
+    t.text "description"
     t.index ["extraction_job_id"], name: "index_transformation_definitions_on_extraction_job_id"
     t.index ["last_edited_by_id"], name: "index_transformation_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_transformation_definitions_on_name", unique: true, length: 255

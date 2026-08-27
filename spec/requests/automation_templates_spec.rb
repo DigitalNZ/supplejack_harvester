@@ -63,6 +63,24 @@ RSpec.describe 'AutomationTemplates' do
     end
   end
 
+  describe 'the description on GET /automation_templates/:id' do
+    it 'offers the three description states, and the collapsed one leads' do
+      get automation_template_path(automation_template)
+
+      expect(response.body).to match(/class="js-description-collapsed"/)
+      expect(response.body).to match(/js-description-expanded/)
+      expect(response.body).to match(/<textarea[^>]*name="automation_template\[description\]"/)
+    end
+
+    it 'renders the description as markdown' do
+      automation_template.update(description: 'Runs **weekly**.')
+
+      get automation_template_path(automation_template)
+
+      expect(response.body).to include '<strong>weekly</strong>'
+    end
+  end
+
   describe 'GET /automation_templates/new' do
     it 'displays the new template form' do
       get new_automation_template_path
@@ -121,6 +139,14 @@ RSpec.describe 'AutomationTemplates' do
         patch automation_template_path(automation_template), params: { automation_template: valid_attributes }
         automation_template.reload
         expect(automation_template.name).to eq('Updated Template')
+      end
+
+      it 'saves a description on its own' do
+        patch automation_template_path(automation_template), params: {
+          automation_template: { description: 'Runs weekly.' }
+        }
+
+        expect(automation_template.reload.description).to eq 'Runs weekly.'
       end
 
       it 'redirects to the template show page' do

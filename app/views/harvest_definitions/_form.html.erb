@@ -17,9 +17,9 @@
         <% end %>
 
         <% if @harvest_definition.enrichment? %>
-          <% extraction_definitions = ExtractionDefinition.all.enrichment %>
+          <% extraction_definitions = ExtractionDefinition.enrichment.order(:name) %>
         <% else %>
-          <% extraction_definitions = ExtractionDefinition.all.harvest %>
+          <% extraction_definitions = ExtractionDefinition.harvest.order(:name) %>
         <% end %>
 
         <div class="col-3">
@@ -34,9 +34,9 @@
         </div>
 
         <% if @harvest_definition.enrichment? %>
-          <% transformation_definitions = TransformationDefinition.all.enrichment %>
+          <% transformation_definitions = TransformationDefinition.enrichment.order(:name) %>
         <% else %>
-          <% transformation_definitions = TransformationDefinition.all.harvest %>
+          <% transformation_definitions = TransformationDefinition.harvest.order(:name) %>
         <% end %>
 
         <div class="col-3">

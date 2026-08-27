@@ -69,7 +69,7 @@ class ExtractionDefinitionsController < ApplicationController
   def assign_show_variables
     @parameters = @extraction_definition.parameters.order(created_at: :desc)
     @props = extraction_app_state
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def successful_clone_path(clone)
@@ -93,13 +93,13 @@ class ExtractionDefinitionsController < ApplicationController
   end
 
   def find_destinations
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def extraction_definition_params
     safe_params = params.expect(
       extraction_definition: %i[
-        pipeline_id name format base_url throttle page per_page follow_redirects
+        pipeline_id name description format base_url throttle page per_page follow_redirects
         total_selector kind destination_id source_id enrichment_url paginated split split_selector
         extract_text_from_file fragment_source_id fragment_key evaluate_javascript fields include_sub_documents
       ]

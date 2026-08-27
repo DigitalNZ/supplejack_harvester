@@ -13,7 +13,7 @@ class AutomationTemplatesController < ApplicationController
                             else
                               automation_templates
                             end
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def show
@@ -24,11 +24,11 @@ class AutomationTemplatesController < ApplicationController
 
   def new
     @automation_template = AutomationTemplate.new
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def edit
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def create
@@ -37,7 +37,7 @@ class AutomationTemplatesController < ApplicationController
     if @automation_template.save
       redirect_to automation_templates_path, notice: I18n.t('automation_templates.create.success')
     else
-      @destinations = Destination.all
+      @destinations = Destination.order(:name)
       render :new
     end
   end
@@ -47,7 +47,7 @@ class AutomationTemplatesController < ApplicationController
       redirect_to automation_template_path(@automation_template),
                   notice: I18n.t('automation_templates.update.success')
     else
-      @destinations = Destination.all
+      @destinations = Destination.order(:name)
       render :edit
     end
   end

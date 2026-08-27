@@ -5,7 +5,7 @@ class AutomationStepTemplatesController < ApplicationController
   before_action :set_automation_step_template, only: %i[show update destroy]
 
   def show
-    @pipelines = Pipeline.all
+    @pipelines = Pipeline.order(:name)
     @selected_pipeline = @automation_step_template.pipeline
     @harvest_definitions = @selected_pipeline.harvest_definitions if @selected_pipeline
   end
@@ -14,7 +14,7 @@ class AutomationStepTemplatesController < ApplicationController
     @automation_step_template = @automation_template.automation_step_templates.build(
       position: @automation_template.automation_step_templates.count
     )
-    @pipelines = Pipeline.all
+    @pipelines = Pipeline.order(:name)
   end
 
   def create
@@ -27,7 +27,7 @@ class AutomationStepTemplatesController < ApplicationController
       redirect_to automation_template_path(@automation_template),
                   notice: I18n.t('automation_step_templates.create.success')
     else
-      @pipelines = Pipeline.all
+      @pipelines = Pipeline.order(:name)
       render :new
     end
   end
@@ -51,7 +51,7 @@ class AutomationStepTemplatesController < ApplicationController
   end
 
   def setup_form_variables
-    @pipelines = Pipeline.all
+    @pipelines = Pipeline.order(:name)
     @selected_pipeline = @automation_step_template.pipeline
     @harvest_definitions = @selected_pipeline.harvest_definitions if @selected_pipeline
   end
@@ -77,7 +77,10 @@ class AutomationStepTemplatesController < ApplicationController
     # Create a new step template if needed
     @automation_step_template ||= @automation_template.automation_step_templates.build
 
-    render partial: 'harvest_definitions', locals: { harvest_definitions: @harvest_definitions }
+    render partial: 'shared/harvest_definition_checkboxes',
+           locals: { harvest_definitions: @harvest_definitions,
+                     param_key: 'automation_step_template',
+                     chosen: @automation_step_template.harvest_definition_ids }
   end
 
   private

@@ -1,9 +1,7 @@
 <%= content_for(:title) { 'Pre-processed data' } %>
 <% breadcrumb :preprocess_outputs, @pipeline, @harvest_definition %>
 
-<%= content_for(:header) do %>
-  <h1 class='my-4'><%= @harvest_definition.source_id %>: pre-processed data</h1>
-<% end %>
+<% page_heading "#{@harvest_definition.source_id}: pre-processed data" %>
 
 <%- if @pipeline_jobs.any? %>
   <div class='row'>

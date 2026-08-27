@@ -26,8 +26,9 @@
       <%= form.select :pipeline_id,
                       @pipelines.map { |p| [p.name, p.id] },
                       { include_blank: 'Select a pipeline' },
-                      { class: 'form-select', required: automation_step_template.step_type.to_s != 'api_call',
-                        data: { controller: 'pipeline-select' } } %>
+                      { class: 'form-select js-searchable-select',
+                        required: automation_step_template.step_type.to_s != 'api_call',
+                        data: { controller: 'pipeline-select', placeholder: 'Search for a pipeline' } } %>
       <small class="form-text text-body-secondary">
         Select a pipeline to view and choose its associated harvest definitions.
       </small>
@@ -54,7 +55,10 @@
 
     <div class="mb-4" id="harvest-definitions-container">
       <% if @harvest_definitions.present? %>
-        <%= render 'harvest_definitions', harvest_definitions: @harvest_definitions %>
+        <%= render 'shared/harvest_definition_checkboxes',
+                   harvest_definitions: @harvest_definitions,
+                   param_key: 'automation_step_template',
+                   chosen: @automation_step_template&.harvest_definition_ids %>
       <% end %>
     </div>
   </div>

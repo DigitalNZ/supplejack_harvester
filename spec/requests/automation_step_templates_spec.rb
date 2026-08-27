@@ -19,6 +19,15 @@ RSpec.describe 'AutomationStepTemplates' do
       expect(response).to have_http_status :ok
       expect(response.body).to include 'New Step'
     end
+
+    it 'lists pipelines alphabetically in the pipeline dropdown' do
+      create(:pipeline, name: 'Zebra pipeline')
+      create(:pipeline, name: 'Alpha pipeline')
+
+      get new_automation_template_automation_step_template_path(automation_template)
+
+      expect(response.body.index('Alpha pipeline')).to be < response.body.index('Zebra pipeline')
+    end
   end
 
   describe 'GET /automation_templates/:automation_template_id/automation_step_templates/:id/edit' do

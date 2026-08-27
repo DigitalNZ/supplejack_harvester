@@ -98,7 +98,7 @@ class PipelinesController < ApplicationController
   end
 
   def assign_destinations
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def assign_show_variables

@@ -66,6 +66,37 @@ RSpec.describe 'ExtractionDefinitions' do
     end
   end
 
+  # The same editor the pipeline has, so it is checked the same way: the three states, and the
+  # collapsed one leading.
+  describe 'the description on #show' do
+    let!(:requests) { create_list(:request, 2, extraction_definition:) }
+
+    it 'offers the three description states, and the collapsed one leads' do
+      get pipeline_harvest_definition_extraction_definition_path(pipeline, harvest_definition,
+                                                                 extraction_definition)
+
+      expect(response.body).to match(/class="js-description-collapsed"/)
+      expect(response.body).to match(/js-description-expanded/)
+      expect(response.body).to match(/<textarea[^>]*name="extraction_definition\[description\]"/)
+    end
+
+    it 'names the definition in the prompt to write one' do
+      get pipeline_harvest_definition_extraction_definition_path(pipeline, harvest_definition,
+                                                                 extraction_definition)
+
+      expect(response.body).to include 'Add extraction definition description'
+    end
+
+    it 'renders the description as markdown' do
+      extraction_definition.update(description: 'Paginates **100** at a time.')
+
+      get pipeline_harvest_definition_extraction_definition_path(pipeline, harvest_definition,
+                                                                 extraction_definition)
+
+      expect(response.body).to include '<strong>100</strong>'
+    end
+  end
+
   describe '#create' do
     context 'with valid parameters' do
       let(:extraction_definition2) { build(:extraction_definition, pipeline:) }
@@ -183,6 +214,14 @@ RSpec.describe 'ExtractionDefinitions' do
         }
 
         expect(extraction_definition.reload.last_edited_by).to eq new_user
+      end
+
+      it 'saves a description on its own' do
+        patch pipeline_harvest_definition_extraction_definition_path(pipeline, harvest_definition, extraction_definition), params: {
+          extraction_definition: { description: 'Paginates 100 at a time.' }
+        }
+
+        expect(extraction_definition.reload.description).to eq 'Paginates 100 at a time.'
       end
 
       it 'redirects to the extraction page' do

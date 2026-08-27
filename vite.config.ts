@@ -24,6 +24,7 @@ export default defineConfig({
       '~bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
       '~autoComplete': path.resolve(__dirname, 'node_modules/@tarekraafat/autocomplete.js'),
       '~bootstrap-icons': path.resolve(__dirname, 'node_modules/bootstrap-icons'),
+      '~tom-select': path.resolve(__dirname, 'node_modules/tom-select'),
     }
   },
 })

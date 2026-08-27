@@ -24,7 +24,7 @@ RSpec.describe 'Login' do
         fill_in 'Password', with: user.password
         click_button 'Log in'
 
-        expect(page).to have_css('.header__title', text: 'Harvester')
+        expect(page).to have_css('.header h1', text: 'Harvester')
       end
     end
 
@@ -37,11 +37,11 @@ RSpec.describe 'Login' do
         fill_in 'Password', with: user.password
         click_button 'Log in'
 
-        expect(page).to have_css('.header__title', text: 'Two Factor Authentication')
+        expect(page).to have_css('.header h1', text: 'Two Factor Authentication')
 
         # make sure you get redirected to the 2FA page
         visit root_path
-        expect(page).to have_css('.header__title', text: 'Log in')
+        expect(page).to have_css('.header h1', text: 'Log in')
       end
 
       it 'cannot log in with an invalid OTP' do
@@ -52,7 +52,7 @@ RSpec.describe 'Login' do
         fill_in 'Password', with: user.password
         click_button 'Log in'
 
-        expect(page).to have_css('.header__title', text: 'Two Factor Authentication')
+        expect(page).to have_css('.header h1', text: 'Two Factor Authentication')
 
         fill_in '2FA Code', with: 'invalid-otp'
         click_button 'Log in'
@@ -72,10 +72,10 @@ RSpec.describe 'Login' do
         fill_in 'Password', with: user.password
         click_button 'Log in'
 
-        expect(page).to have_css('.header__title', text: 'Setting up 2FA')
+        expect(page).to have_css('.header h1', text: 'Setting up 2FA')
 
         visit root_path
-        expect(page).to have_css('.header__title', text: 'Setting up 2FA')
+        expect(page).to have_css('.header h1', text: 'Setting up 2FA')
       end
     end
 
@@ -88,11 +88,11 @@ RSpec.describe 'Login' do
         fill_in 'Password', with: user.password
         click_button 'Log in'
 
-        expect(page).to have_css('.header__title', text: 'Two Factor Authentication')
+        expect(page).to have_css('.header h1', text: 'Two Factor Authentication')
 
         # make sure you get redirected to the 2FA page
         visit root_path
-        expect(page).to have_css('.header__title', text: 'Log in')
+        expect(page).to have_css('.header h1', text: 'Log in')
       end
 
       it 'can log in with a valid OTP' do
@@ -103,13 +103,13 @@ RSpec.describe 'Login' do
         fill_in 'Password', with: user.password
         click_button 'Log in'
 
-        expect(page).to have_css('.header__title', text: 'Two Factor Authentication')
+        expect(page).to have_css('.header h1', text: 'Two Factor Authentication')
 
         fill_in '2FA Code', with: user.current_otp
         click_button 'Log in'
 
         expect(page).to have_content('Signed in successfully.')
-        expect(page).to have_css('.header__title', text: 'Harvester')
+        expect(page).to have_css('.header h1', text: 'Harvester')
       end
     end
   end

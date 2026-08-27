@@ -1,20 +1,16 @@
 <%= content_for(:title) { "Editing #{@destination.name_in_database}" } %>
 <% breadcrumb :edit_destination, @destination %>
 
-<%= content_for :header do %>
-  <h1 class="header__title"><%= @destination.name_in_database %></h1>
+<% page_heading @destination.name_in_database %>
 
-  <div class="float-end">
-    <button type="button" class="btn btn-outline-primary me-1" id="js-test-destination-button">
-      Test
-    </button>
+<% page_actions do %>
+  <button type="button" class="btn btn-outline-primary" id="js-test-destination-button">
+    Test
+  </button>
 
-    <button type="submit" class="btn btn-primary" data-form="js-destination-form">
-      Update
-    </button>
-  </div>
-
-  <div class="clearfix">
+  <button type="submit" class="btn btn-primary" data-form="js-destination-form">
+    Update
+  </button>
 <% end %>
 
 <%= render 'form' %>

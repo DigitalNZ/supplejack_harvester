@@ -104,6 +104,24 @@ RSpec.describe 'Transformation Definitions' do
       expect(response).to have_http_status :ok
     end
 
+    it 'offers the three description states, and the collapsed one leads' do
+      get pipeline_harvest_definition_transformation_definition_path(pipeline, harvest_definition,
+                                                                     transformation_definition)
+
+      expect(response.body).to match(/class="js-description-collapsed"/)
+      expect(response.body).to match(/js-description-expanded/)
+      expect(response.body).to match(/<textarea[^>]*name="transformation_definition\[description\]"/)
+    end
+
+    it 'renders the description as markdown' do
+      transformation_definition.update(description: 'Drops **empty** records.')
+
+      get pipeline_harvest_definition_transformation_definition_path(pipeline, harvest_definition,
+                                                                     transformation_definition)
+
+      expect(response.body).to include '<strong>empty</strong>'
+    end
+
     it 'explains that purged preview data was removed, instead of booting the editor' do
       extraction_job.update!(status: 'completed', purged_at: Time.zone.now)
 
@@ -169,6 +187,14 @@ RSpec.describe 'Transformation Definitions' do
         }
 
         expect(transformation_definition.reload.last_edited_by).to eq new_user
+      end
+
+      it 'saves a description on its own' do
+        patch pipeline_harvest_definition_transformation_definition_path(pipeline, harvest_definition, transformation_definition), params: {
+          transformation_definition: { description: 'Drops empty records.' }
+        }
+
+        expect(transformation_definition.reload.description).to eq 'Drops empty records.'
       end
 
       it 'redirects to the transformation_definitions page' do

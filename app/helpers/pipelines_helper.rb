@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 module PipelinesHelper
+  # The tabs across a pipeline's four pages, put in the header's tab slot. Which of the
+  # four is current is the only thing that differs between them, so it is the only thing a
+  # page passes.
+  def pipeline_tabs(pipeline, active:)
+    page_tabs { render 'pipelines/tabs', pipeline:, active: }
+  end
+
   def definition_edit_text(definition, type)
     return "Edit shared #{type.capitalize}" if definition.shared?
 
