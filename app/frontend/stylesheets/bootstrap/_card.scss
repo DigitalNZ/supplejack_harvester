@@ -1,16 +1,17 @@
 .card {
   text-decoration: none;
-  background-color: white;
   width: 100%;
   position: relative;
-  color: $black;
+
+  // Bootstrap 5.3 draws the subtitle from this rather than from a colour on .card-subtitle,
+  // so a card that wants another one has somewhere to say so.
+  --bs-card-subtitle-color: #{$pompeii-ash};
 
   .card-title {
     font-size: 1.125rem;
   }
 
   .card-subtitle {
-    color: $pompeii-ash;
     font-size: 0.875rem;
     font-weight: 500;
   }

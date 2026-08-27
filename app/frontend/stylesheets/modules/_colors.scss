@@ -58,4 +58,11 @@ $dark: $antarctic-deep;
 // body instead - see bootstrap/_root.
 $body-color: $antarctic-deep;
 
+// What 5.3 calls emphasis - its strongest text, which it defaults to black. Table text, the
+// active tab and the text-emphasis utilities all draw from it, so left alone they come out
+// blacker than the body text around them: a table inside a card was darker than the card.
+// Set here for the same reason as $body-color, --bs-emphasis-color-rgb being what table
+// striping and hover shade themselves with.
+$body-emphasis-color: $antarctic-deep;
+
 $table-bg-scale: 0%;

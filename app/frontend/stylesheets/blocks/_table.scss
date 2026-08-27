@@ -8,7 +8,10 @@
 
     // A row is mostly links - the pipeline, the job, the pages it extracted - and
     // underlining them all makes a stripe of the table. They underline when pointed at
-    // instead. Bootstrap 5.2 has no utility for that; 5.3's link-underline-* would do it.
+    // instead. 5.3 does have utilities for this, but saying it that way takes three classes
+    // (link-underline link-underline-opacity-0 link-underline-opacity-100-hover) on every
+    // link, and a link added later that forgets them is silently the odd one out. One rule
+    // over the table says it once, for every link the table ever grows.
     a {
       text-decoration: none;
 
