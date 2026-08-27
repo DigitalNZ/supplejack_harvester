@@ -72,9 +72,9 @@ class TransformationDefinitionsController < ApplicationController
 
   def find_extraction_jobs
     extraction_definitions = if params['kind'] == 'enrichment' || @transformation_definition&.kind == 'enrichment'
-                               ExtractionDefinition.all.enrichment
+                               ExtractionDefinition.enrichment.order(:name)
                              else
-                               ExtractionDefinition.all.harvest
+                               ExtractionDefinition.harvest.order(:name)
                              end
 
     @extraction_jobs = extraction_definitions.map do |ed|
