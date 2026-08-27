@@ -28,7 +28,7 @@
                       { include_blank: 'Select a pipeline' },
                       { class: 'form-select js-searchable-select',
                         required: automation_step_template.step_type.to_s != 'api_call',
-                        data: { controller: 'pipeline-select' } } %>
+                        data: { controller: 'pipeline-select', placeholder: 'Search for a pipeline' } } %>
       <small class="form-text text-muted">
         Select a pipeline to view and choose its associated harvest definitions.
       </small>
