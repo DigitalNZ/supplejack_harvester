@@ -1,16 +1,22 @@
+<%# The harvest definitions of a pipeline, as the checkboxes a step is run against. The two
+    kinds of step - a template's and an automation's - differ only in the name the form
+    posts them under and in which of them are already ticked, so those are what the caller
+    passes.
+
+    chosen is the ids the step already carries, which is nothing for a step being built. %>
 <div class="mb-3">
   <label class="form-label">Harvest Definitions</label>
 
   <div class="harvest-definitions-list">
     <% if harvest_definitions.any? %>
       <div class="list-group">
-        <%= hidden_field_tag 'automation_step_template[harvest_definition_ids][]', nil %>
+        <%= hidden_field_tag "#{param_key}[harvest_definition_ids][]", nil %>
         <% harvest_definitions.each do |harvest_definition| %>
           <div class="list-group-item">
             <div class="form-check">
-              <%= check_box_tag 'automation_step_template[harvest_definition_ids][]',
+              <%= check_box_tag "#{param_key}[harvest_definition_ids][]",
                                 harvest_definition.id,
-                                @automation_step_template&.harvest_definition_ids&.include?(harvest_definition.id.to_s),
+                                chosen&.include?(harvest_definition.id.to_s),
                                 class: 'form-check-input',
                                 id: "harvest_definition_#{harvest_definition.id}" %>
               <%= label_tag "harvest_definition_#{harvest_definition.id}", harvest_definition.name,
