@@ -1,4 +1,5 @@
-<%= form_with(model: [@automation_template, automation_step_template]) do |form| %>
+<%= form_with(model: [@automation_template, automation_step_template],
+              id: 'js-automation-step-template-form') do |form| %>
   <% if automation_step_template.errors.any? %>
     <div class="alert alert-danger">
       <h4><%= pluralize(automation_step_template.errors.count, 'error') %> prohibited this step template from being saved:</h4>
@@ -65,10 +66,5 @@
 
   <div id="api-call-fields" class="<%= automation_step_template.step_type.to_s == 'api_call' ? '' : 'd-none' %>">
     <%= render 'api_call_form', form: form, automation_step_template: automation_step_template %>
-  </div>
-
-  <div class="d-flex justify-content-between">
-    <%= form.submit class: 'btn btn-primary' %>
-    <%= link_to 'Cancel', automation_template_path(@automation_template), class: 'btn btn-secondary' %>
   </div>
 <% end %>

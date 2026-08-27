@@ -7,7 +7,10 @@ import { each } from "lodash";
 const formSubmissionButtons = document.querySelectorAll("[data-form]");
 
 each(formSubmissionButtons, (button) => {
-  button.addEventListener("click", (event) => {
-    document.getElementById(button.dataset.form).submit();
+  button.addEventListener("click", () => {
+    // requestSubmit rather than submit: submit() skips constraint validation, so a form
+    // with required fields would post empty ones without the browser ever saying so. It
+    // also fires the submit event, which submit() bypasses.
+    document.getElementById(button.dataset.form).requestSubmit();
   });
 });

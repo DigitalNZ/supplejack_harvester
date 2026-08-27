@@ -3,6 +3,14 @@
 
 <% page_heading 'New Automation Template' %>
 
+<% page_actions do %>
+  <%= link_to 'Cancel', automation_templates_path, class: 'btn btn-outline-secondary' %>
+
+  <button type="submit" class="btn btn-primary" data-form="js-automation-template-form">
+    Create template
+  </button>
+<% end %>
+
 <div class="card">
   <div class="card-body">
     <%= render 'form', automation_template: @automation_template %>

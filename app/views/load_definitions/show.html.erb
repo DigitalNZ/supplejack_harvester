@@ -7,16 +7,17 @@
   <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
     <i class="bi bi-trash" aria-hidden="true"></i> Delete
   </button>
+
+  <button type="submit" class="btn btn-primary" data-form="js-load-definition-form">
+    Update
+  </button>
 <% end %>
 
 <div class='card'>
   <div class='card-body'>
-    <%= vertical_form_with model: [@pipeline, @harvest_definition, @load_definition] do |form| %>
+    <%= vertical_form_with model: [@pipeline, @harvest_definition, @load_definition],
+                           id: 'js-load-definition-form' do |form| %>
       <%= render 'load_definitions/fields', form:, harvest_definition: @harvest_definition %>
-
-      <div class='float-end mt-4'>
-        <button type="submit" class="btn btn-primary">Update load definition</button>
-      </div>
     <% end %>
   </div>
 </div>

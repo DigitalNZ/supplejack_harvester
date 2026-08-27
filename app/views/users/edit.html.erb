@@ -3,11 +3,19 @@
 
 <% page_heading "Edit #{@user.email}" %>
 
+<% page_actions do %>
+  <%= link_to 'Cancel', users_path, class: 'btn btn-outline-secondary' %>
+
+  <button type="submit" class="btn btn-primary" data-form="js-user-form">
+    Update
+  </button>
+<% end %>
+
 <div class="row">
   <div class="col-sm-6 col-md-6 mb-4">
-    <%= vertical_form_with(model: @user, method: :put) do |f| %>
-      <div class="card">
-        <div class="card-body">
+    <div class="card">
+      <div class="card-body">
+        <%= vertical_form_with(model: @user, method: :put, id: 'js-user-form') do |f| %>
 
           <div class="mb-3">
             <%= f.label :username, class: 'form-label' %>
@@ -34,12 +42,8 @@
                 data-bs-title="The user will be forced to setup and use 2FA to sign in."><i class="bi bi-question-circle" aria-label="helper text"></i>
             <% end %>
           </div>
-
-          <div class="actions">
-            <%= f.submit 'Update', class: 'btn btn-primary' %>
-          </div>
-        </div>
+        <% end %>
       </div>
-    <% end %>
+    </div>
   </div>
 </div>
