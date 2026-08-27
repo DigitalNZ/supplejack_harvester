@@ -1,0 +1,23 @@
+<%# One setting of the run, read back in the field the form asks for it in: its label, the
+    tooltip saying what it meant, and the one answer this run gave, in a select holding
+    that answer alone. The details page asks for this four times over; written out at each
+    of them it was the same twenty lines four times.
+
+    locals:
+      id:      ties the label to its select, and is what a spec looks the field up by
+      label:   the setting's name, spelled the way the form spells it
+      value:   this run's answer
+      tooltip: what the setting meant for the run, or nil where the form offers no help.
+               Squished here so a caller can wrap a long one across source lines without
+               the indentation reaching the tooltip. %>
+<%= label_tag id, class: 'form-label' do %>
+  <%= label %>
+
+  <% if tooltip.present? %>
+    <span data-bs-toggle='tooltip' data-bs-title='<%= tooltip.squish %>'>
+      <i class='bi bi-question-circle' aria-label='helper text'></i>
+    </span>
+  <% end %>
+<% end %>
+
+<%= select_tag nil, options_for_select([value]), class: 'form-select mb-3', id:, name: nil %>

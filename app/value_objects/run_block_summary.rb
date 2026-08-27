@@ -40,6 +40,23 @@ class RunBlockSummary
 
   def input = @pipeline_job.input_for(@definition)
 
+  # The page limit as the modal's own Pages field carries it: the number this block was
+  # given, and nothing at all for a block that did not run.
+  def pages_field
+    pages if ran?
+  end
+
+  # An empty field reads as every page against the modal's placeholder, which is the answer
+  # for a block that ran without a limit and a lie for one that never ran - so the
+  # placeholder goes with it, leaving the field saying nothing rather than saying "all".
+  def pages_placeholder
+    'All pages' if ran?
+  end
+
+  # Position 0 has nothing before it to take an input from, so running fresh there is an
+  # extraction; anywhere else it is whatever the preceding block fed forward.
+  def fresh_input_label = position.zero? ? 'Fresh extraction' : 'Output of previous block'
+
   # The extraction whose documents this block transformed rather than extracting afresh.
   # Nil once that job has been purged, which is a thing the page has to be able to say.
   def extraction_job
@@ -68,11 +85,13 @@ class RunBlockSummary
   # a run can be pointed at an extraction some other block made.
   def extraction_job_definition
     job = extraction_job
-    return if job.nil?
+    return unless job
+
+    definition = job.extraction_definition
 
     job.harvest_job&.harvest_definition ||
-      pipeline.harvest_definitions.find_by(extraction_definition: job.extraction_definition) ||
-      job.extraction_definition.harvest_definitions.first
+      pipeline.harvest_definitions.find_by(extraction_definition: definition) ||
+      definition.harvest_definitions.first
   end
 
   private

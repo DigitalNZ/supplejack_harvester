@@ -47,9 +47,9 @@
           </div>
 
           <div class='col-3'>
-            <%= number_field_tag nil, job_block_pages(summary),
+            <%= number_field_tag nil, summary.pages_field,
                                  autocomplete: 'off',
-                                 placeholder: job_block_pages_placeholder(summary),
+                                 placeholder: summary.pages_placeholder,
                                  class: 'form-control form-control-sm',
                                  name: nil, id: nil %>
           </div>

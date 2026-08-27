@@ -36,62 +36,41 @@
         <%= render 'pipeline_jobs/job_blocks', pipeline_job: %>
       </div>
 
-      <%= label_tag 'job-destination', class: 'form-label' do %>
-        Destination
+      <%= render 'pipeline_jobs/job_setting',
+                 id: 'job-destination',
+                 label: 'Destination',
+                 value: pipeline_job.destination.name,
+                 tooltip: 'The location this run sent its transformed data to.' %>
 
-        <span
-          data-bs-toggle="tooltip"
-          data-bs-title="The location this run sent its transformed data to."><i class="bi bi-question-circle" aria-label="helper text"></i>
-        </span>
+      <%# The three settings a run answers yes or no to, in the order both forms ask them.
+          Written out one at a time they were the same render three times over with a
+          different word in it, which is all the difference between them. %>
+      <% [
+           ['job-delete-previous-records', 'Delete Previous Records',
+            pipeline_job.delete_previous_records,
+            'Whether this run deleted every previous record associated with this Source ID.'],
+           ['job-run-enrichment-concurrently', 'Run Enrichments Concurrently',
+            pipeline_job.run_enrichment_concurrently,
+            "Whether this run ran the extractions within an enrichment in parallel. The
+             enrichment's Throttle setting is ignored in that mode."],
+           ['job-skip-previously-enriched', 'Skip Previously Enriched',
+            pipeline_job.skip_previously_enriched,
+            'Whether this run applied enrichments only to records that had not previously
+             received them.']
+         ].each do |id, label, setting, tooltip| %>
+        <%= render 'pipeline_jobs/job_setting',
+                   id:, label:, tooltip:, value: setting ? 'Yes' : 'No' %>
       <% end %>
-
-      <%= select_tag nil, options_for_select([pipeline_job.destination.name]),
-                     class: 'form-select mb-3', id: 'job-destination', name: nil %>
-
-      <%= label_tag 'job-delete-previous-records', class: 'form-label' do %>
-        Delete Previous Records
-
-        <span
-          data-bs-toggle="tooltip"
-          data-bs-title="Whether this run deleted every previous record associated with this Source ID."><i class="bi bi-question-circle" aria-label="helper text"></i>
-        </span>
-      <% end %>
-
-      <%= select_tag nil, options_for_select([job_yes_no(pipeline_job.delete_previous_records)]),
-                     class: 'form-select mb-3', id: 'job-delete-previous-records', name: nil %>
-
-      <%= label_tag 'job-run-enrichment-concurrently', class: 'form-label' do %>
-        Run Enrichments Concurrently
-
-        <span
-          data-bs-toggle="tooltip"
-          data-bs-title="Whether this run ran the extractions within an enrichment in parallel. The enrichment's Throttle setting is ignored in that mode."><i class="bi bi-question-circle" aria-label="helper text"></i>
-        </span>
-      <% end %>
-
-      <%= select_tag nil, options_for_select([job_yes_no(pipeline_job.run_enrichment_concurrently)]),
-                     class: 'form-select mb-3', id: 'job-run-enrichment-concurrently', name: nil %>
-
-      <%= label_tag 'job-skip-previously-enriched', class: 'form-label' do %>
-        Skip Previously Enriched
-
-        <span
-          data-bs-toggle="tooltip"
-          data-bs-title="Whether this run applied enrichments only to records that had not previously received them."><i class="bi bi-question-circle" aria-label="helper text"></i>
-        </span>
-      <% end %>
-
-      <%= select_tag nil, options_for_select([job_yes_no(pipeline_job.skip_previously_enriched)]),
-                     class: 'form-select mb-3', id: 'job-skip-previously-enriched', name: nil %>
 
       <%# Both forms hide this field when the deployment has no priorities configured. A run
           that was given one is still worth reading back, so a job that has one says so
           whether or not the deployment still offers the choice. %>
       <% if ENV['JOB_PRIORITIES'].present? || pipeline_job.job_priority.present? %>
-        <%= label_tag 'job-priority', 'Job Priority', class: 'form-label' %>
-
-        <%= select_tag nil, options_for_select([job_priority_label(pipeline_job)]),
-                       class: 'form-select mb-3', id: 'job-priority', name: nil %>
+        <%= render 'pipeline_jobs/job_setting',
+                   id: 'job-priority',
+                   label: 'Job Priority',
+                   value: job_priority_label(pipeline_job),
+                   tooltip: nil %>
       <% end %>
     </fieldset>
   </div>
