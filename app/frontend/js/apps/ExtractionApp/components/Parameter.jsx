@@ -269,7 +269,10 @@ const Parameter = ({ id }) => {
                   // The tooltip goes around the whole dropdown, not around the
                   // button: Tooltip renders a span, and Bootstrap opens the menu it
                   // finds as the toggle's next sibling.
-                  <Tooltip data-bs-title="How the value is read when the request is sent. A JSON value is what a nested payload is made of.">
+                  <Tooltip
+                    data-bs-title="How the value is read when the request is sent. A JSON value is what a nested payload is made of."
+                    data-bs-placement="left"
+                  >
                     <div className="dropdown">
                       <button
                         className="btn btn-outline-primary dropdown-toggle"
