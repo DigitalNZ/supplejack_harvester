@@ -1,5 +1,5 @@
-<%# The tabs across a pipeline's four pages. Which of them is current is the only thing that
-    differs between the four, so it is the only thing a page passes. %>
+<%# The tabs across a pipeline's four pages. Rendered through the pipeline_tabs helper,
+    which is what puts them in the header. %>
 <% tabs = [
      [:pipeline, 'Pipeline', pipeline_path(pipeline)],
      [:schedules, "Schedules (#{pipeline.schedules.count})", pipeline_schedules_path(pipeline)],

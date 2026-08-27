@@ -1,10 +1,8 @@
 <% breadcrumb :automation, @automation %>
 
-<%= content_for :heading do %>
-  <h1><%= @automation.name %></h1>
-<% end %>
+<% page_heading @automation.name %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-automation-modal">
     <i class="bi bi-trash"></i> Delete Automation
   </button>

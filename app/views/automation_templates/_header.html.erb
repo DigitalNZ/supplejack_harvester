@@ -1,8 +1,6 @@
 <%= content_for(:title) { automation_template.name } %>
 
-<%= content_for :heading do %>
-  <h1><%= automation_template.name %></h1>
-
+<% page_heading automation_template.name do %>
   <%= render 'shared/description_editor', model: automation_template,
                                           url: automation_template_path(automation_template) %>
 
@@ -24,7 +22,7 @@
   <% end %>
 <% end %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <%= link_to 'Edit', edit_automation_template_path(automation_template),
               class: 'btn btn-outline-primary' %>
 
@@ -39,7 +37,7 @@
   </button>
 <% end %>
 
-<%= content_for :nav_tabs do %>
+<% page_tabs do %>
   <ul class="nav nav-tabs">
     <li class="nav-item">
       <a class="nav-link active" id="details-tab" data-bs-toggle="tab" href="#details" role="tab">Details</a>

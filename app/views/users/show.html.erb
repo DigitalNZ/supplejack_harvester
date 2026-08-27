@@ -1,11 +1,9 @@
 <%= content_for(:title) { @user.username } %>
 <% breadcrumb :user, @user %>
 
-<%= content_for :heading do %>
-  <h1><%= @user.username %></h1>
-<% end %>
+<% page_heading @user.username %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <%= link_to edit_user_path(@user), class: 'btn btn-primary' do %>
     <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit user
   <% end %>

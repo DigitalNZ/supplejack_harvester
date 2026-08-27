@@ -1,9 +1,7 @@
 <%= content_for(:title) { "Edit #{@user.email}" } %>
 <% breadcrumb :edit_user, @user %>
 
-<%= content_for :heading do %>
-  <h1>Edit <%= @user.email %></h1>
-<% end %>
+<% page_heading "Edit #{@user.email}" %>
 
 <div class="row">
   <div class="col-sm-6 col-md-6 mb-4">

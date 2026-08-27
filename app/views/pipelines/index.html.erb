@@ -1,17 +1,15 @@
 <%= content_for(:title) { 'Pipelines' } %>
 <% breadcrumb :pipelines %>
 
-<%= content_for :heading do %>
-  <h1>Pipelines</h1>
-<% end %>
+<% page_heading 'Pipelines' %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
     + Create new pipeline
   </button>
 <% end %>
 
-<%= content_for :nav_tabs do %>
+<% page_tabs do %>
   <ul class="nav nav-tabs">
 
     <li class='nav-item'>

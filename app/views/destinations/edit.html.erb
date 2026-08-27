@@ -1,11 +1,9 @@
 <%= content_for(:title) { "Editing #{@destination.name_in_database}" } %>
 <% breadcrumb :edit_destination, @destination %>
 
-<%= content_for :heading do %>
-  <h1><%= @destination.name_in_database %></h1>
-<% end %>
+<% page_heading @destination.name_in_database %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <button type="button" class="btn btn-outline-primary" id="js-test-destination-button">
     Test
   </button>

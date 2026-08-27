@@ -1,11 +1,9 @@
 <%= content_for(:title) { 'Edit Schedule' } %>
 <% breadcrumb :schedule, @schedule %>
 
-<%= content_for :heading do %>
-  <h1><%= @schedule.subject.name_in_database %></h1>
-<% end %>
+<% page_heading @schedule.subject.name_in_database %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <button type="submit" class="btn btn-primary" data-form="js-schedule-form">
     Update
   </button>

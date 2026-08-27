@@ -1,13 +1,9 @@
 <%= content_for(:title) { @schema.name_in_database } %>
 <% breadcrumb :schema, @schema %>
 
-<%= content_for :heading do %>
-  <h1><%= @schema.name_in_database %></h1>
+<% page_heading @schema.name_in_database, @schema.description %>
 
-  <p class="text-muted mb-0"><%= @schema.description %></p>
-<% end %>
-
-<%= content_for :actions do %>
+<% page_actions do %>
   <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
     Edit Schema
   </button>

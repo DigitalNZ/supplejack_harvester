@@ -1,11 +1,9 @@
 <%= content_for(:title) { 'Users' } %>
 <% breadcrumb :users %>
 
-<%= content_for :heading do %>
-  <h1>Users</h1>
-<% end %>
+<% page_heading 'Users' %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <button
     type="button"
     class="btn btn-primary"

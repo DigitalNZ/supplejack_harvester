@@ -27,9 +27,10 @@
     <%= render 'shared/nav' %>
 
     <%# A page fills the header in slots rather than laying itself out: what the page is about on
-        the left, what can be done to it on the right, its tabs under both. The arranging is all
-        Bootstrap's, so .header holds only the band, the h1's spacing, and the pull that sits the
-        tabs on its edge. There is no other way to put something in the header. %>
+        the left, what can be done to it on the right, its tabs under both. A page fills them
+        with page_heading, page_actions and page_tabs, and there is no other way to put
+        something in the header. The arranging is all Bootstrap's, so .header holds only the
+        band, the h1's spacing, and the pull that sits the tabs on its edge. %>
     <header class='header'>
       <div class='container'>
         <%= breadcrumbs style: :bootstrap5 %>

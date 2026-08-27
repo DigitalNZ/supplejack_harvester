@@ -1,11 +1,9 @@
 <%= content_for(:title) { 'Schedules' } %>
 <% breadcrumb :schedules %>
 
-<%= content_for :heading do %>
-  <h1>Schedules</h1>
-<% end %>
+<% page_heading 'Schedules' %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <%= link_to new_schedule_path, class: 'btn btn-primary' do %>
     <i class="bi bi-plus" aria-hidden="true"></i> Add new schedule
   <% end %>

@@ -1,11 +1,9 @@
 <%= content_for(:title) { 'Jobs' } %>
 <% breadcrumb :extraction_jobs, @pipeline, @harvest_definition, @extraction_definition %>
 
-<%= content_for :heading do %>
-  <h1><%= @extraction_definition.name %></h1>
-<% end %>
+<% page_heading @extraction_definition.name %>
 
-<%= content_for :nav_tabs do %>
+<% page_tabs do %>
   <ul class="nav nav-tabs">
     <li class='nav-item'>
       <%= link_to(

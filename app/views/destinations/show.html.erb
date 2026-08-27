@@ -1,11 +1,9 @@
 <%= content_for(:title) { @destination.name_in_database } %>
 <% breadcrumb :destination, @destination %>
 
-<%= content_for :heading do %>
-  <h1><%= @destination.name_in_database %></h1>
-<% end %>
+<% page_heading @destination.name_in_database %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <%= link_to 'Edit destination', edit_destination_path(@destination), class: 'btn btn-outline-primary' %>
   <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">Delete</button>
 <% end %>

@@ -1,15 +1,14 @@
 <%= content_for(:title) { "#{@extraction_definition.name} job" } %>
 <% breadcrumb :extraction_job, @pipeline, @harvest_definition, @extraction_job %>
 
-<%= content_for :heading do %>
-  <h1>Extracted Data</h1>
+<% page_heading 'Extracted Data' do %>
   <p class="text-muted mb-0">
     <span class="me-1"><%= @extraction_job.extraction_definition.name %></span>|
     <span class="ms-1"><strong><%= @extraction_job.created_at.to_fs(:verbose) %></strong></span>
   </p>
 <% end %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <% unless @extraction_job.purged? %>
     <% retention_path = pipeline_harvest_definition_extraction_definition_extraction_job_retention_path(
          @pipeline, @harvest_definition, @extraction_definition, @extraction_job

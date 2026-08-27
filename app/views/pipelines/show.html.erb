@@ -3,7 +3,7 @@
 
 <%# What the pipeline is: its name, which is edited in place, and the description and tags
     that belong to it. %>
-<%= content_for :heading do %>
+<% page_heading do %>
   <%= render layout: 'shared/inline_editable_element', locals:
     {
       id: 'pipeline-name',
@@ -20,7 +20,7 @@
 <% end %>
 
 <%# What can be done to it. %>
-<%= content_for :actions do %>
+<% page_actions do %>
   <%= render partial: 'pipelines/run_pipeline' %>
 
   <%= render partial: 'pipelines/clone_pipeline' %>
@@ -34,9 +34,7 @@
   </button>
 <% end %>
 
-<%= content_for :nav_tabs do %>
-  <%= render 'pipelines/tabs', pipeline: @pipeline, active: :pipeline %>
-<% end %>
+<% pipeline_tabs @pipeline, active: :pipeline %>
 
 <% if @pipeline.harvest_definitions.any? %>
 

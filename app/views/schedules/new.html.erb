@@ -1,11 +1,9 @@
 <%= content_for(:title) { 'New Schedule' } %>
 <% breadcrumb :new_schedule %>
 
-<%= content_for :heading do %>
-  <h1>Create new schedule</h1>
-<% end %>
+<% page_heading 'Create new schedule' %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <button type="submit" class="btn btn-primary" data-form="js-schedule-form">
     Save schedule
   </button>

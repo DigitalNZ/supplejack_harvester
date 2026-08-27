@@ -1,11 +1,9 @@
 <%= content_for(:title) { 'Destinations' } %>
 <% breadcrumb :destinations %>
 
-<%= content_for :heading do %>
-  <h1>Destinations</h1>
-<% end %>
+<% page_heading 'Destinations' %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <%= link_to new_destination_path, class: 'btn btn-primary' do %>
     <i class="bi bi-plus" aria-hidden="true"></i> Add new destination
   <% end %>

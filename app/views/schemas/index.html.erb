@@ -1,11 +1,9 @@
 <%= content_for(:title) { 'Schemas' } %>
 <% breadcrumb :schemas %>
 
-<%= content_for :heading do %>
-  <h1>Schemas</h1>
-<% end %>
+<% page_heading 'Schemas' %>
 
-<%= content_for :actions do %>
+<% page_actions do %>
   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
     <i class="bi bi-plus" aria-hidden="true"></i>Create new schema
   </button>

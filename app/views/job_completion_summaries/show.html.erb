@@ -1,9 +1,7 @@
 <%= content_for(:title) { "Job Completion Summary - #{@job_completion_summary.pipeline_name}" } %>
 <% breadcrumb :job_completion_summary, @job_completion_summary %>
 
-<%= content_for :heading do %>
-  <h1>Job Completion Summary Details</h1>
-<% end %>
+<% page_heading 'Job Completion Summary Details' %>
 
 <div class="row">
   <%= render 'details' %>
