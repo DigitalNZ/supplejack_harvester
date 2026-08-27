@@ -20,6 +20,6 @@ module JobFiltersHelper
   end
 
   def dest_opts
-    [['All destinations', '']] + Destination.distinct.pluck(:name).compact
+    [['All destinations', '']] + Destination.distinct.order(:name).pluck(:name).compact
   end
 end

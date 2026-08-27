@@ -18,7 +18,8 @@
 
       <%= form.select :schedulable_id, grouped_options_for_select(@schedulable_items),
                       { prompt: 'Please select a process to schedule...' },
-                      { class: 'form-select mb-3', id: 'js-schedulable-select' } %>
+                      { class: 'form-select mb-3 js-searchable-select', id: 'js-schedulable-select',
+                        data: { placeholder: 'Search for a pipeline or automation' } } %>
 
       <%= form.label :frequency, 'Schedule frequency', class: 'form-label' %>
 

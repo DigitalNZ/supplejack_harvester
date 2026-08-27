@@ -51,10 +51,10 @@ class SchedulesController < ApplicationController
 
   def assign_scheduleable_items
     @schedulable_items = [
-      ['Automations', AutomationTemplate.all.sort_by(&:name).map do |at|
+      ['Automations', AutomationTemplate.order(:name).map do |at|
         automation_item(at.name, at.id)
       end],
-      ['Pipelines', Pipeline.all.sort_by(&:name).map do |p|
+      ['Pipelines', Pipeline.order(:name).map do |p|
         pipeline_item(p.name, p.id)
       end]
     ]
@@ -73,7 +73,7 @@ class SchedulesController < ApplicationController
   end
 
   def find_destinations
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def schedule_params
