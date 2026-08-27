@@ -35,9 +35,12 @@ class PipelinesController < ApplicationController
     end
   end
 
+  # Back where the edit was made rather than to the pipeline itself: the name, description
+  # and tags are edited from any of the pipeline's tabs now, and an edit made on one of them
+  # should leave you looking at it.
   def update
     if @pipeline.update(pipeline_params)
-      redirect_to pipeline_path(@pipeline)
+      redirect_back_or_to(pipeline_path(@pipeline))
     else
       flash.alert = t('.failure')
       render :show

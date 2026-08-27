@@ -18,6 +18,40 @@ RSpec.describe 'AutomationTemplates' do
       expect(response).to have_http_status :ok
       expect(response.body).to include CGI.escapeHTML(automation_template.name)
     end
+
+    # The same card of controls the pipelines and jobs lists are narrowed from - see
+    # shared/_filter_bar, which all three render.
+    it 'is narrowed from the filter bar every list wears' do
+      get automation_templates_path
+
+      expect(response.body).to include %(<form class="card bg-light mb-3" action="/automation_templates")
+    end
+
+    it 'says how much of the list a search left' do
+      create(:automation_template, name: 'Not the one')
+
+      get automation_templates_path(search: automation_template.name)
+
+      expect(response.body).to include '1 of 2 templates match'
+    end
+
+    it 'searches by name' do
+      other = create(:automation_template, name: 'Not the one')
+
+      get automation_templates_path(search: automation_template.name)
+
+      expect(response.body).to include CGI.escapeHTML(automation_template.name)
+      expect(response.body).not_to include CGI.escapeHTML(other.name)
+    end
+
+    # A pipeline's templates are the few it has, so there is nothing there to narrow.
+    it "leaves the filter bar off a pipeline's own templates" do
+      pipeline = create(:pipeline)
+
+      get pipeline_automation_templates_path(pipeline)
+
+      expect(response.body).not_to include 'card bg-light mb-3'
+    end
   end
 
   describe 'GET /automation_templates/:id' do

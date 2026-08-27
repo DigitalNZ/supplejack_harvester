@@ -58,7 +58,7 @@ RSpec.describe 'PipelineJobs' do
 
       get pipeline_pipeline_job_path(pipeline, pipeline_job)
 
-      expect(response.body).to include 'View transformed data'
+      expect(response.body).to include 'View pre-processed data'
       expect(response.body).to include pipeline_harvest_definition_preprocess_output_path(
         pipeline, preprocess_definition, pipeline_job
       )
@@ -70,7 +70,7 @@ RSpec.describe 'PipelineJobs' do
       get pipeline_pipeline_job_path(pipeline, pipeline_job)
 
       expect(response.body).to include 'View extracted data'
-      expect(response.body).not_to include 'View transformed data'
+      expect(response.body).not_to include 'View pre-processed data'
     end
   end
 

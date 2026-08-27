@@ -3,13 +3,8 @@
 
 <% page_heading 'Create new schedule' %>
 
-<% page_actions do %>
-  <button type="submit" class="btn btn-primary" data-form="js-schedule-form">
-    Save schedule
-  </button>
-
-  <%= link_to 'Cancel', schedules_path, class: 'btn btn-outline-danger' %>
-<% end %>
+<% form_page_actions form_id: 'js-schedule-form', submit_text: 'Save schedule',
+                     cancel_path: schedules_path %>
 
 <div class='mb-4'></div>
 

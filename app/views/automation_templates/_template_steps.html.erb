@@ -42,7 +42,7 @@
             <% last_run_step = last_automation_run&.automation_steps&.find_by(position: index) %>
           </div>
           <% if step.step_type == 'pipeline' %>
-            <small class='text-muted d-block mt-2'>Harvest Definitions:</small>
+            <small class='text-body-secondary d-block mt-2'>Harvest Definitions:</small>
             <% if step.pipeline&.harvest_definitions.present? %>
               <% harvest_defs_to_show = step.harvest_definitions.presence || step.pipeline.harvest_definitions %>
               <% harvest_defs_to_show.each do |hd| %>
@@ -53,30 +53,21 @@
                     (Fragment priority: <%= hd.load_priority %>)
                   </small>
                   <% report = find_harvest_report(last_automation_run, hd, index) %>
-                  <% status = harvest_report_status(report) %>
-                  <small>
-                    <span class="badge <%= status[:badge_class] %>">
-                      <%= status[:status_text] %>
-                    </span>
-                  </small>
+                  <small><%= status_with_icon(report&.status) %></small>
                 </div>
               <% end %>
             <% else %>
               <div class="d-flex align-items-center mb-1">
-                <small class="text-muted">No harvest definitions available</small>
+                <small class="text-body-secondary">No harvest definitions available</small>
               </div>
             <% end %>
           <% elsif step.step_type == 'api_call' %>
-            <small class='text-muted d-block mt-2'>URL:</small>
+            <small class='text-body-secondary d-block mt-2'>URL:</small>
             <div class="d-flex align-items-center justify-content-between mb-1">
               <small class="text-break">
                 <%= step.api_url.truncate(100) %>
               </small>
-              <small>
-                <span class="badge <%= api_response_badge_class(last_run_step&.api_response_report) %> ms-2">
-                  <%= api_response_status_text(last_run_step&.api_response_report) %>
-                </span>
-              </small>
+              <small class="ms-2"><%= status_with_icon(last_run_step&.api_response_report&.status) %></small>
             </div>
           <% end %>
         </div>

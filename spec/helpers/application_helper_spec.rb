@@ -16,7 +16,7 @@ RSpec.describe ApplicationHelper do
       helper.page_heading 'Jobs', 'Global view of pipeline jobs'
 
       expect(helper.content_for(:heading))
-        .to eq '<h1>Jobs</h1><p class="text-muted mb-0">Global view of pipeline jobs</p>'
+        .to eq '<h1>Jobs</h1><p class="text-body-secondary mb-0">Global view of pipeline jobs</p>'
     end
 
     it 'escapes what it is given rather than trusting it as markup' do
@@ -28,7 +28,7 @@ RSpec.describe ApplicationHelper do
     it 'leaves out the subtitle line when the page has nothing to say under the title' do
       helper.page_heading 'Pipelines'
 
-      expect(helper.content_for(:heading)).not_to include 'text-muted'
+      expect(helper.content_for(:heading)).not_to include 'text-body-secondary'
     end
 
     it 'takes a block for a subtitle that is more than words' do

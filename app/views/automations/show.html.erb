@@ -32,7 +32,7 @@
 
               <h6>Status</h6>
               <p>
-                <span class="badge <%= status_badge_class(@automation.status) %>"><%= @automation.status.humanize %></span>
+                <%= status_with_icon(@automation.status) %>
               </p>
 
               <h6>Total Steps</h6>
@@ -96,9 +96,7 @@
                         <% end %>
                       </td>
                       <td>
-                        <span class="badge <%= status_badge_class(step.status) %>">
-                          <%= step.status.present? ? step.status&.humanize : 'Not Started' %>
-                        </span>
+                        <%= status_with_icon(step.status) %>
                       </td>
                       <td>
                         <% if step.step_type == 'pipeline' && step.pipeline_job %>
@@ -123,7 +121,7 @@
                         <td><%= number_with_delimiter(step_data[:metrics][:records_rejected]) %></td>
                         <td><%= number_with_delimiter(step_data[:metrics][:records_deleted]) %></td>
                       <% else %>
-                        <td colspan="5" class="text-center text-muted">
+                        <td colspan="5" class="text-center text-body-secondary">
                           <%= step.step_type == 'api_call' ? 'N/A' : 'No metrics available' %>
                         </td>
                       <% end %>
@@ -186,7 +184,7 @@
         <p>This action cannot be undone.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
         <%= button_to automation_path(@automation), method: :delete, class: 'btn btn-danger' do %>
           <i class="bi bi-trash"></i> Delete Automation
         <% end %>

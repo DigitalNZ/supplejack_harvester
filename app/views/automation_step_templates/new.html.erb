@@ -3,6 +3,9 @@
 
 <% page_heading 'New Step' %>
 
+<% form_page_actions form_id: 'js-automation-step-template-form', submit_text: 'Create step',
+                     cancel_path: automation_template_path(@automation_template) %>
+
 <div class="card">
   <div class="card-body">
     <%= render 'form', automation_step_template: @automation_step_template %>

@@ -31,9 +31,16 @@ class LoadOptions
     posts_to_the_api?
   end
 
-  # Nor is there a request to wait on or a batch to size.
-  def asks_for_request_settings?
+  # Nor is there a response to wait on.
+  def asks_for_read_timeout?
     posts_to_the_api?
+  end
+
+  # Only a request that carries a batch has a size to set, and an enrichment's does not: it
+  # posts the single record it holds the destination's id for, so the size LoadWorker slices
+  # at decides nothing about the request - see Load::Execution#enrichment_request.
+  def asks_for_batch_size?
+    posts_to_the_api? && kinds.exclude?('enrichment')
   end
 
   # Only an enrichment can leave a record partial by not arriving: Load::Execution sends

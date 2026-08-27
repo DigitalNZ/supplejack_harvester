@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_26_130000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_27_120000) do
   create_table "api_response_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "automation_step_id", null: false
     t.string "status", default: "not_started", null: false
@@ -289,7 +289,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_130000) do
     t.bigint "last_edited_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "read_timeout"
+    t.integer "read_timeout", default: 60, null: false
     t.integer "batch_size", default: 100, null: false
     t.index ["last_edited_by_id"], name: "index_load_definitions_on_last_edited_by_id"
     t.index ["name"], name: "index_load_definitions_on_name", unique: true, length: 255

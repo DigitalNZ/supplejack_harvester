@@ -94,9 +94,9 @@ RSpec.describe 'Managing tags', :js do
 
     click_on 'Delete'
 
-    # The header's × carries the same accessible name, so this is the footer's button.
+    # Scoped to the shown modal's footer, the × in its header being the other way out.
     within '.modal.show .modal-footer' do
-      click_on 'Close'
+      click_on 'Cancel'
     end
 
     expect(page).to have_content 'Musuem'

@@ -151,13 +151,16 @@ RSpec.describe Load::Execution do
         expect(Api::Harvester::Record).to have_received(:new).with(destination, read_timeout: 180)
       end
 
-      it 'says nothing about the timeout when the definition does not set one' do
-        harvest_definition.load_definition.update!(read_timeout: nil)
+      # A block loading without a load definition of its own still makes the request, so it waits
+      # what a definition would have started on rather than falling through to nil.
+      it 'waits the minute a definition starts on when the block has no load definition' do
+        harvest_definition.update!(load_definition: nil)
         allow(Api::Harvester::Record).to receive(:new).and_return(api)
 
         described_class.new([record], harvest_job).call
 
-        expect(Api::Harvester::Record).to have_received(:new).with(destination, read_timeout: nil)
+        expect(Api::Harvester::Record).to have_received(:new)
+          .with(destination, read_timeout: LoadDefinition::DEFAULT_READ_TIMEOUT)
       end
     end
 

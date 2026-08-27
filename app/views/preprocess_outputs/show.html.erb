@@ -2,7 +2,7 @@
 <% breadcrumb :preprocess_output, @pipeline, @harvest_definition, @pipeline_job %>
 
 <% page_heading 'Pre-processed Data' do %>
-  <p class="text-muted mb-0">
+  <p class="text-body-secondary mb-0">
     <span class="me-1"><%= @harvest_definition.source_id %></span>|
     <span class="ms-1"><strong>Job #<%= @pipeline_job.id %>, <%= @pipeline_job.created_at.to_fs(:verbose) %></strong></span>
   </p>

@@ -18,10 +18,6 @@ module AutomationTemplatesHelper
     end
   end
 
-  def harvest_report_status(report)
-    report ? active_report_status(report) : default_report_status
-  end
-
   def format_json(json_string)
     return '' if json_string.blank?
 
@@ -30,29 +26,5 @@ module AutomationTemplatesHelper
     rescue StandardError
       json_string
     end
-  end
-
-  def api_response_badge_class(api_response_report)
-    status_badge_class(api_response_report&.status)
-  end
-
-  def api_response_status_text(api_response_report)
-    api_response_report&.status&.humanize || 'Not started'
-  end
-
-  private
-
-  def active_report_status(report)
-    {
-      badge_class: status_badge_class(report.status),
-      status_text: report.status.humanize
-    }
-  end
-
-  def default_report_status
-    {
-      badge_class: 'bg-secondary',
-      status_text: 'Not started'
-    }
   end
 end

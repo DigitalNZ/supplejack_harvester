@@ -1,12 +1,13 @@
 <%= content_for(:title) { @pipeline ? "#{@pipeline.name} - Automation Templates" : 'Automation Templates' } %>
 <% breadcrumb :automation_templates, @pipeline %>
 
-<%# Two pages share this template: the templates of one pipeline, reached from that pipeline's
-    tabs, and every template there is. Each slot says which of the two it is filling. %>
-<% page_heading(@pipeline ? @pipeline.name : 'Automation Templates') do %>
-  <% if @pipeline&.description.present? %>
-    <%= render 'shared/description', description: @pipeline.description %>
-  <% end %>
+<%# Two pages share this template: the templates of one pipeline, reached from that
+    pipeline's tabs, and every template there is. One of them is a tab of a pipeline and
+    wears its heading; the other is a list in its own right. %>
+<% if @pipeline %>
+  <% pipeline_heading @pipeline %>
+<% else %>
+  <% page_heading 'Automation Templates' %>
 <% end %>
 
 <% if @pipeline %>
@@ -19,46 +20,31 @@
   <% end %>
 <% end %>
 
+<%# Only the whole list can be narrowed. A pipeline's templates are already the few it has,
+    and AutomationTemplatesController does not run the search query over them. %>
 <% unless @pipeline %>
-  <%= form_with url: '/automation_templates', method: :get, class: 'row mb-5' do |form| %>
-    <div class="col-auto pe-2">
-      <div class="search">
-        <%= form.text_field(
-              :search,
-              value: params[:search],
-              placeholder: 'Search by name, description, destination',
-              class: 'form-control search__input'
-            ) %>
-        <%= form.label :search, class: 'search__label' do %>
-          <i aria-hidden="true" class="bi bi-search"></i>
-          Search by name, description, destination
-        <% end %>
+  <% summary = list_summary(@automation_templates, AutomationTemplate.count, 'template') %>
 
-        <% if params[:search].present? %>
-          <button type="button" class="btn btn-secondary search__clear" data-clear-field="search">
-            Clear
-            <i aria-hidden="true" class="bi bi-plus"></i>
-          </button>
-        <% end %>
-      </div>
-    </div>
+  <%= render layout: 'shared/filter_bar', locals: { path: automation_templates_path } do |form| %>
+    <%= render 'shared/search_field', form:,
+                                      placeholder: 'Search by name, description, destination, last edited by' %>
 
-    <div class="col ps-0">
-      <button class="btn btn-primary" type="submit">Search</button>
-    </div>
+    <button class="btn btn-primary" type="submit">Search</button>
 
-    <div class="col-auto pe-0">
-      <%= form.label :sort_by, 'Sort by:', class: 'col-form-label' %>
-    </div>
-    <div class="col-auto">
-      <%= form.select(
-            :sort_by,
-            [['Last Edited', 'updated_at'], ['Alphabetical', 'name']],
-            { selected: params[:sort_by] || 'updated_at' },
-            class: 'form-select', 'data-submitting-select': true
-          ) %>
-    </div>
+    <div class="vr"></div>
+
+    <%# No label beside this: its options say what it does, and the select carries that as its
+        accessible name. %>
+    <%= form.select(
+          :sort_by,
+          [['Sort by: Last Edited', 'updated_at'], ['Sort by: Alphabetical', 'name']],
+          { selected: params[:sort_by] || 'updated_at' },
+          class: 'form-select w-auto', 'aria-label': 'Sort by', 'data-submitting-select': true
+        ) %>
   <% end %>
+
+  <%# Templates carry no tags, so this row is only ever the count of what the search left. %>
+  <%= render 'shared/filter_summary', tags: [], path: automation_templates_path, summary: %>
 <% end %>
 
 <%- @automation_templates.each do |template| %>
@@ -74,7 +60,7 @@
       <div>
           <% if template.automations.exists? %>
           <% last_automation = template.automations.order(created_at: :desc).first %>
-          <span class="badge <%= status_badge_class(last_automation.status) %>"><%= last_automation.status.humanize %></span>
+          <%= status_with_icon(last_automation.status) %>
         <% end %>
         <% if template.destination %>
           <span class="badge bg-light text-dark">
@@ -119,7 +105,7 @@
 
             <br>
 
-            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary">Clone and edit new</button>
 
           <% end %>

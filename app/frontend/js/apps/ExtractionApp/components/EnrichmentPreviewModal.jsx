@@ -113,7 +113,7 @@ const EnrichmentPreviewModal = ({
       <Modal.Header>
         <Modal.Title>Enrichment Extraction preview</Modal.Title>
 
-        <div className="float-end">
+        <div className="ms-auto">
           <button
             className="btn btn-outline-primary me-2"
             onClick={() => {

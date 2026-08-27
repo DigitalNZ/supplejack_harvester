@@ -2,7 +2,7 @@
 <% breadcrumb :pipeline_job, @pipeline_job %>
 
 <% page_heading "Job #{@pipeline_job.id}" do %>
-  <p class="text-muted mb-0">
+  <p class="text-body-secondary mb-0">
     <% if @pipeline_job.start_time %>
       <strong><%= "Started #{@pipeline_job.start_time.to_fs(:verbose)}" %></strong>
     <% else %>

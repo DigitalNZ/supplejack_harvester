@@ -1,7 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { selectParameterIdsByRequestAndKind } from "/js/features/ExtractionApp/ParametersSlice";
-import { selectUiAppDetails } from "/js/features/TransformationApp/UiAppDetailsSlice";
 import Parameter from "./Parameter";
 
 const ParameterList = ({ requestId, kind }) => {

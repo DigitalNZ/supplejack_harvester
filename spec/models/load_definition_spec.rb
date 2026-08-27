@@ -127,52 +127,35 @@ RSpec.describe LoadDefinition do
       end
     end
 
-    describe '#read_timeout_options' do
-      # HTTP_READ_TIMEOUT sets it, and the form reads it back from Faraday rather than from ENV,
-      # so this is the value a request would actually be given.
-      let(:default) { described_class.default_read_timeout }
-      let(:load_definition) { build(:load_definition, pipeline:, read_timeout: nil) }
-
+    describe '.read_timeout_options' do
       it 'names the choices in plain English rather than in seconds' do
-        expect(load_definition.read_timeout_options).to include(['2 minutes', 120])
+        expect(described_class.read_timeout_options).to include(['2 minutes', 120])
       end
 
-      it 'says which wait leaving it unset stands for, rather than only that there is one' do
-        expect(load_definition.read_timeout_options.first)
-          .to eq ["Default (#{described_class.read_timeout_label(default)})", nil]
-      end
-
-      it 'does not offer the same wait twice by naming the default among the choices' do
-        expect(load_definition.read_timeout_options.map(&:last)).not_to include default
-      end
-
-      it 'describes a default the switch does not name in seconds' do
-        allow(described_class).to receive(:default_read_timeout).and_return(90)
-
-        expect(load_definition.read_timeout_options.first).to eq ['Default (90 seconds)', nil]
-      end
-
-      it 'offers every choice when the default is not one of them' do
-        allow(described_class).to receive(:default_read_timeout).and_return(90)
-
-        expect(load_definition.read_timeout_options.map(&:last)).to eq [nil, 30, 60, 120, 180]
-      end
-
-      # Otherwise opening the form would quietly turn a pinned timeout into one that follows
-      # the default, because nothing in the list would match what is stored.
-      it 'keeps the choice equal to the default when this definition is pinned to it' do
-        load_definition.read_timeout = default
-
-        expect(load_definition.read_timeout_options.map(&:last)).to include default
+      # Every entry is a wait: there is no entry standing for a default the form does not name,
+      # which is what the helper text is for.
+      it 'offers the waits and nothing else' do
+        expect(described_class.read_timeout_options.map(&:last)).to eq [30, 60, 120, 180]
       end
     end
 
-    it 'leaves the app-wide default standing when it is not set' do
-      expect(build(:load_definition, pipeline:, read_timeout: nil)).to be_valid
+    it 'names the wait a definition starts on for the helper text to quote' do
+      expect(described_class.default_read_timeout_label).to eq '1 minute'
+    end
+
+    # A minute is what every load waited before the column existed, so a definition that says
+    # nothing about it keeps waiting exactly that.
+    it 'starts on a minute' do
+      expect(create(:load_definition, pipeline:).read_timeout).to eq LoadDefinition::DEFAULT_READ_TIMEOUT
     end
 
     it 'refuses a timeout that is not one of the offered choices' do
       expect(build(:load_definition, pipeline:, read_timeout: 45)).not_to be_valid
+    end
+
+    # The column is not nullable, so nothing can ask for the wait to be left unsaid.
+    it 'refuses a definition with no timeout at all' do
+      expect(build(:load_definition, pipeline:, read_timeout: nil)).not_to be_valid
     end
 
     it 'refuses a batch that would slice into nothing' do

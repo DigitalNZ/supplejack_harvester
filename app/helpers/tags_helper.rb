@@ -31,7 +31,7 @@ module TagsHelper
 
     if rest.any?
       labels << content_tag(:span, "+#{rest.size}",
-                            class: 'small text-muted',
+                            class: 'small text-body-secondary',
                             title: rest.map(&:name).join(', '))
     end
 

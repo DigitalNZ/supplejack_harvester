@@ -3,23 +3,6 @@
 module JobsHelper
   include JobReportsHelper
 
-  STATUS_TO_TEXT = {
-    'queued' => 'Waiting in queue...',
-    'running' => 'Running...',
-    'errored' => 'An error occured',
-    'cancelled' => 'Cancelled',
-    'completed' => 'Completed'
-  }.freeze
-
-  # Returns the human readable text for the status of a given job
-  #
-  # @return String
-  def job_status_text(job)
-    return "Running #{job.kind} job..." if job.running? && job.instance_of?(ExtractionJob)
-
-    STATUS_TO_TEXT[job.status]
-  end
-
   def job_start_time(job)
     job.start_time&.to_fs(:light) || '-'
   end
@@ -59,30 +42,6 @@ module JobsHelper
     return "#{minutes}m #{seconds}s" if minutes.positive?
 
     "#{seconds}s"
-  end
-
-  def job_status_badge(report, job)
-    status_badge(report&.status || job.status)
-  end
-
-  def status_badge(status)
-    tag.span(class: job_badge_classes(status)) do
-      status&.capitalize
-    end
-  end
-
-  def job_badge_classes(status)
-    class_names(
-      'badge',
-      'bg-primary': status == 'completed',
-      'bg-secondary': %w[running queued cancelled].include?(status)
-    )
-  end
-
-  def job_status_label(report, job)
-    return job.cancelled? ? 'Cancelled' : 'Waiting' unless report
-
-    report.status.capitalize
   end
 
   def job_launched_by_label(pipeline_job)

@@ -3,6 +3,8 @@
 
 <% page_heading 'Edit Automation Template' %>
 
+<% form_page_actions form_id: 'js-automation-template-form', cancel_path: automation_templates_path %>
+
 <div class="card">
   <div class="card-body">
     <%= render 'form', automation_template: @automation_template %>

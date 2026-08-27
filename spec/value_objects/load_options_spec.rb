@@ -38,16 +38,32 @@ RSpec.describe LoadOptions do
     end
   end
 
-  describe '#asks_for_request_settings?' do
-    it 'asks a block that posts to the API, which is what there is a request to size' do
-      expect(options_for(:harvest).asks_for_request_settings?).to be true
+  describe '#asks_for_read_timeout?' do
+    it 'asks every block that posts to the API, which is what there is a response to wait for' do
+      expect(options_for(:harvest).asks_for_read_timeout?).to be true
+      expect(options_for(:enrichment).asks_for_read_timeout?).to be true
     end
 
     it 'does not ask a pre-processing block, which writes a file and posts nothing' do
-      expect(options_for(:preprocess).asks_for_request_settings?).to be false
+      expect(options_for(:preprocess).asks_for_read_timeout?).to be false
     end
   end
 
+  describe '#asks_for_batch_size?' do
+    it 'asks a block whose request carries a batch of records' do
+      expect(options_for(:harvest).asks_for_batch_size?).to be true
+    end
+
+    # Load::Execution#enrichment_request posts the one record it holds the destination's id for,
+    # so the number would be a setting that changes nothing.
+    it 'does not ask an enrichment, which posts one record however the batch is sliced' do
+      expect(options_for(:enrichment).asks_for_batch_size?).to be false
+    end
+
+    it 'does not ask a pre-processing block, which writes a file and posts nothing' do
+      expect(options_for(:preprocess).asks_for_batch_size?).to be false
+    end
+  end
 
   describe '#asks_for_required_fragment?' do
     it 'asks an enrichment, the only kind that can leave a record partial by not arriving' do

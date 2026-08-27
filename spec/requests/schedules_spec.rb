@@ -17,6 +17,16 @@ RSpec.describe "Schedules", type: :request do
 
       expect(response).to have_http_status :ok
     end
+
+    it 'returns a successful response when a scheduled run has a report that never started' do
+      schedule = create(:schedule, pipeline:, destination:, harvest_definitions_to_run:)
+      pipeline_job = create(:pipeline_job, pipeline:, destination:, schedule:)
+      create(:harvest_report, pipeline_job:, harvest_job: create(:harvest_job, pipeline_job:))
+
+      get schedules_path
+
+      expect(response).to have_http_status :ok
+    end
   end
 
   describe "GET /new" do

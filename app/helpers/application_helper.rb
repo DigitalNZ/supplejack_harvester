@@ -14,7 +14,7 @@ module ApplicationHelper
     content_for :heading do
       safe_join([
         (tag.h1(title) if title),
-        (tag.p(subtitle, class: 'text-muted mb-0') if subtitle),
+        (tag.p(subtitle, class: 'text-body-secondary mb-0') if subtitle),
         (capture(&block) if block)
       ].compact)
     end
@@ -24,6 +24,26 @@ module ApplicationHelper
   # buttons are spaced by the header, so none of them carries a margin of its own.
   def page_actions(&)
     content_for(:actions) { capture(&) }
+  end
+
+  # The header of a page that is one form: what else can be done to what it shows, a way out
+  # of it, and the button that submits it. Every such page wants the same three in the same
+  # order, and had grown its own copy of them.
+  #
+  # The submit button sits in the header rather than at the foot of the form, and the form
+  # attribute is what still makes it the form's - a plain button outside a form belongs to
+  # no form at all. That association is what a browser needs to submit on Enter: a form with
+  # no submit button of its own and more than one field in it does nothing when Enter is
+  # pressed, which is every form on this pattern. Anything else the page can do goes in the
+  # block, ahead of the way out.
+  def form_page_actions(form_id:, submit_text: 'Update', cancel_path: nil, &extra)
+    page_actions do
+      safe_join([
+        (capture(&extra) if extra),
+        (link_to('Cancel', cancel_path, class: 'btn btn-outline-secondary') if cancel_path),
+        tag.button(submit_text, type: 'submit', class: 'btn btn-primary', form: form_id)
+      ].compact)
+    end
   end
 
   # The slot under both: the tabs of the thing the page is one page of.
@@ -58,32 +78,5 @@ module ApplicationHelper
     return if resource&.last_edited_by.nil?
 
     "Last edited by #{resource.last_edited_by.username}"
-  end
-
-  # Map of status to CSS class names
-  STATUS_CLASS_MAPPING = {
-    'completed' => 'status-completed',
-    'running' => 'status-running',
-    'errored' => 'status-errored',
-    'queued' => 'status-queued'
-  }.freeze
-
-  # Returns the appropriate CSS class based on step status
-  def step_status_class(status)
-    STATUS_CLASS_MAPPING[status] || 'status-not_started'
-  end
-
-  # Map of status to Bootstrap badge classes
-  BADGE_CLASS_MAPPING = {
-    'completed' => 'bg-success',
-    'failed' => 'bg-danger',
-    'running' => 'bg-primary',
-    'queued' => 'bg-warning',
-    'not_started' => 'bg-secondary'
-  }.freeze
-
-  # Returns the appropriate Bootstrap badge class based on automation status
-  def status_badge_class(status)
-    BADGE_CLASS_MAPPING[status] || 'bg-secondary'
   end
 end

@@ -60,14 +60,15 @@
 
   <%# How the request is made rather than what it carries. The destination writes a batch one
       record at a time, so how long it takes tracks how much is sent: a source whose records are
-      large can either be given longer or sent less at once. %>
-  <% if load_options.asks_for_request_settings? %>
+      large can either be given longer or sent less at once. Which of the two a block gets asked
+      is LoadOptions' answer - an enrichment posts one record whatever the batch is sliced at. %>
+  <% if load_options.asks_for_batch_size? %>
     <div class="col-4">
-      <%= form.label :batch_size, 'Records per request', class: 'form-label' do %>
+      <%= form.label :batch_size, class: 'form-label' do %>
         Records per request
         <span
           data-bs-toggle="tooltip"
-          data-bs-title="How many records go to the destination in one request. The destination writes them one at a time, so fewer per request means each one is answered sooner. Lower this before raising the timeout."><i class="bi bi-question-circle" aria-label="helper text"></i>
+          data-bs-title="How many records go to the destination in one request, <%= LoadDefinition::DEFAULT_BATCH_SIZE %> by default. The destination writes them one at a time, so fewer per request means each one is answered sooner. Lower this before raising the timeout."><i class="bi bi-question-circle" aria-label="helper text"></i>
         </span>
       <% end %>
     </div>
@@ -76,22 +77,26 @@
       <%= form.number_field :batch_size, class: 'form-control', min: 1,
                                          max: LoadDefinition::DEFAULT_BATCH_SIZE %>
     </div>
+  <% end %>
+
+  <% if load_options.asks_for_read_timeout? %>
+    <% default_wait = LoadDefinition.default_read_timeout_label %>
 
     <div class="col-4">
-      <%= form.label :read_timeout, 'Response timeout', class: 'form-label' do %>
+      <%= form.label :read_timeout, class: 'form-label' do %>
         Response timeout
         <span
           data-bs-toggle="tooltip"
-          data-bs-title="How long to wait for the destination to answer a load. Leave on Default unless this source's batches are genuinely slow to write - a load that gives up while the destination is still writing counts records as lost that were not."><i class="bi bi-question-circle" aria-label="helper text"></i>
+          data-bs-title="How long to wait for the destination to answer a load, <%= default_wait %> by default. Raise it only when this source's batches are genuinely slow to write - a load that gives up while the destination is still writing counts records as lost that were not."><i class="bi bi-question-circle" aria-label="helper text"></i>
         </span>
       <% end %>
     </div>
 
     <div class='col-8'>
-      <%# The default entry carries a nil value, so it is part of the list rather than an
-          include_blank - that way it can say which wait it stands for. %>
+      <%# Every entry names a wait, so a new definition arrives on the one the column defaults
+          to rather than on an entry saying only that there is a default. %>
       <%= form.select :read_timeout,
-                      options_for_select(form.object.read_timeout_options, form.object.read_timeout),
+                      options_for_select(LoadDefinition.read_timeout_options, form.object.read_timeout),
                       {}, class: 'form-select' %>
     </div>
   <% end %>

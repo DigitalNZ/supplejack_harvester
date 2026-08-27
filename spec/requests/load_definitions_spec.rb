@@ -133,18 +133,32 @@ RSpec.describe 'Load Definitions' do
       expect(response.body).to include load_definition.name
     end
 
-    it 'names the wait the default stands for, so it need not be guessed at' do
+    # In the helper text rather than in an option of its own, the select offering waits and
+    # nothing else.
+    it 'names the wait and the batch a definition starts on, so neither need be guessed at' do
       get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
 
-      expect(response.body).to include "Default (#{LoadDefinition.read_timeout_label(
-        LoadDefinition.default_read_timeout
-      )})"
+      expect(response.body).to include "#{LoadDefinition.default_read_timeout_label} by default"
+      expect(response.body).to include "#{LoadDefinition::DEFAULT_BATCH_SIZE} by default"
     end
 
-    it 'does not offer that same wait again further down the list' do
+    # The page holds more than one select, and the attribute order Rails emits is not something
+    # to depend on, so this one is picked out whole and read from there.
+    def read_timeout_select
+      response.body[%r{<select[^>]*name="load_definition\[read_timeout\]".*?</select>}m]
+    end
+
+    it 'offers waits and nothing else, the wait a definition starts on being one of them' do
       get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
 
-      expect(response.body).not_to include %(<option value="#{LoadDefinition.default_read_timeout}">)
+      expect(read_timeout_select).not_to include 'Default'
+    end
+
+    it 'arrives on the wait the definition was created with' do
+      get pipeline_harvest_definition_load_definition_path(pipeline, harvest_definition, load_definition)
+
+      expect(read_timeout_select[/<option[^>]*selected[^>]*>[^<]*/])
+        .to end_with LoadDefinition.default_read_timeout_label
     end
 
     # Only the settings that mean something for what this block can do - see PipelinesHelper.
@@ -178,25 +192,53 @@ RSpec.describe 'Load Definitions' do
       expect(priority_input).to include 'form-control-plaintext'
     end
 
-    it 'asks an enrichment for both' do
-      enrichment = create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'an-enrichment',
-                                               load_definition: create(:load_definition, pipeline:,
-                                                                                         kind: 'enrichment'))
+    # The other two block kinds, each opened on the load definition it was created with. Methods
+    # rather than lets, so that a block only exists in the examples that ask for one.
+    def get_enrichment_form
+      block = create(:harvest_definition, pipeline:, kind: :enrichment, source_id: 'an-enrichment',
+                                          load_definition: create(:load_definition, pipeline:, kind: 'enrichment'))
 
-      get pipeline_harvest_definition_load_definition_path(pipeline, enrichment, enrichment.load_definition)
+      get pipeline_harvest_definition_load_definition_path(pipeline, block, block.load_definition)
+    end
+
+    def get_preprocess_form
+      block = create(:harvest_definition, pipeline:, kind: :preprocess, source_id: 'a-preprocess',
+                                          load_definition: create(:load_definition, pipeline:,
+                                                                                    kind: 'preprocessed_data'))
+
+      get pipeline_harvest_definition_load_definition_path(pipeline, block, block.load_definition)
+    end
+
+    it 'asks an enrichment for both' do
+      get_enrichment_form
 
       expect(response.body).to include 'load_definition[priority]'
       expect(response.body).to include 'load_definition[required_for_active_record]'
     end
 
-    it 'asks a pre-processing block for neither, having no fragment to write' do
-      preprocess = create(:harvest_definition, pipeline:, kind: :preprocess, source_id: 'a-preprocess',
-                                               load_definition: create(:load_definition, pipeline:, kind: 'preprocessed_data'))
+    # Load::Execution#enrichment_request posts the one record it holds the destination's id for,
+    # so the size LoadWorker slices at decides nothing about the request it makes.
+    it 'does not ask an enrichment how many records go in a request, its request carrying one' do
+      get_enrichment_form
 
-      get pipeline_harvest_definition_load_definition_path(pipeline, preprocess, preprocess.load_definition)
+      expect(response.body).not_to include 'load_definition[batch_size]'
+      expect(response.body).to include 'load_definition[read_timeout]'
+    end
+
+    it 'asks a pre-processing block for neither, having no fragment to write' do
+      get_preprocess_form
 
       expect(response.body).not_to include 'load_definition[priority]'
       expect(response.body).not_to include 'load_definition[required_for_active_record]'
+    end
+
+    # It writes a file for the next block and posts nothing, so there is no request to size or
+    # to wait on either.
+    it 'asks a pre-processing block for neither request setting' do
+      get_preprocess_form
+
+      expect(response.body).not_to include 'load_definition[batch_size]'
+      expect(response.body).not_to include 'load_definition[read_timeout]'
     end
   end
 

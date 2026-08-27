@@ -31,7 +31,7 @@ const PreviewModal = ({
       <Modal.Header>
         <Modal.Title>Extraction preview</Modal.Title>
 
-        <div className="float-end">
+        <div className="ms-auto">
           <button
             className="btn btn-outline-primary me-2"
             onClick={() => {
