@@ -106,7 +106,7 @@
         <p>You'll be logged out and lose access to all pages.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
         <%= button_to(
               'Cancel my account',
               cancel_account_path,
@@ -134,7 +134,7 @@
         <p>Are you sure you want to disable 2FA?</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
         <%= button_to(
               'Disable',
               two_factor_setups_path(resource),
