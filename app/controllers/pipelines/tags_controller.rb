@@ -7,6 +7,9 @@ module Pipelines
     # The editor submits the whole set of tags a pipeline should end up with, so this
     # replaces them rather than adding to them: a tag taken off a pipeline arrives as
     # an absence, and the names that are new arrive as names no tag has yet.
+    #
+    # Back where the edit was made either way: the tags are shown, and so edited, on every
+    # one of the pipeline's tabs.
     def update
       tags = Tag.from_names(tag_names)
       unsaveable = tags.reject(&:persisted?)
@@ -14,7 +17,7 @@ module Pipelines
       if unsaveable.any?
         redirect_with_reasons(unsaveable)
       elsif @pipeline.update(tags:)
-        redirect_to pipeline_path(@pipeline), notice: t('.success')
+        redirect_back_or_to(pipeline_path(@pipeline), notice: t('.success'))
       else
         redirect_with_reasons([@pipeline])
       end
@@ -31,7 +34,7 @@ module Pipelines
     def redirect_with_reasons(records)
       errors = records.flat_map { |record| record.errors.full_messages }.uniq.to_sentence
 
-      redirect_to pipeline_path(@pipeline), alert: t('.failure', errors:)
+      redirect_back_or_to(pipeline_path(@pipeline), alert: t('.failure', errors:))
     end
 
     def set_pipeline

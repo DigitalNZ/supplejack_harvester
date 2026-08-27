@@ -1,12 +1,13 @@
 <%= content_for(:title) { @pipeline ? "#{@pipeline.name} - Automation Templates" : 'Automation Templates' } %>
 <% breadcrumb :automation_templates, @pipeline %>
 
-<%# Two pages share this template: the templates of one pipeline, reached from that pipeline's
-    tabs, and every template there is. Each slot says which of the two it is filling. %>
-<% page_heading(@pipeline ? @pipeline.name : 'Automation Templates') do %>
-  <% if @pipeline&.description.present? %>
-    <%= render 'shared/description', description: @pipeline.description %>
-  <% end %>
+<%# Two pages share this template: the templates of one pipeline, reached from that
+    pipeline's tabs, and every template there is. One of them is a tab of a pipeline and
+    wears its heading; the other is a list in its own right. %>
+<% if @pipeline %>
+  <% pipeline_heading @pipeline %>
+<% else %>
+  <% page_heading 'Automation Templates' %>
 <% end %>
 
 <% if @pipeline %>

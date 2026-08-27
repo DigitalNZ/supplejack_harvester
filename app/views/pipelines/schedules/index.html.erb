@@ -1,7 +1,7 @@
 <%= content_for(:title) { 'Schedules' } %>
 <% breadcrumb :pipeline, @pipeline %>
 
-<% page_heading 'Schedules' %>
+<% pipeline_heading @pipeline %>
 
 <% page_actions do %>
   <%= link_to new_schedule_path(pipeline_id: @pipeline.id), class: 'btn btn-primary' do %>

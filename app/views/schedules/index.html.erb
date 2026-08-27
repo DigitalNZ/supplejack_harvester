@@ -34,13 +34,13 @@
 
         <% processes = times.values.flatten %>
 
-        <% if processes.flat_map(&:pipeline_jobs).any? %>
-          <% pipeline_jobs = processes.filter_map { |process| process.pipeline_jobs.last } %>
+        <% pipeline_jobs = processes.filter_map { |process| process.pipeline_jobs.last } %>
 
-          <% if pipeline_jobs.present? && pipeline_jobs.all?(&:harvest_reports) %>
-            <% total_duration += pipeline_jobs.flat_map(&:harvest_reports).sum(&:duration_seconds) %>
-            <% total_records_loaded += pipeline_jobs.filter_map(&:harvest_report).sum(&:records_loaded) || 0 %>
-          <% end %>
+        <% if pipeline_jobs.present? %>
+          <%# A report is created before its extraction starts, so it has no timestamps at
+              all - and no duration - until the first worker writes one. %>
+          <% total_duration += pipeline_jobs.flat_map(&:harvest_reports).sum { |report| report.duration_seconds || 0 } %>
+          <% total_records_loaded += pipeline_jobs.filter_map(&:harvest_report).sum(&:records_loaded) %>
         <% end %>
 
         <% if processes.flat_map(&:automation_template).any? %>
@@ -73,7 +73,8 @@
 
                 <% if process.pipeline_jobs.any? %>
                   <p class='m-0'>Duration:
-                    <% duration = process.pipeline_jobs.last.harvest_reports.sum(&:duration_seconds) %>
+                    <% reports = process.pipeline_jobs.last.harvest_reports %>
+                    <% duration = reports.sum { |report| report.duration_seconds || 0 } %>
                     <%= ActiveSupport::Duration.build(duration).inspect %>
                   </p>
 
