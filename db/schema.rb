@@ -94,7 +94,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
   end
 
   create_table "extraction_definitions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "name"
+    t.text "name"
     t.string "format"
     t.text "base_url"
     t.integer "throttle", default: 0, null: false
@@ -102,14 +102,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "kind", default: 0
+    t.string "source_id"
     t.bigint "destination_id"
+    t.bigint "pipeline_id"
     t.integer "page", default: 1
+    t.string "total_selector"
+    t.integer "per_page"
     t.boolean "paginated"
     t.bigint "last_edited_by_id"
-    t.bigint "pipeline_id"
-    t.string "source_id"
-    t.integer "per_page"
-    t.string "total_selector"
     t.boolean "split", default: false, null: false
     t.string "split_selector"
     t.boolean "extract_text_from_file", default: false, null: false
@@ -121,7 +121,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
     t.boolean "follow_redirects", default: true
     t.index ["destination_id"], name: "index_extraction_definitions_on_destination_id"
     t.index ["last_edited_by_id"], name: "index_extraction_definitions_on_last_edited_by_id"
-    t.index ["name"], name: "index_extraction_definitions_on_name", unique: true
+    t.index ["name"], name: "index_extraction_definitions_on_name", unique: true, length: 255
     t.index ["pipeline_id"], name: "index_extraction_definitions_on_pipeline_id"
   end
 
@@ -130,18 +130,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "extraction_definition_id", null: false
+    t.integer "kind", default: 0, null: false
     t.timestamp "start_time"
     t.timestamp "end_time"
     t.text "error_message"
     t.text "name"
-    t.integer "kind"
     t.string "stop_condition_type"
     t.string "stop_condition_name"
     t.text "stop_condition_content"
     t.datetime "purged_at"
-    t.datetime "retained_at"
     t.bigint "source_pipeline_job_id"
     t.integer "source_position"
+    t.datetime "retained_at"
     t.index ["extraction_definition_id"], name: "index_extraction_jobs_on_extraction_definition_id"
     t.index ["purged_at"], name: "index_extraction_jobs_on_purged_at"
     t.index ["source_pipeline_job_id"], name: "index_extraction_jobs_on_source_pipeline_job_id"
@@ -170,7 +170,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
   end
 
   create_table "harvest_definitions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "name"
+    t.text "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "extraction_definition_id"
@@ -199,12 +199,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "harvest_definition_id"
+    t.bigint "extraction_job_id"
     t.text "name"
     t.string "target_job_id"
-    t.integer "pipeline_job_id"
-    t.integer "extraction_job_id"
+    t.bigint "pipeline_job_id"
+    t.index ["extraction_job_id"], name: "index_harvest_jobs_on_extraction_job_id"
     t.index ["harvest_definition_id"], name: "index_harvest_jobs_on_harvest_definition_id"
     t.index ["pipeline_job_id", "harvest_definition_id"], name: "index_harvest_jobs_on_pipeline_job_and_harvest_definition", unique: true
+    t.index ["pipeline_job_id"], name: "index_harvest_jobs_on_pipeline_job_id"
     t.index ["status"], name: "index_harvest_jobs_on_status"
   end
 
@@ -429,7 +431,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
   end
 
   create_table "transformation_definitions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "name"
+    t.text "name"
     t.string "record_selector"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -439,7 +441,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_26_120000) do
     t.bigint "last_edited_by_id"
     t.index ["extraction_job_id"], name: "index_transformation_definitions_on_extraction_job_id"
     t.index ["last_edited_by_id"], name: "index_transformation_definitions_on_last_edited_by_id"
-    t.index ["name"], name: "index_transformation_definitions_on_name", unique: true
+    t.index ["name"], name: "index_transformation_definitions_on_name", unique: true, length: 255
     t.index ["pipeline_id"], name: "index_transformation_definitions_on_pipeline_id"
   end
 
