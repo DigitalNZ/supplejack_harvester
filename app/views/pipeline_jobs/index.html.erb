@@ -1,9 +1,7 @@
 <%= content_for(:title) { @pipeline.name_in_database } %>
 <% breadcrumb :pipeline, @pipeline %>
 
-<% page_heading @pipeline.name do %>
-  <%= render 'shared/description', description: @pipeline.description %>
-<% end %>
+<% pipeline_heading @pipeline %>
 
 <% pipeline_tabs @pipeline, active: :jobs %>
 

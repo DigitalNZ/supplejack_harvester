@@ -8,6 +8,13 @@ module PipelinesHelper
     page_tabs { render 'pipelines/tabs', pipeline:, active: }
   end
 
+  # The heading those tabs sit under: the pipeline itself, said the same way on every one
+  # of them. A helper rather than four copies of the same block, for the same reason
+  # pipeline_tabs is one.
+  def pipeline_heading(pipeline)
+    page_heading { render 'pipelines/heading', pipeline: }
+  end
+
   def definition_edit_text(definition, type)
     return "Edit shared #{type.capitalize}" if definition.shared?
 

@@ -1,7 +1,9 @@
 <%# The pipeline's tags, and the editor for changing them. The editor is inert markup
     until PipelineTags.js takes it over, and it needs the tags that already exist to offer
-    them as suggestions. %>
-<% tags = @pipeline.tags.ordered.to_a %>
+    them as suggestions.
+    locals:
+      pipeline: the pipeline whose tags these are %>
+<% tags = pipeline.tags.ordered.to_a %>
 
 <div class="pipeline-tags mt-2"
      data-pipeline-tags
@@ -27,7 +29,7 @@
     <% end %>
   </div>
 
-  <%= form_with url: pipeline_tags_path(@pipeline), method: :patch,
+  <%= form_with url: pipeline_tags_path(pipeline), method: :patch,
                 class: 'card pipeline-tags__editor bg-white rounded-3 shadow-sm mt-2 d-none',
                 data: { tags_editor: true } do %>
     <div class="card-body">
