@@ -12,6 +12,13 @@
                  pipeline, block_definition, block_definition.load_definition
                ),
              edit_text: definition_edit_text(block_definition.load_definition, 'load'),
+             jobs_path:
+               if block_definition.preprocess?
+                 pipeline_harvest_definition_preprocess_outputs_path(pipeline, block_definition)
+               else
+                 ''
+               end,
+             jobs_text: 'View pre-processed data',
              delete_path:
                pipeline_harvest_definition_load_definition_path(
                  pipeline, block_definition, block_definition.load_definition

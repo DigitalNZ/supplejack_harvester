@@ -21,7 +21,7 @@
         block to read, rather than loaded to a destination, so this is the only place
         they can be viewed. Other kinds load their records to the destination API. %>
     <% if report.preprocess? %>
-      <%= link_to 'View transformed data',
+      <%= link_to 'View pre-processed data',
                   pipeline_harvest_definition_preprocess_output_path(
                     pipeline_job.pipeline.id,
                     report.harvest_definition.id,
