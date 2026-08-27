@@ -35,29 +35,6 @@
 
 <% end %>
 
-<%= render layout: 'shared/create_modal',
-           locals: { modal_heading: 'Update new schema', button_text: 'Update schema' } do %>
-  <%= vertical_form_with model: @schema do |form| %>
-
-    <div class='row gy-3 align-items-center'>
-      <div class="col-4">
-        <%= form.label :name, 'Schema Name', class: 'form-label' %>
-      </div>
-      <div class='col-8'>
-        <%= form.text_field :name, class: { 'form-control': true, 'is-invalid': @schema.errors[:name].any? } %>
-      </div>
-
-      <div class="col-4">
-        <%= form.label :description, 'Schema Description', class: 'form-label' %>
-      </div>
-      <div class='col-8'>
-        <%= form.text_area :description,
-                           class: { 'form-control': true, 'is-invalid': @schema.errors[:description].any? } %>
-      </div>
-    </div>
-
-    <div class='d-grid mt-4'>
-      <button type="submit" class="btn btn-primary">Update schema</button>
-    </div>
-  <% end %>
-<% end %>
+<%= render 'shared/name_and_description_modal', model: @schema,
+                                                modal_heading: 'Update schema',
+                                                button_text: 'Update schema' %>
