@@ -1,0 +1,33 @@
+<%# What the run was told to do with each block, in the columns the Run modal asks for it.
+    A block that was not ticked is still listed, greyed: what a run was told to leave alone
+    is as much a part of how it was configured as what it was told to do.
+    locals:
+      pipeline_job: the run being described %>
+<div class='table-responsive'>
+  <table class='table table-sm mb-0'>
+    <thead>
+      <tr>
+        <th scope='col'>Block</th>
+        <th scope='col'>Input</th>
+        <th scope='col'>Pages</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% RunBlockSummary.for(pipeline_job).each do |summary| %>
+        <tr class="<%= 'text-body-secondary' unless summary.ran? %>">
+          <td>
+            <%= summary.label %>
+            <span class='badge bg-light text-dark fw-normal'><%= summary.kind_label %></span>
+          </td>
+
+          <%# Nothing fed a block that did not run, so it says that rather than the input it
+              would have taken. %>
+          <td><%= summary.ran? ? job_block_input(summary) : 'Not run' %></td>
+
+          <td><%= job_block_pages(summary) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

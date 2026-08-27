@@ -10,12 +10,6 @@
         <%= job_status_with_icon(nil, pipeline_job) %>
       </dd>
 
-      <dt class="col-3">Transformation input</dt>
-      <dd class="col-9"><%= pipeline_job_transformation_input(pipeline_job) %></dd>
-
-      <dt class="col-3">Pages to transform</dt>
-      <dd class="col-9"><%= pipeline_job.page_type.humanize %></dd>
-
       <dt class="col-3">Destination</dt>
       <dd class="col-9"><%= pipeline_job.destination.name %></dd>
 
@@ -31,5 +25,14 @@
       <dt class="col-3">Job priority</dt>
       <dd class="col-9"><%= job_priority_label(pipeline_job) %></dd>
     </dl>
+
+    <%# Its own section rather than another row of the list: this is a table, and the
+        input and page limit belong to a block rather than to the run. The job-wide
+        "Transformation input" and "Pages to transform" the list used to carry are two
+        of its columns now - see RunBlockSummary, which answers them per block for every
+        run, however it was started. %>
+    <h3 class='h6 mt-4'>Blocks</h3>
+
+    <%= render 'pipeline_jobs/job_blocks', pipeline_job: %>
   </div>
 </div>

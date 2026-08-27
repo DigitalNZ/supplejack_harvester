@@ -72,6 +72,93 @@ RSpec.describe 'PipelineJobs' do
       expect(response.body).to include 'View extracted data'
       expect(response.body).not_to include 'View pre-processed data'
     end
+
+    # What the run was told to do with each block, which the page carried nothing of
+    # before: the job-wide fields it used to show were the ones the Run modal stopped
+    # setting when the settings became per block.
+    describe 'the blocks table' do
+      let(:harvest) { create(:harvest_definition, kind: 'harvest', position: 1, source_id: 'main', pipeline:) }
+      let(:skipped) { create(:harvest_definition, kind: 'harvest', position: 2, source_id: 'skipped', pipeline:) }
+
+      # The pipeline already carries the block the reports above are about, at position 0.
+      # A chain block left out of the settings leaves the one after it with no input, so
+      # every case here starts from that one running.
+      def settings(overrides)
+        { harvest_definition.id.to_s => { 'run' => true, 'input' => 'fresh' } }.merge(overrides)
+      end
+
+      def block_rows
+        table = response.body[%r{<h3 class='h6 mt-4'>Blocks</h3>.*?</table>}m]
+        table.to_s.scan(%r{<tr[^>]*>.*?</tr>}m).map { |row| row.gsub(/<[^>]+>/, ' ').split.join(' ') }
+      end
+
+      it 'says what fed each block and how much of it was asked for' do
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(harvest.id.to_s => { 'run' => true,
+                                                                                 'input' => 'fresh',
+                                                                                 'pages' => 5 }))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(block_rows).to include 'main Harvest Output of previous block 5'
+      end
+
+      # A run is as much what it was told to leave alone as what it was told to do, so an
+      # unticked block keeps its row - greyed, and with no input or page count to report.
+      it 'lists a block that did not run, greyed' do
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(
+                                      harvest.id.to_s => { 'run' => true, 'input' => 'fresh' },
+                                      skipped.id.to_s => { 'run' => false, 'input' => 'fresh' }
+                                    ))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(block_rows).to include 'skipped Harvest Not run –'
+        expect(response.body).to match(%r{<tr class="text-body-secondary">.*?skipped}m)
+      end
+
+      it 'links a block that reused an extraction to the extraction it reused' do
+        extraction_definition = create(:extraction_definition, pipeline:, harvest_definitions: [harvest])
+        extraction_job = create(:extraction_job, extraction_definition:)
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(
+                                      harvest.id.to_s => { 'run' => true,
+                                                           'input' => "extraction_job:#{extraction_job.id}" }
+                                    ))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(response.body).to include extraction_job.name
+        expect(response.body).to include "extraction_jobs/#{extraction_job.id}"
+      end
+
+      # A purged extraction leaves the words without the link rather than a link that
+      # goes nowhere.
+      it 'says so when the data a block was pointed at has gone' do
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(harvest.id.to_s => {
+                                                               'run' => true,
+                                                               'input' => 'extraction_job:999999'
+                                                             }))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(block_rows).to include 'main Harvest No longer available All'
+      end
+
+      # Nearly every run predates block_settings, and everything the API and automation
+      # paths create still posts the flat fields - RunConfiguration rebuilds the rest.
+      it 'describes a run that posted none of it, from the fields it did post' do
+        job = create(:pipeline_job, pipeline:, destination:, page_type: :set_number, pages: 3,
+                                    harvest_definitions_to_run: [harvest_definition.id.to_s, harvest.id.to_s])
+        job.update_column(:block_settings, {})
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(block_rows).to include 'test Harvest Fresh extraction 3'
+      end
+    end
   end
 
   describe 'GET /harvest_jobs/:harvest_job_id/errors' do
