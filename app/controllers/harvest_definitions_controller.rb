@@ -92,7 +92,7 @@ class HarvestDefinitionsController < ApplicationController
   end
 
   def find_destinations
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def find_harvest_definition

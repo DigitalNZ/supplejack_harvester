@@ -69,7 +69,7 @@ class ExtractionDefinitionsController < ApplicationController
   def assign_show_variables
     @parameters = @extraction_definition.parameters.order(created_at: :desc)
     @props = extraction_app_state
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def successful_clone_path(clone)
@@ -93,7 +93,7 @@ class ExtractionDefinitionsController < ApplicationController
   end
 
   def find_destinations
-    @destinations = Destination.all
+    @destinations = Destination.order(:name)
   end
 
   def extraction_definition_params
