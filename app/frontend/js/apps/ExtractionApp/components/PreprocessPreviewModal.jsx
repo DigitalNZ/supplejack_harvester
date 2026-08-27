@@ -94,7 +94,7 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
       <Modal.Header>
         <Modal.Title>Pre-processed data extraction preview</Modal.Title>
 
-        <div className="float-end d-flex align-items-center">
+        <div className="ms-auto d-flex align-items-center">
           <label className="me-2 mb-0" htmlFor="preprocess-preview-run">
             Preview Data:
           </label>
