@@ -3,6 +3,34 @@
 module ApplicationHelper
   include ActiveSupport::NumberHelper
 
+  # The left-hand slot of the page header: what the page is about. It is a title, and under
+  # it an optional line saying more - a string when that line is only words, or markup
+  # passed as a block when it is more than words. The h1 and the muted line are written
+  # once here rather than on every page, so no page can size its own title.
+  #
+  # A page whose title is not plain text - one edited in place - passes no title and builds
+  # the whole heading in the block.
+  def page_heading(title = nil, subtitle = nil, &block)
+    content_for :heading do
+      safe_join([
+        (tag.h1(title) if title),
+        (tag.p(subtitle, class: 'text-muted mb-0') if subtitle),
+        (capture(&block) if block)
+      ].compact)
+    end
+  end
+
+  # The right-hand slot of the page header: what can be done to what the page shows. The
+  # buttons are spaced by the header, so none of them carries a margin of its own.
+  def page_actions(&)
+    content_for(:actions) { capture(&) }
+  end
+
+  # The slot under both: the tabs of the thing the page is one page of.
+  def page_tabs(&)
+    content_for(:nav_tabs) { capture(&) }
+  end
+
   # How much of a list its filters left: '40 of 331 pipelines match'. The collection knows
   # its own filtered total, but not the total it is a subset of, so that comes from the
   # caller. With nothing filtered out there is nothing to compare against, so it just

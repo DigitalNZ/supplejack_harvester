@@ -12,7 +12,7 @@ jobs:
       - name: Set up node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
       - run: yarn install
       - name: prettier
         run: yarn run prettier --check .
@@ -147,6 +147,14 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
+      # assets:precompile below builds the Vite bundle, and vite.config.ts is loaded through
+      # require, which only works on a Node that can require an ES module. Without this the
+      # build runs on whatever the runner image happens to ship.
+      - name: Set up node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
 
       # The key is the versions apt would install, so the cache is reused for as
       # long as it holds the right packages, no matter which runner image we land

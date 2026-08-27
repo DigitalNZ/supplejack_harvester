@@ -1,16 +1,12 @@
 <%= content_for(:title) { 'Destinations' } %>
 <% breadcrumb :destinations %>
 
-<%= content_for :header do %>
-  <h1 class="header__title">Destinations</h1>
+<% page_heading 'Destinations' %>
 
-  <div class="header__actions">
-    <%= link_to new_destination_path, class: 'btn btn-primary' do %>
-      <i class="bi bi-plus" aria-hidden="true"></i> Add new destination
-    <% end %>
-  </div>
-
-  <div class="clearfix"></div>
+<% page_actions do %>
+  <%= link_to new_destination_path, class: 'btn btn-primary' do %>
+    <i class="bi bi-plus" aria-hidden="true"></i> Add new destination
+  <% end %>
 <% end %>
 
 <%- if @destinations.any? %>

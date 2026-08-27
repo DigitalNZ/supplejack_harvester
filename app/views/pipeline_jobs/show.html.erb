@@ -1,26 +1,23 @@
 <%= content_for(:title) { @pipeline.name_in_database } %>
 <% breadcrumb :pipeline_job, @pipeline_job %>
 
-<%= content_for(:header) do %>
-  <div class="float-start">
-    <h1>Job <%= @pipeline_job.id %></h1>
+<% page_heading "Job #{@pipeline_job.id}" do %>
+  <p class="text-muted mb-0">
     <% if @pipeline_job.start_time %>
       <strong><%= "Started #{@pipeline_job.start_time.to_fs(:verbose)}" %></strong>
     <% else %>
       <strong>Has not yet started</strong>
     <% end %>
-  </div>
+  </p>
+<% end %>
 
-  <div class="float-end">
-    <% unless @pipeline_job.finished? %>
-      <%= button_to 'Cancel pipeline',
-                    cancel_pipeline_pipeline_job_path(@pipeline.id, @pipeline_job.id),
-                    class: 'btn btn-outline-danger me-1',
-                    form_class: 'd-inline' %>
-    <% end %>
-  </div>
-
-  <div class="clearfix"></div>
+<% page_actions do %>
+  <% unless @pipeline_job.finished? %>
+    <%= button_to 'Cancel pipeline',
+                  cancel_pipeline_pipeline_job_path(@pipeline.id, @pipeline_job.id),
+                  class: 'btn btn-outline-danger',
+                  form_class: 'd-inline' %>
+  <% end %>
 <% end %>
 
 <% @pipeline_job.harvest_reports.each do |report| %>

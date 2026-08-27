@@ -77,7 +77,10 @@ class AutomationStepTemplatesController < ApplicationController
     # Create a new step template if needed
     @automation_step_template ||= @automation_template.automation_step_templates.build
 
-    render partial: 'harvest_definitions', locals: { harvest_definitions: @harvest_definitions }
+    render partial: 'shared/harvest_definition_checkboxes',
+           locals: { harvest_definitions: @harvest_definitions,
+                     param_key: 'automation_step_template',
+                     chosen: @automation_step_template.harvest_definition_ids }
   end
 
   private

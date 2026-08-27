@@ -1,6 +1,7 @@
-const description = document.querySelector(".js-description");
-
-if (description) {
+// A description shows one of three states at a time: a clamped preview, the whole thing in a card,
+// and the edit form. The pipeline, the automation template and the definitions all draw the same
+// editor, so this drives every one on the page rather than only the first.
+document.querySelectorAll(".js-description").forEach((description) => {
   const collapsed = description.querySelector(".js-description-collapsed");
   const expanded = description.querySelector(".js-description-expanded");
   const form = description.querySelector(".js-description-form");
@@ -46,4 +47,4 @@ if (description) {
 
       show(collapsed);
     });
-}
+});

@@ -16,18 +16,18 @@
   </div>
 
   <%= vertical_form_with(model:, url:, class: form_classes, id: "#{id}-form") do |form| %>
-
-    <div class='float-start'>
+    <%# The field and its two buttons on one row, spaced by the gap rather than by a margin each. %>
+    <div class='d-flex align-items-center gap-2'>
       <%= form.text_field attribute, class: 'form-control w-auto' %>
+
+      <%= form.submit 'Save', class: 'btn btn-primary' %>
+
+      <button
+        type='button'
+        class='btn btn-outline-secondary js-inline-editable-cancel'
+        data-id="<%= id %>">
+        Cancel
+      </button>
     </div>
-
-    <%= form.submit 'Save', class: 'btn btn-primary ms-2' %>
-
-    <button
-      type='button'
-      class='btn btn-outline-secondary ms-2 js-inline-editable-cancel'
-      data-id="<%= id %>">
-      Cancel
-    </button>
   <% end %>
 </div>

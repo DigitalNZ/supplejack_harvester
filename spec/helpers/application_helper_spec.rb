@@ -3,6 +3,63 @@
 require 'rails_helper'
 
 RSpec.describe ApplicationHelper do
+  # The three slots of the page header. A page states what goes in them; what they look
+  # like is written once, in the helpers and the layout.
+  describe '#page_heading' do
+    it 'puts the title in the heading slot as the only h1 on the page' do
+      helper.page_heading 'Pipelines'
+
+      expect(helper.content_for(:heading)).to eq '<h1>Pipelines</h1>'
+    end
+
+    it 'sets a subtitle under the title when the page gives one' do
+      helper.page_heading 'Jobs', 'Global view of pipeline jobs'
+
+      expect(helper.content_for(:heading))
+        .to eq '<h1>Jobs</h1><p class="text-muted mb-0">Global view of pipeline jobs</p>'
+    end
+
+    it 'escapes what it is given rather than trusting it as markup' do
+      helper.page_heading '<script>', '<script>'
+
+      expect(helper.content_for(:heading)).not_to include '<script>'
+    end
+
+    it 'leaves out the subtitle line when the page has nothing to say under the title' do
+      helper.page_heading 'Pipelines'
+
+      expect(helper.content_for(:heading)).not_to include 'text-muted'
+    end
+
+    it 'takes a block for a subtitle that is more than words' do
+      helper.page_heading('Job 1') { '<p>Started</p>'.html_safe }
+
+      expect(helper.content_for(:heading)).to eq '<h1>Job 1</h1><p>Started</p>'
+    end
+
+    it 'builds the whole heading from the block when the title is not plain text' do
+      helper.page_heading { '<h1>Edited in place</h1>'.html_safe }
+
+      expect(helper.content_for(:heading)).to eq '<h1>Edited in place</h1>'
+    end
+  end
+
+  describe '#page_actions' do
+    it 'puts what it is given in the actions slot' do
+      helper.page_actions { '<button>Delete</button>'.html_safe }
+
+      expect(helper.content_for(:actions)).to eq '<button>Delete</button>'
+    end
+  end
+
+  describe '#page_tabs' do
+    it 'puts what it is given in the tab slot' do
+      helper.page_tabs { '<ul class="nav nav-tabs"></ul>'.html_safe }
+
+      expect(helper.content_for(:nav_tabs)).to eq '<ul class="nav nav-tabs"></ul>'
+    end
+  end
+
   # The two sentences a list shows: what its filters left, beside the filters, and where
   # the current page sits, beside the pagination.
   describe '#list_summary' do

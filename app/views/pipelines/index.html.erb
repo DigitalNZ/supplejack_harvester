@@ -1,18 +1,15 @@
 <%= content_for(:title) { 'Pipelines' } %>
 <% breadcrumb :pipelines %>
 
-<%= content_for :header do %>
-  <h1 class="header__title">Pipelines</h1>
+<% page_heading 'Pipelines' %>
 
-  <div class="header__actions">
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
-        + Create new pipeline
-    </button>
-  </div>
+<% page_actions do %>
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-modal">
+    + Create new pipeline
+  </button>
+<% end %>
 
-  <div class="clearfix"></div>
-
-  <div class='mt-4'></div>
+<% page_tabs do %>
   <ul class="nav nav-tabs">
 
     <li class='nav-item'>
@@ -130,29 +127,6 @@
   </div>
 <% end %>
 
-<%= render layout: 'shared/create_modal',
-           locals: { modal_heading: 'Create new pipeline', button_text: 'Create pipeline' } do %>
-  <%= vertical_form_with model: @pipeline do |form| %>
-
-    <div class='row gy-3 align-items-center'>
-      <div class="col-4">
-        <%= form.label :name, 'Pipeline Name', class: 'form-label' %>
-      </div>
-      <div class='col-8'>
-        <%= form.text_field :name, class: { 'form-control': true, 'is-invalid': @pipeline.errors[:name].any? } %>
-      </div>
-
-      <div class="col-4">
-        <%= form.label :description, 'Pipeline Description', class: 'form-label' %>
-      </div>
-      <div class='col-8'>
-        <%= form.text_area :description,
-                           class: { 'form-control': true, 'is-invalid': @pipeline.errors[:description].any? } %>
-      </div>
-    </div>
-
-    <div class='d-grid mt-4'>
-      <button type="submit" class="btn btn-primary">Create pipeline</button>
-    </div>
-  <% end %>
-<% end %>
+<%= render 'shared/name_and_description_modal', model: @pipeline,
+                                                modal_heading: 'Create new pipeline',
+                                                button_text: 'Create pipeline' %>

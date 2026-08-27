@@ -1,20 +1,16 @@
 <%= content_for(:title) { 'Users' } %>
 <% breadcrumb :users %>
 
-<%= content_for :header do %>
-  <h1 class="header__title">Users</h1>
+<% page_heading 'Users' %>
 
-  <div class="header__actions">
-    <button
-      type="button"
-      class="btn btn-primary"
-      data-bs-toggle="modal"
-      data-bs-target="#invite-user">
-      <i class="bi bi-plus" aria-hidden="true"></i> Invite user
-    </button>
-  </div>
-
-  <div class="clearfix"></div>
+<% page_actions do %>
+  <button
+    type="button"
+    class="btn btn-primary"
+    data-bs-toggle="modal"
+    data-bs-target="#invite-user">
+    <i class="bi bi-plus" aria-hidden="true"></i> Invite user
+  </button>
 <% end %>
 
 <% if @users.any? %>

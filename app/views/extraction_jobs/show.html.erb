@@ -1,49 +1,44 @@
 <%= content_for(:title) { "#{@extraction_definition.name} job" } %>
 <% breadcrumb :extraction_job, @pipeline, @harvest_definition, @extraction_job %>
 
-<%= content_for(:header) do %>
-  <div class="float-start">
-    <h1>Extracted Data</h1>
-    <p>
-      <span class="me-1"><%= @extraction_job.extraction_definition.name %></span>|
-      <span class="ms-1"><strong><%= @extraction_job.created_at.to_fs(:verbose) %></strong></span>
-    </p>
-  </div>
+<% page_heading 'Extracted Data' do %>
+  <p class="text-muted mb-0">
+    <span class="me-1"><%= @extraction_job.extraction_definition.name %></span>|
+    <span class="ms-1"><strong><%= @extraction_job.created_at.to_fs(:verbose) %></strong></span>
+  </p>
+<% end %>
 
-  <div class="float-end">
-    <% unless @extraction_job.purged? %>
-      <% retention_path = pipeline_harvest_definition_extraction_definition_extraction_job_retention_path(
-           @pipeline, @harvest_definition, @extraction_definition, @extraction_job
-         ) %>
-      <% if @extraction_job.retained? %>
-        <%= button_to retention_path, method: :delete, class: 'btn btn-outline-primary me-1', form_class: 'd-inline' do %>
-          <i class="bi bi-unlock" aria-hidden="true"></i> Stop retaining
-        <% end %>
-      <% else %>
-        <%= button_to retention_path, class: 'btn btn-outline-primary me-1', form_class: 'd-inline' do %>
-          <i class="bi bi-lock-fill" aria-hidden="true"></i> Retain job
-        <% end %>
+<% page_actions do %>
+  <% unless @extraction_job.purged? %>
+    <% retention_path = pipeline_harvest_definition_extraction_definition_extraction_job_retention_path(
+         @pipeline, @harvest_definition, @extraction_definition, @extraction_job
+       ) %>
+    <% if @extraction_job.retained? %>
+      <%= button_to retention_path, method: :delete, class: 'btn btn-outline-primary', form_class: 'd-inline' do %>
+        <i class="bi bi-unlock" aria-hidden="true"></i> Stop retaining
+      <% end %>
+    <% else %>
+      <%= button_to retention_path, class: 'btn btn-outline-primary', form_class: 'd-inline' do %>
+        <i class="bi bi-lock-fill" aria-hidden="true"></i> Retain job
       <% end %>
     <% end %>
+  <% end %>
 
-    <% if @extraction_job.queued? || @extraction_job.running? %>
-      <%= button_to 'Cancel job',
-                    cancel_pipeline_harvest_definition_extraction_definition_extraction_job_path(
-                      @pipeline,
-                      @harvest_definition,
-                      @extraction_definition,
-                      @extraction_job
-                    ),
-                    class: 'btn btn-outline-danger me-1',
-                    form_class: 'd-inline' %>
-    <% end %>
+  <% if @extraction_job.queued? || @extraction_job.running? %>
+    <%= button_to 'Cancel job',
+                  cancel_pipeline_harvest_definition_extraction_definition_extraction_job_path(
+                    @pipeline,
+                    @harvest_definition,
+                    @extraction_definition,
+                    @extraction_job
+                  ),
+                  class: 'btn btn-outline-danger',
+                  form_class: 'd-inline' %>
+  <% end %>
 
-    <button type="button" class="btn btn-danger px-2 py-2" data-bs-toggle="modal" data-bs-target="#delete-modal">
-      <i class="bi bi-trash" aria-hidden="true"></i> Delete job
-    </button>
-  </div>
-
-  <div class="clearfix"></div>
+  <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
+    <i class="bi bi-trash" aria-hidden="true"></i> Delete job
+  </button>
 <% end %>
 
 <% path = pipeline_harvest_definition_extraction_definition_extraction_job_path(@pipeline, @harvest_definition,

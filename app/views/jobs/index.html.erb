@@ -1,14 +1,7 @@
 <%= content_for(:title) { 'Jobs' } %>
 <% breadcrumb :jobs %>
 
-<%= content_for(:header) do %>
-  <div class='float-start'>
-    <h1>Jobs</h1>
-    <p>Global view of pipeline jobs</p>
-  </div>
-
-  <div class='clearfix'></div>
-<% end %>
+<% page_heading 'Jobs', 'Global view of pipeline jobs' %>
 
 <%= render 'pipeline_jobs/jobs_table',
            jobs: @pipeline_jobs,

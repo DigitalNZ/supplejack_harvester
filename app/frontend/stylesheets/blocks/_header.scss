@@ -1,16 +1,16 @@
+// The band a page is titled in. Everything inside it is arranged by Bootstrap utilities in the
+// layout, so all this holds is the band and the one thing utilities cannot express: pulling the
+// tab strip through the band's own padding so it sits on the bottom edge.
 .header {
   background-color: $doctor;
   padding: 2rem;
   border-bottom: 1px solid $bright-star;
 
-  @include element('title') {
-    float: left;
-    margin-bottom: 0;
-  }
-
-  @include element('actions') {
-    float: right;
-    padding-top: .5rem;
+  // Every page titles itself with an h1 in the heading slot, so it is spaced here rather than by
+  // a class each page has to remember. The gap is for what the slot carries under it: a line of
+  // detail, a description, the tags.
+  h1 {
+    margin-bottom: .25rem;
   }
 
   .nav-tabs {

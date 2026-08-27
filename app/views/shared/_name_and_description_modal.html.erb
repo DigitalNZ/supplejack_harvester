@@ -1,0 +1,28 @@
+<%# The modal behind the button that creates or renames a thing that is only a name and a
+    description. What the thing is called comes from the model itself; only what the modal
+    is headed and what its button says differ between them. %>
+<%= render layout: 'shared/create_modal', locals: { modal_heading:, button_text: } do %>
+  <%= vertical_form_with model: do |form| %>
+
+    <div class='row gy-3 align-items-center'>
+      <div class="col-4">
+        <%= form.label :name, "#{model.model_name.human} Name", class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.text_field :name, class: { 'form-control': true, 'is-invalid': model.errors[:name].any? } %>
+      </div>
+
+      <div class="col-4">
+        <%= form.label :description, "#{model.model_name.human} Description", class: 'form-label' %>
+      </div>
+      <div class='col-8'>
+        <%= form.text_area :description,
+                           class: { 'form-control': true, 'is-invalid': model.errors[:description].any? } %>
+      </div>
+    </div>
+
+    <div class='d-grid mt-4'>
+      <button type="submit" class="btn btn-primary"><%= button_text %></button>
+    </div>
+  <% end %>
+<% end %>

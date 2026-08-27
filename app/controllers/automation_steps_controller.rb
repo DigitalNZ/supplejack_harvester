@@ -7,7 +7,12 @@ class AutomationStepsController < ApplicationController
     @pipeline = Pipeline.find(params[:pipeline_id])
     @harvest_definitions = @pipeline.harvest_definitions
 
-    render partial: 'harvest_definitions', locals: { harvest_definitions: @harvest_definitions }
+    # Nothing is ticked: this re-renders the list for a pipeline just chosen, before there
+    # is a step to have chosen any of them.
+    render partial: 'shared/harvest_definition_checkboxes',
+           locals: { harvest_definitions: @harvest_definitions,
+                     param_key: 'automation_step',
+                     chosen: nil }
   end
 
   private
