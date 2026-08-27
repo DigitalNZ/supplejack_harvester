@@ -180,7 +180,8 @@
         <%= form.select :destination_id,
                         options_from_collection_for_select(@destinations, :id, :name),
                         { include_blank: 'Select a destination' },
-                        class: 'form-select' %>
+                        class: 'form-select js-searchable-select',
+                        data: { optional: true, placeholder: 'Search for a destination' } %>
       </div>
     </div>
 

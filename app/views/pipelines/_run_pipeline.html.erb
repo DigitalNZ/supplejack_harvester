@@ -45,7 +45,7 @@
 
         <div class='col-7'>
           <%= form.select :destination_id, options_from_collection_for_select(@destinations, 'id', 'name'), {},
-                          class: 'form-select' %>
+                          class: 'form-select js-searchable-select' %>
         </div>
 
         <div class='col-5'>
