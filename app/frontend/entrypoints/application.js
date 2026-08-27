@@ -43,7 +43,6 @@ import "/js/modals/enrichmentExtractionDefinitionModal";
 import "/js/SubmittingSelect";
 import "/js/AutoComplete";
 import "/js/editor";
-import "/js/form-header-submission";
 import "/js/run-blocks";
 import "/js/schedules";
 import "/js/automation-template-tabs";

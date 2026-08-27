@@ -30,15 +30,18 @@ module ApplicationHelper
   # of it, and the button that submits it. Every such page wants the same three in the same
   # order, and had grown its own copy of them.
   #
-  # The submit button lives here rather than at the foot of the form, which is why it carries
-  # the form's id - js/form-header-submission is what turns that into a submit. Anything the
-  # page can do besides saving goes in the block, ahead of the way out.
+  # The submit button sits in the header rather than at the foot of the form, and the form
+  # attribute is what still makes it the form's - a plain button outside a form belongs to
+  # no form at all. That association is what a browser needs to submit on Enter: a form with
+  # no submit button of its own and more than one field in it does nothing when Enter is
+  # pressed, which is every form on this pattern. Anything else the page can do goes in the
+  # block, ahead of the way out.
   def form_page_actions(form_id:, submit_text: 'Update', cancel_path: nil, &extra)
     page_actions do
       safe_join([
         (capture(&extra) if extra),
         (link_to('Cancel', cancel_path, class: 'btn btn-outline-secondary') if cancel_path),
-        tag.button(submit_text, type: 'submit', class: 'btn btn-primary', data: { form: form_id })
+        tag.button(submit_text, type: 'submit', class: 'btn btn-primary', form: form_id)
       ].compact)
     end
   end
