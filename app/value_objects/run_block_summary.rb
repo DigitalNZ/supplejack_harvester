@@ -17,7 +17,7 @@ class RunBlockSummary
     (pipeline.ordered_blocks + pipeline.enrichments).map { |definition| new(pipeline_job, definition) }
   end
 
-  delegate :source_id, :position, :enrichment?, :preprocess?, :preceding_position, to: :@definition
+  delegate :id, :source_id, :position, :enrichment?, :preprocess?, :preceding_position, to: :@definition
   delegate :pipeline, to: :@pipeline_job
 
   def initialize(pipeline_job, definition)

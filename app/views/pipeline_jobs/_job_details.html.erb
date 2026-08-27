@@ -1,38 +1,98 @@
-<div class="card">
-  <div class="card-body">
-    <dl class="row dl-lined">
-      <dt class="col-3">Run by</dt>
-      <dd class="col-9"><%= job_launched_by_label(pipeline_job) %></dd>
+<%# The run drawn as the form that asked for it: the same fields, in the same order, in the
+    schedule form's own layout - which is where these fields are already laid out full width
+    in a card, the shape this page needs. The Run modal asks the same questions, but its
+    label-beside-field grid is sized for a modal and leaves half a page of nothing between
+    the two out here.
 
-      <dt class="col-3">Status</dt>
-      <dd class="col-9">
-        <span class="visually-hidden">Status: </span>
+    A record of a run and the form that starts one are the same set of questions, so they
+    are worth reading in the same shape.
+
+    One disabled fieldset carries the read-only-ness, rather than a disabled attribute on
+    every control, and there is no form around it: nothing here submits anywhere. Links
+    inside a disabled fieldset still work, which is what lets the block rows keep pointing
+    at the data they reused.
+
+    Run by and Status are not settings and so have no field in either form. They are drawn
+    as plain text under a label of their own rather than squeezed into an input that would
+    only lie about being one.
+
+    locals:
+      pipeline_job: the run being described %>
+<div class='card'>
+  <div class='card-body'>
+    <fieldset disabled>
+      <span class='form-label'>Run by</span>
+
+      <div class='form-control-plaintext pt-0 mb-3'><%= job_launched_by_label(pipeline_job) %></div>
+
+      <span class='form-label'>Status</span>
+
+      <div class='form-control-plaintext pt-0 mb-3'>
+        <span class='visually-hidden'>Status: </span>
         <%= job_status_with_icon(nil, pipeline_job) %>
-      </dd>
+      </div>
 
-      <dt class="col-3">Destination</dt>
-      <dd class="col-9"><%= pipeline_job.destination.name %></dd>
+      <div class='mb-3'>
+        <%= render 'pipeline_jobs/job_blocks', pipeline_job: %>
+      </div>
 
-      <dt class="col-3">Delete previous records</dt>
-      <dd class="col-9"><%= pipeline_job.delete_previous_records ? 'Yes' : 'No' %></dd>
+      <%= label_tag 'job-destination', class: 'form-label' do %>
+        Destination
 
-      <dt class="col-3">Run enrichments concurrently</dt>
-      <dd class="col-9"><%= pipeline_job.run_enrichment_concurrently ? 'Yes' : 'No' %></dd>
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="The location this run sent its transformed data to."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
 
-      <dt class="col-3">Skip previously enriched</dt>
-      <dd class="col-9"><%= pipeline_job.skip_previously_enriched ? 'Yes' : 'No' %></dd>
+      <%= select_tag nil, options_for_select([pipeline_job.destination.name]),
+                     class: 'form-select mb-3', id: 'job-destination', name: nil %>
 
-      <dt class="col-3">Job priority</dt>
-      <dd class="col-9"><%= job_priority_label(pipeline_job) %></dd>
-    </dl>
+      <%= label_tag 'job-delete-previous-records', class: 'form-label' do %>
+        Delete Previous Records
 
-    <%# Its own section rather than another row of the list: this is a table, and the
-        input and page limit belong to a block rather than to the run. The job-wide
-        "Transformation input" and "Pages to transform" the list used to carry are two
-        of its columns now - see RunBlockSummary, which answers them per block for every
-        run, however it was started. %>
-    <h3 class='h6 mt-4'>Blocks</h3>
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="Whether this run deleted every previous record associated with this Source ID."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
 
-    <%= render 'pipeline_jobs/job_blocks', pipeline_job: %>
+      <%= select_tag nil, options_for_select([job_yes_no(pipeline_job.delete_previous_records)]),
+                     class: 'form-select mb-3', id: 'job-delete-previous-records', name: nil %>
+
+      <%= label_tag 'job-run-enrichment-concurrently', class: 'form-label' do %>
+        Run Enrichments Concurrently
+
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="Whether this run ran the extractions within an enrichment in parallel. The enrichment's Throttle setting is ignored in that mode."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
+
+      <%= select_tag nil, options_for_select([job_yes_no(pipeline_job.run_enrichment_concurrently)]),
+                     class: 'form-select mb-3', id: 'job-run-enrichment-concurrently', name: nil %>
+
+      <%= label_tag 'job-skip-previously-enriched', class: 'form-label' do %>
+        Skip Previously Enriched
+
+        <span
+          data-bs-toggle="tooltip"
+          data-bs-title="Whether this run applied enrichments only to records that had not previously received them."><i class="bi bi-question-circle" aria-label="helper text"></i>
+        </span>
+      <% end %>
+
+      <%= select_tag nil, options_for_select([job_yes_no(pipeline_job.skip_previously_enriched)]),
+                     class: 'form-select mb-3', id: 'job-skip-previously-enriched', name: nil %>
+
+      <%# Both forms hide this field when the deployment has no priorities configured. A run
+          that was given one is still worth reading back, so a job that has one says so
+          whether or not the deployment still offers the choice. %>
+      <% if ENV['JOB_PRIORITIES'].present? || pipeline_job.job_priority.present? %>
+        <%= label_tag 'job-priority', 'Job Priority', class: 'form-label' %>
+
+        <%= select_tag nil, options_for_select([job_priority_label(pipeline_job)]),
+                       class: 'form-select mb-3', id: 'job-priority', name: nil %>
+      <% end %>
+    </fieldset>
   </div>
 </div>
