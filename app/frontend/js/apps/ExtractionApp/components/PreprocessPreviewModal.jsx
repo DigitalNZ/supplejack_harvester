@@ -134,7 +134,7 @@ const PreprocessPreviewModal = ({ showModal, handleClose, requestId }) => {
         )}
 
         {!loading && runs.length == 0 && (
-          <p className="text-muted">
+          <p className="text-body-secondary">
             No pre-processed data yet — run the pipeline first.
           </p>
         )}

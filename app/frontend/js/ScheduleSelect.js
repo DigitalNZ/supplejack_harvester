@@ -55,7 +55,7 @@ if (schedulableSelect) {
   // schedule is configured with exactly the same layout and the same input choices.
   function fetchRunBlocks(pipelineId) {
     harvestDefinitionsContainer.innerHTML =
-      '<div class="text-muted">Loading blocks...</div>';
+      '<div class="text-body-secondary">Loading blocks...</div>';
 
     const scheduleId = document.getElementById("js-schedule-id")?.value;
     const query = scheduleId ? `?schedule_id=${scheduleId}` : "";

@@ -15,7 +15,7 @@
     <h6 class="dropdown-header px-2"><%= heading %></h6>
 
     <% if tags.empty? %>
-      <p class="dropdown-item-text text-muted mb-0">No tags yet.</p>
+      <p class="dropdown-item-text text-body-secondary mb-0">No tags yet.</p>
     <% end %>
 
     <% tags.each do |tag| %>
@@ -24,7 +24,7 @@
                           id: "tag-filter-#{tag.slug}", class: 'form-check-input m-0 flex-shrink-0' %>
         <%= label_tag "tag-filter-#{tag.slug}", class: 'form-check-label d-flex gap-3 flex-grow-1' do %>
           <span class="flex-grow-1"><%= tag.name %></span>
-          <span class="text-muted"><%= counts.fetch(tag.id, 0) %></span>
+          <span class="text-body-secondary"><%= counts.fetch(tag.id, 0) %></span>
         <% end %>
       </div>
     <% end %>

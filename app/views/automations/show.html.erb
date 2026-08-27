@@ -126,7 +126,7 @@
                         <td><%= number_with_delimiter(step_data[:metrics][:records_rejected]) %></td>
                         <td><%= number_with_delimiter(step_data[:metrics][:records_deleted]) %></td>
                       <% else %>
-                        <td colspan="5" class="text-center text-muted">
+                        <td colspan="5" class="text-center text-body-secondary">
                           <%= step.step_type == 'api_call' ? 'N/A' : 'No metrics available' %>
                         </td>
                       <% end %>

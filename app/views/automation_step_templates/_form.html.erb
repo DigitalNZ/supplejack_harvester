@@ -28,7 +28,7 @@
                       { include_blank: 'Select a pipeline' },
                       { class: 'form-select', required: automation_step_template.step_type.to_s != 'api_call',
                         data: { controller: 'pipeline-select' } } %>
-      <small class="form-text text-muted">
+      <small class="form-text text-body-secondary">
         Select a pipeline to view and choose its associated harvest definitions.
       </small>
     </div>
@@ -40,7 +40,7 @@
           This step will use the destination from the template:
           <strong><%= @automation_template.destination.name %></strong>
         </p>
-        <small class="text-muted">To change the destination, edit the template settings.</small>
+        <small class="text-body-secondary">To change the destination, edit the template settings.</small>
       </div>
     <% else %>
       <div class="mb-3">
@@ -48,7 +48,7 @@
         <p class="form-text">
           <span class="text-warning">No destination set for this template.</span>
         </p>
-        <small class="text-muted">When creating an automation from this template, you'll need to set a destination.</small>
+        <small class="text-body-secondary">When creating an automation from this template, you'll need to set a destination.</small>
       </div>
     <% end %>
 

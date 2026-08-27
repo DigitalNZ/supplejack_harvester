@@ -42,7 +42,7 @@
             <% last_run_step = last_automation_run&.automation_steps&.find_by(position: index) %>
           </div>
           <% if step.step_type == 'pipeline' %>
-            <small class='text-muted d-block mt-2'>Harvest Definitions:</small>
+            <small class='text-body-secondary d-block mt-2'>Harvest Definitions:</small>
             <% if step.pipeline&.harvest_definitions.present? %>
               <% harvest_defs_to_show = step.harvest_definitions.presence || step.pipeline.harvest_definitions %>
               <% harvest_defs_to_show.each do |hd| %>
@@ -58,11 +58,11 @@
               <% end %>
             <% else %>
               <div class="d-flex align-items-center mb-1">
-                <small class="text-muted">No harvest definitions available</small>
+                <small class="text-body-secondary">No harvest definitions available</small>
               </div>
             <% end %>
           <% elsif step.step_type == 'api_call' %>
-            <small class='text-muted d-block mt-2'>URL:</small>
+            <small class='text-body-secondary d-block mt-2'>URL:</small>
             <div class="d-flex align-items-center justify-content-between mb-1">
               <small class="text-break">
                 <%= step.api_url.truncate(100) %>

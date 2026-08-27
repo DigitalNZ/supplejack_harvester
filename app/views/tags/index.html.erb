@@ -29,7 +29,7 @@
           <%# What the tag is on, so it can be looked at before the tag is renamed or
               deleted. A tag nothing carries has nowhere to link to. %>
           <% if count.zero? %>
-            <span class="small text-muted">No pipelines</span>
+            <span class="small text-body-secondary">No pipelines</span>
           <% else %>
             <%= link_to pluralize(count, 'pipeline'), pipelines_path(tags: [tag.slug]), class: 'small' %>
           <% end %>
@@ -48,7 +48,7 @@
 
     <% if @tags.empty? %>
       <div class="card">
-        <div class="card-body text-center text-muted py-5">
+        <div class="card-body text-center text-body-secondary py-5">
           There are currently no tags. They are created as pipelines are tagged, from a pipeline's page.
         </div>
       </div>
