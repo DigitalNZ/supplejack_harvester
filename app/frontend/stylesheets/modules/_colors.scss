@@ -48,4 +48,14 @@ $tag-colors: (
 $primary: $vital-green;
 $dark: $antarctic-deep;
 
+// Set here rather than as a custom property after the fact, because Bootstrap derives more
+// from it than the colour: --bs-body-color-rgb, and from that the secondary, tertiary and
+// emphasis colours 5.3 draws muted text, placeholders and table stripes with. A :root that
+// names only the colour leaves every derived one computed from Bootstrap's default.
+//
+// $body-bg is left alone: it is already white, which since 5.3 is also the surface every
+// input, select, dropdown, table and modal sits on. The page's own grey is painted on the
+// body instead - see bootstrap/_root.
+$body-color: $antarctic-deep;
+
 $table-bg-scale: 0%;

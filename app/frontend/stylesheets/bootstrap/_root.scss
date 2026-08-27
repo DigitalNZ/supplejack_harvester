@@ -1,9 +1,13 @@
 :root {
-  --bs-body-bg: #{$bleached-silk};
-  --bs-body-color: #{$antarctic-deep};
   --bs-body-font-family: 'Lato', var(--bs-font-sans-serif);
 }
 
+// The page is darker than the things on it, which is the other way around from what
+// Bootstrap 5.3 assumes: --bs-body-bg is the surface every component takes its background
+// from, so colouring the page through it turned every input, select, dropdown, list group
+// and table the same grey as the page behind them. The page is painted here instead, and
+// $body-bg stays white for the components to sit on - see modules/_colors.
 body {
+  background-color: $bleached-silk;
   margin-bottom: 2rem;
 }
