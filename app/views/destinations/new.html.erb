@@ -3,13 +3,9 @@
 
 <% page_heading 'Add New Destination' %>
 
-<% page_actions do %>
+<% form_page_actions form_id: 'js-destination-form', submit_text: 'Save' do %>
   <button type="button" class="btn btn-outline-primary" id="js-test-destination-button">
     Test
-  </button>
-
-  <button type="submit" class="btn btn-primary" data-form="js-destination-form">
-    Save
   </button>
 <% end %>
 

@@ -26,6 +26,23 @@ module ApplicationHelper
     content_for(:actions) { capture(&) }
   end
 
+  # The header of a page that is one form: what else can be done to what it shows, a way out
+  # of it, and the button that submits it. Every such page wants the same three in the same
+  # order, and had grown its own copy of them.
+  #
+  # The submit button lives here rather than at the foot of the form, which is why it carries
+  # the form's id - js/form-header-submission is what turns that into a submit. Anything the
+  # page can do besides saving goes in the block, ahead of the way out.
+  def form_page_actions(form_id:, submit_text: 'Update', cancel_path: nil, &extra)
+    page_actions do
+      safe_join([
+        (capture(&extra) if extra),
+        (link_to('Cancel', cancel_path, class: 'btn btn-outline-secondary') if cancel_path),
+        tag.button(submit_text, type: 'submit', class: 'btn btn-primary', data: { form: form_id })
+      ].compact)
+    end
+  end
+
   # The slot under both: the tabs of the thing the page is one page of.
   def page_tabs(&)
     content_for(:nav_tabs) { capture(&) }

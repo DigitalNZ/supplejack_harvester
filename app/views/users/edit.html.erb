@@ -3,13 +3,7 @@
 
 <% page_heading "Edit #{@user.email}" %>
 
-<% page_actions do %>
-  <%= link_to 'Cancel', users_path, class: 'btn btn-outline-secondary' %>
-
-  <button type="submit" class="btn btn-primary" data-form="js-user-form">
-    Update
-  </button>
-<% end %>
+<% form_page_actions form_id: 'js-user-form', cancel_path: users_path %>
 
 <div class="row">
   <div class="col-sm-6 col-md-6 mb-4">

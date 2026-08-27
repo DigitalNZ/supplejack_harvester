@@ -3,13 +3,9 @@
 
 <% page_heading @destination.name_in_database %>
 
-<% page_actions do %>
+<% form_page_actions form_id: 'js-destination-form', submit_text: 'Update' do %>
   <button type="button" class="btn btn-outline-primary" id="js-test-destination-button">
     Test
-  </button>
-
-  <button type="submit" class="btn btn-primary" data-form="js-destination-form">
-    Update
   </button>
 <% end %>
 

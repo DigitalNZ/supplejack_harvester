@@ -3,11 +3,7 @@
 
 <% page_heading @tag.name_in_database %>
 
-<% page_actions do %>
-  <%= link_to 'Cancel', tags_path, class: 'btn btn-outline-secondary' %>
-
-  <button type="submit" class="btn btn-primary" data-form="js-tag-form">Update</button>
-<% end %>
+<% form_page_actions form_id: 'js-tag-form', cancel_path: tags_path %>
 
 <%= vertical_form_with model: @tag, id: 'js-tag-form' do |form| %>
   <div class="card">

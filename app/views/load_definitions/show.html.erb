@@ -3,13 +3,9 @@
 
 <% page_heading @load_definition.name %>
 
-<% page_actions do %>
+<% form_page_actions form_id: 'js-load-definition-form' do %>
   <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal">
     <i class="bi bi-trash" aria-hidden="true"></i> Delete
-  </button>
-
-  <button type="submit" class="btn btn-primary" data-form="js-load-definition-form">
-    Update
   </button>
 <% end %>
 

@@ -3,13 +3,8 @@
 
 <% page_heading 'New Step' %>
 
-<% page_actions do %>
-  <%= link_to 'Cancel', automation_template_path(@automation_template), class: 'btn btn-outline-secondary' %>
-
-  <button type="submit" class="btn btn-primary" data-form="js-automation-step-template-form">
-    Create step
-  </button>
-<% end %>
+<% form_page_actions form_id: 'js-automation-step-template-form', submit_text: 'Create step',
+                     cancel_path: automation_template_path(@automation_template) %>
 
 <div class="card">
   <div class="card-body">
