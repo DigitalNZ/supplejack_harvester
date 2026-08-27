@@ -51,6 +51,7 @@ import "/js/inlineEditable";
 import "/js/pipelineDescription";
 import "/js/react";
 import "/js/step-type-select";
+import "/js/SearchableSelect";
 import "/js/load-definition-fields";
 import "/js/ScheduleSelect";
 import "/js/Expander";
