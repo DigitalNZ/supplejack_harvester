@@ -1,5 +1,49 @@
 name: Code quality score
 
+# Scores app/ and lib/ on three measures and fails the build if the total gets worse than
+# the PR's base commit. Lower is better throughout. The score is a comparison, not a
+# threshold: a number that is bad but no worse than main passes.
+#
+#   flay  structural duplication, weighted x 0.003. Counts .erb as well as .rb, so the
+#         same field written out four times in a view scores here.
+#   flog  average ABC complexity per method, weighted x 0.8
+#   reek  code smells per Ruby file, weighted x 5
+#
+# The three come from https://github.com/boost/code_quality_score, which shells out to the
+# flay, flog and reek binaries and sums the weighted results.
+#
+# --- Running it locally -----------------------------------------------------------------
+#
+# The gems are not in our Gemfile, so install them first:
+#
+#   gem install flay flog reek
+#
+# Then, from the repository root, for a single number per measure:
+#
+#   flay app lib | head -n 1           # "Total score (lower is better) = N" -> N * 0.003
+#   flog app lib | head -n 2 | tail -1 # "  N: flog/method average"          -> N * 0.8
+#   reek app lib | tail -1             # "N total warnings"    -> (N / ruby file count) * 5
+#
+# where the Ruby file count is `find app lib -type f -name "*.rb" | wc -l`.
+#
+# Two things will otherwise make your local numbers disagree with CI's:
+#
+#   1. CI checks the base and head commits out into ./base and ./head under a workspace
+#      that has no .reek.yml, so reek runs on its defaults and OUR .reek.yml IS IGNORED.
+#      Every relaxation in it - UtilityFunction off for app/helpers, TooManyStatements
+#      raised to 10 - is off in CI, so CI reports far more warnings than a bare `reek`
+#      here does. To reproduce it, run reek from a directory with no .reek.yml in it or
+#      above it, passing paths into the tree.
+#   2. This is a comparison against the PR's base commit, so one run tells you nothing.
+#      Score a worktree of main too, and compare:
+#
+#        git worktree add /tmp/base origin/main
+#
+# To find what changed rather than just that something did, diff the tools' own reports
+# between the two trees - `flay <tree>/app <tree>/lib > report` for each and diff them,
+# same for reek. flay names the file and line of every duplicated node, so it will point
+# straight at the repetition that cost you the points.
+
 on:
   - pull_request
 

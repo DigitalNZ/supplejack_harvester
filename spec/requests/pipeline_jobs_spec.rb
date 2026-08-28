@@ -72,6 +72,169 @@ RSpec.describe 'PipelineJobs' do
       expect(response.body).to include 'View extracted data'
       expect(response.body).not_to include 'View pre-processed data'
     end
+
+    # What the run was told to do with each block, which the page carried nothing of
+    # before: the job-wide fields it used to show were the ones the Run modal stopped
+    # setting when the settings became per block.
+    #
+    # The page draws them as the rows of the Run modal that asked for them, disabled, so
+    # the assertions read the fields rather than the text of a table.
+    describe 'the blocks' do
+      let(:harvest) { create(:harvest_definition, kind: 'harvest', position: 1, source_id: 'main', pipeline:) }
+      let(:skipped) { create(:harvest_definition, kind: 'harvest', position: 2, source_id: 'skipped', pipeline:) }
+
+      # The pipeline already carries the block the reports above are about, at position 0.
+      # A chain block left out of the settings leaves the one after it with no input, so
+      # every case here starts from that one running.
+      def settings(overrides)
+        { harvest_definition.id.to_s => { 'run' => true, 'input' => 'fresh' } }.merge(overrides)
+      end
+
+      # The row a block's tickbox sits in, which holds its input and its page limit too.
+      def block_row(definition)
+        response.parsed_body.at_css("#job-block-#{definition.id}-run").ancestors('.row').first
+      end
+
+      def ran?(definition)
+        response.parsed_body.at_css("#job-block-#{definition.id}-run").attr('checked').present?
+      end
+
+      def input_of(definition)
+        block_row(definition).at_css('select option').text
+      end
+
+      def pages_of(definition)
+        block_row(definition).at_css('input[type="number"]')['value']
+      end
+
+      it 'says what fed each block and how much of it was asked for' do
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(harvest.id.to_s => { 'run' => true,
+                                                                                  'input' => 'fresh',
+                                                                                  'pages' => 5 }))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(ran?(harvest)).to be true
+        expect(input_of(harvest)).to eq 'Output of previous block'
+        expect(pages_of(harvest)).to eq '5'
+      end
+
+      # No limit was asked for, and an empty field reads as every page against the
+      # placeholder - the same way it does in the modal.
+      it 'leaves the page limit empty when every page was asked for' do
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(harvest.id.to_s => { 'run' => true,
+                                                                                  'input' => 'fresh' }))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(pages_of(harvest)).to be_blank
+      end
+
+      # A run is as much what it was told to leave alone as what it was told to do, so an
+      # unticked block keeps its row - its box unticked, and with no input or page count
+      # left to report.
+      it 'lists a block that did not run, unticked' do
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(
+                                      harvest.id.to_s => { 'run' => true, 'input' => 'fresh' },
+                                      skipped.id.to_s => { 'run' => false, 'input' => 'fresh' }
+                                    ))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(ran?(skipped)).to be false
+        expect(input_of(skipped)).to eq '–'
+        expect(block_row(skipped).at_css('input[type="number"]')['placeholder']).to be_nil
+      end
+
+      it 'links a block that reused an extraction to the extraction it reused' do
+        extraction_definition = create(:extraction_definition, pipeline:, harvest_definitions: [harvest])
+        extraction_job = create(:extraction_job, extraction_definition:)
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(
+                                      harvest.id.to_s => { 'run' => true,
+                                                           'input' => "extraction_job:#{extraction_job.id}" }
+                                    ))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(input_of(harvest)).to eq extraction_job.name
+        expect(block_row(harvest).at_css('a')['href']).to include "extraction_jobs/#{extraction_job.id}"
+      end
+
+      # Bootstrap switches off pointer events on a .btn inside a disabled fieldset, which
+      # is what the settings above are wrapped in - the link has to be drawn as something
+      # else to survive it.
+      it 'leaves that link clickable inside the disabled fieldset' do
+        extraction_definition = create(:extraction_definition, pipeline:, harvest_definitions: [harvest])
+        extraction_job = create(:extraction_job, extraction_definition:)
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(
+                                      harvest.id.to_s => { 'run' => true,
+                                                           'input' => "extraction_job:#{extraction_job.id}" }
+                                    ))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(block_row(harvest).at_css('a')['class']).not_to include 'btn'
+      end
+
+      # A purged extraction leaves the words without the link rather than a link that
+      # goes nowhere.
+      it 'says so when the data a block was pointed at has gone' do
+        job = create(:pipeline_job, pipeline:, destination:,
+                                    block_settings: settings(harvest.id.to_s => {
+                                                               'run' => true,
+                                                               'input' => 'extraction_job:999999'
+                                                             }))
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(input_of(harvest)).to eq 'No longer available'
+        expect(block_row(harvest).at_css('a')).to be_nil
+      end
+
+      # Nearly every run predates block_settings, and everything the API and automation
+      # paths create still posts the flat fields - RunConfiguration rebuilds the rest.
+      it 'describes a run that posted none of it, from the fields it did post' do
+        job = create(:pipeline_job, pipeline:, destination:, page_type: :set_number, pages: 3,
+                                    harvest_definitions_to_run: [harvest_definition.id.to_s, harvest.id.to_s])
+        job.update_column(:block_settings, {})
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        expect(input_of(harvest_definition)).to eq 'Fresh extraction'
+        expect(pages_of(harvest_definition)).to eq '3'
+      end
+    end
+
+    # The settings are read back in the shape they were asked for, but nothing on this
+    # page submits anywhere: one disabled fieldset, and no form around it.
+    describe 'the job settings' do
+      it 'draws them as the disabled fields of the form that asked for them' do
+        get pipeline_pipeline_job_path(pipeline, pipeline_job)
+
+        details = response.parsed_body.at_css('fieldset[disabled]')
+
+        expect(details).to be_present
+        expect(details.ancestors('form')).to be_empty
+        expect(details.at_css('#job-destination option').text).to eq destination.name
+      end
+
+      it 'answers each setting the way the form that asks for it does' do
+        job = create(:pipeline_job, pipeline:, destination:, delete_previous_records: true,
+                                    run_enrichment_concurrently: false)
+
+        get pipeline_pipeline_job_path(pipeline, job)
+
+        page = response.parsed_body
+
+        expect(page.at_css('#job-delete-previous-records option').text).to eq 'Yes'
+        expect(page.at_css('#job-run-enrichment-concurrently option').text).to eq 'No'
+      end
+    end
   end
 
   describe 'GET /harvest_jobs/:harvest_job_id/errors' do
