@@ -20,13 +20,42 @@ jobs:
         run: |
           echo "PR_SOURCE_BRANCH: $PR_SOURCE_BRANCH"
           echo "PR_TARGET_BRANCH: $PR_TARGET_BRANCH"
-          MR_IID=`curl \
+
+          # state=all, newest first: a merged PR usually reaches GitLab as
+          # "merged" already (detected from the mirrored push to main), and the
+          # old state=opened lookup then returned nothing and PUT a null IID.
+          MR=$(curl -s \
             --header "Content-Type: application/json" \
             --header "PRIVATE-TOKEN: $GITLAB_API_ACCESS_TOKEN" \
-            "$GITLAB_API/projects/$GITLAB_PROJECT_ID/merge_requests?state=opened&source_branch=$PR_SOURCE_BRANCH&target_branch=$PR_TARGET_BRANCH" \
-            | jq '.[0].iid'`
-          curl \
-            --request PUT \
-            --header "Content-Type: application/json" \
-            --header "PRIVATE-TOKEN: $GITLAB_API_ACCESS_TOKEN" \
-            "$GITLAB_API/projects/$GITLAB_PROJECT_ID/merge_requests/$MR_IID?state_event=close"
+            "$GITLAB_API/projects/$GITLAB_PROJECT_ID/merge_requests?state=all&source_branch=$PR_SOURCE_BRANCH&target_branch=$PR_TARGET_BRANCH&order_by=updated_at&per_page=1")
+          MR_IID=$(echo "$MR" | jq '.[0].iid')
+          MR_STATE=$(echo "$MR" | jq -r '.[0].state')
+          if [ "$MR_IID" = "null" ]; then
+            echo "No GitLab MR found for $PR_SOURCE_BRANCH -> $PR_TARGET_BRANCH, nothing to do."
+            exit 0
+          fi
+          echo "GitLab MR !$MR_IID is $MR_STATE"
+
+          # Cancel in-flight pipelines FIRST: a deploying_uat job that finishes
+          # after the MR merges or closes re-pushes the uat-env pointer and
+          # resurrects the UAT environment, with no event left to stop it.
+          # "manual" pipelines are only blocked on buttons — nothing runs in
+          # them without a click, so they are left alone.
+          curl -s --header "PRIVATE-TOKEN: $GITLAB_API_ACCESS_TOKEN" \
+            "$GITLAB_API/projects/$GITLAB_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=20" \
+            | jq -r '.[] | select(.status | IN("created", "waiting_for_resource", "preparing", "pending", "running")) | .id' \
+            | while read -r PIPELINE_ID; do
+                echo "Cancelling pipeline $PIPELINE_ID"
+                curl -s --request POST --header "PRIVATE-TOKEN: $GITLAB_API_ACCESS_TOKEN" \
+                  "$GITLAB_API/projects/$GITLAB_PROJECT_ID/pipelines/$PIPELINE_ID/cancel" > /dev/null
+              done
+
+          if [ "$MR_STATE" = "opened" ]; then
+            curl -s --request PUT \
+              --header "Content-Type: application/json" \
+              --header "PRIVATE-TOKEN: $GITLAB_API_ACCESS_TOKEN" \
+              "$GITLAB_API/projects/$GITLAB_PROJECT_ID/merge_requests/$MR_IID?state_event=close" > /dev/null
+            echo "Closed MR !$MR_IID"
+          else
+            echo "MR !$MR_IID already $MR_STATE - skipping close."
+          fi
