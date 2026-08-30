@@ -9,7 +9,7 @@
     "@popperjs/core": "^2.11.7",
     "@reduxjs/toolkit": "^1.9.5",
     "@tarekraafat/autocomplete.js": "^10.2.10",
-    "axios": "^1.19.0",
+    "axios": "^1.20.0",
     "bootstrap": "5.3.8",
     "bootstrap-icons": "^1.10.5",
     "classnames": "^2.3.2",
