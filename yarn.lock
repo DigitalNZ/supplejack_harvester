@@ -1097,10 +1097,10 @@
     "@lezer/common" "^1.0.2"
     "@lezer/css" "^1.1.7"
 
-"@codemirror/lang-html@^6.4.11":
-  version "6.4.11"
-  resolved "https://registry.yarnpkg.com/@codemirror/lang-html/-/lang-html-6.4.11.tgz#c46ba46ae642fd567cf05c4129005d2913ac248d"
-  integrity sha512-9NsXp7Nwp891pQchI7gPdTwBuSuT3K65NGTHWHNJ55HjYcHLllr0rbIZNdOzas9ztc1EUVBlHou85FFZS4BNnw==
+"@codemirror/lang-html@^6.4.12":
+  version "6.4.12"
+  resolved "https://registry.yarnpkg.com/@codemirror/lang-html/-/lang-html-6.4.12.tgz#ca5dc0f741c1e819182bce9d03b073552172b1b7"
+  integrity sha512-pw2ReWKUqSkbvh76RAT4NYxiogRu+PWkR2ukAwO9uOgrm8uipkzjtKKtNpyeAQwHOqxEeSvAXZ6vr3AfyB9y/w==
   dependencies:
     "@codemirror/autocomplete" "^6.0.0"
     "@codemirror/lang-css" "^6.0.0"
