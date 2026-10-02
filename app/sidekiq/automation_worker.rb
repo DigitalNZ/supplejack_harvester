@@ -11,14 +11,14 @@ class AutomationWorker
   # @param step_id [Integer] The ID of the step to process
   def perform(automation_id, step_id)
     initialize_models(automation_id, step_id)
-    process_step(automation_id, step_id)
+    process_step(automation_id, step_id) unless @automation.nil? || @step.nil?
   end
 
   private
 
   def initialize_models(automation_id, step_id)
-    @automation = Automation.find(automation_id)
-    @step = AutomationStep.find(step_id)
+    @automation = Automation.find_by(id: automation_id)
+    @step = AutomationStep.find_by(id: step_id)
   end
 
   def process_step(automation_id, step_id)
@@ -56,23 +56,19 @@ class AutomationWorker
   end
 
   def process_pipeline_step(automation_id, step_id)
-    if step_pipeline_completed?
-      handle_next_step
-      return
-    end
+    return if step_pipeline_stopped?
+    return handle_next_step if step_pipeline_completed?
 
-    if step_has_pipeline_job?
-      schedule_job_check(automation_id, step_id)
-      return
-    end
-
-    # Otherwise, create and start a new pipeline job for this step
-    create_and_run_pipeline_job
+    create_and_run_pipeline_job unless step_has_pipeline_job?
     schedule_job_check(automation_id, step_id)
   end
 
   def step_pipeline_completed?
     @step.pipeline_job.present? && all_reports_completed?
+  end
+
+  def step_pipeline_stopped?
+    @step.pipeline_job.present? && (@step.pipeline_job.cancelled? || @step.pipeline_job.errored?)
   end
 
   def all_reports_completed?
