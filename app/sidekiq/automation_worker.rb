@@ -11,14 +11,14 @@ class AutomationWorker
   # @param step_id [Integer] The ID of the step to process
   def perform(automation_id, step_id)
     initialize_models(automation_id, step_id)
-    process_step(automation_id, step_id)
+    process_step(automation_id, step_id) unless @automation.nil? || @step.nil?
   end
 
   private
 
   def initialize_models(automation_id, step_id)
-    @automation = Automation.find(automation_id)
-    @step = AutomationStep.find(step_id)
+    @automation = Automation.find_by(id: automation_id)
+    @step = AutomationStep.find_by(id: step_id)
   end
 
   def process_step(automation_id, step_id)
