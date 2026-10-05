@@ -7,11 +7,16 @@ default: &default
   host:     <%= ENV.fetch('MYSQL_HOST')        { '127.0.0.1' } %>
   port:     <%= ENV.fetch('MYSQL_PORT')        { 3306 } %>
   socket:   <%= ENV.fetch('MYSQL_SOCKET')      { '/tmp/mysql.sock' } %>
-  # Alpine 3.24's MariaDB Connector/C verifies the DB's self-signed cert by default,
-  # and mysql2 0.5.7 cannot override it via ssl_mode. Read ssl-verify-server-cert=0
-  # from config/mysql.cnf to keep TLS but skip verification.
+  # When MYSQL_SSLCA is provided, connect over TLS and verify the server's cert
+  # against that CA. Otherwise, fall back to config/mysql.cnf, which sets
+  # ssl-verify-server-cert=0 because Alpine 3.24's MariaDB Connector/C verifies
+  # by default and mysql2 0.5.7 cannot override it via ssl_mode.
+<% if ENV['MYSQL_SSLCA'].present? %>
+  sslca: <%= ENV['MYSQL_SSLCA'] %>
+<% else %>
   default_file:  <%= Rails.root.join('config', 'mysql.cnf') %>
   default_group: 'client'
+<% end %>
 
 test:
   <<: *default
