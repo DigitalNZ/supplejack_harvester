@@ -1097,10 +1097,10 @@
     "@lezer/common" "^1.0.2"
     "@lezer/css" "^1.1.7"
 
-"@codemirror/lang-html@^6.4.11":
-  version "6.4.11"
-  resolved "https://registry.yarnpkg.com/@codemirror/lang-html/-/lang-html-6.4.11.tgz#c46ba46ae642fd567cf05c4129005d2913ac248d"
-  integrity sha512-9NsXp7Nwp891pQchI7gPdTwBuSuT3K65NGTHWHNJ55HjYcHLllr0rbIZNdOzas9ztc1EUVBlHou85FFZS4BNnw==
+"@codemirror/lang-html@^6.4.12":
+  version "6.4.12"
+  resolved "https://registry.yarnpkg.com/@codemirror/lang-html/-/lang-html-6.4.12.tgz#ca5dc0f741c1e819182bce9d03b073552172b1b7"
+  integrity sha512-pw2ReWKUqSkbvh76RAT4NYxiogRu+PWkR2ukAwO9uOgrm8uipkzjtKKtNpyeAQwHOqxEeSvAXZ6vr3AfyB9y/w==
   dependencies:
     "@codemirror/autocomplete" "^6.0.0"
     "@codemirror/lang-css" "^6.0.0"
@@ -1157,12 +1157,12 @@
     "@lezer/lr" "^1.0.0"
     style-mod "^4.0.0"
 
-"@codemirror/legacy-modes@^6.5.3":
-  version "6.5.3"
-  resolved "https://registry.yarnpkg.com/@codemirror/legacy-modes/-/legacy-modes-6.5.3.tgz#5dcac7cdc430d32ad8af1c2c9bce392fad1b5fcb"
-  integrity sha512-xCsmIzH78MyWkib9jlPaaun57XNkfbMIhagfaZVd0iLTqlpw3jXaIcbZm72MTmmn64eTZpBVNjbyYh+QXnxRsg==
+"@codemirror/legacy-modes@^6.5.5":
+  version "6.5.5"
+  resolved "https://registry.yarnpkg.com/@codemirror/legacy-modes/-/legacy-modes-6.5.5.tgz#2eb27876122e8e5a1c7e88273b1b7c4eb078aa8a"
+  integrity sha512-9ltT214oMb3Y1w5eAZMSigzrjzZnMI2Wa3Feq73rU/i4C56MkwrpfswfQYOr28C5pXr6dWwspNTMyeHXlzWMxg==
   dependencies:
-    "@codemirror/language" "^6.0.0"
+    "@codemirror/streamparser" "^6.0.0"
 
 "@codemirror/lint@^6.0.0":
   version "6.8.5"
@@ -1188,6 +1188,11 @@
   integrity sha512-FVqsPqtPWKVVL3dPSxy8wEF/ymIEuVzF1PK3VbUgrxXpJUSHQWWZz4JMToquRxnkw+36LTamCZG2iua2Ptq0fA==
   dependencies:
     "@marijn/find-cluster-break" "^1.0.0"
+
+"@codemirror/streamparser@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@codemirror/streamparser/-/streamparser-6.0.0.tgz#cc48a8f67e9001222d69938fabab157d68ce59d6"
+  integrity sha512-JTFPF6xrfjt0mnfGPgzcLiMwYmvIyNaoizp8BYzv8FE8KrT6GBGDZ190rtt+O7Wke3gG/MFHyiY9YGNeimof4w==
 
 "@codemirror/view@^6.0.0", "@codemirror/view@^6.17.0", "@codemirror/view@^6.23.0", "@codemirror/view@^6.27.0", "@codemirror/view@^6.35.0":
   version "6.38.3"
