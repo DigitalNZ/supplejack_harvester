@@ -1,4 +1,4 @@
-FROM ruby:3.4.10-alpine3.24
+FROM ruby:3.4.12-alpine3.24
 
 # Drop compromised eMudhra/emSign root (CVE-2026-111943); redundant once base image rebuilds with ca-certificates-bundle >= 20261020-r0
 RUN apk upgrade --no-cache ca-certificates-bundle
